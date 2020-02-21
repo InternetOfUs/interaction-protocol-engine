@@ -1,0 +1,50 @@
+# Changelog
+
+All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
+
+
+## Version 0.9.0 (2020-02-21)
+
+ * Migrate to use Vert.x
+
+
+## Version 0.8.0 (2019-10-30)
+
+ * Fix new task models.
+
+
+## Version 0.7.1 (2019-10-22)
+
+ * Fix python case errors.
+
+
+## Version 0.7.0 (2019-10-21)
+
+ * Import the team web services.
+
+
+## Version 0.5.0 (2019-08-08)
+
+ * Align with other partners.
+
+
+## Version 0.4.0 (2019-07-26)
+
+ * Add task models and services.
+ * Add trust model ad services.
+ * Add a better API description.
+
+
+## Version 0.3.0 (2019-07-15)
+
+ * Add tags to the services.
+
+
+## Version 0.2.0 (2019-07-01)
+
+ * Add services to manage the communities, the norms , the profiles and the messages.
+
+
+## Version 0.1.0 (2019-04-08)
+
+ * Project skeleton
