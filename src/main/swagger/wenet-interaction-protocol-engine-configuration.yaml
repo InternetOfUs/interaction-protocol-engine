@@ -1,0 +1,141 @@
+resourcePackages:
+- eu.internetofus.wenet_task_manager.api
+prettyPrint: true
+cacheTTL: 0
+openAPI:
+  tags:
+    - name: Other
+      description: Other services provided by the API.
+    - name: Communities
+      description: The functionality provided allows to manage members, norms and task types associated to a community.
+    - name: Messages
+      description: The functionality provided allows to send messages.
+    - name: Norms
+      description: The functionality provided allows to publish norms, and manage the user and community norms.
+    - name: Tasks
+      description: The functionality provided allows to publish task types, create and manage task instances.
+    - name: Teams
+      description: The functionality provided allows to automatically form teams that have diversity in gender, personality and intelligence. Also we provide the functions to evaluate the personality and intelligences of users and the result can be kept of the profile attributes.
+    - name: Trusts
+      description: The functionality provided allows to manage the trust over other users.
+  info:
+    # The verion of the API has to be synchonized with the 'api-version' property of the 'pom.xml'
+    version: '0.9.0'
+    title: WeNet - Interaciton protocol engine API
+    description:  >-
+      This API will be used to storing and maintaining the task description,
+      and the community description, along with their associated norms, to realize the user
+      interactions between them sending messages guaranteeing that they follow the norms,
+      and to form teams to realize a task.
+
+      The functionality of the API is organized around the following concepts:
+
+       * **Community**: is a group of users with a common goal.
+       * **Message**: is the atomic communication between users.
+       * **Norm**: is a rule that restricts or prescribes the behaviour of users.
+       * **Profile**: is a fixed set of user attributes.
+       * **Task**: is an individual goal to be achieved by a team.
+       * **Team**: is a group of individuals set to fulfil a task.
+       * **Trust**: is the confidence that another user achieve a task.
+
+
+      ## Community
+
+      The functionality provided allows to managing members, norms and task types associated with a community.
+
+      At the moment does not exist any restriction to create communities.
+      Every member of a community has the right to access to:
+
+       * The name, description and avatar of the community.
+       * The task types that can be done in the community.
+       * The norm of the community.
+       * The list of members of the community.
+       * The list of task instances that it is involved.
+
+      For the rest of the actions it needs to have the privilege to perform the action. This privileges can be:
+
+       * **MODIFY_NAME**: a user with this privilege can modify the name of the community.
+       * **MODIFY_DESCRIPTION**: a user with this privilege can modify the description of the community.
+       * **MODIFY_KEYWORDS**: a user with this privilege can modify the keywords of the community.
+       * **MODIFY_AVATAR**: a user with this privilege can modify the avatar image of the community.
+       * **ADD_NORM**: a user with this privilege can add a new norm into the community.
+       * **REMOVE_NORM**: a user with this privilege can remove a norm form the community.
+       * **ADD_MEMBER**: a user with this privilege can add a new user into the community.
+       * **REMOVE_MEMBER**: a user with this privilege can remove a user from the community.
+       * **MODIFY_MEMBER_PRIVILEGES**: a user with this privilege can modify the privileges of a community member.
+       * **VIEW_MEMBER_PRIVILEGES**: a user with this privilege can view the privileges of a community member.
+       * **ADD_TASK_TYPE**: a user with this privilege can add a new type of task that can be done in the community.
+       * **REMOVE_TASK_TYPE**: a user with this privilege can remove a type of task that can be done in the community.
+       * **ADD_TASK_INSTANCE**: a user with this privilege can start a new task to do in a community.
+
+
+      On the other hand, to join into a community you have to do the same action to add a member,
+      and to leave a community the same action as remove a member.
+
+
+      ## Message
+
+      The functionality provided allows for sending messages.
+
+      When a user sends a message through the API, the message is sent to the norm interpreter of the user.
+      This interpreter needs to first verify that the message does not violate any of the norms,
+      this includes the community norms, the task norms, the sender’s individual norms, as well as the context-dependent
+      norms that are attached to this message. If the message violates any of those norms,
+      an error message is sent back to the user. However, if the message obeys the norms, then the norm interpreter needs
+      to decide what to do next, usually translated into sending messages to other peers. This decision follows from
+      the community, individual and context-dependent norms, and takes the user’s profile (both public and private)
+      into account as needed. If the message is sent to the interpreter of another user. As in the previous case,
+      the norm interpreter of this new user needs to first verify that the message does not violate any of the community norms.
+      This re-checking upon receipt ensures that the sender’s norm engine has not been manipulated to cheat.
+      If the message violates any of the community norms, then it may either be discarded, or if the community norms
+      require sanctioning, then the appropriate sanctions should be executed. However, if the action obeys the community norms,
+      then the norm interpreter needs to decide what to do next, which is usually translated into sending messages
+      to other peers and/or sending messages to its user. This decision takes into consideration the community norms,
+      the context-dependent norms that are attached to the message, the individual private norms of the human whose interpreter
+      has received this message, as well as their local profile (both private and public). This ensures that the interpreter
+      abides with it is human’s private norms without leaking any of their private norms and profile.
+
+
+      ## Norm
+
+      The functionality provided allows to publish norms, and manage the user and community norms.
+
+      There are norms on the individual (user level), the task level, and the community level.
+      An individual’s norm might be “Suppress incoming messages at night” (and this will
+      be applied for the user who sets this norm only). A task norm might be “Don’t ask my ex”
+      (so that would be applied for a specific task only). A community norm might be
+      “If you don’t volunteer, you cannot ask for help” and it would be enforced on everyone.
+      Given the above, this means that norms will be attached to users, tasks and communities.
+
+
+      ## Task
+
+      The task is associated to the next concepts:
+
+       * **TaskType**: describe the attributes and norms that describe the goal of the task.
+       * **TaskInstance**: the instance of a task type that is active.
+       * **TaskView**: maintains the state of the task instance from the point of view of an specific user.
+
+
+      ## Team
+
+      The functionality provided allows to automatically form teams that have diversity in gender,
+      personality and intelligence.
+      Also, we provide the functions to evaluate the personality and intelligences of users and
+      the result can be kept of the profile attributes.
+
+      ### Trust
+
+      The trust over another user is dynamically and will be updated every time they collaborate
+      to achieve a task. Also, you can get or set the trust on another user, on a member of
+      a community, or on a member of a community to fulfil a task type.
+
+    contact:
+      name: Bruno Rosell i Gui (UDT-IA, IIIA-CSIC)
+      email: rosell (at) iiia.csic.es
+    license:
+      name: MIT
+      url: https://opensource.org/licenses/MIT
+  servers:
+    - url: http://ardid.iiia.csic.es/dev-wenet-task-manager/
+      description: Develop server
