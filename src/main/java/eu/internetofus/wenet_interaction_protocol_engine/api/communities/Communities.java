@@ -39,6 +39,8 @@ import javax.ws.rs.core.MediaType;
 import eu.internetofus.wenet_interaction_protocol_engine.api.ErrorMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.enums.ParameterStyle;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -101,6 +103,73 @@ public interface Communities {
 			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
 	void createCommunity(@Parameter(hidden = true, required = false) JsonObject body,
 			@Parameter(hidden = true, required = false) OperationRequest context,
+			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+
+	/**
+	 * Called when want to get some communities.
+	 *
+	 * @param context       of the request.
+	 * @param resultHandler to inform of the response.
+	 */
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(
+			summary = "Return some active communities",
+			description = "Allow to search for a communities that match some patterns")
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "name",
+			description = "The name of the communities to return or a Perl compatible regular expressions (PCRE) that has to match the name of the communities to return.",
+			required = false,
+			schema = @Schema(type = "string", example = "(?i)na(?-i)me"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "description",
+			description = "The description of the communities to return or a Perl compatible regular expressions (PCRE) that has to match the description of the communities to return.",
+			required = false,
+			schema = @Schema(type = "string", example = "(?i)descripti(?-i)on"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "keyword",
+			description = "The keyword of the communities to return or a Perl compatible regular expressions (PCRE) that has to match the keyword of the communities to return.",
+			required = false,
+			style = ParameterStyle.MATRIX,
+			schema = @Schema(type = "string", example = "(?i)key(?-i)word"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "avatar",
+			description = "The avatar of the communities to return or a Perl compatible regular expressions (PCRE) that has to match the avatar of the communities to return.",
+			required = false,
+			schema = @Schema(type = "string", example = "(?i)a(?-i)vatar"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "sinceFrom",
+			description = "The time stamp inclusive that mark the older limit in witch the community has been created. It is the difference, measured in milliseconds, between the time when the profile has to be valid and midnight, January 1, 1970 UTC.",
+			required = false,
+			schema = @Schema(type = "integer", defaultValue = "0", example = "1457166440"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "sinceTo",
+			description = "The time stamp inclusive that mark the newest limit in witch the community has been created. It is the difference, measured in milliseconds, between the time when the profile has not more valid and midnight, January 1, 1970 UTC.",
+			required = false,
+			schema = @Schema(type = "integer", defaultValue = "92233720368547757", example = "1571664406"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "offset",
+			description = "Index of the first community to return.",
+			required = false,
+			schema = @Schema(type = "integer", defaultValue = "0", example = "10"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "limit",
+			description = "Number maximum of communities to return.",
+			required = false,
+			schema = @Schema(type = "integer", defaultValue = "10", example = "100"))
+	@ApiResponse(
+			responseCode = "200",
+			description = "The communities that match the patterns",
+			content = @Content(schema = @Schema(implementation = CommunitiesPage.class)))
+	void retrieveCommunitiesPage(@Parameter(hidden = true, required = false) OperationRequest context,
 			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
 
 	/**

@@ -228,4 +228,16 @@ public class CommunitiesResource implements Communities {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveCommunitiesPage(OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
+
+		final JsonObject params = context.getParams().getJsonObject("query", new JsonObject());
+
+		OperationReponseHandlers.responseOk(resultHandler, new CommunitiesPage());
+
+	}
+
 }
