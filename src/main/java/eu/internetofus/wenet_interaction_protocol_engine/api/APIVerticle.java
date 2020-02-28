@@ -30,6 +30,8 @@ import javax.ws.rs.core.Response.Status;
 
 import org.tinylog.Logger;
 
+import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Communities;
+import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunitiesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.versions.Versions;
 import eu.internetofus.wenet_interaction_protocol_engine.api.versions.VersionsResource;
 import io.vertx.core.AbstractVerticle;
@@ -68,7 +70,11 @@ public class APIVerticle extends AbstractVerticle {
 
 					routerFactory.mountServiceInterface(Versions.class, Versions.ADDRESS);
 					new ServiceBinder(this.vertx).setAddress(Versions.ADDRESS).register(Versions.class,
-							new VersionsResource(this));
+							new VersionsResource(this.config()));
+
+					routerFactory.mountServiceInterface(Communities.class, Communities.ADDRESS);
+					new ServiceBinder(this.vertx).setAddress(Communities.ADDRESS).register(Communities.class,
+							new CommunitiesResource(this.vertx));
 
 					// bind the ERROR handlers
 					final Router router = routerFactory.getRouter();

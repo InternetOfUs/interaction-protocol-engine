@@ -52,6 +52,7 @@ import org.testcontainers.utility.MountableFile;
 import org.tinylog.Level;
 import org.tinylog.provider.InternalLogger;
 
+import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
 import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -173,7 +174,8 @@ public class WeNetInteractionProtocolEngineIntegrationExtension
 				.withEnv("MONGO_INITDB_ROOT_USERNAME", "root").withEnv("MONGO_INITDB_ROOT_PASSWORD", "password")
 				.withEnv("MONGO_INITDB_DATABASE", dbName)
 				.withCopyFileToContainer(
-						MountableFile.forClasspathResource("eu/internetofus/wenet_task_manager/initialize-" + dbName + ".js"),
+						MountableFile
+								.forClasspathResource("eu/internetofus/wenet_interaction_protocol_engine/initialize-" + dbName + ".js"),
 						"/docker-entrypoint-initdb.d/init-mongo.js")
 				.withExposedPorts(EXPORT_MONGODB_PORT).withNetwork(network).withNetworkAliases(dbName)
 				.waitingFor(Wait.forListeningPort());
@@ -202,7 +204,8 @@ public class WeNetInteractionProtocolEngineIntegrationExtension
 					profilePersistenceContainer.start();
 
 					final GenericContainer<?> profileManagerContainer = new GenericContainer<>(WENET_PROFILE_MANAGER_DOCKER_NAME)
-							.withEnv("DB_HOST", WENET_PROFILE_MANAGER_DB_NAME);
+							.withEnv("DB_HOST", WENET_PROFILE_MANAGER_DB_NAME).withNetwork(network).withExposedPorts(EXPORT_API_PORT)
+							.withNetworkAliases(WENET_PROFILE_MANAGER_SERVER_NAME);
 					profileManagerContainer.start();
 					final String profileManagerApiPort = String.valueOf(profileManagerContainer.getMappedPort(EXPORT_API_PORT));
 
@@ -213,7 +216,7 @@ public class WeNetInteractionProtocolEngineIntegrationExtension
 							.withEnv("DB_HOST", WENET_TASK_MANAGER_DB_NAME)
 							.withEnv("WENET_PROFILE_MANAGER_API_HOST", WENET_PROFILE_MANAGER_SERVER_NAME)
 							.withEnv("WENET_PROFILE_MANAGER_API_PORT", profileManagerApiPort)
-							.withEnv("WENET_PROFILE_MANAGER_API_PATH", "").withNetwork(network)
+							.withEnv("WENET_PROFILE_MANAGER_API_PATH", "").withNetwork(network).withExposedPorts(EXPORT_API_PORT)
 							.withNetworkAliases(WENET_TASK_MANAGER_SERVER_NAME);
 
 					taskManagerContainer.start();
@@ -231,11 +234,10 @@ public class WeNetInteractionProtocolEngineIntegrationExtension
 					} catch (final Throwable ignored) {
 					}
 					new Main()
-							.startWith("-papi.port=" + port, "-ppersistence.host=" + WENET_INTERACTION_PROTOCOL_ENGINE_DB_NAME,
-									"-ppersistence.port=" + persistenceContainer.getMappedPort(EXPORT_API_PORT),
-									"-pservice.profileManager.host=" + WENET_PROFILE_MANAGER_SERVER_NAME,
-									"-pservice.profileManager.port=" + profileManagerApiPort, "-pservice.profileManager.apiPath=\"\"",
-									"-pservice.taskManager.host=" + WENET_TASK_MANAGER_SERVER_NAME,
+							.startWith("-papi.port=" + port, "-ppersistence.host=localhost",
+									"-ppersistence.port=" + persistenceContainer.getMappedPort(EXPORT_MONGODB_PORT),
+									"-pservice.profileManager.host=localhost", "-pservice.profileManager.port=" + profileManagerApiPort,
+									"-pservice.profileManager.apiPath=\"\"", "-pservice.taskManager.host=localhost",
 									"-pservice.taskManager.port=" + taskManagerApiPort, "-pservice.taskManager.apiPath=\"\"")
 							.onComplete(start -> {
 
@@ -366,9 +368,7 @@ public class WeNetInteractionProtocolEngineIntegrationExtension
 			throws ParameterResolutionException {
 
 		final Class<?> type = parameterContext.getParameter().getType();
-		return type == WebClient.class
-				// || type == TasksRepository.class
-				|| type == MongoClient.class || type == WeNetProfileManagerService.class
+		return type == WebClient.class || type == CommunitiesRepository.class || type == MongoClient.class
 				|| type == WeNetProfileManagerService.class
 				|| this.vertxExtension.supportsParameter(parameterContext, extensionContext);
 
@@ -409,15 +409,14 @@ public class WeNetInteractionProtocolEngineIntegrationExtension
 					}, MongoClient.class);
 			return pool;
 
-			// } else if (type == TasksRepository.class) {
-			//
-			// return
-			// extensionContext.getStore(ExtensionContext.Namespace.create(this.getClass().getName()))
-			// .getOrComputeIfAbsent(TasksRepository.class.getName(), key -> {
-			//
-			// final WeNetInteractionProtocolEngineContext context = getContext();
-			// return TasksRepository.createProxy(context.vertx);
-			// }, TasksRepository.class);
+		} else if (type == CommunitiesRepository.class) {
+
+			return extensionContext.getStore(ExtensionContext.Namespace.create(this.getClass().getName()))
+					.getOrComputeIfAbsent(CommunitiesRepository.class.getName(), key -> {
+
+						final WeNetInteractionProtocolEngineContext context = getContext();
+						return CommunitiesRepository.createProxy(context.vertx);
+					}, CommunitiesRepository.class);
 
 		} else if (type == WeNetProfileManagerService.class) {
 

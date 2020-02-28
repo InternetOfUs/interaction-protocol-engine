@@ -24,64 +24,49 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.persistence;
+package eu.internetofus.wenet_interaction_protocol_engine.api;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.MongoClient;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
+import org.junit.jupiter.api.Test;
+
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerOptions;
 
 /**
- * The verticle that provide the persistence services.
+ * Test the {@link APIVerticle}.
+ *
+ * @see APIVerticle
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticle extends AbstractVerticle {
+public class APIVerticleTest {
 
 	/**
-	 * The name of the pool of connections.
+	 * Check that not stop the server if it is not started.
 	 */
-	private static final String PERSISTENCE_POOL_NAME = "WENET_INTERACTION_PROTOCOL_ENGINE_POOL";
+	@Test
+	public void shouldNotStopIfServerNotStarted() {
 
-	/**
-	 * The pool of database connections.
-	 */
-	protected MongoClient pool;
+		final APIVerticle api = new APIVerticle();
+		assertThatCode(() -> api.stop()).doesNotThrowAnyException();
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void start(Promise<Void> startPromise) throws Exception {
-
-		try {
-			// create the pool
-			final JsonObject persitenceConf = this.config().getJsonObject("persistence", new JsonObject());
-			this.pool = MongoClient.createShared(this.vertx, persitenceConf, PERSISTENCE_POOL_NAME);
-
-			// register services
-			CommunitiesRepository.register(this.vertx, this.pool);
-
-			startPromise.complete();
-
-		} catch (final Throwable cause) {
-
-			startPromise.fail(cause);
-		}
 	}
 
 	/**
-	 * Close the connections pool.
-	 *
-	 * {@inheritDoc}
+	 * Check that not stop the server if it is not started.
 	 */
-	@Override
-	public void stop() throws Exception {
+	@Test
+	public void shouldStopIfServerStarted() {
 
-		if (this.pool != null) {
-			this.pool.close();
-			this.pool = null;
-		}
+		final APIVerticle api = new APIVerticle();
+		final HttpServerOptions options = new HttpServerOptions();
+		options.setHost("localhost");
+		options.setPort(0);
+		api.server = Vertx.vertx().createHttpServer(options);
+		assertThatCode(() -> api.stop()).doesNotThrowAnyException();
+		assertThat(api.server).isNull();
 
 	}
 

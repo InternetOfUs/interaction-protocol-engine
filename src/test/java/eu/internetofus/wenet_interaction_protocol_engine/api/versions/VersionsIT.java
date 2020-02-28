@@ -26,57 +26,45 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.versions;
 
-import javax.ws.rs.core.MediaType;
+import static eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension.Asserts.assertThatBodyIs;
+import static io.vertx.junit5.web.TestRequest.testRequest;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import javax.ws.rs.core.Response.Status;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.api.OperationRequest;
-import io.vertx.ext.web.api.OperationResponse;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.junit5.VertxTestContext;
 
 /**
- * Resource to provide the {@link Versions} of the API.
+ * The integration test over the {@link Versions}.
  *
  * @see Versions
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class VersionsResource implements Versions {
+@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
+public class VersionsIT {
 
 	/**
-	 * The version of the software.
-	 */
-	protected final Version version;
-
-	/**
-	 * Create a new version resource.
+	 * Verify that return the version.
 	 *
-	 * @param apiConfiguration configuration of the API.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
 	 */
-	public VersionsResource(JsonObject apiConfiguration) {
+	@Test
+	public void shouldReturnVersion(WebClient client, VertxTestContext testContext) {
 
-		this.version = new Version();
-		final JsonObject conf = apiConfiguration.getJsonObject("version", new JsonObject());
-		this.version.api = conf.getString("api", "Undefined");
-		this.version.software = conf.getString("software", "Undefined");
-		this.version.vendor = conf.getString("vendor", "UDT-IA,IIIA-CSIC");
-
+		testRequest(client, HttpMethod.GET, Versions.PATH).expect(res -> {
+			assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+			final Version version = assertThatBodyIs(Version.class, res);
+			assertThat(version.api).isNotEmpty();
+			assertThat(version.software).isNotEmpty();
+			assertThat(version.vendor).isNotEmpty();
+		}).send(testContext);
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void getVersion(OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
-
-		resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(Status.OK.getStatusCode())
-				.putHeader(HttpHeaders.CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON)
-				.setPayload(Buffer.buffer(this.version.toJsonString()))));
-
-	}
-
 }

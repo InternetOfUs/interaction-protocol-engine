@@ -1,5 +1,5 @@
 resourcePackages:
-- eu.internetofus.wenet_task_manager.api
+- eu.internetofus.wenet_interaction_protocol_engine.api
 prettyPrint: true
 cacheTTL: 0
 openAPI:

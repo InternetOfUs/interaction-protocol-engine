@@ -24,65 +24,30 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.persistence;
+package eu.internetofus.wenet_interaction_protocol_engine.api.versions;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.MongoClient;
+import eu.internetofus.wenet_interaction_protocol_engine.ModelTestCase;
 
 /**
- * The verticle that provide the persistence services.
+ * Test the {@link Version}.
+ *
+ * @see Version
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticle extends AbstractVerticle {
-
-	/**
-	 * The name of the pool of connections.
-	 */
-	private static final String PERSISTENCE_POOL_NAME = "WENET_INTERACTION_PROTOCOL_ENGINE_POOL";
-
-	/**
-	 * The pool of database connections.
-	 */
-	protected MongoClient pool;
+public class VersionTest extends ModelTestCase<Version> {
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void start(Promise<Void> startPromise) throws Exception {
+	public Version createModelExample(int index) {
 
-		try {
-			// create the pool
-			final JsonObject persitenceConf = this.config().getJsonObject("persistence", new JsonObject());
-			this.pool = MongoClient.createShared(this.vertx, persitenceConf, PERSISTENCE_POOL_NAME);
-
-			// register services
-			CommunitiesRepository.register(this.vertx, this.pool);
-
-			startPromise.complete();
-
-		} catch (final Throwable cause) {
-
-			startPromise.fail(cause);
-		}
-	}
-
-	/**
-	 * Close the connections pool.
-	 *
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void stop() throws Exception {
-
-		if (this.pool != null) {
-			this.pool.close();
-			this.pool = null;
-		}
-
+		final Version version = new Version();
+		version.api = "0.0." + index;
+		version.software = "0." + index + ".0";
+		version.vendor = "UDT-IA, IIIA-CSIC";
+		return version;
 	}
 
 }

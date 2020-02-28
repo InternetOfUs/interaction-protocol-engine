@@ -45,7 +45,7 @@ public interface WeNetProfileManagerService {
 	/**
 	 * The address of this service.
 	 */
-	String ADDRESS = "wenet_task_manager.service.profileManager";
+	String ADDRESS = "wenet_interaction_protocol_engine.service.profileManager";
 
 	/**
 	 * Create a proxy of the {@link WeNetProfileManagerService}.

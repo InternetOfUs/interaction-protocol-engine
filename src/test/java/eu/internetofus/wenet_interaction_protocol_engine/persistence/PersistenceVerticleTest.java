@@ -26,62 +26,45 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
+import org.junit.jupiter.api.Test;
+
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 
 /**
- * The verticle that provide the persistence services.
+ * Test the {@link PersistenceVerticle}.
+ *
+ * @see PersistenceVerticle
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticle extends AbstractVerticle {
+public class PersistenceVerticleTest {
 
 	/**
-	 * The name of the pool of connections.
+	 * Check that not stop the server if it is not started.
 	 */
-	private static final String PERSISTENCE_POOL_NAME = "WENET_INTERACTION_PROTOCOL_ENGINE_POOL";
+	@Test
+	public void shouldNotStopIfServerNotStarted() {
 
-	/**
-	 * The pool of database connections.
-	 */
-	protected MongoClient pool;
+		final PersistenceVerticle persistence = new PersistenceVerticle();
+		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void start(Promise<Void> startPromise) throws Exception {
-
-		try {
-			// create the pool
-			final JsonObject persitenceConf = this.config().getJsonObject("persistence", new JsonObject());
-			this.pool = MongoClient.createShared(this.vertx, persitenceConf, PERSISTENCE_POOL_NAME);
-
-			// register services
-			CommunitiesRepository.register(this.vertx, this.pool);
-
-			startPromise.complete();
-
-		} catch (final Throwable cause) {
-
-			startPromise.fail(cause);
-		}
 	}
 
 	/**
-	 * Close the connections pool.
-	 *
-	 * {@inheritDoc}
+	 * Check that not stop the server if it is not started.
 	 */
-	@Override
-	public void stop() throws Exception {
+	@Test
+	public void shouldStopIfServerStarted() {
 
-		if (this.pool != null) {
-			this.pool.close();
-			this.pool = null;
-		}
+		final PersistenceVerticle persistence = new PersistenceVerticle();
+		persistence.pool = MongoClient.create(Vertx.vertx(), new JsonObject());
+		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
+		assertThat(persistence.pool).isNull();
 
 	}
 
