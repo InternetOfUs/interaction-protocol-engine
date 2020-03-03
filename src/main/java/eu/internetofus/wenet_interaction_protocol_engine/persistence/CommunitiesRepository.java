@@ -237,14 +237,12 @@ public interface CommunitiesRepository {
 	 *                      of the communities to return.
 	 * @param sinceFrom     time stamp inclusive that mark the older limit in witch
 	 *                      the community has been created. It is the difference,
-	 *                      measured in milliseconds, between the time when the
-	 *                      profile has to be valid and midnight, January 1, 1970
-	 *                      UTC.
+	 *                      measured in seconds, between the time when the profile
+	 *                      has to be valid and midnight, January 1, 1970 UTC.
 	 * @param sinceTo       time stamp inclusive that mark the newest limit in witch
 	 *                      the community has been created. It is the difference,
-	 *                      measured in milliseconds, between the time when the
-	 *                      profile has not more valid and midnight, January 1, 1970
-	 *                      UTC.
+	 *                      measured in seconds, between the time when the profile
+	 *                      has not more valid and midnight, January 1, 1970 UTC.
 	 * @param offset        index of the first community to return.
 	 * @param limit         number maximum of communities to return.
 	 * @param searchHandler handler to manage the search.

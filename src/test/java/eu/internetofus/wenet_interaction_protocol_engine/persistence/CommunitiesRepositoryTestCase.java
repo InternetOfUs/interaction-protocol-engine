@@ -37,6 +37,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import eu.internetofus.wenet_interaction_protocol_engine.Model;
+import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunitiesPage;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Community;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityTest;
@@ -196,7 +197,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	@Test
 	public void shouldStoreCommunityObject(VertxTestContext testContext) {
 
-		final long now = System.currentTimeMillis();
+		final long now = TimeManager.now();
 		this.repository.storeCommunity(new JsonObject(),
 				testContext.succeeding(storedCommunity -> testContext.verify(() -> {
 

@@ -143,13 +143,13 @@ public interface Communities {
 	@Parameter(
 			in = ParameterIn.QUERY,
 			name = "sinceFrom",
-			description = "The time stamp inclusive that mark the older limit in witch the community has been created. It is the difference, measured in milliseconds, between the time when the profile has to be valid and midnight, January 1, 1970 UTC.",
+			description = "The time stamp inclusive that mark the older limit in witch the community has been created. It is the difference, measured in seconds, between the time when the profile has to be valid and midnight, January 1, 1970 UTC.",
 			required = false,
 			schema = @Schema(type = "integer", defaultValue = "0", example = "1457166440"))
 	@Parameter(
 			in = ParameterIn.QUERY,
 			name = "sinceTo",
-			description = "The time stamp inclusive that mark the newest limit in witch the community has been created. It is the difference, measured in milliseconds, between the time when the profile has not more valid and midnight, January 1, 1970 UTC.",
+			description = "The time stamp inclusive that mark the newest limit in witch the community has been created. It is the difference, measured in seconds, between the time when the profile has not more valid and midnight, January 1, 1970 UTC.",
 			required = false,
 			schema = @Schema(type = "integer", defaultValue = "92233720368547757", example = "1571664406"))
 	@Parameter(

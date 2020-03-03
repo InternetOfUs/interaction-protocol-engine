@@ -26,6 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
+import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -92,7 +93,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	@Override
 	public void storeCommunity(JsonObject community, Handler<AsyncResult<JsonObject>> storeHandler) {
 
-		final long now = System.currentTimeMillis();
+		final long now = TimeManager.now();
 		community.put("sinceTime", now);
 		this.pool.save(COMMUNITIES_COLLECTION, community, store -> {
 

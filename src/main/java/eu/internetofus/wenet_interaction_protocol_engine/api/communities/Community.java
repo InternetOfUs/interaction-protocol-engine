@@ -86,7 +86,7 @@ public class Community extends Model implements Validable, Mergeable<Community> 
 	 * The time in ISO 8601 format since the community is active.
 	 */
 	@Schema(
-			description = "The difference, measured in milliseconds, between the community is active and midnight, January 1, 1970 UTC.",
+			description = "The difference, measured in seconds, between the community is active and midnight, January 1, 1970 UTC.",
 			example = "1571412479710")
 	public long sinceTime;
 
