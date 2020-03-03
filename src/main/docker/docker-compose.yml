@@ -11,19 +11,19 @@ services:
       - ./initialize-wenetProfileManagerDB.js:/docker-entrypoint-initdb.d/init-mongo.js
       - wenet_profile_manager_data:/data/db
     networks:
-      wenet_interaction_protocol_engine_net:
+      wenet_network:
 
   wenet_profile_manager_api:
-    image: wenet/profile-manager:0.10.0
+    image: wenet/profile-manager:0.11.0
     depends_on:
       - wenet_profile_manager_database
     environment:
       DB_HOST: wenet_profile_manager_database
       WAIT_HOSTS: wenet_profile_manager_database:27017
-    ports:
-      - ${PROFILE_MANAGER_API_PORT:-8080}:8080
     networks:
-      wenet_interaction_protocol_engine_net:
+      wenet_network:
+    ports:
+      - ${PROFILE_MANAGER_API_PORT:-8081}:8080
 
   wenet_task_manager_database:
     image: mongo:4.2.3
@@ -36,56 +36,60 @@ services:
       - ./initialize-wenetTaskManagerDB.js:/docker-entrypoint-initdb.d/init-mongo.js
       - wenet_task_manager_data:/data/db
     networks:
-      wenet_interaction_protocol_engine_net:
+      wenet_network:
 
   wenet_task_manager_api:
-    image: wenet/task-manager:0.2.0
+    image: wenet/task-manager:0.3.0
     depends_on:
       - wenet_task_manager_database
+      - wenet_profile_manager_api
     environment:
       DB_HOST: wenet_task_manager_database
+      WENET_PROFILE_MANAGER_API_HOST: localhost
+      WENET_PROFILE_MANAGER_API_PORT: ${PROFILE_MANAGER_API_PORT:-8081}
+      WENET_PROFILE_MANAGER_API_PATH: ""
       WAIT_HOSTS: wenet_task_manager_database:27017
-    ports:
-      - ${TASK_MANAGER_API_PORT:-8081}:8080
     networks:
-      wenet_interaction_protocol_engine_net:
+      wenet_network:
+    ports:
+      - ${TASK_MANAGER_API_PORT:-8082}:8080
 
-  database:
+  wenet_interaction_protocol_engine_database:
     image: mongo:4.2.3
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password}
       MONGO_INITDB_DATABASE: wenetInteractionProtocolEngineDB
-    networks:
-      wenet_interaction_protocol_engine_net:
     volumes:
       - ./initialize-wenetInteractionProtocolEngineDB.js:/docker-entrypoint-initdb.d/init-mongo.js
       - wenet_interaction_protocol_engine_data:/data/db
-
-  api:
-    build:
-      context: ../../../.
-      dockerfile: src/main/docker/Dockerfile
-    image: "wenet/interaction-protocol-engine"
-    depends_on:
-      - database
     networks:
-      wenet_interaction_protocol_engine_net:
-    ports:
-      - ${API_PORT:-80}:8080
+      wenet_network:
+
+  wenet_interaction_protocol_engine_api:
+    image: wenet/interaction-protocol-engine:0.9.0
+    depends_on:
+      - wenet_interaction_protocol_engine_database
+      - wenet_profile_manager_api
+      - wenet_task_manager_api
     environment:
-      DB_HOST: database
-      WENET_PROFILE_MANAGER_API_HOST: wenet_profile_manager_api
-      WENET_PROFILE_MANAGER_API_PORT: 8080
+      DB_HOST: wenet_interaction_protocol_engine_database
+      WENET_PROFILE_MANAGER_API_HOST: localhost
+      WENET_PROFILE_MANAGER_API_PORT: ${PROFILE_MANAGER_API_PORT:-8081}
       WENET_PROFILE_MANAGER_API_PATH: ""
-      WENET_TASK_MANAGER_API_HOST: wenet_task_manager_api
-      WENET_TASK_MANAGER_API_PORT: 8081
+      WENET_TASK_MANAGER_API_HOST: localhost
+      WENET_TASK_MANAGER_API_PORT: ${TASK_MANAGER_API_PORT:-8082}
       WENET_TASK_MANAGER_API_PATH: ""
-      WAIT_HOSTS: database:27017, wenet_profile_manager_api:8080, wenet_task_manager_api:8081
+      WAIT_HOSTS: wenet_interaction_protocol_engine_database:27017
+    networks:
+      wenet_network:
+    ports:
+      - ${INTERACTION_PROTOCOL_ENGINE_API_PORT:-8083}:8080
 
 volumes:
-    wenet_interaction_protocol_engine_data:
     wenet_profile_manager_data:
+    wenet_task_manager_data:
+    wenet_interaction_protocol_engine_data:
 
 networks:
-    wenet_interaction_protocol_engine_net:
+    wenet_network:
