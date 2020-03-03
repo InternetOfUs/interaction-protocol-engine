@@ -26,6 +26,8 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
+import java.util.List;
+
 import eu.internetofus.wenet_interaction_protocol_engine.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Community;
 import io.vertx.codegen.annotations.GenIgnore;
@@ -34,6 +36,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.serviceproxy.ServiceBinder;
@@ -216,5 +219,95 @@ public interface CommunitiesRepository {
 	 * @param deleteHandler handler to manage the delete result.
 	 */
 	void deleteCommunity(String id, Handler<AsyncResult<Void>> deleteHandler);
+
+	/**
+	 * Search for the communities that satisfy the query.
+	 *
+	 * @param name          of the communities to return or a Perl compatible
+	 *                      regular expressions (PCRE) that has to match the name of
+	 *                      the communities to return.
+	 * @param description   of the communities to return or a Perl compatible
+	 *                      regular expressions (PCRE) that has to match the
+	 *                      description of the communities to return.
+	 * @param keywords      of the communities to return or a Perl compatible
+	 *                      regular expressions (PCRE) that has to match the keyword
+	 *                      of the communities to return.
+	 * @param avatar        of the communities to return or a Perl compatible
+	 *                      regular expressions (PCRE) that has to match the avatar
+	 *                      of the communities to return.
+	 * @param sinceFrom     time stamp inclusive that mark the older limit in witch
+	 *                      the community has been created. It is the difference,
+	 *                      measured in milliseconds, between the time when the
+	 *                      profile has to be valid and midnight, January 1, 1970
+	 *                      UTC.
+	 * @param sinceTo       time stamp inclusive that mark the newest limit in witch
+	 *                      the community has been created. It is the difference,
+	 *                      measured in milliseconds, between the time when the
+	 *                      profile has not more valid and midnight, January 1, 1970
+	 *                      UTC.
+	 * @param offset        index of the first community to return.
+	 * @param limit         number maximum of communities to return.
+	 * @param searchHandler handler to manage the search.
+	 */
+	@GenIgnore
+	default void searchCommunityPageObject(String name, String description, List<String> keywords, String avatar,
+			Long sinceFrom, Long sinceTo, int offset, int limit, Handler<AsyncResult<JsonObject>> searchHandler) {
+
+		final JsonObject query = new JsonObject();
+		if (name != null) {
+
+			query.put("name", new JsonObject().put("$regex", name));
+		}
+
+		if (description != null) {
+
+			query.put("description", new JsonObject().put("$regex", description));
+		}
+
+		if (keywords != null && !keywords.isEmpty()) {
+
+			final JsonArray keywordsMatch = new JsonArray();
+			for (final String keyword : keywords) {
+
+				keywordsMatch.add(new JsonObject().put("$elemMatch", new JsonObject().put("$regex", keyword)));
+			}
+			query.put("keywords", new JsonObject().put("$all", keywordsMatch));
+		}
+
+		if (avatar != null) {
+
+			query.put("avatar", new JsonObject().put("$regex", avatar));
+		}
+
+		if (sinceFrom != null || sinceTo != null) {
+
+			final JsonObject restriction = new JsonObject();
+			if (sinceFrom != null) {
+
+				restriction.put("$gte", sinceFrom);
+
+			}
+			if (sinceTo != null) {
+
+				restriction.put("$lte", sinceTo);
+
+			}
+
+			query.put("sinceTime", restriction);
+
+		}
+		this.searchCommunityPageObject(query, offset, limit, searchHandler);
+	}
+
+	/**
+	 * Search for the communities that satisfy the query.
+	 *
+	 * @param query         that has to match the communities to search.
+	 * @param offset        index of the first community to return.
+	 * @param limit         number maximum of communities to return.
+	 * @param searchHandler handler to manage the search.
+	 */
+	void searchCommunityPageObject(JsonObject query, int offset, int limit,
+			Handler<AsyncResult<JsonObject>> searchHandler);
 
 }

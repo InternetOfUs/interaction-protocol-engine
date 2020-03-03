@@ -34,8 +34,7 @@ pages:
   image: maven:${MVN_VERSION}
   script:
     - mvn site post-site
-    - mkdir public
-    - cp -r target/site public
+    - mv target/site public
   artifacts:
     paths:
       - public 

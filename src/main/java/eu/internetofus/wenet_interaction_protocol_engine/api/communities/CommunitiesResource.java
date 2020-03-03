@@ -26,6 +26,9 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.communities;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.ws.rs.core.Response.Status;
 
 import org.tinylog.Logger;
@@ -37,6 +40,7 @@ import eu.internetofus.wenet_interaction_protocol_engine.persistence.Communities
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.OperationRequest;
 import io.vertx.ext.web.api.OperationResponse;
@@ -235,8 +239,42 @@ public class CommunitiesResource implements Communities {
 	public void retrieveCommunitiesPage(OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
 
 		final JsonObject params = context.getParams().getJsonObject("query", new JsonObject());
+		final int offset = params.getInteger("offset", 0);
+		final int limit = params.getInteger("limit", 10);
+		final String name = params.getString("name", null);
+		final String description = params.getString("description", null);
 
-		OperationReponseHandlers.responseOk(resultHandler, new CommunitiesPage());
+		final List<String> keywords = new ArrayList<>();
+		final JsonArray keywordValues = params.getJsonArray("keyword", null);
+		if (keywordValues != null) {
+
+			final int max = keywordValues.size();
+			for (int i = 0; i < max; i++) {
+
+				keywords.add(keywordValues.getString(i));
+			}
+
+		}
+
+		final String avatar = params.getString("avatar", null);
+		final Long sinceFrom = params.getLong("sinceFrom", null);
+		final Long sinceTo = params.getLong("sinceTo", null);
+
+		this.repository.searchCommunityPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
+				search -> {
+
+					if (search.failed()) {
+
+						final Throwable cause = search.cause();
+						Logger.debug(cause, "Cannot delete the community  {}.");
+						OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+
+					} else {
+
+						final JsonObject page = search.result();
+						OperationReponseHandlers.responseOk(resultHandler, page);
+					}
+				});
 
 	}
 

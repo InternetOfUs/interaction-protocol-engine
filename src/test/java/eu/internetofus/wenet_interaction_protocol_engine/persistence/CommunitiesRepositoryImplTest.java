@@ -31,6 +31,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,7 +65,7 @@ public class CommunitiesRepositoryImplTest extends CommunitiesRepositoryTestCase
 	 * @param pool that create the mongo connections.
 	 */
 	@BeforeEach
-	public void cerateRepository(MongoClient pool) {
+	public void createRepository(MongoClient pool) {
 
 		this.repository = new CommunitiesRepositoryImpl(pool);
 
@@ -147,6 +150,53 @@ public class CommunitiesRepositoryImplTest extends CommunitiesRepositoryTestCase
 				.forClass(Handler.class);
 		verify(this.repository.pool, times(1)).removeDocument(any(), any(), handler.capture());
 		handler.getValue().handle(Future.failedFuture("Internal error"));
+
+	}
+
+	/**
+	 * Check search communities fail because can not obtain the number of
+	 * communities that match.
+	 *
+	 * @param testContext test context.
+	 */
+	@Test
+	public void shouldSearchCommunityPageObjectFailedByMongoClientCount(VertxTestContext testContext) {
+
+		this.repository.pool = mock(MongoClient.class);
+
+		this.repository.searchCommunityPageObject(null, null, new ArrayList<>(), null, null, null, 0, 100,
+				testContext.failing(search -> {
+					testContext.completeNow();
+				}));
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<Long>>> handler = ArgumentCaptor.forClass(Handler.class);
+		verify(this.repository.pool, times(1)).count(any(), any(), handler.capture());
+		handler.getValue().handle(Future.failedFuture("Internal error"));
+
+	}
+
+	/**
+	 * Check search communities fail because can not find.
+	 *
+	 * @param testContext test context.
+	 */
+	@Test
+	public void shouldSearchCommunityPageObjectFailedByMongoClientFind(VertxTestContext testContext) {
+
+		this.repository.pool = mock(MongoClient.class);
+
+		this.repository.searchCommunityPageObject(null, null, new ArrayList<>(), null, null, null, 0, 100,
+				testContext.failing(search -> {
+					testContext.completeNow();
+				}));
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<Long>>> handler = ArgumentCaptor.forClass(Handler.class);
+		verify(this.repository.pool, times(1)).count(any(), any(), handler.capture());
+		handler.getValue().handle(Future.succeededFuture(100L));
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<List<JsonObject>>>> findHandler = ArgumentCaptor.forClass(Handler.class);
+		verify(this.repository.pool, times(1)).findWithOptions(any(), any(), any(), findHandler.capture());
+		findHandler.getValue().handle(Future.failedFuture("Internal error"));
 
 	}
 

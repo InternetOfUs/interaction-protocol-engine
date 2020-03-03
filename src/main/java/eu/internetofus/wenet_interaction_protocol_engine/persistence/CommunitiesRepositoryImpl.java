@@ -30,6 +30,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.mongo.UpdateOptions;
 
@@ -159,6 +160,52 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 			}
 		});
 
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void searchCommunityPageObject(JsonObject query, int offset, int limit,
+			Handler<AsyncResult<JsonObject>> searchHandler) {
+
+		this.pool.count(COMMUNITIES_COLLECTION, query, count -> {
+
+			if (count.failed()) {
+
+				searchHandler.handle(Future.failedFuture(count.cause()));
+
+			} else {
+
+				final long total = count.result().longValue();
+				final JsonObject page = new JsonObject().put("offset", offset).put("total", total);
+				if (total == 0 || offset >= total) {
+
+					searchHandler.handle(Future.succeededFuture(page));
+
+				} else {
+
+					final FindOptions options = new FindOptions();
+					options.setLimit(limit);
+					options.setSkip(offset);
+					this.pool.findWithOptions(COMMUNITIES_COLLECTION, query, options, find -> {
+
+						if (find.failed()) {
+
+							searchHandler.handle(Future.failedFuture(find.cause()));
+
+						} else {
+
+							page.put("communities", find.result());
+							searchHandler.handle(Future.succeededFuture(page));
+						}
+
+					});
+
+				}
+
+			}
+		});
 	}
 
 }

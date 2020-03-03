@@ -27,16 +27,22 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api.communities;
 
 import static eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension.Asserts.assertThatBodyIs;
+import static eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepositoryTestCase.createAndStoreSomeCommunitiesWithFakeSinceTime;
+import static eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepositoryTestCase.removeAllCommunities;
+import static io.vertx.junit5.web.TestRequest.queryParam;
 import static io.vertx.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response.Status;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.ErrorMessage;
@@ -44,6 +50,7 @@ import eu.internetofus.wenet_interaction_protocol_engine.persistence.Communities
 import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxTestContext;
 
@@ -660,6 +667,341 @@ public class CommunitiesIT {
 			}).sendJson(new JsonObject().put("_id", "Identifier"), testContext);
 		}));
 
+	}
+
+	/**
+	 * Verify that found some communities by its name.
+	 *
+	 * @param repository  that manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunitiesPage(io.vertx.ext.web.api.OperationRequest,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunitiesByName(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final Community community1 = new CommunityTest().createModelExample(1);
+		final String name = UUID.randomUUID().toString();
+		community1.name = name + " 1";
+		repository.storeCommunity(community1, testContext.succeeding(storedCommunity1 -> {
+
+			final Community community2 = new CommunityTest().createModelExample(2);
+			community2.name = name + " 1";
+			repository.storeCommunity(community2, testContext.succeeding(storedCommunity2 -> {
+
+				testRequest(client, HttpMethod.GET, Communities.PATH).with(queryParam("name", name)).expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunitiesPage page = assertThatBodyIs(CommunitiesPage.class, res);
+					assertThat(page.offset).isEqualTo(0);
+					assertThat(page.total).isEqualTo(2);
+					assertThat(page.communities).isNotEmpty().containsExactly(storedCommunity1, storedCommunity2);
+					testContext.completeNow();
+
+				}).send(testContext);
+			}));
+		}));
+	}
+
+	/**
+	 * Verify that found some communities by its description.
+	 *
+	 * @param repository  that manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunitiesPage(io.vertx.ext.web.api.OperationRequest,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunitiesByDescription(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final Community community1 = new CommunityTest().createModelExample(1);
+		final String description = UUID.randomUUID().toString();
+		community1.description += description;
+		repository.storeCommunity(community1, testContext.succeeding(storedCommunity1 -> {
+
+			final Community community2 = new CommunityTest().createModelExample(2);
+			community2.description = description + " " + community2.description;
+			repository.storeCommunity(community2, testContext.succeeding(storedCommunity2 -> {
+
+				testRequest(client, HttpMethod.GET, Communities.PATH)
+						.with(queryParam("description", description), queryParam("offset", "1")).expect(res -> {
+
+							assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+							final CommunitiesPage page = assertThatBodyIs(CommunitiesPage.class, res);
+							assertThat(page.offset).isEqualTo(1);
+							assertThat(page.total).isEqualTo(2);
+							assertThat(page.communities).isNotEmpty().containsExactly(storedCommunity2);
+							testContext.completeNow();
+
+						}).send(testContext);
+			}));
+		}));
+	}
+
+	/**
+	 * Verify that found some communities by a keyword.
+	 *
+	 * @param repository  that manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunitiesPage(io.vertx.ext.web.api.OperationRequest,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunitiesByAKeyword(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final Community community1 = new CommunityTest().createModelExample(1);
+		final String keyword = UUID.randomUUID().toString();
+		community1.keywords.add(keyword);
+		repository.storeCommunity(community1, testContext.succeeding(storedCommunity1 -> {
+
+			final Community community2 = new CommunityTest().createModelExample(2);
+			community2.keywords.add(keyword);
+			repository.storeCommunity(community2, testContext.succeeding(storedCommunity2 -> {
+
+				testRequest(client, HttpMethod.GET, Communities.PATH)
+						.with(queryParam("keyword", keyword), queryParam("limit", "1")).expect(res -> {
+
+							assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+							final CommunitiesPage page = assertThatBodyIs(CommunitiesPage.class, res);
+							assertThat(page.offset).isEqualTo(0);
+							assertThat(page.total).isEqualTo(2);
+							assertThat(page.communities).isNotEmpty().containsExactly(storedCommunity1);
+							testContext.completeNow();
+
+						}).send(testContext);
+			}));
+		}));
+	}
+
+	/**
+	 * Verify that found some communities by some keyword.
+	 *
+	 * @param repository  that manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunitiesPage(io.vertx.ext.web.api.OperationRequest,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunitiesBySomeKeyword(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final Community community1 = new CommunityTest().createModelExample(1);
+		final String keyword = UUID.randomUUID().toString();
+		community1.keywords.add(keyword);
+		repository.storeCommunity(community1, testContext.succeeding(storedCommunity1 -> {
+
+			final Community community2 = new CommunityTest().createModelExample(2);
+			community2.keywords.add(1, keyword);
+			repository.storeCommunity(community2, testContext.succeeding(storedCommunity2 -> {
+
+				final Community community3 = new CommunityTest().createModelExample(30);
+				community3.keywords.add(0, keyword);
+				repository.storeCommunity(community3, testContext.succeeding(storedCommunity3 -> {
+
+					testRequest(client, HttpMethod.GET, Communities.PATH)
+							.with(queryParam("keyword", keyword), queryParam("keyword", "keyword 1")).expect(res -> {
+
+								assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+								final CommunitiesPage page = assertThatBodyIs(CommunitiesPage.class, res);
+								assertThat(page.offset).isEqualTo(0);
+								assertThat(page.total).isEqualTo(2);
+								assertThat(page.communities).isNotEmpty().containsExactly(storedCommunity1, storedCommunity2);
+								testContext.completeNow();
+
+							}).send(testContext);
+				}));
+			}));
+		}));
+	}
+
+	/**
+	 * Verify that found some communities by its avatar.
+	 *
+	 * @param repository  that manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunitiesPage(io.vertx.ext.web.api.OperationRequest,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunitiesByAvatar(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final Community community1 = new CommunityTest().createModelExample(1);
+		final String avatar = "http://host.com/avatar_" + UUID.randomUUID().toString() + ".png";
+		community1.avatar = avatar;
+		repository.storeCommunity(community1, testContext.succeeding(storedCommunity1 -> {
+
+			final Community community2 = new CommunityTest().createModelExample(2);
+			community2.avatar = avatar;
+			repository.storeCommunity(community2, testContext.succeeding(storedCommunity2 -> {
+
+				testRequest(client, HttpMethod.GET, Communities.PATH).with(queryParam("avatar", avatar)).expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunitiesPage page = assertThatBodyIs(CommunitiesPage.class, res);
+					assertThat(page.offset).isEqualTo(0);
+					assertThat(page.total).isEqualTo(2);
+					assertThat(page.communities).isNotEmpty().containsExactly(storedCommunity1, storedCommunity2);
+					testContext.completeNow();
+
+				}).send(testContext);
+			}));
+		}));
+	}
+
+	/**
+	 * Verify that found some communities by its since from.
+	 *
+	 * @param pool        that create the mongo connections.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunitiesPage(io.vertx.ext.web.api.OperationRequest,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	@Execution(ExecutionMode.SAME_THREAD)
+	public void shouldFoundCommunitiesBySinceFrom(MongoClient pool, WebClient client, VertxTestContext testContext) {
+
+		removeAllCommunities(pool);
+		final List<Community> communities = createAndStoreSomeCommunitiesWithFakeSinceTime(pool, 23);
+
+		testRequest(client, HttpMethod.GET, Communities.PATH).with(queryParam("sinceFrom", "0"), queryParam("offset", "7"))
+				.expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunitiesPage page = assertThatBodyIs(CommunitiesPage.class, res);
+					assertThat(page.offset).isEqualTo(7);
+					assertThat(page.total).isEqualTo(23);
+					assertThat(page.communities).isEqualTo(communities.subList(7, 17));
+					testContext.completeNow();
+
+				}).send(testContext);
+	}
+
+	/**
+	 * Verify that found some communities by its since to.
+	 *
+	 * @param pool        that create the mongo connections.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunitiesPage(io.vertx.ext.web.api.OperationRequest,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	@Execution(ExecutionMode.SAME_THREAD)
+	public void shouldFoundCommunitiesBySinceTo(MongoClient pool, WebClient client, VertxTestContext testContext) {
+
+		removeAllCommunities(pool);
+		final List<Community> communities = createAndStoreSomeCommunitiesWithFakeSinceTime(pool, 23);
+
+		testRequest(client, HttpMethod.GET, Communities.PATH)
+				.with(queryParam("sinceTo", "10000000"), queryParam("limit", "7")).expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunitiesPage page = assertThatBodyIs(CommunitiesPage.class, res);
+					assertThat(page.offset).isEqualTo(0);
+					assertThat(page.total).isEqualTo(23);
+					assertThat(page.communities).isEqualTo(communities.subList(0, 7));
+					testContext.completeNow();
+
+				}).send(testContext);
+	}
+
+	/**
+	 * Verify that found some communities by its since range.
+	 *
+	 * @param pool        that create the mongo connections.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunitiesPage(io.vertx.ext.web.api.OperationRequest,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	@Execution(ExecutionMode.SAME_THREAD)
+	public void shouldFoundCommunitiesBySinceRange(MongoClient pool, WebClient client, VertxTestContext testContext) {
+
+		removeAllCommunities(pool);
+		final List<Community> communities = createAndStoreSomeCommunitiesWithFakeSinceTime(pool, 23);
+
+		testRequest(client, HttpMethod.GET, Communities.PATH).with(queryParam("sinceFrom", "700000"),
+				queryParam("sinceTo", "1300000"), queryParam("offset", "1"), queryParam("limit", "3")).expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunitiesPage page = assertThatBodyIs(CommunitiesPage.class, res);
+					assertThat(page.offset).isEqualTo(1);
+					assertThat(page.total).isEqualTo(7);
+					assertThat(page.communities).isEqualTo(communities.subList(8, 11));
+					testContext.completeNow();
+
+				}).send(testContext);
+	}
+
+	/**
+	 * Verify that found a community.
+	 *
+	 * @param repository  that manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunitiesPage(io.vertx.ext.web.api.OperationRequest,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotFoundCommunitiesBecausePatternIsNotValid(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		testRequest(client, HttpMethod.GET, Communities.PATH).with(queryParam("name", "a{12(")).expect(res -> {
+
+			assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+			final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+			assertThat(error.code).isNotEmpty();
+			assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+			testContext.completeNow();
+
+		}).send(testContext);
+	}
+
+	/**
+	 * Verify that return an empty community if any match.
+	 *
+	 * @param repository  that manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunitiesPage(io.vertx.ext.web.api.OperationRequest,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldEmptyPageIfAnyCommunityMatch(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		testRequest(client, HttpMethod.GET, Communities.PATH).with(queryParam("name", UUID.randomUUID().toString()))
+				.expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunitiesPage page = assertThatBodyIs(CommunitiesPage.class, res);
+					assertThat(page.offset).isEqualTo(0);
+					assertThat(page.total).isEqualTo(0);
+					assertThat(page.communities).isNull();
+					testContext.completeNow();
+
+				}).send(testContext);
 	}
 
 }

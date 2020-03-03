@@ -64,7 +64,7 @@ public class CommunityTest extends ModelTestCase<Community> {
 
 			model.keywords.add("keyword " + i);
 		}
-		model.avatar = "http://images.com/avatar" + index;
+		model.avatar = "http://images.com/avatar" + index + ".png";
 		model.sinceTime = 1571412479710l + index * 300000;
 
 		return model;

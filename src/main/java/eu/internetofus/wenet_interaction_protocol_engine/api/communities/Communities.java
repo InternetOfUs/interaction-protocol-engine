@@ -40,7 +40,7 @@ import eu.internetofus.wenet_interaction_protocol_engine.api.ErrorMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.enums.ParameterStyle;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -133,8 +133,7 @@ public interface Communities {
 			name = "keyword",
 			description = "The keyword of the communities to return or a Perl compatible regular expressions (PCRE) that has to match the keyword of the communities to return.",
 			required = false,
-			style = ParameterStyle.MATRIX,
-			schema = @Schema(type = "string", example = "(?i)key(?-i)word"))
+			array = @ArraySchema(schema = @Schema(type = "string", example = "(?i)key(?-i)word")))
 	@Parameter(
 			in = ParameterIn.QUERY,
 			name = "avatar",
@@ -169,6 +168,10 @@ public interface Communities {
 			responseCode = "200",
 			description = "The communities that match the patterns",
 			content = @Content(schema = @Schema(implementation = CommunitiesPage.class)))
+	@ApiResponse(
+			responseCode = "400",
+			description = "Bad request. For example if a pattern is not right",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
 	void retrieveCommunitiesPage(@Parameter(hidden = true, required = false) OperationRequest context,
 			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
 
