@@ -74,15 +74,8 @@ public interface WeNetProfileManagerService {
 	}
 
 	/**
-	 * Create a profile.
-	 *
-	 * @param profile       to create.
-	 * @param createHandler handler to manage the creation process.
-	 */
-	void createProfile(JsonObject profile, Handler<AsyncResult<JsonObject>> createHandler);
-
-	/**
-	 * Return a profile.
+	 * Return a profile. It is used to verify if the identifier of a WeNet user is
+	 * right.
 	 *
 	 * @param id              identifier of the profile to get.
 	 * @param retrieveHandler handler to manage the retrieve process.
@@ -90,7 +83,15 @@ public interface WeNetProfileManagerService {
 	void retrieveProfile(String id, Handler<AsyncResult<JsonObject>> retrieveHandler);
 
 	/**
-	 * Return a profile.
+	 * Create a profile. ATTENTION: this is used only for testing purposes.
+	 *
+	 * @param profile       to create.
+	 * @param createHandler handler to manage the creation process.
+	 */
+	void createProfile(JsonObject profile, Handler<AsyncResult<JsonObject>> createHandler);
+
+	/**
+	 * Return a profile. ATTENTION: this is used only for testing purposes.
 	 *
 	 * @param id            identifier of the profile to get.
 	 * @param deleteHandler handler to manage the delete process.
