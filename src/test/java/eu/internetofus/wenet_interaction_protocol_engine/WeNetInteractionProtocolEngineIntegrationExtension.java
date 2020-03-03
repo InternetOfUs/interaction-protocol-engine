@@ -122,7 +122,7 @@ public class WeNetInteractionProtocolEngineIntegrationExtension
 	/**
 	 * The name of the WeNet profile manager docker container to use.
 	 */
-	private static final String WENET_PROFILE_MANAGER_DOCKER_NAME = "wenet/profile-manager:0.10.0";
+	private static final String WENET_PROFILE_MANAGER_DOCKER_NAME = "wenet/profile-manager:0.11.0";
 
 	/**
 	 * The name of the WeNet profile manager used on the docker network.
@@ -142,7 +142,7 @@ public class WeNetInteractionProtocolEngineIntegrationExtension
 	/**
 	 * The name of the WeNet task manager docker container to use.
 	 */
-	private static final String WENET_TASK_MANAGER_DOCKER_NAME = "wenet/task-manager:0.2.0";
+	private static final String WENET_TASK_MANAGER_DOCKER_NAME = "wenet/task-manager:0.3.0";
 
 	/**
 	 * The name of the WeNet task manager used on the docker network.
