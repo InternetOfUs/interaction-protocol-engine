@@ -38,11 +38,6 @@ ARG WENET_TASK_MANAGER_API_HOST=${DEFAULT_WENET_TASK_MANAGER_API_HOST}
 ARG WENET_TASK_MANAGER_API_PORT=${DEFAULT_WENET_TASK_MANAGER_API_PORT}
 ARG WENET_TASK_MANAGER_API_PATH=${DEFAULT_WENET_TASK_MANAGER_API_PATH}
 ENV RUN_ARGS=""
-ENV RUN_API_PROPERTIES="-papi.host=${API_HOST} -papi.port=${API_PORT}"
-ENV RUN_PERSISTENCE_PROPERTIES="-ppersistence.db_name=${DB_NAME} -ppersistence.username=${DB_USER_NAME} -ppersistence.password=${DB_USER_PASSWORD}"
-ENV RUN_PROFILE_MANAGER_PROPERTIES="-pservice.profileManager.host=${WENET_PROFILE_MANAGER_API_HOST} -pservice.profileManager.port=${WENET_PROFILE_MANAGER_API_PORT} -pservice.profileManager.apiPath=${WENET_PROFILE_MANAGER_API_PATH}"
-ENV RUN_TASK_MANAGER_PROPERTIES="-pservice.taskManager.host=${WENET_TASK_MANAGER_API_HOST} -pservice.taskManager.port=${WENET_TASK_MANAGER_API_PORT} -pservice.taskManager.apiPath=${WENET_TASK_MANAGER_API_PATH}"
-ENV RUN_PROPERTIES="${RUN_API_PROPERTIES} ${RUN_PERSISTENCE_PROPERTIES} ${RUN_PROFILE_MANAGER_PROPERTIES} ${RUN_TASK_MANAGER_PROPERTIES}"
 
 # Create running dierectories
 RUN mkdir -p /usr/wenet/interaction-protocol-engine/lib
@@ -68,4 +63,9 @@ ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait
 RUN chmod +x /wait
 
 EXPOSE ${API_PORT}
-CMD /wait && java -jar wenet-interaction-protocol-engine.jar -c etc ${RUN_PROPERTIES} ${RUN_ARGS}
+CMD /wait && java -jar wenet-task-manager.jar -c etc \
+  -papi.host=${API_HOST} -papi.port=${API_PORT}\
+  -ppersistence.host=${DB_HOST} -ppersistence.port=${DB_PORT} -ppersistence.db_name=${DB_NAME} -ppersistence.username=${DB_USER_NAME} -ppersistence.password=${DB_USER_PASSWORD}\
+  -pservice.profileManager.host=${WENET_PROFILE_MANAGER_API_HOST} -pservice.profileManager.port=${WENET_PROFILE_MANAGER_API_PORT} -pservice.profileManager.apiPath=${WENET_PROFILE_MANAGER_API_PATH}\
+  -pservice.taskManager.host=${WENET_PROFILE_MANAGER_API_HOST} -pservice.taskManager.port=${WENET_PROFILE_MANAGER_API_PORT} -pservice.taskManager.apiPath=${WENET_PROFILE_MANAGER_API_PATH}\
+  ${RUN_ARGS}

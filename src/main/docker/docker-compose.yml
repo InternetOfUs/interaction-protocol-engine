@@ -15,6 +15,7 @@ services:
 
   wenet_profile_manager_api:
     image: wenet/profile-manager:0.11.0
+    restart: always
     depends_on:
       - wenet_profile_manager_database
     environment:
@@ -40,6 +41,7 @@ services:
 
   wenet_task_manager_api:
     image: wenet/task-manager:0.3.0
+    restart: always
     depends_on:
       - wenet_task_manager_database
       - wenet_profile_manager_api
@@ -56,6 +58,7 @@ services:
 
   wenet_interaction_protocol_engine_database:
     image: mongo:4.2.3
+    restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password}
@@ -68,6 +71,7 @@ services:
 
   wenet_interaction_protocol_engine_api:
     image: wenet/interaction-protocol-engine:0.9.0
+    restart: always
     depends_on:
       - wenet_interaction_protocol_engine_database
       - wenet_profile_manager_api
