@@ -475,7 +475,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = null;
 		final int offset = 0;
 		final int limit = 100;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
@@ -512,7 +512,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = null;
 		final int offset = 5;
 		final int limit = 10;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
@@ -549,7 +549,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = null;
 		final int offset = 0;
 		final int limit = 100;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
@@ -586,7 +586,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = null;
 		final int offset = 0;
 		final int limit = 100;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
@@ -625,7 +625,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = null;
 		final int offset = 0;
 		final int limit = 100;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
@@ -663,7 +663,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = null;
 		final int offset = 0;
 		final int limit = 100;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
@@ -700,7 +700,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = null;
 		final int offset = 0;
 		final int limit = 100;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
@@ -788,7 +788,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = null;
 		final int offset = 0;
 		final int limit = 100;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
@@ -824,7 +824,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = 1500000l;
 		final int offset = 0;
 		final int limit = 100;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
@@ -860,7 +860,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = 1800000l;
 		final int offset = 0;
 		final int limit = 100;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
@@ -897,7 +897,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = 1800000l;
 		final int offset = 1;
 		final int limit = 2;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
@@ -931,7 +931,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = null;
 		final int offset = 0;
 		final int limit = 100;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
@@ -966,7 +966,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 		final Long sinceTo = null;
 		final int offset = 3;
 		final int limit = 100;
-		CommunitiesRepositoryTestCase.this.repository.searchCommunityPageObject(name, description, keywords, avatar,
+		CommunitiesRepositoryTestCase.this.repository.searchCommunitiesPageObject(name, description, keywords, avatar,
 				sinceFrom, sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(() -> {
 
 					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);

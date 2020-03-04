@@ -260,13 +260,13 @@ public class CommunitiesResource implements Communities {
 		final Long sinceFrom = params.getLong("sinceFrom", null);
 		final Long sinceTo = params.getLong("sinceTo", null);
 
-		this.repository.searchCommunityPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
+		this.repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
 				search -> {
 
 					if (search.failed()) {
 
 						final Throwable cause = search.cause();
-						Logger.debug(cause, "Cannot delete the community  {}.");
+						Logger.debug(cause, "Cannot found communities.");
 						OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
 					} else {
@@ -296,8 +296,20 @@ public class CommunitiesResource implements Communities {
 	public void deleteCommunityMember(String communityId, String userId, OperationRequest context,
 			Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		// TODO Auto-generated method stub
+		this.repository.deleteCommunityMember(communityId, userId, delete -> {
 
+			if (delete.failed()) {
+
+				final Throwable cause = delete.cause();
+				Logger.debug(cause, "Cannot delete the user {} from the community {}.", userId, communityId);
+				OperationReponseHandlers.responseFailedWith(resultHandler, Status.NOT_FOUND, cause);
+
+			} else {
+
+				OperationReponseHandlers.responseOk(resultHandler);
+			}
+
+		});
 	}
 
 	/**
@@ -307,7 +319,21 @@ public class CommunitiesResource implements Communities {
 	public void retrieveCommunityMember(String communityId, String userId, OperationRequest context,
 			Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		// TODO Auto-generated method stub
+		this.repository.searchCommunityMemberObject(communityId, userId, search -> {
+
+			final JsonObject member = search.result();
+			if (member == null) {
+
+				Logger.debug(search.cause(), "The user {} is not a member of the community {}", userId, communityId);
+				OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND, "not_found_community_member",
+						"The user '" + userId + "' is not a member of the community '" + communityId + "'.");
+
+			} else {
+
+				OperationReponseHandlers.responseOk(resultHandler, member);
+
+			}
+		});
 
 	}
 
@@ -318,7 +344,26 @@ public class CommunitiesResource implements Communities {
 	public void retrieveCommunityMembersPage(String communityId, OperationRequest context,
 			Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		// TODO Auto-generated method stub
+		final JsonObject params = context.getParams().getJsonObject("query", new JsonObject());
+		final int offset = params.getInteger("offset", 0);
+		final int limit = params.getInteger("limit", 10);
+		final Long sinceFrom = params.getLong("sinceFrom", null);
+		final Long sinceTo = params.getLong("sinceTo", null);
+
+		this.repository.searchCommunityMembersPageObject(communityId, sinceFrom, sinceTo, offset, limit, search -> {
+
+			if (search.failed()) {
+
+				final Throwable cause = search.cause();
+				Logger.debug(cause, "Cannot found the members of the community {}.", communityId);
+				OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+
+			} else {
+
+				final JsonObject page = search.result();
+				OperationReponseHandlers.responseOk(resultHandler, page);
+			}
+		});
 
 	}
 

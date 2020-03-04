@@ -249,7 +249,7 @@ public interface CommunitiesRepository {
 	 * @param searchHandler handler to manage the search.
 	 */
 	@GenIgnore
-	default void searchCommunityPageObject(String name, String description, List<String> keywords, String avatar,
+	default void searchCommunitiesPageObject(String name, String description, List<String> keywords, String avatar,
 			Long sinceFrom, Long sinceTo, int offset, int limit, Handler<AsyncResult<JsonObject>> searchHandler) {
 
 		final JsonObject query = new JsonObject();

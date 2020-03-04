@@ -44,6 +44,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
+import eu.internetofus.wenet_interaction_protocol_engine.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.ErrorMessage;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
@@ -1002,6 +1003,332 @@ public class CommunitiesIT {
 					testContext.completeNow();
 
 				}).send(testContext);
+	}
+
+	/**
+	 * Verify that return error when search an undefined community member.
+	 *
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotRetrieveCommunityMemberWithAnUndefinedCommunityId(WebClient client,
+			VertxTestContext testContext) {
+
+		testRequest(client, HttpMethod.GET,
+				Communities.PATH + "/undefined-community-identifier" + Communities.MEMBERS_PATH + "/undefined-user-id")
+						.expect(res -> {
+
+							assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
+							final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+							assertThat(error.code).isNotEmpty();
+							assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+							testContext.completeNow();
+
+						}).send(testContext);
+	}
+
+	/**
+	 * Verify that return error when search an undefined community member.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityMember(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final CommunityMember member = new CommunityMember();
+		member.userId = UUID.randomUUID().toString();
+		repository.storeCommunityMember(communityId, member, testContext.succeeding(stored -> {
+
+			testRequest(client, HttpMethod.GET,
+					Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH + "/" + stored.userId).expect(res -> {
+
+						assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+						final CommunityMember found = assertThatBodyIs(CommunityMember.class, res);
+						assertThat(found).isEqualTo(stored);
+						testContext.completeNow();
+
+					}).send(testContext);
+
+		}));
+	}
+
+	/**
+	 * Verify that return error when delete an undefined community member.
+	 *
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#deleteCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotDeleteCommunityMemberWithAnUndefinedCommunityId(WebClient client, VertxTestContext testContext) {
+
+		testRequest(client, HttpMethod.DELETE,
+				Communities.PATH + "/undefined-community-identifier" + Communities.MEMBERS_PATH + "/undefined-user-id")
+						.expect(res -> {
+
+							assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
+							final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+							assertThat(error.code).isNotEmpty();
+							assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+							testContext.completeNow();
+
+						}).send(testContext);
+	}
+
+	/**
+	 * Verify that return error when delete an undefined community member.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#deleteCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldDeleteCommunityMember(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final CommunityMember member = new CommunityMember();
+		member.userId = UUID.randomUUID().toString();
+		repository.storeCommunityMember(communityId, member, testContext.succeeding(stored -> {
+
+			testRequest(client, HttpMethod.DELETE,
+					Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH + "/" + stored.userId).expect(res -> {
+
+						assertThat(res.statusCode()).isEqualTo(Status.NO_CONTENT.getStatusCode());
+						testContext.completeNow();
+
+					}).send(testContext);
+
+		}));
+	}
+
+	/**
+	 * Verify that return an empty page if not members are defined.
+	 *
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveEmptyCommunityMembersPage(WebClient client, VertxTestContext testContext) {
+
+		testRequest(client, HttpMethod.GET, Communities.PATH + "/undefined-community-identifier" + Communities.MEMBERS_PATH)
+				.expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunityMembersPage page = assertThatBodyIs(CommunityMembersPage.class, res);
+					assertThat(page).isNotNull();
+					assertThat(page.total).isEqualTo(0l);
+					testContext.completeNow();
+
+				}).send(testContext);
+	}
+
+	/**
+	 * Verify that return an page with some members.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityMembersPage(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", UUID.randomUUID().toString()),
+				testContext.succeeding(stored1 -> {
+
+					repository.storeCommunityMemberObject(communityId,
+							new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored2 -> {
+
+								repository.storeCommunityMemberObject(communityId,
+										new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored3 -> {
+
+											testRequest(client, HttpMethod.GET,
+													Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH).expect(res -> {
+
+														assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+														final CommunityMembersPage page = assertThatBodyIs(CommunityMembersPage.class, res);
+														assertThat(page).isNotNull();
+														assertThat(page.offset).isEqualTo(0l);
+														assertThat(page.total).isEqualTo(3l);
+														assertThat(page.members).isNotEmpty().hasSize(3).containsExactly(
+																Model.fromJsonObject(stored1, CommunityMember.class),
+																Model.fromJsonObject(stored2, CommunityMember.class),
+																Model.fromJsonObject(stored3, CommunityMember.class));
+														testContext.completeNow();
+
+													}).send(testContext);
+
+										}));
+							}));
+
+				}));
+	}
+
+	/**
+	 * Verify that return an page with some members with an offset.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityMembersPageWithAnOffset(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", UUID.randomUUID().toString()),
+				testContext.succeeding(stored1 -> {
+
+					repository.storeCommunityMemberObject(communityId,
+							new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored2 -> {
+
+								repository.storeCommunityMemberObject(communityId,
+										new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored3 -> {
+
+											testRequest(client, HttpMethod.GET,
+													Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
+															.with(queryParam("offset", "2")).expect(res -> {
+
+																assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+																final CommunityMembersPage page = assertThatBodyIs(CommunityMembersPage.class, res);
+																assertThat(page).isNotNull();
+																assertThat(page.offset).isEqualTo(2l);
+																assertThat(page.total).isEqualTo(3l);
+																assertThat(page.members).isNotEmpty().hasSize(1)
+																		.containsExactly(Model.fromJsonObject(stored3, CommunityMember.class));
+																testContext.completeNow();
+
+															}).send(testContext);
+
+										}));
+							}));
+
+				}));
+	}
+
+	/**
+	 * Verify that return an page with some members with a limit.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityMembersPageWithALimit(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", UUID.randomUUID().toString()),
+				testContext.succeeding(stored1 -> {
+
+					repository.storeCommunityMemberObject(communityId,
+							new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored2 -> {
+
+								repository.storeCommunityMemberObject(communityId,
+										new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored3 -> {
+
+											testRequest(client, HttpMethod.GET,
+													Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
+															.with(queryParam("limit", "2")).expect(res -> {
+
+																assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+																final CommunityMembersPage page = assertThatBodyIs(CommunityMembersPage.class, res);
+																assertThat(page).isNotNull();
+																assertThat(page.offset).isEqualTo(0l);
+																assertThat(page.total).isEqualTo(3l);
+																assertThat(page.members).isNotEmpty().hasSize(1).containsExactly(
+																		Model.fromJsonObject(stored1, CommunityMember.class),
+																		Model.fromJsonObject(stored2, CommunityMember.class));
+																testContext.completeNow();
+
+															}).send(testContext);
+
+										}));
+							}));
+
+				}));
+	}
+
+	/**
+	 * Verify that return an page with some members with an offset and a limit.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityMembersPageWithOffsetAndLimit(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", UUID.randomUUID().toString()),
+				testContext.succeeding(stored1 -> {
+
+					repository.storeCommunityMemberObject(communityId,
+							new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored2 -> {
+
+								repository.storeCommunityMemberObject(communityId,
+										new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored3 -> {
+
+											repository.storeCommunityMemberObject(communityId,
+													new JsonObject().put("userId", UUID.randomUUID().toString()),
+													testContext.succeeding(stored4 -> {
+
+														testRequest(client, HttpMethod.GET,
+																Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
+																		.with(queryParam("offset", "1"), queryParam("limit", "2")).expect(res -> {
+
+																			assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+																			final CommunityMembersPage page = assertThatBodyIs(CommunityMembersPage.class,
+																					res);
+																			assertThat(page).isNotNull();
+																			assertThat(page.offset).isEqualTo(1l);
+																			assertThat(page.total).isEqualTo(4l);
+																			assertThat(page.members).isNotEmpty().hasSize(1).containsExactly(
+																					Model.fromJsonObject(stored2, CommunityMember.class),
+																					Model.fromJsonObject(stored3, CommunityMember.class));
+																			testContext.completeNow();
+
+																		}).send(testContext);
+
+													}));
+										}));
+							}));
+
+				}));
 	}
 
 }
