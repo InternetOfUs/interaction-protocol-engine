@@ -79,6 +79,11 @@ public interface Communities {
 	String COMMUNITY_ID_PATH = "/{communityId}";
 
 	/**
+	 * The path to the users of a community.
+	 */
+	String MEMBERS_PATH = "/members";
+
+	/**
 	 * Called when want to create a community.
 	 *
 	 * @param body          the new community to create.
@@ -261,6 +266,158 @@ public interface Communities {
 	void deleteCommunity(
 			@PathParam("communityId") @Parameter(
 					description = "The identifier of the community to delete") String communityId,
+			@Parameter(hidden = true, required = false) OperationRequest context,
+			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+
+	/**
+	 * Called when want to add an user into a community.
+	 *
+	 * @param communityId   identifier of the community to add the member.
+	 * @param body          the new member of the community.
+	 * @param context       of the request.
+	 * @param resultHandler to inform of the response.
+	 */
+	@POST
+	@Path(COMMUNITY_ID_PATH + MEMBERS_PATH)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(
+			summary = "Add an user into a community",
+			description = "Join or add an user to be a member of a community.")
+	@RequestBody(
+			description = "Member to add into the community",
+			required = true,
+			content = @Content(schema = @Schema(implementation = Community.class)))
+	@ApiResponse(
+			responseCode = "200",
+			description = "The new member of the community",
+			content = @Content(schema = @Schema(implementation = Community.class)))
+	@ApiResponse(
+			responseCode = "400",
+			description = "Bad community member",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+	@ApiResponse(
+			responseCode = "404",
+			description = "Not found community",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+	void createCommunityMember(
+			@PathParam("communityId") @Parameter(
+					description = "The identifier of the community to add the member") String communityId,
+			@Parameter(hidden = true, required = false) JsonObject body,
+			@Parameter(hidden = true, required = false) OperationRequest context,
+			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+
+	/**
+	 * Called when want to add an user into a community.
+	 *
+	 * @param communityId   identifier of the community to remove the member.
+	 * @param userId        identifier of the user to remove as member of the
+	 *                      community.
+	 * @param context       of the request.
+	 * @param resultHandler to inform of the response.
+	 */
+	@DELETE
+	@Path(COMMUNITY_ID_PATH + MEMBERS_PATH + "/{userId}")
+	@Operation(
+			summary = "Remove an user from a community",
+			description = "You can use this method to leave or remove an user from a community.")
+	@ApiResponse(responseCode = "204", description = "The user has removed as member of the community")
+	@ApiResponse(
+			responseCode = "404",
+			description = "Not found community or user",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+	void deleteCommunityMember(
+			@PathParam("communityId") @Parameter(
+					description = "The identifier of the community to delete the member") String communityId,
+			@PathParam("userId") @Parameter(
+					description = "The identifier of the user to remove as member of the community") String userId,
+			@Parameter(hidden = true, required = false) OperationRequest context,
+			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+
+	/**
+	 * Called when want to get the information of an user in a community.
+	 *
+	 * @param communityId   identifier of the community to get the member
+	 *                      information.
+	 * @param userId        identifier of the user to get its membership
+	 *                      information.
+	 * @param context       of the request.
+	 * @param resultHandler to inform of the response.
+	 */
+	@GET
+	@Path(COMMUNITY_ID_PATH + MEMBERS_PATH + "/{userId}")
+	@Operation(
+			summary = "Get the community member information of an user.",
+			description = "You can use this method to obtain the membership information of an user in a community.")
+	@ApiResponse(
+			responseCode = "200",
+			description = "The member of the community",
+			content = @Content(schema = @Schema(implementation = Community.class)))
+	@ApiResponse(
+			responseCode = "404",
+			description = "Not found community or user",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+	void retrieveCommunityMember(
+			@PathParam("communityId") @Parameter(
+					description = "The identifier of the community to get the member information") String communityId,
+			@PathParam("userId") @Parameter(
+					description = "The identifier of the user to get its membership information in the community") String userId,
+			@Parameter(hidden = true, required = false) OperationRequest context,
+			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+
+	/**
+	 * Called when want to get the information of all the user that are in a
+	 * community.
+	 *
+	 * @param communityId   identifier of the community to get the members
+	 *                      information.
+	 * @param context       of the request.
+	 * @param resultHandler to inform of the response.
+	 */
+	@GET
+	@Path(COMMUNITY_ID_PATH + MEMBERS_PATH)
+	@Operation(
+			summary = "Get the members of a community.",
+			description = "You can use this method to obtain the member that are in a community.")
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "joinFrom",
+			description = "The time stamp inclusive that mark the older limit in witch the community member has joined. It is the difference, measured in seconds, between the time when the member has joined into the community and midnight, January 1, 1970 UTC.",
+			required = false,
+			schema = @Schema(type = "integer", defaultValue = "0", example = "1457166440"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "joinTo",
+			description = "The time stamp inclusive that mark the newest limit in witch the community member has joined. It is the difference, measured in seconds, between the time when the member has joined into the community and midnight, January 1, 1970 UTC.",
+			required = false,
+			schema = @Schema(type = "integer", defaultValue = "92233720368547757", example = "1571664406"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "offset",
+			description = "Index of the first community member to return.",
+			required = false,
+			schema = @Schema(type = "integer", defaultValue = "0", example = "10"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "limit",
+			description = "Number maximum of community members to return.",
+			required = false,
+			schema = @Schema(type = "integer", defaultValue = "10", example = "100"))
+	@ApiResponse(
+			responseCode = "200",
+			description = "The members of the community that match the pattern",
+			content = @Content(schema = @Schema(implementation = CommunityMembersPage.class)))
+	@ApiResponse(
+			responseCode = "400",
+			description = "Bad request. For example if a pattern is not right",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+	@ApiResponse(
+			responseCode = "404",
+			description = "Not found community",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+	void retrieveCommunityMembersPage(
+			@PathParam("communityId") @Parameter(
+					description = "The identifier of the community to get the member information") String communityId,
 			@Parameter(hidden = true, required = false) OperationRequest context,
 			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
 

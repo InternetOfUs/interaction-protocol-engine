@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,10 @@ import eu.internetofus.wenet_interaction_protocol_engine.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunitiesPage;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Community;
+import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityMember;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityTest;
+import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.junit5.VertxTestContext;
@@ -972,6 +976,411 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 
 					testContext.completeNow();
 				})));
+
+	}
+
+	/**
+	 * Verify that can not found a community member.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityMember(String, String,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotFoundCommunityMember(VertxTestContext testContext) {
+
+		this.repository.searchCommunityMember("undefined community identifier", "undefined user id",
+				testContext.failing(failed -> {
+					testContext.completeNow();
+				}));
+
+	}
+
+	/**
+	 * Verify that can found a community member.
+	 *
+	 *
+	 * @param profileManager service to manage profile managers.
+	 * @param testContext    context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityMember(String, String,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityMember(WeNetProfileManagerService profileManager, VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final CommunityMember member = new CommunityMember();
+		member.userId = UUID.randomUUID().toString();
+		final long now = TimeManager.now();
+		this.repository.storeCommunityMember(communityId, member, testContext.succeeding(storedMember -> {
+			this.repository.searchCommunityMember(communityId, member.userId,
+					testContext.succeeding(foundCommunity -> testContext.verify(() -> {
+						final CommunityMember expectedMember = new CommunityMember();
+						expectedMember.userId = member.userId;
+						expectedMember.joinTime = foundCommunity.joinTime;
+						assertThat(foundCommunity).isEqualTo(expectedMember);
+						assertThat(foundCommunity.joinTime).isGreaterThanOrEqualTo(now);
+						testContext.completeNow();
+					})));
+		}));
+
+	}
+
+	/**
+	 * Verify that can found a community member object.
+	 *
+	 *
+	 * @param profileManager service to manage profile managers.
+	 * @param testContext    context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityMemberObject(String, String,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityMemberObject(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final String userId = UUID.randomUUID().toString();
+		final long now = TimeManager.now();
+		this.repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", userId),
+				testContext.succeeding(storedMember -> {
+					this.repository.searchCommunityMemberObject(communityId, userId,
+							testContext.succeeding(foundCommunity -> testContext.verify(() -> {
+								assertThat(foundCommunity).isNotNull();
+								assertThat(foundCommunity.getString("userId")).isEqualTo(userId);
+								assertThat(foundCommunity.getLong("joinTime")).isGreaterThanOrEqualTo(now);
+								testContext.completeNow();
+							})));
+				}));
+
+	}
+
+	/**
+	 * Verify that can not store a community member that can not be an object.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotStoreACommunityMemberThatCanNotBeAnObject(VertxTestContext testContext) {
+
+		final CommunityMember communityMember = new CommunityMember() {
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public JsonObject toJsonObject() {
+
+				return null;
+			}
+		};
+		this.repository.storeCommunityMember("communityId", communityMember, testContext.failing(failed -> {
+			testContext.completeNow();
+		}));
+
+	}
+
+	/**
+	 * Verify that can store a community member.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityMember(String,String,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldStoreCommunityMember(VertxTestContext testContext) {
+
+		final long now = TimeManager.now();
+		final CommunityMember communityMember = new CommunityMember();
+		this.repository.storeCommunityMember("communityId", communityMember,
+				testContext.succeeding(storedCommunityMember -> testContext.verify(() -> {
+
+					assertThat(storedCommunityMember).isNotNull();
+					assertThat(storedCommunityMember.joinTime).isGreaterThanOrEqualTo(now);
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Verify that can store a community member object.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#storeCommunityMemberObject(String,JsonObject,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldStoreCommunityMemberObject(VertxTestContext testContext) {
+
+		final long now = TimeManager.now();
+		this.repository.storeCommunityMemberObject("communityId", new JsonObject(),
+				testContext.succeeding(storedCommunityMember -> testContext.verify(() -> {
+
+					assertThat(storedCommunityMember).isNotNull();
+					assertThat(storedCommunityMember.getLong("joinTime", 0l)).isNotEqualTo(0).isGreaterThanOrEqualTo(now);
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Verify that can not update a community member if it is not defined.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotUpdateUndefinedCommunityMember(VertxTestContext testContext) {
+
+		final CommunityMember communityMember = new CommunityMember();
+		communityMember.userId = "undefined community member identifier";
+		this.repository.updateCommunityMember("communityId", communityMember, testContext.failing(failed -> {
+			testContext.completeNow();
+		}));
+
+	}
+
+	/**
+	 * Verify that can not update a community member if it is not defined.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#updateCommunityMemberObject(String,JsonObject,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotUpdateUndefinedCommunityMemberObject(VertxTestContext testContext) {
+
+		final JsonObject communityMember = new JsonObject().put("userId", "undefined community member identifier");
+		this.repository.updateCommunityMemberObject("communityId", communityMember, testContext.failing(failed -> {
+			testContext.completeNow();
+		}));
+
+	}
+
+	/**
+	 * Verify that can not update a community member if it is not defined.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotUpdateACommunityMemberThatCanNotBeAnObject(VertxTestContext testContext) {
+
+		final CommunityMember communityMember = new CommunityMember() {
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public JsonObject toJsonObject() {
+
+				return null;
+			}
+		};
+		communityMember.userId = "undefined community member identifier";
+		this.repository.updateCommunityMember("communityId", communityMember, testContext.failing(failed -> {
+			testContext.completeNow();
+		}));
+
+	}
+
+	/**
+	 * Verify that update a community member.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldUpdateACommunityMember(VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final CommunityMember communityMember = new CommunityMember();
+		communityMember.userId = UUID.randomUUID().toString();
+		this.repository.storeCommunityMember(communityId, communityMember, testContext.succeeding(stored -> {
+
+			final CommunityMember member = new CommunityMember();
+			member.userId = communityMember.userId;
+			this.repository.updateCommunityMember(communityId, member, testContext.succeeding(update -> {
+				testContext.completeNow();
+			}));
+
+		}));
+
+	}
+
+	/**
+	 * Verify that delete a community member.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldDeleteCommunityMember(VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final CommunityMember communityMember = new CommunityMember();
+		final String userId = UUID.randomUUID().toString();
+		communityMember.userId = userId;
+		this.repository.storeCommunityMember(communityId, communityMember, testContext.succeeding(stored -> {
+
+			this.repository.deleteCommunityMember(communityId, userId, testContext.succeeding(delete -> {
+
+				this.repository.searchCommunityMember(communityId, userId, testContext.failing(search -> {
+					testContext.completeNow();
+				}));
+
+			}));
+		}));
+
+	}
+
+	/**
+	 * Verify that found an empty community member page.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundEmptyCommunityMemberPage(VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final CommunityMember communityMember = new CommunityMember();
+		final String userId = UUID.randomUUID().toString();
+		communityMember.userId = userId;
+		this.repository.searchCommunityMembersPageObject(communityId, null, null, 0, 100,
+				testContext.succeeding(page -> testContext.verify(() -> {
+
+					assertThat(page.getLong("offset")).isEqualTo(0L);
+					assertThat(page.getLong("total")).isEqualTo(0L);
+					assertThat(page.getJsonArray("members")).isNull();
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Verify that found some community user members.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityMemberPage(VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		this.repository.storeCommunityMemberObject(communityId,
+				new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored1 -> {
+
+					this.repository.storeCommunityMemberObject(communityId,
+							new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored2 -> {
+
+								this.repository.searchCommunityMembersPageObject(communityId, null, null, 0, 100,
+										testContext.succeeding(page -> testContext.verify(() -> {
+
+											assertThat(page.getLong("offset")).isEqualTo(0L);
+											assertThat(page.getLong("total")).isEqualTo(2L);
+											final JsonArray members = page.getJsonArray("members");
+											assertThat(members.size()).isEqualTo(2);
+											assertThat(members.getJsonObject(0).getString("userId")).isEqualTo(stored1.getString("userId"));
+											assertThat(members.getJsonObject(1).getString("userId")).isEqualTo(stored2.getString("userId"));
+											testContext.completeNow();
+										})));
+
+							}));
+				}));
+
+	}
+
+	/**
+	 * Verify that found some community user members with a join from.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityMemberPageWithJoinFrom(VertxTestContext testContext) {
+
+		final long now = TimeManager.now();
+		final String communityId = UUID.randomUUID().toString();
+		this.repository.storeCommunityMemberObject(communityId,
+				new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored1 -> {
+
+					this.repository.storeCommunityMemberObject(communityId,
+							new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored2 -> {
+
+								this.repository.searchCommunityMembersPageObject(communityId, now, null, 0, 100,
+										testContext.succeeding(page -> testContext.verify(() -> {
+
+											assertThat(page.getLong("offset")).isEqualTo(0L);
+											assertThat(page.getLong("total")).isEqualTo(2L);
+											final JsonArray members = page.getJsonArray("members");
+											assertThat(members.size()).isEqualTo(2);
+											assertThat(members.getJsonObject(0).getString("userId")).isEqualTo(stored1.getString("userId"));
+											assertThat(members.getJsonObject(1).getString("userId")).isEqualTo(stored2.getString("userId"));
+											testContext.completeNow();
+										})));
+
+							}));
+				}));
+
+	}
+
+	/**
+	 * Verify that found some community user members with a join to.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityMemberPageWithJoinTo(VertxTestContext testContext) {
+
+		final long now = TimeManager.now();
+		final String communityId = UUID.randomUUID().toString();
+		this.repository.storeCommunityMemberObject(communityId,
+				new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored1 -> {
+
+					this.repository.storeCommunityMemberObject(communityId,
+							new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored2 -> {
+
+								this.repository.searchCommunityMembersPageObject(communityId, null, now + 1, 0, 100,
+										testContext.succeeding(page -> testContext.verify(() -> {
+
+											assertThat(page.getLong("offset")).isEqualTo(0L);
+											assertThat(page.getLong("total")).isEqualTo(2L);
+											final JsonArray members = page.getJsonArray("members");
+											assertThat(members.size()).isEqualTo(2);
+											assertThat(members.getJsonObject(0).getString("userId")).isEqualTo(stored1.getString("userId"));
+											assertThat(members.getJsonObject(1).getString("userId")).isEqualTo(stored2.getString("userId"));
+											testContext.completeNow();
+										})));
+
+							}));
+				}));
 
 	}
 

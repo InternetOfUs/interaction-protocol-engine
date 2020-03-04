@@ -26,38 +26,31 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.communities;
 
-import java.util.List;
+import java.util.ArrayList;
 
-import eu.internetofus.wenet_interaction_protocol_engine.Model;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Schema;
+import eu.internetofus.wenet_interaction_protocol_engine.ModelTestCase;
 
 /**
- * Page of communities obtained after a search.
+ * Test the {@link CommunityMembersPage}.
+ *
+ * @see CommunityMembersPage
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@Schema(description = "Contains some communities that have been found")
-public class CommunitiesPage extends Model {
+public class CommunityMemberPageTest extends ModelTestCase<CommunityMembersPage> {
 
 	/**
-	 * The index of the first community returned.
+	 * {@inheritDoc}
 	 */
-	@Schema(description = "The index of the first community returned.", example = "0")
-	public int offset;
+	@Override
+	public CommunityMembersPage createModelExample(int index) {
 
-	/**
-	 * The number total of communities that satisfies the search.
-	 */
-	@Schema(description = "The number total of communities that satisfies the search.", example = "100")
-	public long total;
-
-	/**
-	 * The identifier of the user.
-	 */
-	@ArraySchema(
-			schema = @Schema(implementation = Community.class),
-			arraySchema = @Schema(description = "The set of communities found"))
-	public List<Community> communities;
+		final CommunityMembersPage model = new CommunityMembersPage();
+		model.offset = index;
+		model.total = 100 + index;
+		model.members = new ArrayList<>();
+		model.members.add(new CommunityMemberTest().createModelExample(index));
+		return model;
+	}
 
 }

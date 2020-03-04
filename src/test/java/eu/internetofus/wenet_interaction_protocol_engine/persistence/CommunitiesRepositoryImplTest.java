@@ -26,28 +26,11 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
-import io.vertx.ext.mongo.MongoClientDeleteResult;
-import io.vertx.ext.mongo.MongoClientUpdateResult;
-import io.vertx.junit5.VertxTestContext;
 
 /**
  * Test the {@link CommunitiesRepositoryImpl}.
@@ -68,135 +51,6 @@ public class CommunitiesRepositoryImplTest extends CommunitiesRepositoryTestCase
 	public void createRepository(MongoClient pool) {
 
 		this.repository = new CommunitiesRepositoryImpl(pool);
-
-	}
-
-	/**
-	 * Check search fail by mongo client.
-	 *
-	 * @param testContext test context.
-	 */
-	@Test
-	public void shouldSearchFailedByMongoClient(VertxTestContext testContext) {
-
-		this.repository.pool = mock(MongoClient.class);
-
-		this.repository.searchCommunityObject("communityId", testContext.failing(search -> {
-			testContext.completeNow();
-		}));
-		@SuppressWarnings("unchecked")
-		final ArgumentCaptor<Handler<AsyncResult<JsonObject>>> handler = ArgumentCaptor.forClass(Handler.class);
-		verify(this.repository.pool, times(1)).findOne(any(), any(), any(), handler.capture());
-		handler.getValue().handle(Future.failedFuture("Internal error"));
-
-	}
-
-	/**
-	 * Check store fail by mongo client.
-	 *
-	 * @param testContext test context.
-	 */
-	@Test
-	public void shouldStoreFailedByMongoClient(VertxTestContext testContext) {
-
-		this.repository.pool = mock(MongoClient.class);
-
-		this.repository.storeCommunity(new JsonObject(), testContext.failing(store -> {
-			testContext.completeNow();
-		}));
-		@SuppressWarnings("unchecked")
-		final ArgumentCaptor<Handler<AsyncResult<String>>> handler = ArgumentCaptor.forClass(Handler.class);
-		verify(this.repository.pool, times(1)).save(any(), any(), handler.capture());
-		handler.getValue().handle(Future.failedFuture("Internal error"));
-
-	}
-
-	/**
-	 * Check update fail by mongo client.
-	 *
-	 * @param testContext test context.
-	 */
-	@Test
-	public void shouldUpdateFailedByMongoClient(VertxTestContext testContext) {
-
-		this.repository.pool = mock(MongoClient.class);
-
-		this.repository.updateCommunity(new JsonObject(), testContext.failing(update -> {
-			testContext.completeNow();
-		}));
-		@SuppressWarnings("unchecked")
-		final ArgumentCaptor<Handler<AsyncResult<MongoClientUpdateResult>>> handler = ArgumentCaptor
-				.forClass(Handler.class);
-		verify(this.repository.pool, times(1)).updateCollectionWithOptions(any(), any(), any(), any(), handler.capture());
-		handler.getValue().handle(Future.failedFuture("Internal error"));
-
-	}
-
-	/**
-	 * Check delete fail by mongo client.
-	 *
-	 * @param testContext test context.
-	 */
-	@Test
-	public void shouldDeleteFailedByMongoClient(VertxTestContext testContext) {
-
-		this.repository.pool = mock(MongoClient.class);
-
-		this.repository.deleteCommunity("communityId", testContext.failing(delete -> {
-			testContext.completeNow();
-		}));
-		@SuppressWarnings("unchecked")
-		final ArgumentCaptor<Handler<AsyncResult<MongoClientDeleteResult>>> handler = ArgumentCaptor
-				.forClass(Handler.class);
-		verify(this.repository.pool, times(1)).removeDocument(any(), any(), handler.capture());
-		handler.getValue().handle(Future.failedFuture("Internal error"));
-
-	}
-
-	/**
-	 * Check search communities fail because can not obtain the number of
-	 * communities that match.
-	 *
-	 * @param testContext test context.
-	 */
-	@Test
-	public void shouldSearchCommunityPageObjectFailedByMongoClientCount(VertxTestContext testContext) {
-
-		this.repository.pool = mock(MongoClient.class);
-
-		this.repository.searchCommunityPageObject(null, null, new ArrayList<>(), null, null, null, 0, 100,
-				testContext.failing(search -> {
-					testContext.completeNow();
-				}));
-		@SuppressWarnings("unchecked")
-		final ArgumentCaptor<Handler<AsyncResult<Long>>> handler = ArgumentCaptor.forClass(Handler.class);
-		verify(this.repository.pool, times(1)).count(any(), any(), handler.capture());
-		handler.getValue().handle(Future.failedFuture("Internal error"));
-
-	}
-
-	/**
-	 * Check search communities fail because can not find.
-	 *
-	 * @param testContext test context.
-	 */
-	@Test
-	public void shouldSearchCommunityPageObjectFailedByMongoClientFind(VertxTestContext testContext) {
-
-		this.repository.pool = mock(MongoClient.class);
-
-		this.repository.searchCommunityPageObject(null, null, new ArrayList<>(), null, null, null, 0, 100,
-				testContext.failing(search -> {
-					testContext.completeNow();
-				}));
-		@SuppressWarnings("unchecked")
-		final ArgumentCaptor<Handler<AsyncResult<Long>>> handler = ArgumentCaptor.forClass(Handler.class);
-		verify(this.repository.pool, times(1)).count(any(), any(), handler.capture());
-		handler.getValue().handle(Future.succeededFuture(100L));
-		@SuppressWarnings("unchecked")
-		final ArgumentCaptor<Handler<AsyncResult<List<JsonObject>>>> findHandler = ArgumentCaptor.forClass(Handler.class);
-		verify(this.repository.pool, times(1)).findWithOptions(any(), any(), any(), findHandler.capture());
-		findHandler.getValue().handle(Future.failedFuture("Internal error"));
 
 	}
 

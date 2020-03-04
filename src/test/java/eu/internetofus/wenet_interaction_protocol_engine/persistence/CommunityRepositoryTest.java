@@ -33,6 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Community;
+import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityMember;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -50,8 +51,8 @@ import io.vertx.junit5.VertxTestContext;
 public class CommunityRepositoryTest {
 
 	/**
-	 * Verify that can not found a community because that returned by repository is not
-	 * right.
+	 * Verify that can not found a community because that returned by repository is
+	 * not right.
 	 *
 	 * @param testContext context that executes the test.
 	 *
@@ -77,12 +78,12 @@ public class CommunityRepositoryTest {
 	}
 
 	/**
-	 * Verify that can not store a community because that returned by repository is not
-	 * right.
+	 * Verify that can not store a community because that returned by repository is
+	 * not right.
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#searchCommunity(String, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#storeCommunity(Community, Handler)
 	 */
 	@Test
 	public void shouldNotStoreCommunityBecauseReturnedJsonObjectIsNotRight(VertxTestContext testContext) {
@@ -103,12 +104,12 @@ public class CommunityRepositoryTest {
 	}
 
 	/**
-	 * Verify that can not store a community because that returned by repository is not
-	 * right.
+	 * Verify that can not store a community because that returned by repository is
+	 * not right.
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#searchCommunity(String, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#storeCommunity(Community, Handler)
 	 */
 	@Test
 	public void shouldNotStoreCommunityBecauseStoreFailed(VertxTestContext testContext) {
@@ -124,23 +125,19 @@ public class CommunityRepositoryTest {
 
 		};
 
-		repository.storeCommunity(new Community(), testContext.failing(fail ->
-
-		{
-
-			assertThat(fail).isEqualTo(cause);
+		repository.storeCommunity(new Community(), testContext.failing(fail -> testContext.verify(() -> {
 			testContext.completeNow();
-		}));
+		})));
 
 	}
 
 	/**
-	 * Verify that can not update a community because that returned by repository is not
-	 * right.
+	 * Verify that can not update a community because that returned by repository is
+	 * not right.
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#searchCommunity(String, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#updateCommunity(Community, Handler)
 	 */
 	@Test
 	public void shouldNotUpdateCommunityBecauseReturnedJsonObjectIsNotRight(VertxTestContext testContext) {
@@ -162,12 +159,12 @@ public class CommunityRepositoryTest {
 	}
 
 	/**
-	 * Verify that can not update a community because that returned by repository is not
-	 * right.
+	 * Verify that can not update a community because that returned by repository is
+	 * not right.
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#searchCommunity(String, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#updateCommunity(Community, Handler)
 	 */
 	@Test
 	public void shouldNotUpdateCommunityBecauseUpdateFailed(VertxTestContext testContext) {
@@ -182,11 +179,160 @@ public class CommunityRepositoryTest {
 			}
 		};
 
-		repository.updateCommunity(new Community(), testContext.failing(fail -> {
-
+		repository.updateCommunity(new Community(), testContext.failing(fail -> testContext.verify(() -> {
 			assertThat(fail).isEqualTo(cause);
 			testContext.completeNow();
+		})));
+
+	}
+
+	/**
+	 * Verify that can not found a community member because that returned by
+	 * repository is not right.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityMember(String,String,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotFoundCommunityMemberBecauseReturnedJsonObjectIsNotRight(VertxTestContext testContext) {
+
+		final CommunitiesRepository repository = new CommunitiesRepositoryImpl(null) {
+
+			@Override
+			public void searchCommunityMemberObject(String communityId, String userId,
+					Handler<AsyncResult<JsonObject>> searchHandler) {
+
+				searchHandler.handle(Future.succeededFuture(new JsonObject().put("key", "value")));
+
+			}
+		};
+
+		repository.searchCommunityMember("communityId", "any identifier", testContext.failing(fail -> {
+			testContext.completeNow();
 		}));
+
+	}
+
+	/**
+	 * Verify that can not store a community member because that returned by
+	 * repository is not right.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityMember(String, String, Handler)
+	 */
+	@Test
+	public void shouldNotStoreCommunityMemberBecauseReturnedJsonObjectIsNotRight(VertxTestContext testContext) {
+
+		final CommunitiesRepository repository = new CommunitiesRepositoryImpl(null) {
+
+			@Override
+			public void storeCommunityMemberObject(String communityId, JsonObject community,
+					Handler<AsyncResult<JsonObject>> storeHandler) {
+
+				storeHandler.handle(Future.succeededFuture(new JsonObject().put("key", "value")));
+			}
+		};
+
+		repository.storeCommunityMember("communityId", new CommunityMember(), testContext.failing(fail -> {
+			testContext.completeNow();
+		}));
+
+	}
+
+	/**
+	 * Verify that can not store a community member because that returned by
+	 * repository is not right.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#storeCommunityMember(String, CommunityMember,
+	 *      Handler)
+	 */
+	@Test
+	public void shouldNotStoreCommunityMemberBecauseStoreFailed(VertxTestContext testContext) {
+
+		final Throwable cause = new IllegalArgumentException("Cause that can not be stored");
+		final CommunitiesRepository repository = new CommunitiesRepositoryImpl(null) {
+
+			@Override
+			public void storeCommunityMemberObject(String communityId, JsonObject community,
+					Handler<AsyncResult<JsonObject>> storeHandler) {
+
+				storeHandler.handle(Future.failedFuture(cause));
+			}
+
+		};
+
+		repository.storeCommunityMember("communityId", new CommunityMember(),
+				testContext.failing(fail -> testContext.verify(() -> {
+					assertThat(fail).isEqualTo(cause);
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Verify that can not update a community member because that returned by
+	 * repository is not right.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#updateCommunityMember(String, CommunityMember,
+	 *      Handler)
+	 */
+	@Test
+	public void shouldNotUpdateCommunityMemberBecauseReturnedJsonObjectIsNotRight(VertxTestContext testContext) {
+
+		final CommunitiesRepository repository = new CommunitiesRepositoryImpl(null) {
+
+			@Override
+			public void updateCommunityMemberObject(String communityId, JsonObject community,
+					Handler<AsyncResult<JsonObject>> updateHandler) {
+
+				updateHandler.handle(Future.succeededFuture(new JsonObject().put("key", "value")));
+			}
+
+		};
+
+		repository.updateCommunityMember("communityId", new CommunityMember(), testContext.failing(fail -> {
+			testContext.completeNow();
+		}));
+
+	}
+
+	/**
+	 * Verify that can not update a community member because that returned by
+	 * repository is not right.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,Handler)
+	 */
+	@Test
+	public void shouldNotUpdateCommunityMemberBecauseUpdateFailed(VertxTestContext testContext) {
+
+		final Throwable cause = new IllegalArgumentException("Cause that can not be updated");
+		final CommunitiesRepository repository = new CommunitiesRepositoryImpl(null) {
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public void updateCommunityMemberObject(String communityId, JsonObject member,
+					Handler<AsyncResult<JsonObject>> updateHandler) {
+
+				updateHandler.handle(Future.failedFuture(cause));
+			}
+		};
+
+		repository.updateCommunityMember("communityId", new CommunityMember(),
+				testContext.failing(fail -> testContext.verify(() -> {
+					assertThat(fail).isEqualTo(cause);
+					testContext.completeNow();
+				})));
 
 	}
 

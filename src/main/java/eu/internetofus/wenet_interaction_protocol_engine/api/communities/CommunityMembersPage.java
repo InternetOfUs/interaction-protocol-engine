@@ -33,23 +33,23 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * Page of communities obtained after a search.
+ * Page of community members obtained after a search.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@Schema(description = "Contains some communities that have been found")
-public class CommunitiesPage extends Model {
+@Schema(description = "Contains some community members that have been found")
+public class CommunityMembersPage extends Model {
 
 	/**
 	 * The index of the first community returned.
 	 */
-	@Schema(description = "The index of the first community returned.", example = "0")
+	@Schema(description = "The index of the first community member returned.", example = "0")
 	public int offset;
 
 	/**
 	 * The number total of communities that satisfies the search.
 	 */
-	@Schema(description = "The number total of communities that satisfies the search.", example = "100")
+	@Schema(description = "The number total of community members that satisfies the search.", example = "100")
 	public long total;
 
 	/**
@@ -57,7 +57,6 @@ public class CommunitiesPage extends Model {
 	 */
 	@ArraySchema(
 			schema = @Schema(implementation = Community.class),
-			arraySchema = @Schema(description = "The set of communities found"))
-	public List<Community> communities;
-
+			arraySchema = @Schema(description = "The set of community members found"))
+	public List<CommunityMember> members;
 }

@@ -278,4 +278,48 @@ public class CommunitiesResource implements Communities {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void createCommunityMember(String communityId, JsonObject body, OperationRequest context,
+			Handler<AsyncResult<OperationResponse>> resultHandler) {
+
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void deleteCommunityMember(String communityId, String userId, OperationRequest context,
+			Handler<AsyncResult<OperationResponse>> resultHandler) {
+
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveCommunityMember(String communityId, String userId, OperationRequest context,
+			Handler<AsyncResult<OperationResponse>> resultHandler) {
+
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveCommunityMembersPage(String communityId, OperationRequest context,
+			Handler<AsyncResult<OperationResponse>> resultHandler) {
+
+		// TODO Auto-generated method stub
+
+	}
+
 }

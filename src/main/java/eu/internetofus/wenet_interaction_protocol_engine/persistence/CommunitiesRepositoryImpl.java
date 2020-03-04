@@ -28,12 +28,9 @@ package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
 import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.mongo.MongoClient;
-import io.vertx.ext.mongo.UpdateOptions;
 
 /**
  * Implementation of the {@link CommunitiesRepository}.
@@ -46,6 +43,11 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	 * The name of the collection that contains the communities.
 	 */
 	public static final String COMMUNITIES_COLLECTION = "communities";
+
+	/**
+	 * The name of the collection that contains the community members.
+	 */
+	public static final String COMMUNITY_MEMBERS_COLLECTION = "communityMembers";
 
 	/**
 	 * Create a new service.
@@ -65,26 +67,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	public void searchCommunityObject(String id, Handler<AsyncResult<JsonObject>> searchHandler) {
 
 		final JsonObject query = new JsonObject().put("_id", id);
-		this.pool.findOne(COMMUNITIES_COLLECTION, query, null, search -> {
-
-			if (search.failed()) {
-
-				searchHandler.handle(Future.failedFuture(search.cause()));
-
-			} else {
-
-				final JsonObject community = search.result();
-				if (community == null) {
-
-					searchHandler.handle(Future.failedFuture("Does not exist a community with the identifier '" + id + "'."));
-
-				} else {
-
-					searchHandler.handle(Future.succeededFuture(community));
-				}
-			}
-		});
-
+		this.findOneDocument(COMMUNITIES_COLLECTION, query, null, searchHandler);
 	}
 
 	/**
@@ -95,18 +78,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 
 		final long now = TimeManager.now();
 		community.put("sinceTime", now);
-		this.pool.save(COMMUNITIES_COLLECTION, community, store -> {
-
-			if (store.failed()) {
-
-				storeHandler.handle(Future.failedFuture(store.cause()));
-
-			} else {
-
-				storeHandler.handle(Future.succeededFuture(community));
-			}
-
-		});
+		this.storeOneDocument(COMMUNITIES_COLLECTION, community, storeHandler);
 
 	}
 
@@ -118,23 +90,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 
 		final String id = community.getString("_id");
 		final JsonObject query = new JsonObject().put("_id", id);
-		final JsonObject updateCommunity = new JsonObject().put("$set", community);
-		final UpdateOptions options = new UpdateOptions().setMulti(false);
-		this.pool.updateCollectionWithOptions(COMMUNITIES_COLLECTION, query, updateCommunity, options, update -> {
-
-			if (update.failed()) {
-
-				updateHandler.handle(Future.failedFuture(update.cause()));
-
-			} else if (update.result().getDocModified() != 1) {
-
-				updateHandler.handle(Future.failedFuture("Not Found community to update"));
-
-			} else {
-
-				updateHandler.handle(Future.succeededFuture(community));
-			}
-		});
+		this.updateOneDocument(COMMUNITIES_COLLECTION, query, community, updateHandler);
 
 	}
 
@@ -145,21 +101,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	public void deleteCommunity(String id, Handler<AsyncResult<Void>> deleteHandler) {
 
 		final JsonObject query = new JsonObject().put("_id", id);
-		this.pool.removeDocument(COMMUNITIES_COLLECTION, query, remove -> {
-
-			if (remove.failed()) {
-
-				deleteHandler.handle(Future.failedFuture(remove.cause()));
-
-			} else if (remove.result().getRemovedCount() != 1) {
-
-				deleteHandler.handle(Future.failedFuture("Not Found community to delete"));
-
-			} else {
-
-				deleteHandler.handle(Future.succeededFuture());
-			}
-		});
+		this.deleteOneDocument(COMMUNITIES_COLLECTION, query, deleteHandler);
 
 	}
 
@@ -170,43 +112,72 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	public void searchCommunityPageObject(JsonObject query, int offset, int limit,
 			Handler<AsyncResult<JsonObject>> searchHandler) {
 
-		this.pool.count(COMMUNITIES_COLLECTION, query, count -> {
+		this.searchPageObject(COMMUNITIES_COLLECTION, query, null, offset, limit, "communities", searchHandler);
 
-			if (count.failed()) {
+	}
 
-				searchHandler.handle(Future.failedFuture(count.cause()));
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void searchCommunityMemberObject(String communityId, String userId,
+			Handler<AsyncResult<JsonObject>> searchHandler) {
 
-			} else {
+		final JsonObject query = new JsonObject().put("communityId", communityId).put("userId", userId);
+		final JsonObject fields = new JsonObject().put("_id", 0).put("communityId", 0);
+		this.findOneDocument(COMMUNITY_MEMBERS_COLLECTION, query, fields, searchHandler);
 
-				final long total = count.result().longValue();
-				final JsonObject page = new JsonObject().put("offset", offset).put("total", total);
-				if (total == 0 || offset >= total) {
+	}
 
-					searchHandler.handle(Future.succeededFuture(page));
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void storeCommunityMemberObject(String communityId, JsonObject member,
+			Handler<AsyncResult<JsonObject>> storeHandler) {
 
-				} else {
+		final long now = TimeManager.now();
+		member.put("joinTime", now);
+		member.put("communityId", communityId);
+		this.storeOneDocument(COMMUNITY_MEMBERS_COLLECTION, member, storeHandler, "_id", "communityId");
 
-					final FindOptions options = new FindOptions();
-					options.setLimit(limit);
-					options.setSkip(offset);
-					this.pool.findWithOptions(COMMUNITIES_COLLECTION, query, options, find -> {
+	}
 
-						if (find.failed()) {
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void updateCommunityMemberObject(String communityId, JsonObject member,
+			Handler<AsyncResult<JsonObject>> updateHandler) {
 
-							searchHandler.handle(Future.failedFuture(find.cause()));
+		final String userId = member.getString("userId");
+		final JsonObject query = new JsonObject().put("communityId", communityId).put("userId", userId);
+		this.updateOneDocument(COMMUNITY_MEMBERS_COLLECTION, query, member, updateHandler);
 
-						} else {
+	}
 
-							page.put("communities", find.result());
-							searchHandler.handle(Future.succeededFuture(page));
-						}
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void deleteCommunityMember(String communityId, String userId, Handler<AsyncResult<Void>> deleteHandler) {
 
-					});
+		final JsonObject query = new JsonObject().put("communityId", communityId).put("userId", userId);
+		this.deleteOneDocument(COMMUNITY_MEMBERS_COLLECTION, query, deleteHandler);
 
-				}
+	}
 
-			}
-		});
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void searchCommunityMembersPageObject(String communityId, JsonObject query, int offset, int limit,
+			Handler<AsyncResult<JsonObject>> searchHandler) {
+
+		query.put("communityId", communityId);
+		this.searchPageObject(COMMUNITY_MEMBERS_COLLECTION, query, new JsonObject().put("communityId", 0).put("_id", 0),
+				offset, limit, "members", searchHandler);
+
 	}
 
 }
