@@ -148,7 +148,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(Community, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#storeCommunity(Community, io.vertx.core.Handler)
 	 */
 	@Test
 	public void shouldNotStoreACommunityThatCanNotBeAnObject(VertxTestContext testContext) {
@@ -176,7 +176,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#searchCommunity(String, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#storeCommunity(Community, io.vertx.core.Handler)
 	 */
 	@Test
 	public void shouldStoreCommunity(VertxTestContext testContext) {
@@ -313,7 +313,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunityObject(String,
+	 *      io.vertx.core.Handler)
 	 */
 	@Test
 	public void shouldUpdateCommunityObject(VertxTestContext testContext) {
@@ -344,7 +345,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#searchCommunity(String, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#deleteCommunity(String, io.vertx.core.Handler)
 	 */
 	@Test
 	public void shouldNotDeleteUndefinedCommunity(VertxTestContext testContext) {
@@ -360,7 +361,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#deleteCommunity(String, io.vertx.core.Handler)
 	 */
 	@Test
 	public void shouldDeleteCommunity(VertxTestContext testContext) {
@@ -457,7 +458,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -494,7 +496,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -531,7 +534,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -568,7 +572,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -605,7 +610,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -644,7 +650,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -682,7 +689,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -771,7 +779,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -807,7 +816,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -843,7 +853,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -879,7 +890,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -916,7 +928,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -950,7 +963,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 * @param pool        that create the mongo connections.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
+	 *      String, Long, Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	@Execution(ExecutionMode.SAME_THREAD)
@@ -1063,7 +1077,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
+	 * @see CommunitiesRepository#storeCommunityMember(String,CommunityMember,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
@@ -1091,7 +1105,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#searchCommunityMember(String,String,
+	 * @see CommunitiesRepository#storeCommunityMember(String, CommunityMember,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
@@ -1202,7 +1216,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
+	 * @see CommunitiesRepository#storeCommunityMember(String,CommunityMember,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
@@ -1228,7 +1242,7 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
+	 * @see CommunitiesRepository#deleteCommunityMember(String, String,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
@@ -1256,8 +1270,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
-	 *      io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunityMembersPageObject(String, Long,
+	 *      Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	public void shouldFoundEmptyCommunityMemberPage(VertxTestContext testContext) {
@@ -1282,8 +1296,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
-	 *      io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunityMembersPageObject(String, Long,
+	 *      Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	public void shouldFoundCommunityMemberPage(VertxTestContext testContext) {
@@ -1317,8 +1331,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
-	 *      io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunityMembersPageObject(String, Long,
+	 *      Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	public void shouldFoundCommunityMemberPageWithJoinFrom(VertxTestContext testContext) {
@@ -1353,8 +1367,8 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 	 *
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
-	 *      io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunityMembersPageObject(String, Long,
+	 *      Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	public void shouldFoundCommunityMemberPageWithJoinTo(VertxTestContext testContext) {
