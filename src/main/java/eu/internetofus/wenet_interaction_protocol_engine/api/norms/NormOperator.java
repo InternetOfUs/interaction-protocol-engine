@@ -24,66 +24,35 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.persistence;
-
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.MongoClient;
+package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
 /**
- * The verticle that provide the persistence services.
+ * A norm operator.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticle extends AbstractVerticle {
+// @Schema(description = "The possible norms operators")
+public enum NormOperator {
 
 	/**
-	 * The name of the pool of connections.
+	 * Equals operator.
 	 */
-	private static final String PERSISTENCE_POOL_NAME = "WENET_INTERACTION_PROTOCOL_ENGINE_POOL";
-
+	EQUALS,
 	/**
-	 * The pool of database connections.
+	 * Less than operator.
 	 */
-	protected MongoClient pool;
-
+	LESS_THAN,
 	/**
-	 * {@inheritDoc}
+	 * Greater than operator.
 	 */
-	@Override
-	public void start(Promise<Void> startPromise) throws Exception {
-
-		try {
-			// create the pool
-			final JsonObject persitenceConf = this.config().getJsonObject("persistence", new JsonObject());
-			this.pool = MongoClient.createShared(this.vertx, persitenceConf, PERSISTENCE_POOL_NAME);
-
-			// register services
-			CommunitiesRepository.register(this.vertx, this.pool);
-			NormsRepository.register(this.vertx, this.pool);
-
-			startPromise.complete();
-
-		} catch (final Throwable cause) {
-
-			startPromise.fail(cause);
-		}
-	}
-
+	GREATER_THAN,
 	/**
-	 * Close the connections pool.
-	 *
-	 * {@inheritDoc}
+	 * Less or equals than operator.
 	 */
-	@Override
-	public void stop() throws Exception {
-
-		if (this.pool != null) {
-			this.pool.close();
-			this.pool = null;
-		}
-
-	}
+	LESS_EQ_THAN,
+	/**
+	 * Greater or equals than operator.
+	 */
+	GREATER_EQ_THAN;
 
 }

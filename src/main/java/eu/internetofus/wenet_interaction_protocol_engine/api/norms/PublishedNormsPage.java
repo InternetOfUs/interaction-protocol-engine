@@ -24,66 +24,41 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.persistence;
+package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.MongoClient;
+import java.util.List;
+
+import eu.internetofus.wenet_interaction_protocol_engine.Model;
+import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Community;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * The verticle that provide the persistence services.
+ * Contains the found published norms.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticle extends AbstractVerticle {
+@Schema(description = "Contains a set of published norms found")
+public class PublishedNormsPage extends Model {
 
 	/**
-	 * The name of the pool of connections.
+	 * The index of the first community returned.
 	 */
-	private static final String PERSISTENCE_POOL_NAME = "WENET_INTERACTION_PROTOCOL_ENGINE_POOL";
+	@Schema(description = "The index of the first published norm returned.", example = "0")
+	public int offset;
 
 	/**
-	 * The pool of database connections.
+	 * The number total of communities that satisfies the search.
 	 */
-	protected MongoClient pool;
+	@Schema(description = "The number total of published norms that satisfies the search.", example = "100")
+	public long total;
 
 	/**
-	 * {@inheritDoc}
+	 * The published norms.
 	 */
-	@Override
-	public void start(Promise<Void> startPromise) throws Exception {
-
-		try {
-			// create the pool
-			final JsonObject persitenceConf = this.config().getJsonObject("persistence", new JsonObject());
-			this.pool = MongoClient.createShared(this.vertx, persitenceConf, PERSISTENCE_POOL_NAME);
-
-			// register services
-			CommunitiesRepository.register(this.vertx, this.pool);
-			NormsRepository.register(this.vertx, this.pool);
-
-			startPromise.complete();
-
-		} catch (final Throwable cause) {
-
-			startPromise.fail(cause);
-		}
-	}
-
-	/**
-	 * Close the connections pool.
-	 *
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void stop() throws Exception {
-
-		if (this.pool != null) {
-			this.pool.close();
-			this.pool = null;
-		}
-
-	}
+	@ArraySchema(
+			schema = @Schema(implementation = Community.class),
+			arraySchema = @Schema(description = "The set of published norms found"))
+	public List<PublishedNorm> norms;
 
 }
