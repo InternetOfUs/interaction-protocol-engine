@@ -24,41 +24,34 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
+package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import java.util.ArrayList;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.wenet_interaction_protocol_engine.ModelTestCase;
+import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
+import io.vertx.ext.mongo.MongoClient;
 
 /**
- * * Test the {@link PublishedNorm}
+ * Test the {@link NormsRepositoryImpl}.
  *
- * @see PublishedNorm
- *
+ * @see NormsRepositoryImpl
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
+@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
+public class NormsRepositoryImplTest extends NormsRepositoryTestCase<NormsRepositoryImpl> {
 
 	/**
-	 * {@inheritDoc}
+	 * Create the repository to use in the tests.
+	 *
+	 * @param pool that create the mongo connections.
 	 */
-	@Override
-	public PublishedNorm createModelExample(int index) {
+	@BeforeEach
+	public void createRepository(MongoClient pool) {
 
-		final PublishedNorm model = new PublishedNorm();
-		model.name = "Published norm " + index;
-		model.description = "Description of published norm " + index;
-		model.keywords = new ArrayList<>();
-		for (int i = index - 2; i < index + 2; i++) {
+		this.repository = new NormsRepositoryImpl(pool);
 
-			model.keywords.add("keyword " + i);
-		}
-		model.publisherId = "Published identifier " + index;
-		model.publishTime = index * 100000;
-		model.norm = new NormTest().createModelExample(index);
-
-		return model;
 	}
 
 }

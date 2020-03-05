@@ -29,7 +29,6 @@ package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 import java.util.List;
 
 import eu.internetofus.wenet_interaction_protocol_engine.Model;
-import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norm;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNorm;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
@@ -42,7 +41,7 @@ import io.vertx.ext.mongo.MongoClient;
 import io.vertx.serviceproxy.ServiceBinder;
 
 /**
- * The service to manage the {@link Norm} on the database.
+ * The service to manage the {@link PublishedNorm} on the database.
  *
  * @author UDT-IA, IIIA-CSIC
  */
@@ -86,7 +85,7 @@ public interface NormsRepository {
 	 * @param searchHandler handler to manage the search.
 	 */
 	@GenIgnore
-	default void searchPublishedNorm(String id, Handler<AsyncResult<Norm>> searchHandler) {
+	default void searchPublishedNorm(String id, Handler<AsyncResult<PublishedNorm>> searchHandler) {
 
 		this.searchPublishedNormObject(id, search -> {
 
@@ -97,7 +96,7 @@ public interface NormsRepository {
 			} else {
 
 				final JsonObject value = search.result();
-				final Norm norm = Model.fromJsonObject(value, Norm.class);
+				final PublishedNorm norm = Model.fromJsonObject(value, PublishedNorm.class);
 				if (norm == null) {
 
 					searchHandler.handle(Future.failedFuture("The stored published norm is not valid."));

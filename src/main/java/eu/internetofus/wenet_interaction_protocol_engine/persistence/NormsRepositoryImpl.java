@@ -72,7 +72,7 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 	public void storePublishedNorm(JsonObject norm, Handler<AsyncResult<JsonObject>> storeHandler) {
 
 		final long now = TimeManager.now();
-		norm.put("sinceTime", now);
+		norm.put("publishTime", now);
 		this.storeOneDocument(PUBLISHED_NORMS_COLLECTION, norm, storeHandler);
 
 	}
