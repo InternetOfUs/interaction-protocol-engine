@@ -27,10 +27,6 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api.communities;
 
 import eu.internetofus.wenet_interaction_protocol_engine.ModelTestCase;
-import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
 
 /**
  * Test the {@link CommunityMember}
@@ -51,35 +47,6 @@ public class CommunityMemberTest extends ModelTestCase<CommunityMember> {
 		model.userId = null;
 		model.joinTime = index * 100000;
 		return model;
-	}
-
-	/**
-	 * Create a community member creating before the user on the WeNet.
-	 *
-	 * @param index          of the community user to create.
-	 * @param profileManager service to create profile users.
-	 *
-	 * @return the future created community member.
-	 */
-	public Future<CommunityMember> createModelExample(int index, WeNetProfileManagerService profileManager) {
-
-		final Promise<CommunityMember> promise = Promise.promise();
-		profileManager.createProfile(new JsonObject(), create -> {
-
-			if (create.failed()) {
-
-				promise.fail(create.cause());
-
-			} else {
-
-				final CommunityMember model = new CommunityMember();
-				model.userId = create.result().getString("id");
-				model.joinTime = index * 100000;
-				promise.complete(model);
-			}
-
-		});
-		return promise.future();
 	}
 
 }

@@ -28,6 +28,8 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.communities;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -39,13 +41,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
 import eu.internetofus.wenet_interaction_protocol_engine.Model;
-import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
+import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.OperationRequest;
+import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
 /**
@@ -55,7 +58,7 @@ import io.vertx.junit5.VertxTestContext;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
+@ExtendWith(VertxExtension.class)
 public class CommunitiesResourceTest {
 
 	/**
@@ -67,6 +70,7 @@ public class CommunitiesResourceTest {
 
 		final CommunitiesResource resource = new CommunitiesResource();
 		resource.repository = mock(CommunitiesRepository.class);
+		resource.profileManager = mock(WeNetProfileManagerService.class);
 		return resource;
 
 	}
@@ -120,6 +124,71 @@ public class CommunitiesResourceTest {
 		final ArgumentCaptor<Handler<AsyncResult<Community>>> updateHandler = ArgumentCaptor.forClass(Handler.class);
 		verify(resource.repository, times(1)).updateCommunity(any(), updateHandler.capture());
 		updateHandler.getValue().handle(Future.failedFuture("Update community error"));
+
+	}
+
+	/**
+	 * Check fail retrieve community member because repository failed.
+	 *
+	 * @param testContext test context.
+	 */
+	@Test
+	public void shouldFailRetrieveCommunityMembersPageBecauseRepositoryFails(VertxTestContext testContext) {
+
+		final CommunitiesResource resource = createCommunitiesResource();
+		final OperationRequest context = mock(OperationRequest.class);
+		doReturn(new JsonObject()).when(context).getParams();
+		resource.retrieveCommunityMembersPage("communityId", context, testContext.succeeding(update -> {
+
+			assertThat(update.getStatusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+			testContext.completeNow();
+		}));
+
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<JsonObject>>> searchHandler = ArgumentCaptor.forClass(Handler.class);
+		verify(resource.repository, times(1)).searchCommunityMembersPageObject(eq("communityId"), any(), any(), eq(0),
+				eq(10), searchHandler.capture());
+		searchHandler.getValue().handle(Future.failedFuture("Search community member error"));
+
+	}
+
+	/**
+	 * Check fail create community member because repository failed.
+	 *
+	 * @param testContext test context.
+	 */
+	@Test
+	public void shouldFailCreateCommunityMemberBecauseRepositoryFails(VertxTestContext testContext) {
+
+		final CommunitiesResource resource = createCommunitiesResource();
+		final OperationRequest context = mock(OperationRequest.class);
+		doReturn(new JsonObject()).when(context).getParams();
+		resource.createCommunityMember("communityId", new JsonObject().put("userId", "UserIdentifier"), context,
+				testContext.succeeding(update -> {
+
+					assertThat(update.getStatusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+					testContext.completeNow();
+				}));
+
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<Community>>> searchCommunityHandler = ArgumentCaptor
+				.forClass(Handler.class);
+		verify(resource.repository, times(1)).searchCommunity(any(), searchCommunityHandler.capture());
+		searchCommunityHandler.getValue().handle(Future.succeededFuture(new Community()));
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<JsonObject>>> retrieveProfileHandler = ArgumentCaptor
+				.forClass(Handler.class);
+		verify(resource.profileManager, times(1)).retrieveProfile(any(), retrieveProfileHandler.capture());
+		retrieveProfileHandler.getValue().handle(Future.succeededFuture(new JsonObject()));
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<CommunityMember>>> searchCommunityMemberHandler = ArgumentCaptor
+				.forClass(Handler.class);
+		verify(resource.repository, times(1)).searchCommunityMember(any(), any(), searchCommunityMemberHandler.capture());
+		searchCommunityMemberHandler.getValue().handle(Future.failedFuture("The member is not defined"));
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<JsonObject>>> storeHandler = ArgumentCaptor.forClass(Handler.class);
+		verify(resource.repository, times(1)).storeCommunityMemberObject(any(), any(), storeHandler.capture());
+		storeHandler.getValue().handle(Future.failedFuture("Can not store member"));
 
 	}
 

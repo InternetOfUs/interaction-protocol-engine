@@ -37,6 +37,7 @@ import eu.internetofus.wenet_interaction_protocol_engine.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.ValidationErrorException;
 import eu.internetofus.wenet_interaction_protocol_engine.api.OperationReponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
+import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -58,6 +59,11 @@ public class CommunitiesResource implements Communities {
 	protected CommunitiesRepository repository;
 
 	/**
+	 * The manager to manage the users profile.
+	 */
+	protected WeNetProfileManagerService profileManager;
+
+	/**
 	 * Create an empty resource. This is only used for unit tests.
 	 */
 	protected CommunitiesResource() {
@@ -72,6 +78,7 @@ public class CommunitiesResource implements Communities {
 	public CommunitiesResource(Vertx vertx) {
 
 		this.repository = CommunitiesRepository.createProxy(vertx);
+		this.profileManager = WeNetProfileManagerService.createProxy(vertx);
 	}
 
 	/**
@@ -285,7 +292,68 @@ public class CommunitiesResource implements Communities {
 	public void createCommunityMember(String communityId, JsonObject body, OperationRequest context,
 			Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		// TODO Auto-generated method stub
+		this.repository.searchCommunity(communityId, searchCommunity -> {
+
+			if (searchCommunity.failed()) {
+
+				OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND, "not_found_community",
+						"The community to add the member is not defined");
+
+			} else {
+
+				final String userId = body.getString("userId", null);
+				if (userId == null) {
+
+					OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "bad_member.userId",
+							"You must to specify the identifier of the user to be a member of the community");
+
+				} else {
+
+					this.profileManager.retrieveProfile(userId, retrieveProfile -> {
+
+						if (retrieveProfile.failed()) {
+
+							Logger.debug(retrieveProfile.cause(), "The user {} is not a valid profile.", userId);
+							OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND, "bad_member.userId",
+									"The user to be a member is not defined.");
+
+						} else {
+
+							this.repository.searchCommunityMember(communityId, userId, searchCommunityMember -> {
+
+								if (!searchCommunityMember.failed()) {
+
+									OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST,
+											"bad_member.userId", "The user is already a member of the community");
+
+								} else {
+
+									this.repository.storeCommunityMemberObject(communityId, body, store -> {
+
+										if (store.failed()) {
+
+											Logger.debug(retrieveProfile.cause(), "Can not store {}.", body);
+											OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "bad_member",
+													"The member can not be stored");
+
+										} else {
+
+											OperationReponseHandlers.responseOk(resultHandler, store.result());
+										}
+
+									});
+
+								}
+
+							});
+						}
+
+					});
+
+				}
+			}
+
+		});
 
 	}
 

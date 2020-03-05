@@ -45,6 +45,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import eu.internetofus.wenet_interaction_protocol_engine.Model;
+import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.ErrorMessage;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
@@ -957,7 +958,6 @@ public class CommunitiesIT {
 	/**
 	 * Verify that found a community.
 	 *
-	 * @param repository  that manage the communities.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -965,8 +965,7 @@ public class CommunitiesIT {
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotFoundCommunitiesBecausePatternIsNotValid(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldNotFoundCommunitiesBecausePatternIsNotValid(WebClient client, VertxTestContext testContext) {
 
 		testRequest(client, HttpMethod.GET, Communities.PATH).with(queryParam("name", "a{12(")).expect(res -> {
 
@@ -982,7 +981,6 @@ public class CommunitiesIT {
 	/**
 	 * Verify that return an empty community if any match.
 	 *
-	 * @param repository  that manage the communities.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -990,8 +988,7 @@ public class CommunitiesIT {
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldEmptyPageIfAnyCommunityMatch(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldEmptyPageIfAnyCommunityMatch(WebClient client, VertxTestContext testContext) {
 
 		testRequest(client, HttpMethod.GET, Communities.PATH).with(queryParam("name", UUID.randomUUID().toString()))
 				.expect(res -> {
@@ -1467,4 +1464,169 @@ public class CommunitiesIT {
 
 	}
 
+	/**
+	 * Verify that can not create an empty community member.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotCreateEmptyCommunityMember(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(storedCommunity -> {
+
+			testRequest(client, HttpMethod.POST, Communities.PATH + "/" + storedCommunity._id + Communities.MEMBERS_PATH)
+					.expect(res -> {
+
+						assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+						final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+						assertThat(error.code).isNotEmpty().contains(".userId");
+						assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+						testContext.completeNow();
+
+					}).sendJson(new JsonObject(), testContext);
+		}));
+	}
+
+	/**
+	 * Verify that can not create a member over an undefined community.
+	 *
+	 * @param profileManager to manage the profiles.
+	 * @param client         to connect to the server.
+	 * @param testContext    context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotCreateCommunityMemberOverUndefinedCommunity(WeNetProfileManagerService profileManager,
+			WebClient client, VertxTestContext testContext) {
+
+		profileManager.createProfile(new JsonObject(), testContext.succeeding(createdProfile -> {
+
+			testRequest(client, HttpMethod.POST, Communities.PATH + "/undefined-community" + Communities.MEMBERS_PATH)
+					.expect(res -> {
+
+						assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
+						final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+						assertThat(error.code).isNotEmpty();
+						assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+						testContext.completeNow();
+
+					}).sendJson(new JsonObject().put("userId", createdProfile.getString("id")), testContext);
+		}));
+
+	}
+
+	/**
+	 * Verify that can not create a community member if the user is not defined.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotCreateCommunityMemberBecauseUserNotDefined(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(storedCommunity -> {
+
+			testRequest(client, HttpMethod.POST, Communities.PATH + "/" + storedCommunity._id + Communities.MEMBERS_PATH)
+					.expect(res -> {
+
+						assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
+						final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+						assertThat(error.code).isNotEmpty().contains(".userId");
+						assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+						testContext.completeNow();
+
+					}).sendJson(new JsonObject().put("userId", "undefined user identifier"), testContext);
+		}));
+	}
+
+	/**
+	 * Verify that create a community member.
+	 *
+	 * @param repository     to manage the communities.
+	 * @param profileManager to manage the profiles.
+	 * @param client         to connect to the server.
+	 * @param testContext    context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldCreateCommunityMember(CommunitiesRepository repository, WeNetProfileManagerService profileManager,
+			WebClient client, VertxTestContext testContext) {
+
+		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(storedCommunity -> {
+
+			profileManager.createProfile(new JsonObject(), testContext.succeeding(createdProfile -> {
+
+				final String userId = createdProfile.getString("id");
+				final long now = TimeManager.now();
+				testRequest(client, HttpMethod.POST, Communities.PATH + "/" + storedCommunity._id + Communities.MEMBERS_PATH)
+						.expect(res -> {
+
+							assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+							final CommunityMember stored = assertThatBodyIs(CommunityMember.class, res);
+							assertThat(stored.userId).isEqualTo(userId);
+							assertThat(stored.joinTime).isGreaterThanOrEqualTo(now);
+							testContext.completeNow();
+
+						}).sendJson(new JsonObject().put("userId", userId), testContext);
+			}));
+		}));
+	}
+
+	/**
+	 * Verify that can not create a community member because the user is already a
+	 * member.
+	 *
+	 * @param repository     to manage the communities.
+	 * @param profileManager to manage the profiles.
+	 * @param client         to connect to the server.
+	 * @param testContext    context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotCreateCommunityMemberBecauseItIsAlreadyAMember(CommunitiesRepository repository,
+			WeNetProfileManagerService profileManager, WebClient client, VertxTestContext testContext) {
+
+		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(storedCommunity -> {
+
+			profileManager.createProfile(new JsonObject(), testContext.succeeding(createdProfile -> {
+
+				final String userId = createdProfile.getString("id");
+				final CommunityMember member = new CommunityMember();
+				member.userId = userId;
+				repository.storeCommunityMember(storedCommunity._id, member, testContext.succeeding(storedMember -> {
+
+					testRequest(client, HttpMethod.POST, Communities.PATH + "/" + storedCommunity._id + Communities.MEMBERS_PATH)
+							.expect(res -> {
+
+								assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+								final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+								assertThat(error.code).isNotEmpty().contains(".userId");
+								assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+								testContext.completeNow();
+
+							}).sendJson(new JsonObject().put("userId", userId), testContext);
+
+				}));
+
+			}));
+
+		}));
+	}
 }
