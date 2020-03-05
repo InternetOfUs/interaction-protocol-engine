@@ -26,24 +26,34 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.ArrayList;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.wenet_interaction_protocol_engine.ModelTestCase;
 import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
+import eu.internetofus.wenet_interaction_protocol_engine.ValidationErrorException;
+import eu.internetofus.wenet_interaction_protocol_engine.ValidationsTest;
+import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.VertxTestContext;
 
 /**
- * * Test the {@link PublishedNorm}
+ * Test the {@link PublishedNorm}
  *
  * @see PublishedNorm
  *
  *
  * @author UDT-IA, IIIA-CSIC
  */
+@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
 public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 
 	/**
@@ -73,7 +83,6 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	 * @param index          of the example to create.
 	 * @param profileManager service to manage the profiles.
 	 * @param createHandler  component that manage the creation result.
-	 *
 	 */
 	public static void createValidPublishedNormExample(int index, WeNetProfileManagerService profileManager,
 			Handler<AsyncResult<PublishedNorm>> createHandler) {
@@ -93,6 +102,230 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 			}
 
 		});
+
+	}
+
+	/**
+	 * Check that an right published norm is valid.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldRightPublishedNormBeValid(WeNetProfileManagerService profileManager, VertxTestContext testContext) {
+
+		createValidPublishedNormExample(43, profileManager, testContext.succeeding(model -> {
+			model.validate("codePrefix", profileManager, testContext.succeeding(ignored -> {
+				testContext.completeNow();
+
+			}));
+		}));
+	}
+
+	/**
+	 * Check that an empty published norm is not valid.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldEmptyPublishedNormNotBeValid(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm model = new PublishedNorm();
+		model.validate("codePrefix", profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix.norm");
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Create a minimum published norm that will be valid.
+	 *
+	 * @return the created published norm.
+	 */
+	public static PublishedNorm createMinimumValidPublishedNormExample() {
+
+		final PublishedNorm model = new PublishedNorm();
+		model.norm = new Norm();
+		return model;
+
+	}
+
+	/**
+	 * Create the norm with the minimum fields to be valid.
+	 *
+	 * @return the created minimum
+	 */
+
+	/**
+	 * Check that a published norm with only a norm is valid.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldPublishedNormWithOnlyAnormBeValid(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm model = createMinimumValidPublishedNormExample();
+		model.validate("codePrefix", profileManager, testContext.succeeding(ignored -> {
+			testContext.completeNow();
+
+		}));
+
+	}
+
+	/**
+	 * Check that a published norm with an identifier is not valid.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldPublishedNormWithIdNotBeValid(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm model = new PublishedNorm();
+		model.norm = new NormTest().createModelExample(1);
+		model._id = "Defined identifier";
+		model.validate("codePrefix", profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix._id");
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that a published norm with a large name is not valid.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldPublishedNormWithLargeNameNotBeValid(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm model = new PublishedNorm();
+		model.norm = new NormTest().createModelExample(1);
+		model.name = ValidationsTest.STRING_256;
+		model.validate("codePrefix", profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix.name");
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that a published norm with a large description is not valid.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldPublishedNormWithLargeDescriptionNotBeValid(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm model = new PublishedNorm();
+		model.norm = new NormTest().createModelExample(1);
+		model.description = ValidationsTest.STRING_256;
+		model.validate("codePrefix", profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix.description");
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that a published norm with a large keyword is not valid.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldPublishedNormWithLargeKeywordNotBeValid(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm model = new PublishedNorm();
+		model.norm = new NormTest().createModelExample(1);
+		model.keywords = new ArrayList<>();
+		model.keywords.add("  ");
+		model.keywords.add(null);
+		model.keywords.add(ValidationsTest.STRING_256);
+		model.validate("codePrefix", profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix.keywords[2]");
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that a published norm with a large norm attribute is not valid.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldPublishedNormWithLargeNormAttributeNotBeValid(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm model = new PublishedNorm();
+		model.norm = new NormTest().createModelExample(1);
+		model.norm.attribute = ValidationsTest.STRING_256;
+		model.validate("codePrefix", profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix.norm.attribute");
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that a published norm with a publishedId that is not defined is not
+	 * valid.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldPublishedNormWithAnUndefinedPublishedIdNotBeValid(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm model = new PublishedNorm();
+		model.norm = new NormTest().createModelExample(1);
+		model.publisherId = "Undefined published identifier";
+		model.validate("codePrefix", profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix.publisherId");
+			testContext.completeNow();
+
+		})));
 
 	}
 

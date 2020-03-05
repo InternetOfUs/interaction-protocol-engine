@@ -32,6 +32,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.tinylog.Logger;
 
+import eu.internetofus.wenet_interaction_protocol_engine.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.api.OperationReponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.api.Operations;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
@@ -85,8 +86,42 @@ public class NormsResource implements Norms {
 	public void publishNorm(JsonObject body, OperationRequest context,
 			Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_IMPLEMENTED, "to_do",
-				"Not implemented yet");
+		final PublishedNorm publishedNorm = Model.fromJsonObject(body, PublishedNorm.class);
+		if (publishedNorm == null) {
+
+			Logger.debug("The {} is not a valid norm to publish.", body);
+			OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "bad_publishedNorm",
+					"The norm to publish is not not right.");
+
+		} else {
+
+			publishedNorm.validate("bad_publishedNorm", this.profileManager, validation -> {
+
+				if (validation.failed()) {
+
+					final Throwable cause = validation.cause();
+					Logger.debug(cause, "The {} is not valid.", publishedNorm);
+					OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+
+				} else {
+
+					this.repository.storePublishedNorm(publishedNorm, stored -> {
+						if (stored.failed()) {
+
+							final Throwable cause = stored.cause();
+							Logger.debug(cause, "Cannot store  {}.", publishedNorm);
+							OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+
+						} else {
+
+							OperationReponseHandlers.responseOk(resultHandler, stored.result());
+						}
+
+					});
+				}
+
+			});
+		}
 
 	}
 

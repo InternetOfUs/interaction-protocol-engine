@@ -27,6 +27,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
 import static eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension.Asserts.assertThatBodyIs;
+import static eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNormTest.createMinimumValidPublishedNormExample;
 import static eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepositoryTestCase.createAndStoreSomeFakePublishNorms;
 import static eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepositoryTestCase.removeAllNorms;
 import static io.vertx.junit5.web.TestRequest.queryParam;
@@ -151,7 +152,7 @@ public class NormsIT {
 	@Test
 	public void shouldNotStoreBadPublishedNorm(WebClient client, VertxTestContext testContext) {
 
-		final PublishedNorm publishedNorm = new PublishedNorm();
+		final PublishedNorm publishedNorm = createMinimumValidPublishedNormExample();
 		publishedNorm._id = UUID.randomUUID().toString();
 		testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
 
@@ -213,7 +214,7 @@ public class NormsIT {
 	public void shouldStoreEmptyPublishedNorm(NormsRepository repository, WebClient client,
 			VertxTestContext testContext) {
 
-		final PublishedNorm publishedNorm = new PublishedNorm();
+		final PublishedNorm publishedNorm = createMinimumValidPublishedNormExample();
 		testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
 
 			assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
