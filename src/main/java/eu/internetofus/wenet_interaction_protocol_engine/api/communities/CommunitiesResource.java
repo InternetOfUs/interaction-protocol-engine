@@ -347,10 +347,10 @@ public class CommunitiesResource implements Communities {
 		final JsonObject params = context.getParams().getJsonObject("query", new JsonObject());
 		final int offset = params.getInteger("offset", 0);
 		final int limit = params.getInteger("limit", 10);
-		final Long sinceFrom = params.getLong("sinceFrom", null);
-		final Long sinceTo = params.getLong("sinceTo", null);
+		final Long joinFrom = params.getLong("joinFrom", null);
+		final Long joinTo = params.getLong("joinTo", null);
 
-		this.repository.searchCommunityMembersPageObject(communityId, sinceFrom, sinceTo, offset, limit, search -> {
+		this.repository.searchCommunityMembersPageObject(communityId, joinFrom, joinTo, offset, limit, search -> {
 
 			if (search.failed()) {
 

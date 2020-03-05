@@ -48,6 +48,7 @@ import eu.internetofus.wenet_interaction_protocol_engine.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.ErrorMessage;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
+import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepositoryImplTest;
 import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -1266,7 +1267,7 @@ public class CommunitiesIT {
 																assertThat(page).isNotNull();
 																assertThat(page.offset).isEqualTo(0l);
 																assertThat(page.total).isEqualTo(3l);
-																assertThat(page.members).isNotEmpty().hasSize(1).containsExactly(
+																assertThat(page.members).isNotEmpty().hasSize(2).containsExactly(
 																		Model.fromJsonObject(stored1, CommunityMember.class),
 																		Model.fromJsonObject(stored2, CommunityMember.class));
 																testContext.completeNow();
@@ -1317,7 +1318,7 @@ public class CommunitiesIT {
 																			assertThat(page).isNotNull();
 																			assertThat(page.offset).isEqualTo(1l);
 																			assertThat(page.total).isEqualTo(4l);
-																			assertThat(page.members).isNotEmpty().hasSize(1).containsExactly(
+																			assertThat(page.members).isNotEmpty().hasSize(2).containsExactly(
 																					Model.fromJsonObject(stored2, CommunityMember.class),
 																					Model.fromJsonObject(stored3, CommunityMember.class));
 																			testContext.completeNow();
@@ -1329,6 +1330,141 @@ public class CommunitiesIT {
 							}));
 
 				}));
+	}
+
+	/**
+	 * Verify that return an page with some members that are joined after a date.
+	 *
+	 * @param pool        connection to the database.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityMembersPageWithJoinFrom(MongoClient pool, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityMember> members = CommunitiesRepositoryImplTest
+				.createCommunityMemebersWithFakeJoinTime(communityId, pool, 23);
+
+		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
+				.with(queryParam("joinFrom", "700000")).expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunityMembersPage page = assertThatBodyIs(CommunityMembersPage.class, res);
+					assertThat(page).isNotNull();
+					assertThat(page.offset).isEqualTo(0);
+					assertThat(page.total).isEqualTo(16);
+					assertThat(page.members).isEqualTo(members.subList(7, 17));
+					testContext.completeNow();
+
+				}).send(testContext);
+
+	}
+
+	/**
+	 * Verify that return an page with some members that are joined before a date.
+	 *
+	 * @param pool        connection to the database.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityMembersPageWithJoinTo(MongoClient pool, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityMember> members = CommunitiesRepositoryImplTest
+				.createCommunityMemebersWithFakeJoinTime(communityId, pool, 23);
+
+		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
+				.with(queryParam("joinTo", "700000")).expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunityMembersPage page = assertThatBodyIs(CommunityMembersPage.class, res);
+					assertThat(page).isNotNull();
+					assertThat(page.offset).isEqualTo(0);
+					assertThat(page.total).isEqualTo(8);
+					assertThat(page.members).isEqualTo(members.subList(0, 8));
+					testContext.completeNow();
+
+				}).send(testContext);
+
+	}
+
+	/**
+	 * Verify that return an page with some members that are joined in a range
+	 *
+	 * @param pool        connection to the database.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityMembersPageWithJoinRange(MongoClient pool, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityMember> members = CommunitiesRepositoryImplTest
+				.createCommunityMemebersWithFakeJoinTime(communityId, pool, 23);
+
+		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
+				.with(queryParam("joinFrom", "700000"), queryParam("joinTo", "1700000")).expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunityMembersPage page = assertThatBodyIs(CommunityMembersPage.class, res);
+					assertThat(page).isNotNull();
+					assertThat(page.offset).isEqualTo(0);
+					assertThat(page.total).isEqualTo(11);
+					assertThat(page.members).isEqualTo(members.subList(7, 17));
+					testContext.completeNow();
+
+				}).send(testContext);
+
+	}
+
+	/**
+	 * Verify that return an page with some members that are joined in a range with
+	 * an offset and a limit.
+	 *
+	 * @param pool        connection to the database.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityMembersPageWithJoinRangeOffsetAndLimit(MongoClient pool, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityMember> members = CommunitiesRepositoryImplTest
+				.createCommunityMemebersWithFakeJoinTime(communityId, pool, 23);
+
+		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
+				.with(queryParam("joinFrom", "700000"), queryParam("joinTo", "1700000"), queryParam("offset", "3"),
+						queryParam("limit", "2"))
+				.expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunityMembersPage page = assertThatBodyIs(CommunityMembersPage.class, res);
+					assertThat(page).isNotNull();
+					assertThat(page.offset).isEqualTo(3);
+					assertThat(page.total).isEqualTo(11);
+					assertThat(page.members).isEqualTo(members.subList(10, 12));
+					testContext.completeNow();
+
+				}).send(testContext);
+
 	}
 
 }
