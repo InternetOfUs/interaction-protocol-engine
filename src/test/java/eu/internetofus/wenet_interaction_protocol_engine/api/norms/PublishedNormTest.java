@@ -29,6 +29,12 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 import java.util.ArrayList;
 
 import eu.internetofus.wenet_interaction_protocol_engine.ModelTestCase;
+import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
+import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
 
 /**
  * * Test the {@link PublishedNorm}
@@ -59,6 +65,35 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 		model.norm = new NormTest().createModelExample(index);
 
 		return model;
+	}
+
+	/**
+	 * Create a valid published norm.
+	 *
+	 * @param index          of the example to create.
+	 * @param profileManager service to manage the profiles.
+	 * @param createHandler  component that manage the creation result.
+	 *
+	 */
+	public static void createValidPublishedNormExample(int index, WeNetProfileManagerService profileManager,
+			Handler<AsyncResult<PublishedNorm>> createHandler) {
+
+		profileManager.createProfile(new JsonObject(), create -> {
+
+			if (create.failed()) {
+
+				createHandler.handle(Future.failedFuture(create.cause()));
+
+			} else {
+
+				final PublishedNorm result = new PublishedNormTest().createModelExample(index);
+				result.publisherId = create.result().getString("id");
+				result.publishTime = TimeManager.now();
+				createHandler.handle(Future.succeededFuture(result));
+			}
+
+		});
+
 	}
 
 }

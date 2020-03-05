@@ -26,9 +26,14 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
+import java.util.List;
+
 import javax.ws.rs.core.Response.Status;
 
+import org.tinylog.Logger;
+
 import eu.internetofus.wenet_interaction_protocol_engine.api.OperationReponseHandlers;
+import eu.internetofus.wenet_interaction_protocol_engine.api.Operations;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.AsyncResult;
@@ -89,11 +94,34 @@ public class NormsResource implements Norms {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void retrievePublishedNormsPage(OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
+	public void retrievePublishedNormsPage(OperationRequest context,
+			Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_IMPLEMENTED, "to_do",
-				"Not implemented yet");
+		final JsonObject params = Operations.getQueryParamters(context);
+		final int offset = params.getInteger("offset", 0);
+		final int limit = params.getInteger("limit", 10);
+		final String name = params.getString("name", null);
+		final String description = params.getString("description", null);
+		final List<String> keywords = Operations.toListString(params.getJsonArray("keyword", null));
+		final String publisherId = params.getString("publisherId", null);
+		final Long publishFrom = params.getLong("publishFrom", null);
+		final Long publishTo = params.getLong("publishTo", null);
 
+		this.repository.searchPublishedNormsPageObject(name, description, keywords, publisherId, publishFrom, publishTo,
+				offset, limit, search -> {
+
+					if (search.failed()) {
+
+						final Throwable cause = search.cause();
+						Logger.debug(cause, "Cannot found published norms.");
+						OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+
+					} else {
+
+						final JsonObject page = search.result();
+						OperationReponseHandlers.responseOk(resultHandler, page);
+					}
+				});
 	}
 
 	/**
@@ -103,8 +131,21 @@ public class NormsResource implements Norms {
 	public void retrievePublishedNorm(String publishedNormId, OperationRequest context,
 			Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_IMPLEMENTED, "to_do",
-				"Not implemented yet");
+		this.repository.searchPublishedNormObject(publishedNormId, search -> {
+
+			final JsonObject publishedNorm = search.result();
+			if (publishedNorm == null) {
+
+				Logger.debug(search.cause(), "Not found published norm for {}", publishedNormId);
+				OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND, "not_found_published_norm",
+						"Does not exist a published norm associated to '" + publishedNormId + "'.");
+
+			} else {
+
+				OperationReponseHandlers.responseOk(resultHandler, publishedNorm);
+
+			}
+		});
 
 	}
 
@@ -127,8 +168,20 @@ public class NormsResource implements Norms {
 	public void deletePublishedNorm(String publishedNormId, OperationRequest context,
 			Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_IMPLEMENTED, "to_do",
-				"Not implemented yet");
+		this.repository.deletePublishedNorm(publishedNormId, delete -> {
+
+			if (delete.failed()) {
+
+				final Throwable cause = delete.cause();
+				Logger.debug(cause, "Cannot delete the published norm  {}.", publishedNormId);
+				OperationReponseHandlers.responseFailedWith(resultHandler, Status.NOT_FOUND, cause);
+
+			} else {
+
+				OperationReponseHandlers.responseOk(resultHandler);
+			}
+
+		});
 
 	}
 

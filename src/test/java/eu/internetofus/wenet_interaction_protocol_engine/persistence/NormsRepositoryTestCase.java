@@ -709,11 +709,11 @@ public abstract class NormsRepositoryTestCase<T extends NormsRepository> {
 	 *
 	 * @return the aggregated norms.
 	 */
-	public static List<PublishedNorm> createAndStoreSomeNormsWithFakePublishTime(MongoClient pool, int max) {
+	public static List<PublishedNorm> createAndStoreSomeFakePublishNorms(MongoClient pool, int max) {
 
 		final List<PublishedNorm> norms = new ArrayList<>();
 		final Semaphore semaphore = new Semaphore(0);
-		createNextNormWithFakePublishTime(pool, norms, max, semaphore);
+		createNextFakePublishNorm(pool, norms, max, semaphore);
 
 		try {
 			semaphore.acquire(max);
@@ -732,7 +732,7 @@ public abstract class NormsRepositoryTestCase<T extends NormsRepository> {
 	 * @param tries     number maximum of times to create a published norm.
 	 * @param semaphore to inform when the norm is created.
 	 */
-	private static void createNextNormWithFakePublishTime(MongoClient pool, List<PublishedNorm> norms, int tries,
+	private static void createNextFakePublishNorm(MongoClient pool, List<PublishedNorm> norms, int tries,
 			Semaphore semaphore) {
 
 		final int index = norms.size();
@@ -746,7 +746,7 @@ public abstract class NormsRepositoryTestCase<T extends NormsRepository> {
 
 			}
 			if (tries > 1) {
-				createNextNormWithFakePublishTime(pool, norms, tries - 1, semaphore);
+				createNextFakePublishNorm(pool, norms, tries - 1, semaphore);
 			}
 			semaphore.release();
 		});
@@ -766,7 +766,7 @@ public abstract class NormsRepositoryTestCase<T extends NormsRepository> {
 	public void shouldFindPublishedNormsPublishAFromTime(MongoClient pool, VertxTestContext testContext) {
 
 		removeAllNorms(pool);
-		final List<PublishedNorm> norms = createAndStoreSomeNormsWithFakePublishTime(pool, 23);
+		final List<PublishedNorm> norms = createAndStoreSomeFakePublishNorms(pool, 23);
 
 		final String name = null;
 		final String description = null;
@@ -802,7 +802,7 @@ public abstract class NormsRepositoryTestCase<T extends NormsRepository> {
 	public void shouldFindPublishedNormsPublishAToTime(MongoClient pool, VertxTestContext testContext) {
 
 		removeAllNorms(pool);
-		final List<PublishedNorm> norms = createAndStoreSomeNormsWithFakePublishTime(pool, 23);
+		final List<PublishedNorm> norms = createAndStoreSomeFakePublishNorms(pool, 23);
 
 		final String name = null;
 		final String description = null;
@@ -838,7 +838,7 @@ public abstract class NormsRepositoryTestCase<T extends NormsRepository> {
 	public void shouldFindPublishedNormsPublishTimeInARange(MongoClient pool, VertxTestContext testContext) {
 
 		removeAllNorms(pool);
-		final List<PublishedNorm> norms = createAndStoreSomeNormsWithFakePublishTime(pool, 23);
+		final List<PublishedNorm> norms = createAndStoreSomeFakePublishNorms(pool, 23);
 
 		final String name = null;
 		final String description = null;
@@ -874,7 +874,7 @@ public abstract class NormsRepositoryTestCase<T extends NormsRepository> {
 	public void shouldFindPublishedNorms(MongoClient pool, VertxTestContext testContext) {
 
 		removeAllNorms(pool);
-		final List<PublishedNorm> norms = createAndStoreSomeNormsWithFakePublishTime(pool, 23);
+		final List<PublishedNorm> norms = createAndStoreSomeFakePublishNorms(pool, 23);
 
 		final String name = ".+ 1\\d";
 		final String description = "3|4|5|6";

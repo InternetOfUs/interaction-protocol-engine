@@ -53,6 +53,7 @@ import org.tinylog.Level;
 import org.tinylog.provider.InternalLogger;
 
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
+import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -369,7 +370,7 @@ public class WeNetInteractionProtocolEngineIntegrationExtension
 
 		final Class<?> type = parameterContext.getParameter().getType();
 		return type == WebClient.class || type == CommunitiesRepository.class || type == MongoClient.class
-				|| type == WeNetProfileManagerService.class
+				|| type == WeNetProfileManagerService.class || type == NormsRepository.class
 				|| this.vertxExtension.supportsParameter(parameterContext, extensionContext);
 
 	}
@@ -417,6 +418,15 @@ public class WeNetInteractionProtocolEngineIntegrationExtension
 						final WeNetInteractionProtocolEngineContext context = getContext();
 						return CommunitiesRepository.createProxy(context.vertx);
 					}, CommunitiesRepository.class);
+
+		} else if (type == NormsRepository.class) {
+
+			return extensionContext.getStore(ExtensionContext.Namespace.create(this.getClass().getName()))
+					.getOrComputeIfAbsent(NormsRepository.class.getName(), key -> {
+
+						final WeNetInteractionProtocolEngineContext context = getContext();
+						return NormsRepository.createProxy(context.vertx);
+					}, NormsRepository.class);
 
 		} else if (type == WeNetProfileManagerService.class) {
 
