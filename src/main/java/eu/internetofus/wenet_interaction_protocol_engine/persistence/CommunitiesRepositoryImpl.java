@@ -50,6 +50,11 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	public static final String COMMUNITY_MEMBERS_COLLECTION = "communityMembers";
 
 	/**
+	 * The name of the collection that contains the community norms.
+	 */
+	public static final String COMMUNITY_NORMS_COLLECTION = "communityNorms";
+
+	/**
 	 * Create a new service.
 	 *
 	 * @param pool to create the connections.
@@ -177,6 +182,57 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 		query.put("communityId", communityId);
 		this.searchPageObject(COMMUNITY_MEMBERS_COLLECTION, query, new JsonObject().put("communityId", 0).put("_id", 0),
 				offset, limit, "members", searchHandler);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void searchCommunityNormObject(String communityId, String normId,
+			Handler<AsyncResult<JsonObject>> searchHandler) {
+
+		final JsonObject query = new JsonObject().put("communityId", communityId).put("_id", normId);
+		final JsonObject fields = new JsonObject().put("communityId", 0);
+		this.findOneDocument(COMMUNITY_NORMS_COLLECTION, query, fields, searchHandler);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void storeCommunityNormObject(String communityId, JsonObject norm,
+			Handler<AsyncResult<JsonObject>> storeHandler) {
+
+		final long now = TimeManager.now();
+		norm.put("sinceTime", now);
+		norm.put("communityId", communityId);
+		this.storeOneDocument(COMMUNITY_NORMS_COLLECTION, norm, storeHandler, "communityId");
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void deleteCommunityNorm(String communityId, String normId, Handler<AsyncResult<Void>> deleteHandler) {
+
+		final JsonObject query = new JsonObject().put("communityId", communityId).put("_id", normId);
+		this.deleteOneDocument(COMMUNITY_NORMS_COLLECTION, query, deleteHandler);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void searchCommunityNormsPageObject(String communityId, JsonObject query, int offset, int limit,
+			Handler<AsyncResult<JsonObject>> searchHandler) {
+
+		query.put("communityId", communityId);
+		this.searchPageObject(COMMUNITY_NORMS_COLLECTION, query, new JsonObject().put("communityId", 0), offset, limit,
+				"norms", searchHandler);
 
 	}
 

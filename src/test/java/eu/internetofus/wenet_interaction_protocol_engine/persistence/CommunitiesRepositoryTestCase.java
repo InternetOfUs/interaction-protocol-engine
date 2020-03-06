@@ -42,6 +42,9 @@ import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunitiesPage;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Community;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityMember;
+import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityNorm;
+import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityNormTest;
+import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityNormsPage;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityTest;
 import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.json.JsonArray;
@@ -1395,6 +1398,380 @@ public abstract class CommunitiesRepositoryTestCase<T extends CommunitiesReposit
 
 							}));
 				}));
+
+	}
+
+	/**
+	 * Verify that can not found a community norm.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNorm(String, String,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotFoundCommunityNorm(VertxTestContext testContext) {
+
+		this.repository.searchCommunityNorm("undefined community identifier", "undefined norm id",
+				testContext.failing(failed -> {
+					testContext.completeNow();
+				}));
+
+	}
+
+	/**
+	 * Verify that can found a community norm.
+	 *
+	 *
+	 * @param profileManager service to manage profile managers.
+	 * @param testContext    context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNorm(String, String,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityNorm(WeNetProfileManagerService profileManager, VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final CommunityNorm norm = new CommunityNorm();
+		norm._id = UUID.randomUUID().toString();
+		final long now = TimeManager.now();
+		this.repository.storeCommunityNorm(communityId, norm, testContext.succeeding(storedNorm -> {
+			this.repository.searchCommunityNorm(communityId, norm._id,
+					testContext.succeeding(foundCommunity -> testContext.verify(() -> {
+						final CommunityNorm expectedNorm = new CommunityNorm();
+						expectedNorm._id = norm._id;
+						expectedNorm.sinceTime = foundCommunity.sinceTime;
+						assertThat(foundCommunity).isEqualTo(expectedNorm);
+						assertThat(foundCommunity.sinceTime).isGreaterThanOrEqualTo(now);
+						testContext.completeNow();
+					})));
+		}));
+
+	}
+
+	/**
+	 * Verify that can found a community norm object.
+	 *
+	 *
+	 * @param profileManager service to manage profile managers.
+	 * @param testContext    context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNormObject(String, String,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityNormObject(WeNetProfileManagerService profileManager, VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final long now = TimeManager.now();
+		this.repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(storedNorm -> {
+			final String normId = storedNorm.getString("_id");
+			this.repository.searchCommunityNormObject(communityId, normId,
+					testContext.succeeding(foundCommunity -> testContext.verify(() -> {
+						assertThat(foundCommunity).isNotNull();
+						assertThat(foundCommunity.getString("_id")).isEqualTo(normId);
+						assertThat(foundCommunity.getLong("sinceTime")).isGreaterThanOrEqualTo(now);
+						testContext.completeNow();
+					})));
+		}));
+
+	}
+
+	/**
+	 * Verify that can not store a community norm that can not be an object.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#storeCommunityNorm(String,CommunityNorm,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotStoreACommunityNormThatCanNotBeAnObject(VertxTestContext testContext) {
+
+		final CommunityNorm communityNorm = new CommunityNorm() {
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public JsonObject toJsonObject() {
+
+				return null;
+			}
+		};
+		this.repository.storeCommunityNorm("communityId", communityNorm, testContext.failing(failed -> {
+			testContext.completeNow();
+		}));
+
+	}
+
+	/**
+	 * Verify that can store a community norm.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#storeCommunityNorm(String, CommunityNorm,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldStoreCommunityNorm(VertxTestContext testContext) {
+
+		final long now = TimeManager.now();
+		final CommunityNorm communityNorm = new CommunityNorm();
+		this.repository.storeCommunityNorm("communityId", communityNorm,
+				testContext.succeeding(storedCommunityNorm -> testContext.verify(() -> {
+
+					assertThat(storedCommunityNorm).isNotNull();
+					assertThat(storedCommunityNorm.sinceTime).isGreaterThanOrEqualTo(now);
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Verify that can store a community norm object.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#storeCommunityNormObject(String,JsonObject,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldStoreCommunityNormObject(VertxTestContext testContext) {
+
+		final long now = TimeManager.now();
+		this.repository.storeCommunityNormObject("communityId", new JsonObject(),
+				testContext.succeeding(storedCommunityNorm -> testContext.verify(() -> {
+
+					assertThat(storedCommunityNorm).isNotNull();
+					assertThat(storedCommunityNorm.getLong("sinceTime", 0l)).isNotEqualTo(0).isGreaterThanOrEqualTo(now);
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Verify that delete a community norm.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#deleteCommunityNorm(String, String,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldDeleteCommunityNorm(VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final CommunityNorm communityNorm = new CommunityNorm();
+		final String normId = UUID.randomUUID().toString();
+		communityNorm._id = normId;
+		this.repository.storeCommunityNorm(communityId, communityNorm, testContext.succeeding(stored -> {
+
+			this.repository.deleteCommunityNorm(communityId, normId, testContext.succeeding(delete -> {
+
+				this.repository.searchCommunityNorm(communityId, normId, testContext.failing(search -> {
+					testContext.completeNow();
+				}));
+
+			}));
+		}));
+
+	}
+
+	/**
+	 * Verify that found an empty community norm page.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
+	 *      int, int, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundEmptyCommunityNormPage(VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final CommunityNorm communityNorm = new CommunityNorm();
+		final String normId = UUID.randomUUID().toString();
+		communityNorm._id = normId;
+		this.repository.searchCommunityNormsPageObject(communityId, null, null, 0, 100,
+				testContext.succeeding(page -> testContext.verify(() -> {
+
+					assertThat(page.getLong("offset")).isEqualTo(0L);
+					assertThat(page.getLong("total")).isEqualTo(0L);
+					assertThat(page.getJsonArray("norms")).isNull();
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Verify that found some community norm norms.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
+	 *      int, int, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityNormPage(VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		this.repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored1 -> {
+
+			this.repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored2 -> {
+
+				this.repository.searchCommunityNormsPageObject(communityId, null, null, 0, 100,
+						testContext.succeeding(page -> testContext.verify(() -> {
+
+							assertThat(page.getLong("offset")).isEqualTo(0L);
+							assertThat(page.getLong("total")).isEqualTo(2L);
+							final JsonArray norms = page.getJsonArray("norms", new JsonArray());
+							assertThat(norms.size()).isEqualTo(2);
+							assertThat(norms.getJsonObject(0).getString("_id")).isEqualTo(stored1.getString("_id"));
+							assertThat(norms.getJsonObject(1).getString("_id")).isEqualTo(stored2.getString("_id"));
+							testContext.completeNow();
+						})));
+
+			}));
+		}));
+
+	}
+
+	/**
+	 * Create an aggregate some communities with a fake {@link Community#sinceTime}.
+	 *
+	 * @param communityId identifier where the norm will be stored.
+	 * @param pool        that create the mongo connections.
+	 * @param max         number of communities to try to create.
+	 *
+	 * @return the aggregated communities.
+	 */
+	public static List<CommunityNorm> createAndStoreSomeCommunityNormsWithFakeSinceTime(String communityId,
+			MongoClient pool, int max) {
+
+		final List<CommunityNorm> communityNormss = new ArrayList<>();
+		final Semaphore semaphore = new Semaphore(0);
+		createNextCommunityNormWithFakeSinceTime(communityId, pool, communityNormss, max, semaphore);
+
+		try {
+			semaphore.acquire(max);
+		} catch (final InterruptedException ignored) {
+		}
+
+		return communityNormss;
+
+	}
+
+	/**
+	 * Create an store a community norm with a fake since time.
+	 *
+	 * @param communityId    identifier where the norm will be stored.
+	 * @param pool           that create the mongo connections.
+	 * @param communityNorms that has been created.
+	 * @param tries          number maximum of times to create a community norm.
+	 * @param semaphore      to inform when the community is created.
+	 */
+	private static void createNextCommunityNormWithFakeSinceTime(String communityId, MongoClient pool,
+			List<CommunityNorm> communityNorms, int tries, Semaphore semaphore) {
+
+		final int index = communityNorms.size();
+		final CommunityNorm communityNorm = new CommunityNormTest().createModelExample(index);
+		communityNorm.sinceTime = index * 100000;
+		pool.save(CommunitiesRepositoryImpl.COMMUNITY_NORMS_COLLECTION,
+				communityNorm.toJsonObject().put("communityId", communityId), stored -> {
+					if (!stored.failed()) {
+
+						communityNorm._id = stored.result();
+						communityNorms.add(communityNorm);
+
+					}
+					if (tries > 1) {
+						createNextCommunityNormWithFakeSinceTime(communityId, pool, communityNorms, tries - 1, semaphore);
+					}
+					semaphore.release();
+				});
+
+	}
+
+	/**
+	 * Verify that found some community norms with a since from.
+	 *
+	 * @param pool        that create the mongo connections.
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
+	 *      int, int, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityNormsPageWithSinceFrom(MongoClient pool, VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityNorm> communityNorms = createAndStoreSomeCommunityNormsWithFakeSinceTime(communityId, pool, 23);
+		this.repository.searchCommunityNormsPageObject(communityId, 1500000l, null, 0, 100,
+				testContext.succeeding(found -> testContext.verify(() -> {
+
+					final CommunityNormsPage foundPage = Model.fromJsonObject(found, CommunityNormsPage.class);
+					assertThat(foundPage.offset).isEqualTo(0);
+					assertThat(foundPage.total).isEqualTo(8);
+					assertThat(foundPage.norms).isEqualTo(communityNorms.subList(15, 23));
+
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Verify that found some community norms with a since to.
+	 *
+	 * @param pool        that create the mongo connections.
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
+	 *      int, int, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityNormsPageWithSinceTo(MongoClient pool, VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityNorm> communityNorms = createAndStoreSomeCommunityNormsWithFakeSinceTime(communityId, pool, 23);
+		this.repository.searchCommunityNormsPageObject(communityId, null, 1500000l, 0, 100,
+				testContext.succeeding(found -> testContext.verify(() -> {
+
+					final CommunityNormsPage foundPage = Model.fromJsonObject(found, CommunityNormsPage.class);
+					assertThat(foundPage.offset).isEqualTo(0);
+					assertThat(foundPage.total).isEqualTo(16);
+					assertThat(foundPage.norms).isEqualTo(communityNorms.subList(0, 16));
+
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Verify that found some community norms with a since range.
+	 *
+	 * @param pool        that create the mongo connections.
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
+	 *      int, int, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityNormsPageWithSinceRange(MongoClient pool, VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityNorm> communityNorms = createAndStoreSomeCommunityNormsWithFakeSinceTime(communityId, pool, 23);
+		this.repository.searchCommunityNormsPageObject(communityId, 1500000l, 2100000l, 2, 3,
+				testContext.succeeding(found -> testContext.verify(() -> {
+
+					final CommunityNormsPage foundPage = Model.fromJsonObject(found, CommunityNormsPage.class);
+					assertThat(foundPage.offset).isEqualTo(2);
+					assertThat(foundPage.total).isEqualTo(7);
+					assertThat(foundPage.norms).isEqualTo(communityNorms.subList(17, 20));
+
+					testContext.completeNow();
+				})));
 
 	}
 

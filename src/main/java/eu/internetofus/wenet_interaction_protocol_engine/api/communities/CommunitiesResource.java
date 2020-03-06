@@ -399,7 +399,7 @@ public class CommunitiesResource implements Communities {
 	public void retrieveCommunityMembersPage(String communityId, OperationRequest context,
 			Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		final JsonObject params = context.getParams().getJsonObject("query", new JsonObject());
+		final JsonObject params = Operations.getQueryParamters(context);
 		final int offset = params.getInteger("offset", 0);
 		final int limit = params.getInteger("limit", 10);
 		final Long joinFrom = params.getLong("joinFrom", null);
@@ -411,6 +411,140 @@ public class CommunitiesResource implements Communities {
 
 				final Throwable cause = search.cause();
 				Logger.debug(cause, "Cannot found the members of the community {}.", communityId);
+				OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+
+			} else {
+
+				final JsonObject page = search.result();
+				OperationReponseHandlers.responseOk(resultHandler, page);
+			}
+		});
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void createCommunityNorm(String communityId, JsonObject body, OperationRequest context,
+			Handler<AsyncResult<OperationResponse>> resultHandler) {
+
+		final CommunityNorm communityNorm = Model.fromJsonObject(body, CommunityNorm.class);
+		if (communityNorm == null) {
+
+			Logger.debug("The {} is not a valid norm for a community.", body);
+			OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "bad_community_norm",
+					"The community norm is not right.");
+
+		} else {
+
+			try {
+
+				communityNorm.validate("bad_community_norm");
+				this.repository.searchCommunity(communityId, searchCommunity -> {
+
+					if (searchCommunity.failed()) {
+
+						OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND, "not_found_community",
+								"The community to add the norm is not defined");
+
+					} else {
+
+						this.repository.storeCommunityNorm(communityId, communityNorm, stored -> {
+
+							if (stored.failed()) {
+
+								final Throwable cause = stored.cause();
+								Logger.debug(cause, "Cannot store  {}.", communityNorm);
+								OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+
+							} else {
+
+								OperationReponseHandlers.responseOk(resultHandler, stored.result());
+							}
+						});
+
+					}
+
+				});
+
+			} catch (final ValidationErrorException cause) {
+
+				Logger.debug(cause, "The {} is not valid.", communityNorm);
+				OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+			}
+
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void deleteCommunityNorm(String communityId, String normId, OperationRequest context,
+			Handler<AsyncResult<OperationResponse>> resultHandler) {
+
+		this.repository.deleteCommunityNorm(communityId, normId, delete -> {
+
+			if (delete.failed()) {
+
+				final Throwable cause = delete.cause();
+				Logger.debug(cause, "Cannot delete the norm {} from the community {}.", normId, communityId);
+				OperationReponseHandlers.responseFailedWith(resultHandler, Status.NOT_FOUND, cause);
+
+			} else {
+
+				OperationReponseHandlers.responseOk(resultHandler);
+			}
+
+		});
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveCommunityNorm(String communityId, String normId, OperationRequest context,
+			Handler<AsyncResult<OperationResponse>> resultHandler) {
+
+		this.repository.searchCommunityNormObject(communityId, normId, search -> {
+
+			final JsonObject norm = search.result();
+			if (norm == null) {
+
+				Logger.debug(search.cause(), "The norm {} is not a norm of the community {}", normId, communityId);
+				OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND, "not_found_community_norm",
+						"The norm '" + normId + "' is not on the community '" + communityId + "'.");
+
+			} else {
+
+				OperationReponseHandlers.responseOk(resultHandler, norm);
+
+			}
+		});
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveCommunityNormsPage(String communityId, OperationRequest context,
+			Handler<AsyncResult<OperationResponse>> resultHandler) {
+
+		final JsonObject params = Operations.getQueryParamters(context);
+		final int offset = params.getInteger("offset", 0);
+		final int limit = params.getInteger("limit", 10);
+		final Long sinceFrom = params.getLong("sinceFrom", null);
+		final Long sinceTo = params.getLong("sinceTo", null);
+
+		this.repository.searchCommunityNormsPageObject(communityId, sinceFrom, sinceTo, offset, limit, search -> {
+
+			if (search.failed()) {
+
+				final Throwable cause = search.cause();
+				Logger.debug(cause, "Cannot found the norms of the community {}.", communityId);
 				OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
 			} else {

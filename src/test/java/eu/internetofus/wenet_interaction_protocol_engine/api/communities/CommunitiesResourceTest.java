@@ -94,7 +94,7 @@ public class CommunitiesResourceTest {
 		@SuppressWarnings("unchecked")
 		final ArgumentCaptor<Handler<AsyncResult<Community>>> storeHandler = ArgumentCaptor.forClass(Handler.class);
 		verify(resource.repository, times(1)).storeCommunity(any(), storeHandler.capture());
-		storeHandler.getValue().handle(Future.failedFuture("Search community error"));
+		storeHandler.getValue().handle(Future.failedFuture("Store community error"));
 
 	}
 
@@ -192,4 +192,57 @@ public class CommunitiesResourceTest {
 
 	}
 
+	/**
+	 * Check fail create community norm because repository can not store it.
+	 *
+	 * @param testContext test context.
+	 */
+	@Test
+	public void shouldFailCreateCommunityNormBecasueRepositoryFailsToStore(VertxTestContext testContext) {
+
+		final CommunitiesResource resource = createCommunitiesResource();
+		final OperationRequest context = mock(OperationRequest.class);
+		resource.createCommunityNorm("communityId", new CommunityNormTest().createModelExample(1).toJsonObject(), context,
+				testContext.succeeding(create -> {
+
+					assertThat(create.getStatusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+					testContext.completeNow();
+				}));
+
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<Community>>> searchHandler = ArgumentCaptor.forClass(Handler.class);
+		verify(resource.repository, times(1)).searchCommunity(any(), searchHandler.capture());
+		searchHandler.getValue().handle(
+				Future.succeededFuture(Model.fromJsonObject(new JsonObject().put("_id", "communityId"), Community.class)));
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<CommunityNorm>>> storeHandler = ArgumentCaptor.forClass(Handler.class);
+		verify(resource.repository, times(1)).storeCommunityNorm(any(), any(), storeHandler.capture());
+		storeHandler.getValue().handle(Future.failedFuture("Store community norm error"));
+
+	}
+
+	/**
+	 * Check fail retrieve community norm because repository failed.
+	 *
+	 * @param testContext test context.
+	 */
+	@Test
+	public void shouldFailRetrieveCommunityNormsPageBecauseRepositoryFails(VertxTestContext testContext) {
+
+		final CommunitiesResource resource = createCommunitiesResource();
+		final OperationRequest context = mock(OperationRequest.class);
+		doReturn(new JsonObject()).when(context).getParams();
+		resource.retrieveCommunityNormsPage("communityId", context, testContext.succeeding(update -> {
+
+			assertThat(update.getStatusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+			testContext.completeNow();
+		}));
+
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<JsonObject>>> searchHandler = ArgumentCaptor.forClass(Handler.class);
+		verify(resource.repository, times(1)).searchCommunityNormsPageObject(eq("communityId"), any(), any(), eq(0), eq(10),
+				searchHandler.capture());
+		searchHandler.getValue().handle(Future.failedFuture("Search community norm error"));
+
+	}
 }

@@ -48,6 +48,7 @@ import eu.internetofus.wenet_interaction_protocol_engine.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.ErrorMessage;
+import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepositoryImplTest;
 import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
@@ -1030,7 +1031,7 @@ public class CommunitiesIT {
 	}
 
 	/**
-	 * Verify that return error when search an undefined community member.
+	 * Verify that return a community member.
 	 *
 	 * @param repository  to manage the communities.
 	 * @param client      to connect to the server.
@@ -1087,7 +1088,7 @@ public class CommunitiesIT {
 	}
 
 	/**
-	 * Verify that return error when delete an undefined community member.
+	 * Verify that delete a community member.
 	 *
 	 * @param repository  to manage the communities.
 	 * @param client      to connect to the server.
@@ -1141,7 +1142,7 @@ public class CommunitiesIT {
 	}
 
 	/**
-	 * Verify that return an page with some members.
+	 * Verify that return a page with some members.
 	 *
 	 * @param repository  to manage the communities.
 	 * @param client      to connect to the server.
@@ -1187,7 +1188,7 @@ public class CommunitiesIT {
 	}
 
 	/**
-	 * Verify that return an page with some members with an offset.
+	 * Verify that return a page with some members with an offset.
 	 *
 	 * @param repository  to manage the communities.
 	 * @param client      to connect to the server.
@@ -1232,7 +1233,7 @@ public class CommunitiesIT {
 	}
 
 	/**
-	 * Verify that return an page with some members with a limit.
+	 * Verify that return a page with some members with a limit.
 	 *
 	 * @param repository  to manage the communities.
 	 * @param client      to connect to the server.
@@ -1278,7 +1279,7 @@ public class CommunitiesIT {
 	}
 
 	/**
-	 * Verify that return an page with some members with an offset and a limit.
+	 * Verify that return a page with some members with an offset and a limit.
 	 *
 	 * @param repository  to manage the communities.
 	 * @param client      to connect to the server.
@@ -1330,7 +1331,7 @@ public class CommunitiesIT {
 	}
 
 	/**
-	 * Verify that return an page with some members that are joined after a date.
+	 * Verify that return a page with some members that are joined after a date.
 	 *
 	 * @param pool        connection to the database.
 	 * @param client      to connect to the server.
@@ -1345,7 +1346,7 @@ public class CommunitiesIT {
 
 		final String communityId = UUID.randomUUID().toString();
 		final List<CommunityMember> members = CommunitiesRepositoryImplTest
-				.createCommunityMemebersWithFakeJoinTime(communityId, pool, 23);
+				.createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
 
 		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
 				.with(queryParam("joinFrom", "700000")).expect(res -> {
@@ -1363,7 +1364,7 @@ public class CommunitiesIT {
 	}
 
 	/**
-	 * Verify that return an page with some members that are joined before a date.
+	 * Verify that return a page with some members that are joined before a date.
 	 *
 	 * @param pool        connection to the database.
 	 * @param client      to connect to the server.
@@ -1378,7 +1379,7 @@ public class CommunitiesIT {
 
 		final String communityId = UUID.randomUUID().toString();
 		final List<CommunityMember> members = CommunitiesRepositoryImplTest
-				.createCommunityMemebersWithFakeJoinTime(communityId, pool, 23);
+				.createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
 
 		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
 				.with(queryParam("joinTo", "700000")).expect(res -> {
@@ -1396,7 +1397,7 @@ public class CommunitiesIT {
 	}
 
 	/**
-	 * Verify that return an page with some members that are joined in a range
+	 * Verify that return a page with some members that are joined in a range
 	 *
 	 * @param pool        connection to the database.
 	 * @param client      to connect to the server.
@@ -1411,7 +1412,7 @@ public class CommunitiesIT {
 
 		final String communityId = UUID.randomUUID().toString();
 		final List<CommunityMember> members = CommunitiesRepositoryImplTest
-				.createCommunityMemebersWithFakeJoinTime(communityId, pool, 23);
+				.createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
 
 		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
 				.with(queryParam("joinFrom", "700000"), queryParam("joinTo", "1700000")).expect(res -> {
@@ -1429,7 +1430,7 @@ public class CommunitiesIT {
 	}
 
 	/**
-	 * Verify that return an page with some members that are joined in a range with
+	 * Verify that return a page with some members that are joined in a range with
 	 * an offset and a limit.
 	 *
 	 * @param pool        connection to the database.
@@ -1445,7 +1446,7 @@ public class CommunitiesIT {
 
 		final String communityId = UUID.randomUUID().toString();
 		final List<CommunityMember> members = CommunitiesRepositoryImplTest
-				.createCommunityMemebersWithFakeJoinTime(communityId, pool, 23);
+				.createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
 
 		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
 				.with(queryParam("joinFrom", "700000"), queryParam("joinTo", "1700000"), queryParam("offset", "3"),
@@ -1629,4 +1630,550 @@ public class CommunitiesIT {
 
 		}));
 	}
+
+	/**
+	 * Verify that return error when search an undefined community norm.
+	 *
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotRetrieveCommunityNormWithAnUndefinedCommunityId(WebClient client, VertxTestContext testContext) {
+
+		testRequest(client, HttpMethod.GET,
+				Communities.PATH + "/undefined-community-identifier" + Norms.PATH + "/undefined-user-id").expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
+					final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+					assertThat(error.code).isNotEmpty();
+					assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+					testContext.completeNow();
+
+				}).send(testContext);
+	}
+
+	/**
+	 * Verify that return a community norm.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityNorm(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final CommunityNorm norm = new CommunityNorm();
+		repository.storeCommunityNorm(communityId, norm, testContext.succeeding(stored -> {
+
+			testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH + "/" + stored._id)
+					.expect(res -> {
+
+						assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+						final CommunityNorm found = assertThatBodyIs(CommunityNorm.class, res);
+						assertThat(found).isEqualTo(stored);
+						testContext.completeNow();
+
+					}).send(testContext);
+
+		}));
+	}
+
+	/**
+	 * Verify that return error when delete an undefined community norm.
+	 *
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#deleteCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotDeleteCommunityNormWithAnUndefinedCommunityId(WebClient client, VertxTestContext testContext) {
+
+		testRequest(client, HttpMethod.DELETE,
+				Communities.PATH + "/undefined-community-identifier" + Norms.PATH + "/undefined-norm-id").expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
+					final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+					assertThat(error.code).isNotEmpty();
+					assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+					testContext.completeNow();
+
+				}).send(testContext);
+	}
+
+	/**
+	 * Verify that delete a community norm.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#deleteCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldDeleteCommunityNorm(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final CommunityNorm norm = new CommunityNorm();
+		repository.storeCommunityNorm(communityId, norm, testContext.succeeding(stored -> {
+
+			testRequest(client, HttpMethod.DELETE, Communities.PATH + "/" + communityId + Norms.PATH + "/" + stored._id)
+					.expect(res -> {
+
+						assertThat(res.statusCode()).isEqualTo(Status.NO_CONTENT.getStatusCode());
+						testContext.completeNow();
+
+					}).send(testContext);
+
+		}));
+	}
+
+	/**
+	 * Verify that return an empty page if not norms are defined.
+	 *
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveEmptyCommunityNormsPage(WebClient client, VertxTestContext testContext) {
+
+		testRequest(client, HttpMethod.GET, Communities.PATH + "/undefined-community-identifier" + Norms.PATH)
+				.expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunityNormsPage page = assertThatBodyIs(CommunityNormsPage.class, res);
+					assertThat(page).isNotNull();
+					assertThat(page.total).isEqualTo(0l);
+					testContext.completeNow();
+
+				}).send(testContext);
+	}
+
+	/**
+	 * Verify that return a page with some norms.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityNormsPage(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored1 -> {
+
+			repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored2 -> {
+
+				repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored3 -> {
+
+					testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH).expect(res -> {
+
+						assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+						final CommunityNormsPage page = assertThatBodyIs(CommunityNormsPage.class, res);
+						assertThat(page).isNotNull();
+						assertThat(page.offset).isEqualTo(0l);
+						assertThat(page.total).isEqualTo(3l);
+						assertThat(page.norms).isNotEmpty().hasSize(3).containsExactly(
+								Model.fromJsonObject(stored1, CommunityNorm.class), Model.fromJsonObject(stored2, CommunityNorm.class),
+								Model.fromJsonObject(stored3, CommunityNorm.class));
+						testContext.completeNow();
+
+					}).send(testContext);
+
+				}));
+			}));
+
+		}));
+	}
+
+	/**
+	 * Verify that return a page with some norms with an offset.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityNormsPageWithAnOffset(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored1 -> {
+
+			repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored2 -> {
+
+				repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored3 -> {
+
+					testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH)
+							.with(queryParam("offset", "2")).expect(res -> {
+
+								assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+								final CommunityNormsPage page = assertThatBodyIs(CommunityNormsPage.class, res);
+								assertThat(page).isNotNull();
+								assertThat(page.offset).isEqualTo(2l);
+								assertThat(page.total).isEqualTo(3l);
+								assertThat(page.norms).isNotEmpty().hasSize(1)
+										.containsExactly(Model.fromJsonObject(stored3, CommunityNorm.class));
+								testContext.completeNow();
+
+							}).send(testContext);
+
+				}));
+			}));
+
+		}));
+	}
+
+	/**
+	 * Verify that return a page with some norms with a limit.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityNormsPageWithALimit(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored1 -> {
+
+			repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored2 -> {
+
+				repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored3 -> {
+
+					testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH)
+							.with(queryParam("limit", "2")).expect(res -> {
+
+								assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+								final CommunityNormsPage page = assertThatBodyIs(CommunityNormsPage.class, res);
+								assertThat(page).isNotNull();
+								assertThat(page.offset).isEqualTo(0l);
+								assertThat(page.total).isEqualTo(3l);
+								assertThat(page.norms).isNotEmpty().hasSize(2).containsExactly(
+										Model.fromJsonObject(stored1, CommunityNorm.class),
+										Model.fromJsonObject(stored2, CommunityNorm.class));
+								testContext.completeNow();
+
+							}).send(testContext);
+
+				}));
+			}));
+
+		}));
+	}
+
+	/**
+	 * Verify that return a page with some norms with an offset and a limit.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityNormsPageWithOffsetAndLimit(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored1 -> {
+
+			repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored2 -> {
+
+				repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored3 -> {
+
+					repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored4 -> {
+
+						testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH)
+								.with(queryParam("offset", "1"), queryParam("limit", "2")).expect(res -> {
+
+									assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+									final CommunityNormsPage page = assertThatBodyIs(CommunityNormsPage.class, res);
+									assertThat(page).isNotNull();
+									assertThat(page.offset).isEqualTo(1l);
+									assertThat(page.total).isEqualTo(4l);
+									assertThat(page.norms).isNotEmpty().hasSize(2).containsExactly(
+											Model.fromJsonObject(stored2, CommunityNorm.class),
+											Model.fromJsonObject(stored3, CommunityNorm.class));
+									testContext.completeNow();
+
+								}).send(testContext);
+
+					}));
+				}));
+			}));
+
+		}));
+	}
+
+	/**
+	 * Verify that return a page with some norms that are added after a date.
+	 *
+	 * @param pool        connection to the database.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityNormsPageWithSinceFrom(MongoClient pool, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityNorm> norms = CommunitiesRepositoryImplTest.createCommunityNormsWithFakeSinceTime(communityId,
+				pool, 23);
+
+		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH)
+				.with(queryParam("sinceFrom", "700000")).expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunityNormsPage page = assertThatBodyIs(CommunityNormsPage.class, res);
+					assertThat(page).isNotNull();
+					assertThat(page.offset).isEqualTo(0);
+					assertThat(page.total).isEqualTo(16);
+					assertThat(page.norms).isEqualTo(norms.subList(7, 17));
+					testContext.completeNow();
+
+				}).send(testContext);
+
+	}
+
+	/**
+	 * Verify that return a page with some norms that are added before a date.
+	 *
+	 * @param pool        connection to the database.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityNormsPageWithSinceTo(MongoClient pool, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityNorm> norms = CommunitiesRepositoryImplTest.createCommunityNormsWithFakeSinceTime(communityId,
+				pool, 23);
+
+		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH)
+				.with(queryParam("sinceTo", "700000")).expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunityNormsPage page = assertThatBodyIs(CommunityNormsPage.class, res);
+					assertThat(page).isNotNull();
+					assertThat(page.offset).isEqualTo(0);
+					assertThat(page.total).isEqualTo(8);
+					assertThat(page.norms).isEqualTo(norms.subList(0, 8));
+					testContext.completeNow();
+
+				}).send(testContext);
+
+	}
+
+	/**
+	 * Verify that return a page with some norms that are added in a range
+	 *
+	 * @param pool        connection to the database.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityNormsPageWithSinceRange(MongoClient pool, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityNorm> norms = CommunitiesRepositoryImplTest.createCommunityNormsWithFakeSinceTime(communityId,
+				pool, 23);
+
+		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH)
+				.with(queryParam("sinceFrom", "700000"), queryParam("sinceTo", "1700000")).expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunityNormsPage page = assertThatBodyIs(CommunityNormsPage.class, res);
+					assertThat(page).isNotNull();
+					assertThat(page.offset).isEqualTo(0);
+					assertThat(page.total).isEqualTo(11);
+					assertThat(page.norms).isEqualTo(norms.subList(7, 17));
+					testContext.completeNow();
+
+				}).send(testContext);
+
+	}
+
+	/**
+	 * Verify that return a page with some norms that are added in a range with an
+	 * offset and a limit.
+	 *
+	 * @param pool        connection to the database.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldRetrieveCommunityNormsPageWithSinceRangeOffsetAndLimit(MongoClient pool, WebClient client,
+			VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityNorm> norms = CommunitiesRepositoryImplTest.createCommunityNormsWithFakeSinceTime(communityId,
+				pool, 23);
+
+		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH)
+				.with(queryParam("sinceFrom", "700000"), queryParam("sinceTo", "1700000"), queryParam("offset", "3"),
+						queryParam("limit", "2"))
+				.expect(res -> {
+
+					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+					final CommunityNormsPage page = assertThatBodyIs(CommunityNormsPage.class, res);
+					assertThat(page).isNotNull();
+					assertThat(page.offset).isEqualTo(3);
+					assertThat(page.total).isEqualTo(11);
+					assertThat(page.norms).isEqualTo(norms.subList(10, 12));
+					testContext.completeNow();
+
+				}).send(testContext);
+
+	}
+
+	/**
+	 * Verify that can not create an empty community norm.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotCreateEmptyCommunityNorm(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(storedCommunity -> {
+
+			testRequest(client, HttpMethod.POST, Communities.PATH + "/" + storedCommunity._id + Norms.PATH).expect(res -> {
+
+				assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+				final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+				assertThat(error.code).isNotEmpty().contains(".norm");
+				assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+				testContext.completeNow();
+
+			}).sendJson(new JsonObject(), testContext);
+		}));
+	}
+
+	/**
+	 * Verify that can not create a norm over an undefined community.
+	 *
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotCreateCommunityNormOverUndefinedCommunity(WebClient client, VertxTestContext testContext) {
+
+		testRequest(client, HttpMethod.POST, Communities.PATH + "/undefined-community" + Norms.PATH).expect(res -> {
+
+			assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
+			final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+			assertThat(error.code).isNotEmpty();
+			assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+			testContext.completeNow();
+
+		}).sendJson(new CommunityNormTest().createModelExample(23).toJsonObject(), testContext);
+
+	}
+
+	/**
+	 * Verify that create a community norm.
+	 *
+	 * @param repository  to manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#retrieveCommunity(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldCreateCommunityNorm(CommunitiesRepository repository, WebClient client,
+			VertxTestContext testContext) {
+
+		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(storedCommunity -> {
+
+			final long now = TimeManager.now();
+			testRequest(client, HttpMethod.POST, Communities.PATH + "/" + storedCommunity._id + Norms.PATH).expect(res -> {
+
+				assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+				final CommunityNorm stored = assertThatBodyIs(CommunityNorm.class, res);
+				assertThat(stored.sinceTime).isGreaterThanOrEqualTo(now);
+				testContext.completeNow();
+
+			}).sendJson(new CommunityNormTest().createModelExample(23).toJsonObject(), testContext);
+		}));
+	}
+
+	/**
+	 * Verify that return error when try to add a community norm with an object that
+	 * is not a community norm.
+	 *
+	 * @param repository  that manage the communities.
+	 * @param client      to connect to the server.
+	 * @param testContext context to test.
+	 *
+	 * @see Communities#updateCommunity(String, io.vertx.core.json.JsonObject,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotCreateCommunityNormWithANotCommunityNormObject(CommunitiesRepository repository,
+			WebClient client, VertxTestContext testContext) {
+
+		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(community -> {
+
+			testRequest(client, HttpMethod.POST, Communities.PATH + "/" + community._id + Norms.PATH).expect(res -> {
+
+				assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+				final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+				assertThat(error.code).isNotEmpty();
+				assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+				testContext.completeNow();
+
+			}).sendJson(new JsonObject().put("udefinedKey", "value"), testContext);
+		}));
+	}
+
 }

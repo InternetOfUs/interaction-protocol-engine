@@ -34,6 +34,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Community;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityMember;
+import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityNorm;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -329,6 +330,93 @@ public class CommunityRepositoryTest {
 		};
 
 		repository.updateCommunityMember("communityId", new CommunityMember(),
+				testContext.failing(fail -> testContext.verify(() -> {
+					assertThat(fail).isEqualTo(cause);
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Verify that can not found a community norm because that returned by
+	 * repository is not right.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNorm(String,String,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotFoundCommunityNormBecanormeturnedJsonObjectIsNotRight(VertxTestContext testContext) {
+
+		final CommunitiesRepository repository = new CommunitiesRepositoryImpl(null) {
+
+			@Override
+			public void searchCommunityNormObject(String communityId, String normId,
+					Handler<AsyncResult<JsonObject>> searchHandler) {
+
+				searchHandler.handle(Future.succeededFuture(new JsonObject().put("key", "value")));
+
+			}
+		};
+
+		repository.searchCommunityNorm("communityId", "any identifier", testContext.failing(fail -> {
+			testContext.completeNow();
+		}));
+
+	}
+
+	/**
+	 * Verify that can not store a community norm because that returned by
+	 * repository is not right.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNorm(String, String, Handler)
+	 */
+	@Test
+	public void shouldNotStoreCommunityNormBecanormeturnedJsonObjectIsNotRight(VertxTestContext testContext) {
+
+		final CommunitiesRepository repository = new CommunitiesRepositoryImpl(null) {
+
+			@Override
+			public void storeCommunityNormObject(String communityId, JsonObject community,
+					Handler<AsyncResult<JsonObject>> storeHandler) {
+
+				storeHandler.handle(Future.succeededFuture(new JsonObject().put("key", "value")));
+			}
+		};
+
+		repository.storeCommunityNorm("communityId", new CommunityNorm(), testContext.failing(fail -> {
+			testContext.completeNow();
+		}));
+
+	}
+
+	/**
+	 * Verify that can not store a community norm because that returned by
+	 * repository is not right.
+	 *
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#storeCommunityNorm(String, CommunityNorm, Handler)
+	 */
+	@Test
+	public void shouldNotStoreCommunityNormBecauseStoreFailed(VertxTestContext testContext) {
+
+		final Throwable cause = new IllegalArgumentException("Cause that can not be stored");
+		final CommunitiesRepository repository = new CommunitiesRepositoryImpl(null) {
+
+			@Override
+			public void storeCommunityNormObject(String communityId, JsonObject community,
+					Handler<AsyncResult<JsonObject>> storeHandler) {
+
+				storeHandler.handle(Future.failedFuture(cause));
+			}
+
+		};
+
+		repository.storeCommunityNorm("communityId", new CommunityNorm(),
 				testContext.failing(fail -> testContext.verify(() -> {
 					assertThat(fail).isEqualTo(cause);
 					testContext.completeNow();

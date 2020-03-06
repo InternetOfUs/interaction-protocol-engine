@@ -37,6 +37,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import eu.internetofus.wenet_interaction_protocol_engine.api.ErrorMessage;
+import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -308,7 +309,7 @@ public interface Communities {
 			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
 
 	/**
-	 * Called when want to add an user into a community.
+	 * Called when want to remove an user from a community.
 	 *
 	 * @param communityId   identifier of the community to remove the member.
 	 * @param userId        identifier of the user to remove as member of the
@@ -418,6 +419,151 @@ public interface Communities {
 	void retrieveCommunityMembersPage(
 			@PathParam("communityId") @Parameter(
 					description = "The identifier of the community to get the member information") String communityId,
+			@Parameter(hidden = true, required = false) OperationRequest context,
+			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+
+	/**
+	 * Called when want to add a norm into a community.
+	 *
+	 * @param communityId   identifier of the community to add the norm.
+	 * @param body          the new norm to add.
+	 * @param context       of the request.
+	 * @param resultHandler to inform of the response.
+	 */
+	@POST
+	@Path(COMMUNITY_ID_PATH + Norms.PATH)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(
+			summary = "Add an user into a community",
+			description = "Since or add an user to be a norm of a community.")
+	@RequestBody(
+			description = "Norm to add into the community",
+			required = true,
+			content = @Content(schema = @Schema(implementation = Community.class)))
+	@ApiResponse(
+			responseCode = "200",
+			description = "The new norm of the community",
+			content = @Content(schema = @Schema(implementation = Community.class)))
+	@ApiResponse(
+			responseCode = "400",
+			description = "Bad community norm",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+	@ApiResponse(
+			responseCode = "404",
+			description = "Not found community",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+	void createCommunityNorm(
+			@PathParam("communityId") @Parameter(
+					description = "The identifier of the community to add the norm") String communityId,
+			@Parameter(hidden = true, required = false) JsonObject body,
+			@Parameter(hidden = true, required = false) OperationRequest context,
+			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+
+	/**
+	 * Called when want to remove a community from a community.
+	 *
+	 * @param communityId   identifier of the community to remove the norm.
+	 * @param normId        identifier of the norm to delete.
+	 * @param context       of the request.
+	 * @param resultHandler to inform of the response.
+	 */
+	@DELETE
+	@Path(COMMUNITY_ID_PATH + Norms.PATH + "/{normId}")
+	@Operation(
+			summary = "Remove a norm from a community",
+			description = "You can use this method to remove a norm from a community.")
+	@ApiResponse(responseCode = "204", description = "The norm has been removed from the community")
+	@ApiResponse(
+			responseCode = "404",
+			description = "Not found community or norm",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+	void deleteCommunityNorm(
+			@PathParam("communityId") @Parameter(
+					description = "The identifier of the community to delete the norm") String communityId,
+			@PathParam("normId") @Parameter(description = "The identifier of the norm to remove") String normId,
+			@Parameter(hidden = true, required = false) OperationRequest context,
+			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+
+	/**
+	 * Called when want to get the information of a norm defined in a community.
+	 *
+	 * @param communityId   identifier of the community to get the norm.
+	 * @param normId        identifier of the norm.
+	 * @param context       of the request.
+	 * @param resultHandler to inform of the response.
+	 */
+	@GET
+	@Path(COMMUNITY_ID_PATH + Norms.PATH + "/{normId}")
+	@Operation(
+			summary = "Get the norm defined into a community.",
+			description = "You can use this method to obtain a norm that is defined into a community.")
+	@ApiResponse(
+			responseCode = "200",
+			description = "The norm of the community",
+			content = @Content(schema = @Schema(implementation = Community.class)))
+	@ApiResponse(
+			responseCode = "404",
+			description = "Not found community or norm",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+	void retrieveCommunityNorm(
+			@PathParam("communityId") @Parameter(
+					description = "The identifier of the community to get the norm information") String communityId,
+			@PathParam("normId") @Parameter(description = "The identifier of the norm to get") String normId,
+			@Parameter(hidden = true, required = false) OperationRequest context,
+			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+
+	/**
+	 * Called when want to get the norms associated into a community.
+	 *
+	 * @param communityId   identifier of the community to get the norms.
+	 * @param context       of the request.
+	 * @param resultHandler to inform of the response.
+	 */
+	@GET
+	@Path(COMMUNITY_ID_PATH + Norms.PATH)
+	@Operation(
+			summary = "Get the norms of a community.",
+			description = "You can use this method to obtain the norms defined into a community.")
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "sinceFrom",
+			description = "The time stamp inclusive that mark the older limit in witch the community norm was activated. It is the difference, measured in seconds, between the time when the norm has added into the community and midnight, January 1, 1970 UTC.",
+			required = false,
+			schema = @Schema(type = "integer", defaultValue = "0", example = "1457166440"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "sinceTo",
+			description = "The time stamp inclusive that mark the newest limit in witch the community norm was activated. It is the difference, measured in seconds, between the time when the norm has added into the community and midnight, January 1, 1970 UTC.",
+			required = false,
+			schema = @Schema(type = "integer", defaultValue = "92233720368547757", example = "1571664406"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "offset",
+			description = "Index of the first community norm to return.",
+			required = false,
+			schema = @Schema(type = "integer", defaultValue = "0", example = "10"))
+	@Parameter(
+			in = ParameterIn.QUERY,
+			name = "limit",
+			description = "Number maximum of community norms to return.",
+			required = false,
+			schema = @Schema(type = "integer", defaultValue = "10", example = "100"))
+	@ApiResponse(
+			responseCode = "200",
+			description = "The norms of the community that match the pattern",
+			content = @Content(schema = @Schema(implementation = CommunityNormsPage.class)))
+	@ApiResponse(
+			responseCode = "400",
+			description = "Bad request. For example if a pattern is not right",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+	@ApiResponse(
+			responseCode = "404",
+			description = "Not found community",
+			content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+	void retrieveCommunityNormsPage(
+			@PathParam("communityId") @Parameter(
+					description = "The identifier of the community to get the norms") String communityId,
 			@Parameter(hidden = true, required = false) OperationRequest context,
 			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
 

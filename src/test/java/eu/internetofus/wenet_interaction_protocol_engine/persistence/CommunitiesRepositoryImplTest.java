@@ -43,6 +43,8 @@ import eu.internetofus.wenet_interaction_protocol_engine.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityMember;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityMembersPage;
+import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityNorm;
+import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityNormsPage;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.junit5.VertxTestContext;
@@ -78,13 +80,13 @@ public class CommunitiesRepositoryImplTest extends CommunitiesRepositoryTestCase
 	 *
 	 * @return the community members with a fake join time.
 	 */
-	public static List<CommunityMember> createCommunityMemebersWithFakeJoinTime(String communityId, MongoClient pool,
+	public static List<CommunityMember> createCommunityMembersWithFakeJoinTime(String communityId, MongoClient pool,
 			int max) {
 
 		final List<CommunityMember> members = new ArrayList<>();
 		final Semaphore semaphore = new Semaphore(0);
 
-		createNextMeber(semaphore, members, communityId, pool, max);
+		createNextMember(semaphore, members, communityId, pool, max);
 
 		try {
 			semaphore.acquire(max);
@@ -104,7 +106,7 @@ public class CommunitiesRepositoryImplTest extends CommunitiesRepositoryTestCase
 	 * @param pool        connection to the mongo database.
 	 * @param max         number of members to create.
 	 */
-	private static void createNextMeber(Semaphore semaphore, List<CommunityMember> members, String communityId,
+	private static void createNextMember(Semaphore semaphore, List<CommunityMember> members, String communityId,
 			MongoClient pool, int max) {
 
 		final String userId = UUID.randomUUID().toString();
@@ -122,7 +124,7 @@ public class CommunitiesRepositoryImplTest extends CommunitiesRepositoryTestCase
 					members.add(member);
 					if (members.size() < max) {
 
-						createNextMeber(semaphore, members, communityId, pool, max);
+						createNextMember(semaphore, members, communityId, pool, max);
 					}
 					semaphore.release();
 				});
@@ -135,14 +137,14 @@ public class CommunitiesRepositoryImplTest extends CommunitiesRepositoryTestCase
 	 * @param pool        connection to the mongo database.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
-	 *      io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunityMembersPageObject(String, Long,
+	 *      Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	public void shouldFoundCommunityMemberPageWithJoinFrom(MongoClient pool, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityMember> members = createCommunityMemebersWithFakeJoinTime(communityId, pool, 23);
+		final List<CommunityMember> members = createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
 		this.repository.searchCommunityMembersPageObject(communityId, 700000L, null, 0, 100,
 				testContext.succeeding(page -> testContext.verify(() -> {
 
@@ -161,14 +163,14 @@ public class CommunitiesRepositoryImplTest extends CommunitiesRepositoryTestCase
 	 * @param pool        connection to the mongo database.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
-	 *      io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunityMembersPageObject(String, Long,
+	 *      Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	public void shouldFoundCommunityMemberPageWithJoinTo(MongoClient pool, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityMember> members = createCommunityMemebersWithFakeJoinTime(communityId, pool, 23);
+		final List<CommunityMember> members = createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
 		this.repository.searchCommunityMembersPageObject(communityId, null, 700000L, 0, 100,
 				testContext.succeeding(page -> testContext.verify(() -> {
 
@@ -187,14 +189,14 @@ public class CommunitiesRepositoryImplTest extends CommunitiesRepositoryTestCase
 	 * @param pool        connection to the mongo database.
 	 * @param testContext context that executes the test.
 	 *
-	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
-	 *      io.vertx.core.Handler)
+	 * @see CommunitiesRepository#searchCommunityMembersPageObject(String, Long,
+	 *      Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
 	public void shouldFoundCommunityMemberPageWithJoinRange(MongoClient pool, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityMember> members = createCommunityMemebersWithFakeJoinTime(communityId, pool, 23);
+		final List<CommunityMember> members = createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
 		this.repository.searchCommunityMembersPageObject(communityId, 700000L, 1700000L, 1, 5,
 				testContext.succeeding(page -> testContext.verify(() -> {
 
@@ -202,6 +204,144 @@ public class CommunitiesRepositoryImplTest extends CommunitiesRepositoryTestCase
 					assertThat(pageModel.offset).isEqualTo(1L);
 					assertThat(pageModel.total).isEqualTo(11L);
 					assertThat(pageModel.members).isEqualTo(members.subList(8, 13));
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Create some community norms
+	 *
+	 * @param communityId identifier of the community to add the norms.
+	 * @param pool        connection to the mongo database.
+	 * @param max         number of norms to create.
+	 *
+	 * @return the community norms with a fake since time.
+	 */
+	public static List<CommunityNorm> createCommunityNormsWithFakeSinceTime(String communityId, MongoClient pool,
+			int max) {
+
+		final List<CommunityNorm> norms = new ArrayList<>();
+		final Semaphore semaphore = new Semaphore(0);
+
+		createNextNorm(semaphore, norms, communityId, pool, max);
+
+		try {
+			semaphore.acquire(max);
+		} catch (final InterruptedException ignored) {
+		}
+
+		return norms;
+
+	}
+
+	/**
+	 * Create and store the next community norm.
+	 *
+	 * @param semaphore   to inform when the norm is created.
+	 * @param norms       list to store the created norm.
+	 * @param communityId identifier of the community to add the norms.
+	 * @param pool        connection to the mongo database.
+	 * @param max         number of norms to create.
+	 */
+	private static void createNextNorm(Semaphore semaphore, List<CommunityNorm> norms, String communityId,
+			MongoClient pool, int max) {
+
+		final String userId = UUID.randomUUID().toString();
+		final long sinceTime = norms.size() * 100000;
+		pool.save(CommunitiesRepositoryImpl.COMMUNITY_NORMS_COLLECTION,
+				new JsonObject().put("communityId", communityId).put("_id", userId).put("sinceTime", sinceTime), save -> {
+
+					if (save.failed()) {
+
+						InternalLogger.log(Level.ERROR, save.cause());
+					}
+					final CommunityNorm norm = new CommunityNorm();
+					norm._id = userId;
+					norm.sinceTime = sinceTime;
+					norms.add(norm);
+					if (norms.size() < max) {
+
+						createNextNorm(semaphore, norms, communityId, pool, max);
+					}
+					semaphore.release();
+				});
+
+	}
+
+	/**
+	 * Verify that found some community user norms with a since from.
+	 *
+	 * @param pool        connection to the mongo database.
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
+	 *      int, int, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityNormPageWithSinceFrom(MongoClient pool, VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityNorm> norms = createCommunityNormsWithFakeSinceTime(communityId, pool, 23);
+		this.repository.searchCommunityNormsPageObject(communityId, 700000L, null, 0, 100,
+				testContext.succeeding(page -> testContext.verify(() -> {
+
+					final CommunityNormsPage pageModel = Model.fromJsonObject(page, CommunityNormsPage.class);
+					assertThat(pageModel.offset).isEqualTo(0L);
+					assertThat(pageModel.total).isEqualTo(16L);
+					assertThat(pageModel.norms).isEqualTo(norms.subList(7, 23));
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Verify that found some community user norms with a since to.
+	 *
+	 * @param pool        connection to the mongo database.
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
+	 *      int, int, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityNormPageWithSinceTo(MongoClient pool, VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityNorm> norms = createCommunityNormsWithFakeSinceTime(communityId, pool, 23);
+		this.repository.searchCommunityNormsPageObject(communityId, null, 700000L, 0, 100,
+				testContext.succeeding(page -> testContext.verify(() -> {
+
+					final CommunityNormsPage pageModel = Model.fromJsonObject(page, CommunityNormsPage.class);
+					assertThat(pageModel.offset).isEqualTo(0L);
+					assertThat(pageModel.total).isEqualTo(8L);
+					assertThat(pageModel.norms).isEqualTo(norms.subList(0, 8));
+					testContext.completeNow();
+				})));
+
+	}
+
+	/**
+	 * Verify that found some community user norms with a since range.
+	 *
+	 * @param pool        connection to the mongo database.
+	 * @param testContext context that executes the test.
+	 *
+	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
+	 *      int, int, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldFoundCommunityNormPageWithSinceRange(MongoClient pool, VertxTestContext testContext) {
+
+		final String communityId = UUID.randomUUID().toString();
+		final List<CommunityNorm> norms = createCommunityNormsWithFakeSinceTime(communityId, pool, 23);
+		this.repository.searchCommunityNormsPageObject(communityId, 700000L, 1700000L, 1, 5,
+				testContext.succeeding(page -> testContext.verify(() -> {
+
+					final CommunityNormsPage pageModel = Model.fromJsonObject(page, CommunityNormsPage.class);
+					assertThat(pageModel.offset).isEqualTo(1L);
+					assertThat(pageModel.total).isEqualTo(11L);
+					assertThat(pageModel.norms).isEqualTo(norms.subList(8, 13));
 					testContext.completeNow();
 				})));
 

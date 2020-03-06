@@ -31,6 +31,7 @@ import java.util.List;
 import eu.internetofus.wenet_interaction_protocol_engine.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Community;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityMember;
+import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityNorm;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
@@ -291,7 +292,7 @@ public interface CommunitiesRepository {
 				final CommunityMember member = Model.fromJsonObject(value, CommunityMember.class);
 				if (member == null) {
 
-					searchHandler.handle(Future.failedFuture("The stored community is not valid."));
+					searchHandler.handle(Future.failedFuture("The stored community member is not valid."));
 
 				} else {
 
@@ -352,7 +353,7 @@ public interface CommunitiesRepository {
 	}
 
 	/**
-	 * Store a community.
+	 * Store a community member.
 	 *
 	 * @param communityId  identifier of the community to store the member.
 	 * @param member       to store.
@@ -442,37 +443,160 @@ public interface CommunitiesRepository {
 	default void searchCommunityMembersPageObject(String communityId, Long joinFrom, Long joinTo, int offset, int limit,
 			Handler<AsyncResult<JsonObject>> searchHandler) {
 
-		final JsonObject query = new JsonObject();
-		if (joinFrom != null || joinTo != null) {
-
-			final JsonObject restriction = new JsonObject();
-			if (joinFrom != null) {
-
-				restriction.put("$gte", joinFrom);
-
-			}
-			if (joinTo != null) {
-
-				restriction.put("$lte", joinTo);
-
-			}
-
-			query.put("joinTime", restriction);
-
-		}
+		final JsonObject query = new QueryBuilder().withRange("joinTime", joinFrom, joinTo).build();
 		this.searchCommunityMembersPageObject(communityId, query, offset, limit, searchHandler);
+
 	}
 
 	/**
-	 * Search for the communities that satisfy the query.
+	 * Search for the community members that satisfy the query.
 	 *
 	 * @param communityId   identifier of the community to get the members.
-	 * @param query         that has to match the communities to search.
-	 * @param offset        index of the first community to return.
-	 * @param limit         number maximum of communities to return.
+	 * @param query         that has to match the community members to search.
+	 * @param offset        index of the first community member to return.
+	 * @param limit         number maximum of community members to return.
 	 * @param searchHandler handler to manage the search.
 	 */
 	void searchCommunityMembersPageObject(String communityId, JsonObject query, int offset, int limit,
 			Handler<AsyncResult<JsonObject>> searchHandler);
 
+	/**
+	 * Search for a community norm.
+	 *
+	 * @param communityId   identifier of the community to get the norm.
+	 * @param normId        identifier of the norm to get
+	 * @param searchHandler handler to manage the search.
+	 */
+	@GenIgnore
+	default void searchCommunityNorm(String communityId, String normId,
+			Handler<AsyncResult<CommunityNorm>> searchHandler) {
+
+		this.searchCommunityNormObject(communityId, normId, search -> {
+
+			if (search.failed()) {
+
+				searchHandler.handle(Future.failedFuture(search.cause()));
+
+			} else {
+
+				final JsonObject value = search.result();
+				final CommunityNorm norm = Model.fromJsonObject(value, CommunityNorm.class);
+				if (norm == null) {
+
+					searchHandler.handle(Future.failedFuture("The stored community norm is not valid."));
+
+				} else {
+
+					searchHandler.handle(Future.succeededFuture(norm));
+				}
+			}
+		});
+	}
+
+	/**
+	 * Search for the community norm object.
+	 *
+	 * @param communityId   identifier of the community to get the norm.
+	 * @param normId        identifier of the norm to get
+	 * @param searchHandler handler to manage the search.
+	 */
+	void searchCommunityNormObject(String communityId, String normId, Handler<AsyncResult<JsonObject>> searchHandler);
+
+	/**
+	 * Store a community norm.
+	 *
+	 * @param communityId  identifier of the community to store the norm.
+	 * @param norm         community norm to store.
+	 * @param storeHandler handler to manage the store.
+	 */
+	@GenIgnore
+	default void storeCommunityNorm(String communityId, CommunityNorm norm,
+			Handler<AsyncResult<CommunityNorm>> storeHandler) {
+
+		final JsonObject object = norm.toJsonObject();
+		if (object == null) {
+
+			storeHandler.handle(Future.failedFuture("The community norm can not converted to JSON."));
+
+		} else {
+
+			this.storeCommunityNormObject(communityId, object, stored -> {
+				if (stored.failed()) {
+
+					storeHandler.handle(Future.failedFuture(stored.cause()));
+
+				} else {
+
+					final JsonObject value = stored.result();
+					final CommunityNorm storedCommunityNorm = Model.fromJsonObject(value, CommunityNorm.class);
+					if (storedCommunityNorm == null) {
+
+						storeHandler.handle(Future.failedFuture("The stored community norm is not valid."));
+
+					} else {
+
+						storeHandler.handle(Future.succeededFuture(storedCommunityNorm));
+					}
+
+				}
+			});
+		}
+	}
+
+	/**
+	 * Store a community norm.
+	 *
+	 * @param communityId  identifier of the community to store the norm.
+	 * @param norm         to store.
+	 * @param storeHandler handler to manage the search.
+	 */
+	void storeCommunityNormObject(String communityId, JsonObject norm, Handler<AsyncResult<JsonObject>> storeHandler);
+
+	/**
+	 * Delete a community norm.
+	 *
+	 * @param communityId   identifier of the community to delete the norm.
+	 * @param normId        identifier of the norm to delete.
+	 * @param deleteHandler handler to manage the delete result.
+	 */
+	void deleteCommunityNorm(String communityId, String normId, Handler<AsyncResult<Void>> deleteHandler);
+
+	/**
+	 * Search for the community norms that satisfy the query.
+	 *
+	 * @param communityId   identifier of the community to get the norms.
+	 * @param sinceFrom     the time stamp inclusive that mark the older limit in
+	 *                      witch the community norm was defined. It is the
+	 *                      difference, measured in seconds, between the time when
+	 *                      the norm has added into the community and midnight,
+	 *                      January 1, 1970 UTC.
+	 * @param sinceTo       the time stamp inclusive that mark the newest limit in
+	 *                      witch the community norm was defined. It is the
+	 *                      difference, measured in seconds, between the time when
+	 *                      the norm has added into the community and midnight,
+	 *                      January 1, 1970 UTC.
+	 * @param offset        index of the first community norm to return.
+	 * @param limit         number maximum of community norms to return.
+	 * @param searchHandler handler to manage the search.
+	 */
+	@GenIgnore
+	default void searchCommunityNormsPageObject(String communityId, Long sinceFrom, Long sinceTo, int offset, int limit,
+			Handler<AsyncResult<JsonObject>> searchHandler) {
+
+		final JsonObject query = new QueryBuilder().withRange("sinceTime", sinceFrom, sinceTo).build();
+		this.searchCommunityNormsPageObject(communityId, query, offset, limit, searchHandler);
+
+	}
+
+	/**
+	 * Search for the community norms that satisfy the query.
+	 *
+	 * @param communityId   identifier of the community to get the norms.
+	 * @param query         that has to match the community norms to search.
+	 * @param offset        index of the first community norm to return.
+	 * @param limit         number maximum of community norms to return.
+	 * @param searchHandler handler to manage the search.
+	 */
+	void searchCommunityNormsPageObject(String communityId, JsonObject query, int offset, int limit,
+			Handler<AsyncResult<JsonObject>> searchHandler);
 }
