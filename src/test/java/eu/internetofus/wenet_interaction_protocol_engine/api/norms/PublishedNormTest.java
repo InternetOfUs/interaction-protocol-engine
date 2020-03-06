@@ -29,6 +29,7 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -323,6 +324,383 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 			assertThat(error).isInstanceOf(ValidationErrorException.class);
 			final ValidationErrorException validationError = (ValidationErrorException) error;
 			assertThat(validationError.getCode()).isEqualTo("codePrefix.publisherId");
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can merge with a {@code null} source.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldMergePublishedNormWithNullSource(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm target = createMinimumValidPublishedNormExample();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.merge("codePrefix", null, profileManager, testContext.succeeding(merged -> testContext.verify(() -> {
+
+			assertThat(merged).isSameAs(target);
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can merge with an empty source.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldMergePublishedNormWithEmptyModel(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm source = new PublishedNorm();
+		source._id = UUID.randomUUID().toString();
+		source.publishTime = 12345;
+		final PublishedNorm target = createMinimumValidPublishedNormExample();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.merge("codePrefix", source, profileManager, testContext.succeeding(merged -> testContext.verify(() -> {
+
+			assertThat(merged).isNotSameAs(target).isEqualTo(target);
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can merge the name.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldMergePublishedNormName(WeNetProfileManagerService profileManager, VertxTestContext testContext) {
+
+		final PublishedNorm source = new PublishedNorm();
+		source.name = "Source Name";
+		final PublishedNorm target = createMinimumValidPublishedNormExample();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.name = "Target Name";
+		target.merge("codePrefix", source, profileManager, testContext.succeeding(merged -> testContext.verify(() -> {
+
+			assertThat(merged).isNotSameAs(target).isNotEqualTo(target);
+			target.name = "Source Name";
+			assertThat(merged).isEqualTo(target);
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can not merge with a bad name
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldNotMergePublishedNormWithBadName(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm source = new PublishedNorm();
+		source.name = ValidationsTest.STRING_256;
+		final PublishedNorm target = createMinimumValidPublishedNormExample();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.merge("codePrefix", source, profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix.name");
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can merge the description.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldMergePublishedNormDescription(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm source = new PublishedNorm();
+		source.description = "Source Description";
+		final PublishedNorm target = createMinimumValidPublishedNormExample();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.description = "Target Description";
+		target.merge("codePrefix", source, profileManager, testContext.succeeding(merged -> testContext.verify(() -> {
+
+			assertThat(merged).isNotSameAs(target).isNotEqualTo(target);
+			target.description = "Source Description";
+			assertThat(merged).isEqualTo(target);
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can not merge with a bad description
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldNotMergePublishedNormWithBadDescription(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm source = new PublishedNorm();
+		source.description = ValidationsTest.STRING_256;
+		final PublishedNorm target = createMinimumValidPublishedNormExample();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.merge("codePrefix", source, profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix.description");
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can merge the keywords.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldMergePublishedNormKeywords(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm source = new PublishedNorm();
+		source.keywords = new ArrayList<>();
+		source.keywords.add("Source Keyword");
+		final PublishedNorm target = createMinimumValidPublishedNormExample();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.keywords = new ArrayList<>();
+		target.keywords.add("Target Keyword");
+		target.merge("codePrefix", source, profileManager, testContext.succeeding(merged -> testContext.verify(() -> {
+
+			assertThat(merged).isNotSameAs(target).isNotEqualTo(target);
+			target.keywords = new ArrayList<>();
+			target.keywords.add("Source Keyword");
+			assertThat(merged).isEqualTo(target);
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can not merge with a bad keyword
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldNotMergePublishedNormWithBadKeyword(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm source = new PublishedNorm();
+		source.keywords = new ArrayList<>();
+		source.keywords.add("    ");
+		source.keywords.add(null);
+		source.keywords.add(ValidationsTest.STRING_256);
+		final PublishedNorm target = createMinimumValidPublishedNormExample();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.merge("codePrefix", source, profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix.keywords[2]");
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can merge the publisher identifier.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldMergePublishedNormPublisherId(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		profileManager.createProfile(new JsonObject(), testContext.succeeding(profile -> {
+
+			final PublishedNorm source = new PublishedNorm();
+			source.publisherId = profile.getString("id");
+			final PublishedNorm target = createMinimumValidPublishedNormExample();
+			target._id = UUID.randomUUID().toString();
+			target.publishTime = TimeManager.now();
+			target.publisherId = "Target PublisherId";
+			target.merge("codePrefix", source, profileManager, testContext.succeeding(merged -> testContext.verify(() -> {
+
+				assertThat(merged).isNotSameAs(target).isNotEqualTo(target);
+				target.publisherId = profile.getString("id");
+				assertThat(merged).isEqualTo(target);
+				testContext.completeNow();
+
+			})));
+
+		}));
+
+	}
+
+	/**
+	 * Check that can not merge with a bad publisher identifier.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldNotMergePublishedNormWithBadPublisherId(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm source = new PublishedNorm();
+		source.publisherId = "undefined";
+		final PublishedNorm target = createMinimumValidPublishedNormExample();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.merge("codePrefix", source, profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix.publisherId");
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can merge the norm.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldMergeNormOnPublishedNorm(WeNetProfileManagerService profileManager, VertxTestContext testContext) {
+
+		final PublishedNorm source = new PublishedNorm();
+		source.norm = new NormTest().createModelExample(3);
+		final PublishedNorm target = createMinimumValidPublishedNormExample();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.norm = new NormTest().createModelExample(43);
+		target.norm.id = "1";
+		target.merge("codePrefix", source, profileManager, testContext.succeeding(merged -> testContext.verify(() -> {
+
+			assertThat(merged).isNotSameAs(target).isNotEqualTo(target);
+			target.norm = new NormTest().createModelExample(3);
+			target.norm.id = "1";
+			assertThat(merged).isEqualTo(target);
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can merge the norm.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldMergeNormOnPublishedNormWithoutNorm(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm source = new PublishedNorm();
+		source.norm = new NormTest().createModelExample(3);
+		final PublishedNorm target = new PublishedNorm();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.merge("codePrefix", source, profileManager, testContext.succeeding(merged -> testContext.verify(() -> {
+
+			assertThat(merged).isNotSameAs(target).isNotEqualTo(target);
+			target.norm = new NormTest().createModelExample(3);
+			target.norm.id = merged.norm.id;
+			assertThat(merged).isEqualTo(target);
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can not merge with a bad norm
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldNotMergePublishedNormWithBadNorm(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm source = new PublishedNorm();
+		source.norm = new Norm();
+		source.norm.attribute = ValidationsTest.STRING_256;
+		final PublishedNorm target = createMinimumValidPublishedNormExample();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.merge("codePrefix", source, profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix.norm.attribute");
+			testContext.completeNow();
+
+		})));
+
+	}
+
+	/**
+	 * Check that can not merge a bad norm.
+	 *
+	 * @param profileManager service to manage the user profiles.
+	 * @param testContext    context for the test.
+	 */
+	@Test
+	public void shouldNotMergeBadNormOnPublishedNormWithoutNorm(WeNetProfileManagerService profileManager,
+			VertxTestContext testContext) {
+
+		final PublishedNorm source = new PublishedNorm();
+		source.norm = new Norm();
+		source.norm.attribute = ValidationsTest.STRING_256;
+		final PublishedNorm target = new PublishedNorm();
+		target._id = UUID.randomUUID().toString();
+		target.publishTime = TimeManager.now();
+		target.merge("codePrefix", source, profileManager, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isInstanceOf(ValidationErrorException.class);
+			final ValidationErrorException validationError = (ValidationErrorException) error;
+			assertThat(validationError.getCode()).isEqualTo("codePrefix.norm.attribute");
 			testContext.completeNow();
 
 		})));

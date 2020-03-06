@@ -38,7 +38,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
-import eu.internetofus.wenet_interaction_protocol_engine.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.AsyncResult;
@@ -83,11 +82,12 @@ public class NormsResourceTest {
 
 		final NormsResource resource = createNormsResource();
 		final OperationRequest context = mock(OperationRequest.class);
-		resource.publishNorm(new JsonObject(), context, testContext.succeeding(create -> {
+		resource.publishNorm(PublishedNormTest.createMinimumValidPublishedNormExample().toJsonObject(), context,
+				testContext.succeeding(create -> {
 
-			assertThat(create.getStatusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-			testContext.completeNow();
-		}));
+					assertThat(create.getStatusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+					testContext.completeNow();
+				}));
 
 		@SuppressWarnings("unchecked")
 		final ArgumentCaptor<Handler<AsyncResult<PublishedNorm>>> storeHandler = ArgumentCaptor.forClass(Handler.class);
@@ -116,8 +116,7 @@ public class NormsResourceTest {
 		@SuppressWarnings("unchecked")
 		final ArgumentCaptor<Handler<AsyncResult<PublishedNorm>>> searchHandler = ArgumentCaptor.forClass(Handler.class);
 		verify(resource.repository, times(1)).searchPublishedNorm(any(), searchHandler.capture());
-		searchHandler.getValue().handle(Future
-				.succeededFuture(Model.fromJsonObject(new JsonObject().put("_id", "publishedNormId"), PublishedNorm.class)));
+		searchHandler.getValue().handle(Future.succeededFuture(PublishedNormTest.createMinimumValidPublishedNormExample()));
 		@SuppressWarnings("unchecked")
 		final ArgumentCaptor<Handler<AsyncResult<PublishedNorm>>> updateHandler = ArgumentCaptor.forClass(Handler.class);
 		verify(resource.repository, times(1)).updatePublishedNorm(any(), updateHandler.capture());

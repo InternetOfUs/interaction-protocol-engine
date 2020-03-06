@@ -191,8 +191,69 @@ public class NormsResource implements Norms {
 	public void updatePublishedNorm(String publishedNormId, JsonObject body, OperationRequest context,
 			Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_IMPLEMENTED, "to_do",
-				"Not implemented yet");
+		final PublishedNorm source = Model.fromJsonObject(body, PublishedNorm.class);
+		if (source == null) {
+
+			Logger.debug("The {} is not a valid published norm to update.", body);
+			OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST,
+					"bad_published_norm_to_update", "The published norm to update is not right.");
+
+		} else {
+
+			this.repository.searchPublishedNorm(publishedNormId, search -> {
+
+				final PublishedNorm target = search.result();
+				if (target == null) {
+
+					Logger.debug(search.cause(), "Not found published norm {} to update", publishedNormId);
+					OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND,
+							"not_found_published_norm_to_update",
+							"You can not update the published norm '" + publishedNormId + "', because it does not exist.");
+
+				} else {
+
+					target.merge("bad_publishedNorm", source, this.profileManager, merge -> {
+
+						if (merge.failed()) {
+
+							final Throwable cause = merge.cause();
+							Logger.debug(cause, "Cannot update  {} with {}.", target, source);
+							OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+
+						} else {
+
+							final PublishedNorm merged = merge.result();
+							if (merged.equals(target)) {
+
+								OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST,
+										"published_norm_to_update_equal_to_original", "You can not update the published norm '"
+												+ publishedNormId + "', because the new values is equals to the current one.");
+
+							} else {
+
+								this.repository.updatePublishedNorm(merged, update -> {
+
+									if (update.failed()) {
+
+										final Throwable cause = update.cause();
+										Logger.debug(cause, "Cannot update  {}.", target);
+										OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+
+									} else {
+
+										final PublishedNorm updated = update.result();
+										OperationReponseHandlers.responseOk(resultHandler, updated);
+
+									}
+
+								});
+							}
+						}
+					});
+
+				}
+			});
+		}
 
 	}
 

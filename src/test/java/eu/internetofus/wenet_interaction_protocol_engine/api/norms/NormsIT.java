@@ -45,6 +45,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
+import eu.internetofus.wenet_interaction_protocol_engine.ValidationsTest;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.ErrorMessage;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
@@ -180,23 +181,28 @@ public class NormsIT {
 	public void shouldStorePublishedNorm(NormsRepository repository, WeNetProfileManagerService profileManager,
 			WebClient client, VertxTestContext testContext) {
 
-		final PublishedNorm publishedNorm = new PublishedNormTest().createModelExample(1);
-		testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
+		PublishedNormTest.createValidPublishedNormExample(23, profileManager, testContext.succeeding(publishedNorm -> {
 
-			assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-			final PublishedNorm stored = assertThatBodyIs(PublishedNorm.class, res);
-			assertThat(stored).isNotNull().isNotEqualTo(publishedNorm);
-			publishedNorm._id = stored._id;
-			publishedNorm.publishTime = stored.publishTime;
-			assertThat(stored).isEqualTo(publishedNorm);
-			repository.searchPublishedNorm(stored._id, testContext.succeeding(foundPublishedNorm -> testContext.verify(() -> {
+			testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
 
-				assertThat(foundPublishedNorm).isEqualTo(stored);
-				testContext.completeNow();
+				assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+				final PublishedNorm stored = assertThatBodyIs(PublishedNorm.class, res);
+				assertThat(stored).isNotNull().isNotEqualTo(publishedNorm);
+				publishedNorm._id = stored._id;
+				publishedNorm.publishTime = stored.publishTime;
+				publishedNorm.norm.id = stored.norm.id;
+				assertThat(stored).isEqualTo(publishedNorm);
+				repository.searchPublishedNorm(stored._id,
+						testContext.succeeding(foundPublishedNorm -> testContext.verify(() -> {
 
-			})));
+							assertThat(foundPublishedNorm).isEqualTo(stored);
+							testContext.completeNow();
 
-		}).sendJson(publishedNorm.toJsonObject(), testContext);
+						})));
+
+			}).sendJson(publishedNorm.toJsonObject(), testContext);
+
+		}));
 
 	}
 
@@ -211,7 +217,7 @@ public class NormsIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldStoreEmptyPublishedNorm(NormsRepository repository, WebClient client,
+	public void shouldStoreMinimumValidPublishedNorm(NormsRepository repository, WebClient client,
 			VertxTestContext testContext) {
 
 		final PublishedNorm publishedNorm = createMinimumValidPublishedNormExample();
@@ -222,41 +228,7 @@ public class NormsIT {
 			assertThat(stored).isNotNull().isNotEqualTo(publishedNorm);
 			publishedNorm._id = stored._id;
 			publishedNorm.publishTime = stored.publishTime;
-			assertThat(stored).isEqualTo(publishedNorm);
-			repository.searchPublishedNorm(stored._id, testContext.succeeding(foundPublishedNorm -> testContext.verify(() -> {
-
-				assertThat(foundPublishedNorm).isEqualTo(stored);
-				testContext.completeNow();
-
-			})));
-
-		}).sendJson(publishedNorm.toJsonObject(), testContext);
-
-	}
-
-	/**
-	 * Verify that store a simple published norm.
-	 *
-	 * @param repository  that manage the norms.
-	 * @param client      to connect to the server.
-	 * @param testContext context to test.
-	 *
-	 * @see Norms#publishNorm(io.vertx.core.json.JsonObject,
-	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-	 */
-	@Test
-	public void shouldStoreSimplePublishedNorm(NormsRepository repository, WebClient client,
-			VertxTestContext testContext) {
-
-		final PublishedNorm publishedNorm = new PublishedNormTest().createModelExample(1);
-		testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
-
-			assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-			final PublishedNorm stored = assertThatBodyIs(PublishedNorm.class, res);
-			assertThat(stored).isNotNull().isNotEqualTo(publishedNorm);
-			publishedNorm._id = stored._id;
-			assertThat(stored).isNotNull().isNotEqualTo(publishedNorm);
-			publishedNorm.publishTime = stored.publishTime;
+			publishedNorm.norm.id = stored.norm.id;
 			assertThat(stored).isEqualTo(publishedNorm);
 			repository.searchPublishedNorm(stored._id, testContext.succeeding(foundPublishedNorm -> testContext.verify(() -> {
 
@@ -326,30 +298,34 @@ public class NormsIT {
 	/**
 	 * Verify that not update a published norm if any change is done.
 	 *
-	 * @param repository  that manage the norms.
-	 * @param client      to connect to the server.
-	 * @param testContext context to test.
+	 * @param profileManager service to manage the user profiles.
+	 * @param repository     that manage the norms.
+	 * @param client         to connect to the server.
+	 * @param testContext    context to test.
 	 *
 	 * @see Norms#updatePublishedNorm(String, io.vertx.core.json.JsonObject,
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotUpdatePublishedNormBecauseNotChangesHasDone(NormsRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldNotUpdatePublishedNormBecauseNotChangesHasDone(WeNetProfileManagerService profileManager,
+			NormsRepository repository, WebClient client, VertxTestContext testContext) {
 
-		repository.storePublishedNorm(new PublishedNormTest().createModelExample(1),
-				testContext.succeeding(publishedNorm -> {
+		PublishedNormTest.createValidPublishedNormExample(1, profileManager, testContext.succeeding(created -> {
 
-					testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + publishedNorm._id).expect(res -> {
+			repository.storePublishedNorm(created, testContext.succeeding(publishedNorm -> {
 
-						assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-						final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
-						assertThat(error.code).isNotEmpty();
-						assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-						testContext.completeNow();
+				testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + publishedNorm._id).expect(res -> {
 
-					}).sendJson(new JsonObject(), testContext);
-				}));
+					assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+					final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+					assertThat(error.code).isEqualTo("published_norm_to_update_equal_to_original");
+					assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+					testContext.completeNow();
+
+				}).sendJson(new JsonObject().put("norm", new Norm().toJsonObject()), testContext);
+			}));
+
+		}));
 
 	}
 
@@ -402,17 +378,17 @@ public class NormsIT {
 
 			repository.storePublishedNorm(created, testContext.succeeding(storedPublishedNorm -> {
 
-				final PublishedNorm newPublishedNorm = new PublishedNormTest().createModelExample(2);
-				newPublishedNorm._id = UUID.randomUUID().toString();
+				final PublishedNorm newPublishedNorm = new PublishedNorm();
+				newPublishedNorm.norm = new NormTest().createModelExample(45);
 				testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + storedPublishedNorm._id)
 						.expect(res -> testContext.verify(() -> {
 
 							assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
 							final PublishedNorm updated = assertThatBodyIs(PublishedNorm.class, res);
 							assertThat(updated).isNotEqualTo(storedPublishedNorm).isNotEqualTo(newPublishedNorm);
-							newPublishedNorm._id = storedPublishedNorm._id;
-							newPublishedNorm.publishTime = storedPublishedNorm.publishTime;
-							assertThat(updated).isEqualTo(newPublishedNorm);
+							storedPublishedNorm.norm = new NormTest().createModelExample(45);
+							storedPublishedNorm.norm.id = updated.norm.id;
+							assertThat(updated).isEqualTo(storedPublishedNorm);
 							testContext.completeNow();
 
 						})).sendJson(newPublishedNorm.toJsonObject(), testContext);
@@ -564,7 +540,7 @@ public class NormsIT {
 				final PublishedNorm newPublishedNorm = new PublishedNorm();
 				newPublishedNorm.keywords = new ArrayList<>();
 				newPublishedNorm.keywords.add("    ");
-				newPublishedNorm.keywords.add("New keyword");
+				newPublishedNorm.keywords.add("  New keyword   ");
 				testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + storedPublishedNorm._id)
 						.expect(res -> testContext.verify(() -> {
 
@@ -597,23 +573,25 @@ public class NormsIT {
 	public void shouldUpdatePublishedNormPublisherId(WeNetProfileManagerService profileManager,
 			NormsRepository repository, WebClient client, VertxTestContext testContext) {
 
-		PublishedNormTest.createValidPublishedNormExample(23, profileManager, testContext.succeeding(created -> {
-			repository.storePublishedNorm(created, testContext.succeeding(storedPublishedNorm -> {
+		profileManager.createProfile(new JsonObject(), testContext.succeeding(createdProfile -> {
+			PublishedNormTest.createValidPublishedNormExample(23, profileManager, testContext.succeeding(created -> {
+				repository.storePublishedNorm(created, testContext.succeeding(storedPublishedNorm -> {
 
-				final PublishedNorm newPublishedNorm = new PublishedNorm();
-				newPublishedNorm._id = UUID.randomUUID().toString();
-				newPublishedNorm.publisherId = "http://host.com/newPublisherId.png";
-				testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + storedPublishedNorm._id)
-						.expect(res -> testContext.verify(() -> {
+					final PublishedNorm newPublishedNorm = new PublishedNorm();
+					newPublishedNorm._id = UUID.randomUUID().toString();
+					newPublishedNorm.publisherId = createdProfile.getString("id");
+					testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + storedPublishedNorm._id)
+							.expect(res -> testContext.verify(() -> {
 
-							assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-							final PublishedNorm updated = assertThatBodyIs(PublishedNorm.class, res);
-							assertThat(updated).isNotEqualTo(storedPublishedNorm).isNotEqualTo(newPublishedNorm);
-							storedPublishedNorm.publisherId = "http://host.com/newPublisherId.png";
-							assertThat(updated).isEqualTo(storedPublishedNorm);
-							testContext.completeNow();
+								assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+								final PublishedNorm updated = assertThatBodyIs(PublishedNorm.class, res);
+								assertThat(updated).isNotEqualTo(storedPublishedNorm).isNotEqualTo(newPublishedNorm);
+								storedPublishedNorm.publisherId = createdProfile.getString("id");
+								assertThat(updated).isEqualTo(storedPublishedNorm);
+								testContext.completeNow();
 
-						})).sendJson(newPublishedNorm.toJsonObject(), testContext);
+							})).sendJson(newPublishedNorm.toJsonObject(), testContext);
+				}));
 			}));
 		}));
 	}
@@ -676,6 +654,77 @@ public class NormsIT {
 					}).sendJson(new JsonObject().put("_id", "Identifier"), testContext);
 				}));
 
+	}
+
+	/**
+	 * Verify that can update the norm in a published norm.
+	 *
+	 * @param profileManager service to manage the profiles.
+	 * @param repository     that manage the norms.
+	 * @param client         to connect to the server.
+	 * @param testContext    context to test.
+	 *
+	 * @see Norms#retrievePublishedNorm(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldUpdateNormOnPublishedNorm(WeNetProfileManagerService profileManager, NormsRepository repository,
+			WebClient client, VertxTestContext testContext) {
+
+		PublishedNormTest.createValidPublishedNormExample(23, profileManager, testContext.succeeding(created -> {
+			repository.storePublishedNorm(created, testContext.succeeding(storedPublishedNorm -> {
+
+				final PublishedNorm newPublishedNorm = new PublishedNorm();
+				newPublishedNorm.norm = new NormTest().createModelExample(43);
+				testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + storedPublishedNorm._id)
+						.expect(res -> testContext.verify(() -> {
+
+							assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+							final PublishedNorm updated = assertThatBodyIs(PublishedNorm.class, res);
+							assertThat(updated).isNotEqualTo(storedPublishedNorm).isNotEqualTo(newPublishedNorm);
+							storedPublishedNorm.norm = new NormTest().createModelExample(43);
+							storedPublishedNorm.norm.id = storedPublishedNorm.norm.id;
+							assertThat(updated).isEqualTo(storedPublishedNorm);
+							testContext.completeNow();
+
+						})).sendJson(newPublishedNorm.toJsonObject(), testContext);
+			}));
+		}));
+	}
+
+	/**
+	 * Verify that can not update the norm in a published norm.
+	 *
+	 * @param profileManager service to manage the profiles.
+	 * @param repository     that manage the norms.
+	 * @param client         to connect to the server.
+	 * @param testContext    context to test.
+	 *
+	 * @see Norms#retrievePublishedNorm(String,
+	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+	 */
+	@Test
+	public void shouldNotUpdateNormOnPublishedNorm(WeNetProfileManagerService profileManager, NormsRepository repository,
+			WebClient client, VertxTestContext testContext) {
+
+		PublishedNormTest.createValidPublishedNormExample(23, profileManager, testContext.succeeding(created -> {
+			repository.storePublishedNorm(created, testContext.succeeding(storedPublishedNorm -> {
+
+				final PublishedNorm newPublishedNorm = new PublishedNorm();
+				newPublishedNorm.norm = new Norm();
+				newPublishedNorm.norm.attribute = ValidationsTest.STRING_256;
+				testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + storedPublishedNorm._id)
+						.expect(res -> testContext.verify(() -> {
+
+							assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+							final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+							assertThat(error.code).isNotEmpty().endsWith(".norm.attribute");
+							assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+							testContext.completeNow();
+
+						})).sendJson(newPublishedNorm.toJsonObject(), testContext);
+			}));
+		}));
 	}
 
 	/**

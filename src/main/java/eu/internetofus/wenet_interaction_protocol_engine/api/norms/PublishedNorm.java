@@ -178,6 +178,67 @@ public class PublishedNorm extends Model {
 
 		} else {
 
+			final PublishedNorm merged = new PublishedNorm();
+			merged.name = source.name;
+			if (merged.name == null) {
+
+				merged.name = this.name;
+			}
+
+			merged.description = source.description;
+			if (merged.description == null) {
+
+				merged.description = this.description;
+			}
+
+			merged.keywords = source.keywords;
+			if (merged.keywords == null) {
+
+				merged.keywords = this.keywords;
+			}
+
+			merged.publisherId = source.publisherId;
+			if (merged.publisherId == null) {
+
+				merged.publisherId = this.publisherId;
+			}
+
+			if (this.norm == null) {
+
+				merged.norm = source.norm;
+
+			} else {
+
+				merged.norm = new Norm();
+			}
+
+			merged.validate(codePrefix, profileManager, validation -> {
+
+				if (validation.failed()) {
+
+					mergeHandler.handle(Future.failedFuture(validation.cause()));
+
+				} else {
+
+					try {
+
+						if (this.norm != null) {
+
+							merged.norm = this.norm.merge(source.norm, codePrefix + ".norm");
+						}
+
+						merged._id = this._id;
+						merged.publishTime = this.publishTime;
+						mergeHandler.handle(Future.succeededFuture(merged));
+
+					} catch (final ValidationErrorException error) {
+
+						mergeHandler.handle(Future.failedFuture(error));
+					}
+
+				}
+
+			});
 		}
 
 	}
