@@ -21,6 +21,12 @@ services:
     environment:
       DB_HOST: wenet_profile_manager_database
       WAIT_HOSTS: wenet_profile_manager_database:27017
+      WENET_INTERACTION_PROTOCOL_ENGINE_API_HOST: localhost
+      WENET_INTERACTION_PROTOCOL_ENGINE_API_PORT: ${INTERACTION_PROTOCOL_ENGINE_API_PORT:-8083}
+      WENET_INTERACTION_PROTOCOL_ENGINE_API_PATH: ""
+      WENET_TASK_MANAGER_API_HOST: localhost
+      WENET_TASK_MANAGER_API_PORT: ${TASK_MANAGER_API_PORT:-8082}
+      WENET_TASK_MANAGER_API_PATH: ""
     networks:
       wenet_network:
     ports:
@@ -44,7 +50,6 @@ services:
     restart: always
     depends_on:
       - wenet_task_manager_database
-      - wenet_profile_manager_api
     environment:
       DB_HOST: wenet_task_manager_database
       WENET_PROFILE_MANAGER_API_HOST: localhost
@@ -74,8 +79,6 @@ services:
     restart: always
     depends_on:
       - wenet_interaction_protocol_engine_database
-      - wenet_profile_manager_api
-      - wenet_task_manager_api
     environment:
       DB_HOST: wenet_interaction_protocol_engine_database
       WENET_PROFILE_MANAGER_API_HOST: localhost

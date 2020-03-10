@@ -83,7 +83,9 @@ public class Community extends Model implements Validable, Mergeable<Community> 
 	public String avatar;
 
 	/**
-	 * The time in ISO 8601 format since the community is active.
+	 * The time since the community is active. it is measured as the difference,
+	 * measured in seconds, between the community is active and midnight, January 1,
+	 * 1970 UTC.
 	 */
 	@Schema(
 			description = "The difference, measured in seconds, between the community is active and midnight, January 1, 1970 UTC.",
