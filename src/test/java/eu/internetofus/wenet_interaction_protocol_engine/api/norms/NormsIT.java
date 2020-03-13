@@ -26,10 +26,10 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
-import static eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension.Asserts.assertThatBodyIs;
+import static eu.internetofus.common.api.HttpResponses.assertThatBodyIs;
 import static eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNormTest.createMinimumValidPublishedNormExample;
-import static eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepositoryTestCase.createAndStoreSomeFakePublishNorms;
-import static eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepositoryTestCase.removeAllNorms;
+import static eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepositoryIT.createAndStoreSomeFakePublishNorms;
+import static eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepositoryIT.removeAllNorms;
 import static io.vertx.junit5.web.TestRequest.queryParam;
 import static io.vertx.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,11 +45,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
-import eu.internetofus.wenet_interaction_protocol_engine.ValidationsTest;
+import eu.internetofus.common.api.models.ErrorMessage;
+import eu.internetofus.common.api.models.ValidationsTest;
+import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
-import eu.internetofus.wenet_interaction_protocol_engine.api.ErrorMessage;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
-import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;

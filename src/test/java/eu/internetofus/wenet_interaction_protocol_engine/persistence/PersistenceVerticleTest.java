@@ -26,14 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-
-import org.junit.jupiter.api.Test;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.MongoClient;
+import eu.internetofus.common.persitences.AbstractPersistenceVerticleTestCase;
 
 /**
  * Test the {@link PersistenceVerticle}.
@@ -42,30 +35,17 @@ import io.vertx.ext.mongo.MongoClient;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticleTest {
+public class PersistenceVerticleTest extends AbstractPersistenceVerticleTestCase<PersistenceVerticle> {
 
 	/**
-	 * Check that not stop the server if it is not started.
+	 * {@inheritDoc}
+	 *
+	 * @see PersistenceVerticle#PersistenceVerticle()
 	 */
-	@Test
-	public void shouldNotStopIfServerNotStarted() {
+	@Override
+	protected PersistenceVerticle createPersitenceVerticle() {
 
-		final PersistenceVerticle persistence = new PersistenceVerticle();
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-
-	}
-
-	/**
-	 * Check that not stop the server if it is not started.
-	 */
-	@Test
-	public void shouldStopIfServerStarted() {
-
-		final PersistenceVerticle persistence = new PersistenceVerticle();
-		persistence.pool = MongoClient.create(Vertx.vertx(), new JsonObject());
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-		assertThat(persistence.pool).isNull();
-
+		return new PersistenceVerticle();
 	}
 
 }

@@ -32,12 +32,12 @@ import javax.ws.rs.core.Response.Status;
 
 import org.tinylog.Logger;
 
-import eu.internetofus.wenet_interaction_protocol_engine.Model;
-import eu.internetofus.wenet_interaction_protocol_engine.ValidationErrorException;
-import eu.internetofus.wenet_interaction_protocol_engine.api.OperationReponseHandlers;
-import eu.internetofus.wenet_interaction_protocol_engine.api.Operations;
+import eu.internetofus.common.api.OperationReponseHandlers;
+import eu.internetofus.common.api.OperationRequests;
+import eu.internetofus.common.api.models.Model;
+import eu.internetofus.common.api.models.ValidationErrorException;
+import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
-import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -196,8 +196,7 @@ public class CommunitiesResource implements Communities {
 
 								} else {
 
-									final Community updated = update.result();
-									OperationReponseHandlers.responseOk(resultHandler, updated);
+									OperationReponseHandlers.responseOk(resultHandler, merged);
 
 								}
 
@@ -244,12 +243,12 @@ public class CommunitiesResource implements Communities {
 	@Override
 	public void retrieveCommunitiesPage(OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		final JsonObject params = Operations.getQueryParamters(context);
+		final JsonObject params = OperationRequests.getQueryParamters(context);
 		final int offset = params.getInteger("offset", 0);
 		final int limit = params.getInteger("limit", 10);
 		final String name = params.getString("name", null);
 		final String description = params.getString("description", null);
-		final List<String> keywords = Operations.toListString(params.getJsonArray("keyword", null));
+		final List<String> keywords = OperationRequests.toListString(params.getJsonArray("keyword", null));
 		final String avatar = params.getString("avatar", null);
 		final Long sinceFrom = params.getLong("sinceFrom", null);
 		final Long sinceTo = params.getLong("sinceTo", null);
@@ -399,7 +398,7 @@ public class CommunitiesResource implements Communities {
 	public void retrieveCommunityMembersPage(String communityId, OperationRequest context,
 			Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		final JsonObject params = Operations.getQueryParamters(context);
+		final JsonObject params = OperationRequests.getQueryParamters(context);
 		final int offset = params.getInteger("offset", 0);
 		final int limit = params.getInteger("limit", 10);
 		final Long joinFrom = params.getLong("joinFrom", null);
@@ -533,7 +532,7 @@ public class CommunitiesResource implements Communities {
 	public void retrieveCommunityNormsPage(String communityId, OperationRequest context,
 			Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		final JsonObject params = Operations.getQueryParamters(context);
+		final JsonObject params = OperationRequests.getQueryParamters(context);
 		final int offset = params.getInteger("offset", 0);
 		final int limit = params.getInteger("limit", 10);
 		final Long sinceFrom = params.getLong("sinceFrom", null);

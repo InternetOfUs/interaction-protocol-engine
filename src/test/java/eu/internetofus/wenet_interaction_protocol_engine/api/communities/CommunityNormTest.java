@@ -32,9 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
-import eu.internetofus.wenet_interaction_protocol_engine.ModelTestCase;
-import eu.internetofus.wenet_interaction_protocol_engine.ValidationErrorException;
-import eu.internetofus.wenet_interaction_protocol_engine.ValidationsTest;
+import eu.internetofus.common.api.models.ModelTestCase;
+import eu.internetofus.common.api.models.ValidationErrorException;
+import eu.internetofus.common.api.models.ValidationsTest;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norm;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.NormTest;
 

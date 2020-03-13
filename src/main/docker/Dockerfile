@@ -15,8 +15,8 @@ ARG DEFAULT_API_HOST=0.0.0.0
 ARG DEFAULT_API_PORT=8080
 ARG DEFAULT_DB_HOST=localhost
 ARG DEFAULT_DB_PORT=27017
-ARG DEFAULT_DB_NAME=wenetTaskManagerDB
-ARG DEFAULT_DB_USER_NAME=wenetTaskManager
+ARG DEFAULT_DB_NAME=wenetInteractionProtocolengineDB
+ARG DEFAULT_DB_USER_NAME=wenetInteractionProtocolengine
 ARG DEFAULT_DB_USER_PASSWORD=password
 ARG DEFAULT_WENET_PROFILE_MANAGER_API_HOST="wenet.iiia.csic.es"
 ARG DEFAULT_WENET_PROFILE_MANAGER_API_PORT=80
@@ -51,7 +51,7 @@ RUN echo "{\"api\":{\"host\":\"${DEFAULT_API_HOST}\",\"port\":${DEFAULT_API_PORT
 RUN echo "{\"persistence\":{\"db_name\":\"${DEFAULT_DB_NAME}\",\"host\":\"${DEFAULT_DB_HOST}\",\"port\":${DEFAULT_DB_PORT},\"username\":\"${DEFAULT_DB_USER_NAME}\",\"password\":\"${DEFAULT_DB_USER_PASSWORD}\"}}" > /usr/wenet/interaction-protocol-engine/etc/persistence.json
 
 # Create configuration for service
-RUN echo "{\"service\":{\"profileManager\":{\"host\":\"${DEFAULT_WENET_PROFILE_MANAGER_API_HOST}\",\"port\":${DEFAULT_WENET_PROFILE_MANAGER_API_PORT},\"apiPath\":\"${DEFAULT_WENET_PROFILE_MANAGER_API_PATH}\"}},{\"taskManager\":{\"host\":\"${DEFAULT_WENET_TASK_MANAGER_API_HOST}\",\"port\":${DEFAULT_WENET_TASK_MANAGER_API_PORT},\"apiPath\":\"${DEFAULT_WENET_TASK_MANAGER_API_PATH}\"}}}" > /usr/wenet/interaction-protocol-engine/etc/service.json
+RUN echo "{\"service\":{\"profileManager\":{\"host\":\"${DEFAULT_WENET_PROFILE_MANAGER_API_HOST}\",\"port\":${DEFAULT_WENET_PROFILE_MANAGER_API_PORT},\"apiPath\":\"${DEFAULT_WENET_PROFILE_MANAGER_API_PATH}\"},\"taskManager\":{\"host\":\"${DEFAULT_WENET_TASK_MANAGER_API_HOST}\",\"port\":${DEFAULT_WENET_TASK_MANAGER_API_PORT},\"apiPath\":\"${DEFAULT_WENET_TASK_MANAGER_API_PATH}\"}}}" > /usr/wenet/interaction-protocol-engine/etc/service.json
 
 WORKDIR /usr/wenet/interaction-protocol-engine
 COPY --from=build /build/target/wenet-interaction-protocol-engine.jar /usr/wenet/interaction-protocol-engine/wenet-interaction-protocol-engine.jar
@@ -63,7 +63,7 @@ ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait
 RUN chmod +x /wait
 
 EXPOSE ${API_PORT}
-CMD /wait && java -jar wenet-task-manager.jar -c etc \
+CMD /wait && java -jar wenet-interaction-protocol-engine.jar -c etc \
   -papi.host=${API_HOST} -papi.port=${API_PORT}\
   -ppersistence.host=${DB_HOST} -ppersistence.port=${DB_PORT} -ppersistence.db_name=${DB_NAME} -ppersistence.username=${DB_USER_NAME} -ppersistence.password=${DB_USER_PASSWORD}\
   -pservice.profileManager.host=${WENET_PROFILE_MANAGER_API_HOST} -pservice.profileManager.port=${WENET_PROFILE_MANAGER_API_PORT} -pservice.profileManager.apiPath=${WENET_PROFILE_MANAGER_API_PATH}\

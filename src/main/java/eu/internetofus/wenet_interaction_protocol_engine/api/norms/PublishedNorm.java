@@ -28,10 +28,10 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
 import java.util.List;
 
-import eu.internetofus.wenet_interaction_protocol_engine.Model;
-import eu.internetofus.wenet_interaction_protocol_engine.ValidationErrorException;
-import eu.internetofus.wenet_interaction_protocol_engine.Validations;
-import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
+import eu.internetofus.common.api.models.Model;
+import eu.internetofus.common.api.models.ValidationErrorException;
+import eu.internetofus.common.api.models.Validations;
+import eu.internetofus.common.services.WeNetProfileManagerService;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.AsyncResult;

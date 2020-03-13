@@ -26,63 +26,23 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.MongoClient;
+import eu.internetofus.common.persitences.AbstractPersistenceVerticle;
 
 /**
  * The verticle that provide the persistence services.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticle extends AbstractVerticle {
-
-	/**
-	 * The name of the pool of connections.
-	 */
-	private static final String PERSISTENCE_POOL_NAME = "WENET_INTERACTION_PROTOCOL_ENGINE_POOL";
-
-	/**
-	 * The pool of database connections.
-	 */
-	protected MongoClient pool;
+public class PersistenceVerticle extends AbstractPersistenceVerticle {
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void start(Promise<Void> startPromise) throws Exception {
+	protected void registerRepositories() throws Exception {
 
-		try {
-			// create the pool
-			final JsonObject persitenceConf = this.config().getJsonObject("persistence", new JsonObject());
-			this.pool = MongoClient.createShared(this.vertx, persitenceConf, PERSISTENCE_POOL_NAME);
-
-			// register services
-			CommunitiesRepository.register(this.vertx, this.pool);
-			NormsRepository.register(this.vertx, this.pool);
-
-			startPromise.complete();
-
-		} catch (final Throwable cause) {
-
-			startPromise.fail(cause);
-		}
-	}
-
-	/**
-	 * Close the connections pool.
-	 *
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void stop() throws Exception {
-
-		if (this.pool != null) {
-			this.pool.close();
-			this.pool = null;
-		}
+		CommunitiesRepository.register(this.vertx, this.pool);
+		NormsRepository.register(this.vertx, this.pool);
 
 	}
 

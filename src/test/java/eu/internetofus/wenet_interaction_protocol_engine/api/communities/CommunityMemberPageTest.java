@@ -28,7 +28,7 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.communities;
 
 import java.util.ArrayList;
 
-import eu.internetofus.wenet_interaction_protocol_engine.ModelTestCase;
+import eu.internetofus.common.api.models.ModelTestCase;
 
 /**
  * Test the {@link CommunityMembersPage}.

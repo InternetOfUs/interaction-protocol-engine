@@ -26,114 +26,50 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api;
 
-import javax.ws.rs.core.Response.Status;
-
-import org.tinylog.Logger;
-
+import eu.internetofus.common.api.AbstractAPIVerticle;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Communities;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunitiesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.NormsResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.versions.Versions;
 import eu.internetofus.wenet_interaction_protocol_engine.api.versions.VersionsResource;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
-import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Router;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
 import io.vertx.serviceproxy.ServiceBinder;
 
 /**
- * The verticle that provide the API management.
+ * The verticle that provide the manage the WeNet interaction protocol engine
+ * API.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class APIVerticle extends AbstractVerticle {
-
-	/**
-	 * The server that manage the HTTP requests.
-	 */
-	protected HttpServer server;
+public class APIVerticle extends AbstractAPIVerticle {
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void start(Promise<Void> startPromise) throws Exception {
+	protected String getOpenAPIResourcePath() {
 
-		OpenAPI3RouterFactory.create(this.vertx, "wenet-interaction-protocol-engine-api.yaml", createRouterFactory -> {
-			if (createRouterFactory.succeeded()) {
-
-				try {
-
-					final OpenAPI3RouterFactory routerFactory = createRouterFactory.result();
-
-					routerFactory.mountServiceInterface(Versions.class, Versions.ADDRESS);
-					new ServiceBinder(this.vertx).setAddress(Versions.ADDRESS).register(Versions.class,
-							new VersionsResource(this.config()));
-
-					routerFactory.mountServiceInterface(Communities.class, Communities.ADDRESS);
-					new ServiceBinder(this.vertx).setAddress(Communities.ADDRESS).register(Communities.class,
-							new CommunitiesResource(this.vertx));
-
-					routerFactory.mountServiceInterface(Norms.class, Norms.ADDRESS);
-					new ServiceBinder(this.vertx).setAddress(Norms.ADDRESS).register(Norms.class, new NormsResource(this.vertx));
-
-					// bind the ERROR handlers
-					final Router router = routerFactory.getRouter();
-					router.errorHandler(Status.NOT_FOUND.getStatusCode(), NotFoundHandler.build());
-					router.errorHandler(Status.BAD_REQUEST.getStatusCode(), BadRequestHandler.build());
-
-					final JsonObject apiConf = this.config().getJsonObject("api", new JsonObject());
-					final HttpServerOptions httpServerOptions = new HttpServerOptions(apiConf);
-					this.server = this.vertx.createHttpServer(httpServerOptions);
-					this.server.requestHandler(router).listen(startServer -> {
-						if (startServer.failed()) {
-
-							startPromise.fail(startServer.cause());
-
-						} else {
-
-							final HttpServer httpServer = startServer.result();
-							final String host = httpServerOptions.getHost();
-							final int actualPort = httpServer.actualPort();
-							apiConf.put("port", actualPort);
-							Logger.info("The server is ready at http://{}:{}", host, actualPort);
-							startPromise.complete();
-						}
-					});
-
-				} catch (final Throwable throwable) {
-					// Can not start the server , may be the configuration is wrong
-					startPromise.fail(throwable);
-				}
-
-			} else {
-				// In theory never happens, Only can happens if specification is not right or
-				// not present on the path
-				startPromise.fail(createRouterFactory.cause());
-			}
-		});
-
+		return "wenet-interaction-protocol-engine-api.yaml";
 	}
 
 	/**
-	 * Stop the HTTP server.
-	 *
 	 * {@inheritDoc}
-	 *
-	 * @see #server
 	 */
 	@Override
-	public void stop() {
+	protected void mountServiceInterfaces(OpenAPI3RouterFactory routerFactory) {
 
-		if (this.server != null) {
+		routerFactory.mountServiceInterface(Versions.class, Versions.ADDRESS);
+		new ServiceBinder(this.vertx).setAddress(Versions.ADDRESS).register(Versions.class,
+				new VersionsResource(this.config()));
 
-			this.server.close();
-			this.server = null;
-		}
+		routerFactory.mountServiceInterface(Communities.class, Communities.ADDRESS);
+		new ServiceBinder(this.vertx).setAddress(Communities.ADDRESS).register(Communities.class,
+				new CommunitiesResource(this.vertx));
+
+		routerFactory.mountServiceInterface(Norms.class, Norms.ADDRESS);
+		new ServiceBinder(this.vertx).setAddress(Norms.ADDRESS).register(Norms.class, new NormsResource(this.vertx));
+
 	}
 
 }

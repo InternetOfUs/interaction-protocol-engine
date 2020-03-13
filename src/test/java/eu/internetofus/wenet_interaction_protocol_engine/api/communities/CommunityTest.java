@@ -36,9 +36,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import eu.internetofus.wenet_interaction_protocol_engine.ModelTestCase;
-import eu.internetofus.wenet_interaction_protocol_engine.ValidationErrorException;
-import eu.internetofus.wenet_interaction_protocol_engine.ValidationsTest;
+import eu.internetofus.common.api.models.ModelTestCase;
+import eu.internetofus.common.api.models.ValidationErrorException;
+import eu.internetofus.common.api.models.ValidationsTest;
 
 /**
  * Test the {@link Community}.

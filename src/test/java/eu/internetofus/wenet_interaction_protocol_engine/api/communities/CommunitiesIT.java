@@ -26,9 +26,11 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.communities;
 
-import static eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension.Asserts.assertThatBodyIs;
-import static eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepositoryTestCase.createAndStoreSomeCommunitiesWithFakeSinceTime;
-import static eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepositoryTestCase.removeAllCommunities;
+import static eu.internetofus.common.api.HttpResponses.assertThatBodyIs;
+import static eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepositoryIT.createAndStoreSomeCommunitiesWithFakeSinceTime;
+import static eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepositoryIT.createCommunityMembersWithFakeJoinTime;
+import static eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepositoryIT.createCommunityNormsWithFakeSinceTime;
+import static eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepositoryIT.removeAllCommunities;
 import static io.vertx.junit5.web.TestRequest.queryParam;
 import static io.vertx.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,14 +46,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
-import eu.internetofus.wenet_interaction_protocol_engine.Model;
-import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
+import eu.internetofus.common.TimeManager;
+import eu.internetofus.common.api.models.ErrorMessage;
+import eu.internetofus.common.api.models.Model;
+import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
-import eu.internetofus.wenet_interaction_protocol_engine.api.ErrorMessage;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
-import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepositoryImplTest;
-import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
@@ -1345,8 +1346,7 @@ public class CommunitiesIT {
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityMember> members = CommunitiesRepositoryImplTest
-				.createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
+		final List<CommunityMember> members = createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
 
 		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
 				.with(queryParam("joinFrom", "700000")).expect(res -> {
@@ -1378,8 +1378,7 @@ public class CommunitiesIT {
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityMember> members = CommunitiesRepositoryImplTest
-				.createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
+		final List<CommunityMember> members = createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
 
 		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
 				.with(queryParam("joinTo", "700000")).expect(res -> {
@@ -1411,8 +1410,7 @@ public class CommunitiesIT {
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityMember> members = CommunitiesRepositoryImplTest
-				.createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
+		final List<CommunityMember> members = createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
 
 		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
 				.with(queryParam("joinFrom", "700000"), queryParam("joinTo", "1700000")).expect(res -> {
@@ -1445,8 +1443,7 @@ public class CommunitiesIT {
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityMember> members = CommunitiesRepositoryImplTest
-				.createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
+		final List<CommunityMember> members = createCommunityMembersWithFakeJoinTime(communityId, pool, 23);
 
 		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Communities.MEMBERS_PATH)
 				.with(queryParam("joinFrom", "700000"), queryParam("joinTo", "1700000"), queryParam("offset", "3"),
@@ -1947,8 +1944,7 @@ public class CommunitiesIT {
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityNorm> norms = CommunitiesRepositoryImplTest.createCommunityNormsWithFakeSinceTime(communityId,
-				pool, 23);
+		final List<CommunityNorm> norms = createCommunityNormsWithFakeSinceTime(communityId, pool, 23);
 
 		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH)
 				.with(queryParam("sinceFrom", "700000")).expect(res -> {
@@ -1980,8 +1976,7 @@ public class CommunitiesIT {
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityNorm> norms = CommunitiesRepositoryImplTest.createCommunityNormsWithFakeSinceTime(communityId,
-				pool, 23);
+		final List<CommunityNorm> norms = createCommunityNormsWithFakeSinceTime(communityId, pool, 23);
 
 		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH)
 				.with(queryParam("sinceTo", "700000")).expect(res -> {
@@ -2013,8 +2008,7 @@ public class CommunitiesIT {
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityNorm> norms = CommunitiesRepositoryImplTest.createCommunityNormsWithFakeSinceTime(communityId,
-				pool, 23);
+		final List<CommunityNorm> norms = createCommunityNormsWithFakeSinceTime(communityId, pool, 23);
 
 		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH)
 				.with(queryParam("sinceFrom", "700000"), queryParam("sinceTo", "1700000")).expect(res -> {
@@ -2047,8 +2041,7 @@ public class CommunitiesIT {
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityNorm> norms = CommunitiesRepositoryImplTest.createCommunityNormsWithFakeSinceTime(communityId,
-				pool, 23);
+		final List<CommunityNorm> norms = createCommunityNormsWithFakeSinceTime(communityId, pool, 23);
 
 		testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH)
 				.with(queryParam("sinceFrom", "700000"), queryParam("sinceTo", "1700000"), queryParam("offset", "3"),

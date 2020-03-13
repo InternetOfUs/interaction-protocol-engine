@@ -26,7 +26,8 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
+import eu.internetofus.common.TimeManager;
+import eu.internetofus.common.persitences.Repository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
@@ -62,7 +63,7 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 	public void searchPublishedNormObject(String id, Handler<AsyncResult<JsonObject>> searchHandler) {
 
 		final JsonObject query = new JsonObject().put("_id", id);
-		this.findOneDocument(PUBLISHED_NORMS_COLLECTION, query, null, searchHandler);
+		this.findOneDocument(PUBLISHED_NORMS_COLLECTION, query, null, null, searchHandler);
 	}
 
 	/**
@@ -73,7 +74,7 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 
 		final long now = TimeManager.now();
 		norm.put("publishTime", now);
-		this.storeOneDocument(PUBLISHED_NORMS_COLLECTION, norm, storeHandler);
+		this.storeOneDocument(PUBLISHED_NORMS_COLLECTION, norm, null, storeHandler);
 
 	}
 
@@ -81,7 +82,7 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void updatePublishedNorm(JsonObject norm, Handler<AsyncResult<JsonObject>> updateHandler) {
+	public void updatePublishedNorm(JsonObject norm, Handler<AsyncResult<Void>> updateHandler) {
 
 		final String id = norm.getString("_id");
 		final JsonObject query = new JsonObject().put("_id", id);

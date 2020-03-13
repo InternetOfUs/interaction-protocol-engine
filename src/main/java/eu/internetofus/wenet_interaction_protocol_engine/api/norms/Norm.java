@@ -28,10 +28,10 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
 import java.util.UUID;
 
-import eu.internetofus.wenet_interaction_protocol_engine.Model;
-import eu.internetofus.wenet_interaction_protocol_engine.Validable;
-import eu.internetofus.wenet_interaction_protocol_engine.ValidationErrorException;
-import eu.internetofus.wenet_interaction_protocol_engine.Validations;
+import eu.internetofus.common.api.models.Model;
+import eu.internetofus.common.api.models.Validable;
+import eu.internetofus.common.api.models.ValidationErrorException;
+import eu.internetofus.common.api.models.Validations;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**

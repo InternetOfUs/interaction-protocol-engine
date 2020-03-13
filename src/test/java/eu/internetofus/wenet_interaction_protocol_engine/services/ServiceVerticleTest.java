@@ -26,76 +26,26 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.services;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
+import eu.internetofus.common.services.AbstractServicesVerticleTestCase;
 
 /**
- * Test the {@link ServiceVerticle}.
+ * Test the {@link ServicesVerticle}.
  *
- * @see ServiceVerticle
+ * @see ServicesVerticle
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class ServiceVerticleTest {
+public class ServiceVerticleTest extends AbstractServicesVerticleTestCase<ServicesVerticle> {
 
 	/**
-	 * Check that not stop the server if it is not started.
-	 */
-	@Test
-	public void shouldNotStopIfServerNotStarted() {
-
-		final ServiceVerticle service = new ServiceVerticle();
-		assertThatCode(() -> service.stop()).doesNotThrowAnyException();
-
-	}
-
-	/**
-	 * Check that not stop the server if it is not started.
-	 */
-	@Test
-	public void shouldStopIfServerStarted() {
-
-		final ServiceVerticle service = new ServiceVerticle();
-		service.client = WebClient.create(Vertx.vertx(), new WebClientOptions(new JsonObject()));
-		assertThatCode(() -> service.stop()).doesNotThrowAnyException();
-		assertThat(service.client).isNull();
-
-	}
-
-	/**
-	 * Check that not start verticle that is not deployed.
+	 * {@inheritDoc}
 	 *
-	 * @param testContext context to manage the test.
-	 *
-	 * @throws Exception If it can not start the verticle.
+	 * @see ServicesVerticle#ServicesVerticle()
 	 */
-	@Test
-	@ExtendWith(VertxExtension.class)
-	public void shouldNotStartUndeployedVerticle(VertxTestContext testContext) throws Exception {
+	@Override
+	protected ServicesVerticle createServicesVerticle() {
 
-		final ServiceVerticle service = new ServiceVerticle();
-		final Promise<Void> startPromise = Promise.promise();
-		service.start(startPromise);
-		startPromise.future().onComplete(start -> {
-
-			testContext.verify(() -> {
-				assertThat(start.failed()).isTrue();
-				assertThat(start.cause()).isNotNull();
-			});
-			testContext.completeNow();
-		});
-
+		return new ServicesVerticle();
 	}
 
 }

@@ -28,11 +28,11 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.communities;
 
 import java.util.List;
 
+import eu.internetofus.common.api.models.Model;
+import eu.internetofus.common.api.models.Validable;
+import eu.internetofus.common.api.models.ValidationErrorException;
+import eu.internetofus.common.api.models.Validations;
 import eu.internetofus.wenet_interaction_protocol_engine.Mergeable;
-import eu.internetofus.wenet_interaction_protocol_engine.Model;
-import eu.internetofus.wenet_interaction_protocol_engine.Validable;
-import eu.internetofus.wenet_interaction_protocol_engine.ValidationErrorException;
-import eu.internetofus.wenet_interaction_protocol_engine.Validations;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 

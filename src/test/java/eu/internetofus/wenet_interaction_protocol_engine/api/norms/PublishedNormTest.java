@@ -34,12 +34,12 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.wenet_interaction_protocol_engine.ModelTestCase;
-import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
-import eu.internetofus.wenet_interaction_protocol_engine.ValidationErrorException;
-import eu.internetofus.wenet_interaction_protocol_engine.ValidationsTest;
+import eu.internetofus.common.TimeManager;
+import eu.internetofus.common.api.models.ModelTestCase;
+import eu.internetofus.common.api.models.ValidationErrorException;
+import eu.internetofus.common.api.models.ValidationsTest;
+import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
-import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;

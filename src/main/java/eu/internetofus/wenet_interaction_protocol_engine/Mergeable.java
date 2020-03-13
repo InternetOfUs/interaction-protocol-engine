@@ -26,6 +26,8 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
+import eu.internetofus.common.api.models.ValidationErrorException;
+
 /**
  * This is implemented by any model that can merge to another model.
  *

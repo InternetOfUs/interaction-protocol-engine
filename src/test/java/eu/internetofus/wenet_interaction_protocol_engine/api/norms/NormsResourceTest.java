@@ -38,8 +38,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
+import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
-import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -118,8 +118,8 @@ public class NormsResourceTest {
 		verify(resource.repository, times(1)).searchPublishedNorm(any(), searchHandler.capture());
 		searchHandler.getValue().handle(Future.succeededFuture(PublishedNormTest.createMinimumValidPublishedNormExample()));
 		@SuppressWarnings("unchecked")
-		final ArgumentCaptor<Handler<AsyncResult<PublishedNorm>>> updateHandler = ArgumentCaptor.forClass(Handler.class);
-		verify(resource.repository, times(1)).updatePublishedNorm(any(), updateHandler.capture());
+		final ArgumentCaptor<Handler<AsyncResult<Void>>> updateHandler = ArgumentCaptor.forClass(Handler.class);
+		verify(resource.repository, times(1)).updatePublishedNorm(any(PublishedNorm.class), updateHandler.capture());
 		updateHandler.getValue().handle(Future.failedFuture("Update published norm error"));
 
 	}

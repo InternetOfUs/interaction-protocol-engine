@@ -26,65 +26,56 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
+import eu.internetofus.common.AbstractMainVerticle;
+import eu.internetofus.common.api.AbstractAPIVerticle;
+import eu.internetofus.common.persitences.AbstractPersistenceVerticle;
+import eu.internetofus.common.services.AbstractServicesVerticle;
 import eu.internetofus.wenet_interaction_protocol_engine.api.APIVerticle;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.PersistenceVerticle;
-import eu.internetofus.wenet_interaction_protocol_engine.services.ServiceVerticle;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Promise;
+import eu.internetofus.wenet_interaction_protocol_engine.services.ServicesVerticle;
 
 /**
- * The Main verticle that start the API and the persistence.
+ * The Main verticle that deploy the necessary verticles for the WeNet
+ * interactiomn protocol engine.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class MainVerticle extends AbstractVerticle {
+public class MainVerticle extends AbstractMainVerticle {
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see ServicesVerticle
+	 */
+	@Override
+	protected Class<? extends AbstractServicesVerticle> getServiceVerticleClass() {
+
+		return ServicesVerticle.class;
+
+	}
 
 	/**
 	 * {@inheritDoc}
 	 *
 	 * @see PersistenceVerticle
-	 * @see ServiceVerticle
+	 */
+	@Override
+	protected Class<? extends AbstractPersistenceVerticle> getPersistenceVerticleClass() {
+
+		return PersistenceVerticle.class;
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @see APIVerticle
 	 */
 	@Override
-	public void start(Promise<Void> startPromise) throws Exception {
+	protected Class<? extends AbstractAPIVerticle> getAPIVerticleClass() {
 
-		final DeploymentOptions options = new DeploymentOptions(this.config()).setConfig(this.config());
-		this.vertx.deployVerticle(PersistenceVerticle.class, options, deployPersistence -> {
-
-			if (deployPersistence.failed()) {
-
-				startPromise.fail(deployPersistence.cause());
-
-			} else {
-
-				this.vertx.deployVerticle(ServiceVerticle.class, options, deployService -> {
-
-					if (deployService.failed()) {
-
-						startPromise.fail(deployService.cause());
-
-					} else {
-
-						this.vertx.deployVerticle(APIVerticle.class, options, deployAPI -> {
-
-							if (deployAPI.failed()) {
-
-								startPromise.fail(deployAPI.cause());
-
-							} else {
-
-								startPromise.complete();
-							}
-
-						});
-
-					}
-				});
-			}
-
-		});
+		return APIVerticle.class;
 
 	}
+
 }

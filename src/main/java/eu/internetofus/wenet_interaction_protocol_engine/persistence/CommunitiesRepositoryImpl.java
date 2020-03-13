@@ -26,7 +26,8 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import eu.internetofus.wenet_interaction_protocol_engine.TimeManager;
+import eu.internetofus.common.TimeManager;
+import eu.internetofus.common.persitences.Repository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
@@ -72,7 +73,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	public void searchCommunityObject(String id, Handler<AsyncResult<JsonObject>> searchHandler) {
 
 		final JsonObject query = new JsonObject().put("_id", id);
-		this.findOneDocument(COMMUNITIES_COLLECTION, query, null, searchHandler);
+		this.findOneDocument(COMMUNITIES_COLLECTION, query, null, null, searchHandler);
 	}
 
 	/**
@@ -83,7 +84,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 
 		final long now = TimeManager.now();
 		community.put("sinceTime", now);
-		this.storeOneDocument(COMMUNITIES_COLLECTION, community, storeHandler);
+		this.storeOneDocument(COMMUNITIES_COLLECTION, community, null, storeHandler);
 
 	}
 
@@ -91,7 +92,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void updateCommunity(JsonObject community, Handler<AsyncResult<JsonObject>> updateHandler) {
+	public void updateCommunity(JsonObject community, Handler<AsyncResult<Void>> updateHandler) {
 
 		final String id = community.getString("_id");
 		final JsonObject query = new JsonObject().put("_id", id);
@@ -130,7 +131,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 
 		final JsonObject query = new JsonObject().put("communityId", communityId).put("userId", userId);
 		final JsonObject fields = new JsonObject().put("_id", 0).put("communityId", 0);
-		this.findOneDocument(COMMUNITY_MEMBERS_COLLECTION, query, fields, searchHandler);
+		this.findOneDocument(COMMUNITY_MEMBERS_COLLECTION, query, fields, null, searchHandler);
 
 	}
 
@@ -144,7 +145,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 		final long now = TimeManager.now();
 		member.put("joinTime", now);
 		member.put("communityId", communityId);
-		this.storeOneDocument(COMMUNITY_MEMBERS_COLLECTION, member, storeHandler, "_id", "communityId");
+		this.storeOneDocument(COMMUNITY_MEMBERS_COLLECTION, member, null, storeHandler, "_id", "communityId");
 
 	}
 
@@ -153,7 +154,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	 */
 	@Override
 	public void updateCommunityMemberObject(String communityId, JsonObject member,
-			Handler<AsyncResult<JsonObject>> updateHandler) {
+			Handler<AsyncResult<Void>> updateHandler) {
 
 		final String userId = member.getString("userId");
 		final JsonObject query = new JsonObject().put("communityId", communityId).put("userId", userId);
@@ -194,7 +195,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 
 		final JsonObject query = new JsonObject().put("communityId", communityId).put("_id", normId);
 		final JsonObject fields = new JsonObject().put("communityId", 0);
-		this.findOneDocument(COMMUNITY_NORMS_COLLECTION, query, fields, searchHandler);
+		this.findOneDocument(COMMUNITY_NORMS_COLLECTION, query, fields, null, searchHandler);
 
 	}
 
@@ -208,7 +209,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 		final long now = TimeManager.now();
 		norm.put("sinceTime", now);
 		norm.put("communityId", communityId);
-		this.storeOneDocument(COMMUNITY_NORMS_COLLECTION, norm, storeHandler, "communityId");
+		this.storeOneDocument(COMMUNITY_NORMS_COLLECTION, norm, null, storeHandler, "communityId");
 
 	}
 

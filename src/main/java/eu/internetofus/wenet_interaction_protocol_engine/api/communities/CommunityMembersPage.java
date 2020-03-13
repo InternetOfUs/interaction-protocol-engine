@@ -28,7 +28,7 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.communities;
 
 import java.util.List;
 
-import eu.internetofus.wenet_interaction_protocol_engine.Model;
+import eu.internetofus.common.api.models.Model;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 

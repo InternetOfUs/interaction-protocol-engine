@@ -18,17 +18,17 @@
 	"service": {
 		"webClient": {
 			"defaultHost": "wenet.iiia.csic.es",
-			"defaultPort":80
+			"defaultPort": 80
 		},
 		"profileManager": {
-			"host": "ardid.iiia.csic.es",
+			"host": "wenet.iiia.csic.es",
 			"port": 80,
-			"apiPath": "/wenet-profile-manager/0.10.0"
+			"apiPath": "/profile-manager/latest"
 		},
 		"taskManager": {
-			"host": "ardid.iiia.csic.es",
+			"host": "wenet.iiia.csic.es",
 			"port": 80,
-			"apiPath": "/wenet-task-manager/0.2.0"
+			"apiPath": "/task-manager/latest"
 		}
 	}
 }

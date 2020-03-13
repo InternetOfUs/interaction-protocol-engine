@@ -28,7 +28,7 @@ package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
 import java.util.List;
 
-import eu.internetofus.wenet_interaction_protocol_engine.Model;
+import eu.internetofus.common.api.models.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Community;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityMember;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityNorm;
@@ -173,7 +173,7 @@ public interface CommunitiesRepository {
 	 * @param updateHandler handler to manage the update.
 	 */
 	@GenIgnore
-	default void updateCommunity(Community community, Handler<AsyncResult<Community>> updateHandler) {
+	default void updateCommunity(Community community, Handler<AsyncResult<Void>> updateHandler) {
 
 		final JsonObject object = community.toJsonObject();
 		if (object == null) {
@@ -182,26 +182,7 @@ public interface CommunitiesRepository {
 
 		} else {
 
-			this.updateCommunity(object, updated -> {
-				if (updated.failed()) {
-
-					updateHandler.handle(Future.failedFuture(updated.cause()));
-
-				} else {
-
-					final JsonObject value = updated.result();
-					final Community updatedCommunity = Model.fromJsonObject(value, Community.class);
-					if (updatedCommunity == null) {
-
-						updateHandler.handle(Future.failedFuture("The updated community is not valid."));
-
-					} else {
-
-						updateHandler.handle(Future.succeededFuture(updatedCommunity));
-					}
-
-				}
-			});
+			this.updateCommunity(object, updateHandler);
 		}
 	}
 
@@ -211,7 +192,7 @@ public interface CommunitiesRepository {
 	 * @param community     to update.
 	 * @param updateHandler handler to manage the update result.
 	 */
-	void updateCommunity(JsonObject community, Handler<AsyncResult<JsonObject>> updateHandler);
+	void updateCommunity(JsonObject community, Handler<AsyncResult<Void>> updateHandler);
 
 	/**
 	 * Delete a community.
@@ -370,7 +351,7 @@ public interface CommunitiesRepository {
 	 */
 	@GenIgnore
 	default void updateCommunityMember(String communityId, CommunityMember member,
-			Handler<AsyncResult<CommunityMember>> updateHandler) {
+			Handler<AsyncResult<Void>> updateHandler) {
 
 		final JsonObject object = member.toJsonObject();
 		if (object == null) {
@@ -379,26 +360,7 @@ public interface CommunitiesRepository {
 
 		} else {
 
-			this.updateCommunityMemberObject(communityId, object, updated -> {
-				if (updated.failed()) {
-
-					updateHandler.handle(Future.failedFuture(updated.cause()));
-
-				} else {
-
-					final JsonObject value = updated.result();
-					final CommunityMember updatedCommunityMember = Model.fromJsonObject(value, CommunityMember.class);
-					if (updatedCommunityMember == null) {
-
-						updateHandler.handle(Future.failedFuture("The updated community member is not valid."));
-
-					} else {
-
-						updateHandler.handle(Future.succeededFuture(updatedCommunityMember));
-					}
-
-				}
-			});
+			this.updateCommunityMemberObject(communityId, object, updateHandler);
 		}
 	}
 
@@ -409,8 +371,7 @@ public interface CommunitiesRepository {
 	 * @param member        to update.
 	 * @param updateHandler handler to manage the update result.
 	 */
-	void updateCommunityMemberObject(String communityId, JsonObject member,
-			Handler<AsyncResult<JsonObject>> updateHandler);
+	void updateCommunityMemberObject(String communityId, JsonObject member, Handler<AsyncResult<Void>> updateHandler);
 
 	/**
 	 * Delete a community member.

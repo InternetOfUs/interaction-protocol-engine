@@ -28,7 +28,7 @@ package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
 import java.util.List;
 
-import eu.internetofus.wenet_interaction_protocol_engine.Model;
+import eu.internetofus.common.api.models.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNorm;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
@@ -171,7 +171,7 @@ public interface NormsRepository {
 	 * @param updateHandler handler to manage the update.
 	 */
 	@GenIgnore
-	default void updatePublishedNorm(PublishedNorm norm, Handler<AsyncResult<PublishedNorm>> updateHandler) {
+	default void updatePublishedNorm(PublishedNorm norm, Handler<AsyncResult<Void>> updateHandler) {
 
 		final JsonObject object = norm.toJsonObject();
 		if (object == null) {
@@ -180,26 +180,7 @@ public interface NormsRepository {
 
 		} else {
 
-			this.updatePublishedNorm(object, updated -> {
-				if (updated.failed()) {
-
-					updateHandler.handle(Future.failedFuture(updated.cause()));
-
-				} else {
-
-					final JsonObject value = updated.result();
-					final PublishedNorm updatedNorm = Model.fromJsonObject(value, PublishedNorm.class);
-					if (updatedNorm == null) {
-
-						updateHandler.handle(Future.failedFuture("The updated published norm is not valid."));
-
-					} else {
-
-						updateHandler.handle(Future.succeededFuture(updatedNorm));
-					}
-
-				}
-			});
+			this.updatePublishedNorm(object, updateHandler);
 		}
 	}
 
@@ -209,7 +190,7 @@ public interface NormsRepository {
 	 * @param norm          to update.
 	 * @param updateHandler handler to manage the update result.
 	 */
-	void updatePublishedNorm(JsonObject norm, Handler<AsyncResult<JsonObject>> updateHandler);
+	void updatePublishedNorm(JsonObject norm, Handler<AsyncResult<Void>> updateHandler);
 
 	/**
 	 * Delete a published norm.

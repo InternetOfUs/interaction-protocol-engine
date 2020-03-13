@@ -40,9 +40,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
-import eu.internetofus.wenet_interaction_protocol_engine.Model;
+import eu.internetofus.common.api.models.Model;
+import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
-import eu.internetofus.wenet_interaction_protocol_engine.services.WeNetProfileManagerService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -121,8 +121,8 @@ public class CommunitiesResourceTest {
 		searchHandler.getValue().handle(
 				Future.succeededFuture(Model.fromJsonObject(new JsonObject().put("_id", "communityId"), Community.class)));
 		@SuppressWarnings("unchecked")
-		final ArgumentCaptor<Handler<AsyncResult<Community>>> updateHandler = ArgumentCaptor.forClass(Handler.class);
-		verify(resource.repository, times(1)).updateCommunity(any(), updateHandler.capture());
+		final ArgumentCaptor<Handler<AsyncResult<Void>>> updateHandler = ArgumentCaptor.forClass(Handler.class);
+		verify(resource.repository, times(1)).updateCommunity((Community) any(), updateHandler.capture());
 		updateHandler.getValue().handle(Future.failedFuture("Update community error"));
 
 	}

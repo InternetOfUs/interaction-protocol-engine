@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.internetofus</groupId>
 	<artifactId>wenet-interaction-protocol-engine</artifactId>
-	<version>0.9.0</version>
+	<version>0.10.0</version>
 	<description>This project will be used to provide the API to storing
 		and maintaining the WeNet user task.</description>
 	<organization>
@@ -31,7 +31,7 @@
 		<maven.test.failure.ignore>true</maven.test.failure.ignore>
 		<finalName>${project.artifactId}-${project.version}</finalName>
 		<!-- application properties -->
-		<api-version>0.9.0</api-version>
+		<api-version>0.10.0</api-version>
 		<!-- Maven plugins versions -->
 		<io.swagger.core.v3-version>2.1.1</io.swagger.core.v3-version>
 		<maven-clean-plugin-version>3.1.0</maven-clean-plugin-version>
@@ -53,9 +53,10 @@
 		<build-helper-maven-plugin-version>3.0.0</build-helper-maven-plugin-version>
 		<!-- Library versions -->
 		<io.vertx-version>3.8.5</io.vertx-version>
-		<main.verticle>eu.internetofus.wenet_interaction_protocol_engine.MainVerticle</main.verticle>
+		<main.verticle>eu.internetofus.wenet_profile_manager.MainVerticle</main.verticle>
 		<io.swagger-version>2.1.1</io.swagger-version>
 		<commons-validator-version>1.6</commons-validator-version>
+		<com.googlecode.libphonenumber-version>8.11.3</com.googlecode.libphonenumber-version>
 		<jakarta.ws.rs-version>2.1.6</jakarta.ws.rs-version>
 		<org.apache.commons-lang3-version>3.9</org.apache.commons-lang3-version>
 		<org.tinylog-version>2.0.1</org.tinylog-version>
@@ -139,6 +140,11 @@
 			<version>${commons-validator-version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.googlecode.libphonenumber</groupId>
+			<artifactId>libphonenumber</artifactId>
+			<version>${com.googlecode.libphonenumber-version}</version>
+		</dependency>
+		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
 			<artifactId>swagger-annotations</artifactId>
 			<version>${io.swagger-version}</version>
@@ -212,6 +218,12 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
+			<version>${org.mockito-version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
 			<version>${org.mockito-version}</version>
 			<scope>test</scope>
 		</dependency>

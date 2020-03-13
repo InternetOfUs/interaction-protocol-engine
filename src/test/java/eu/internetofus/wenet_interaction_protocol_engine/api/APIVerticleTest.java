@@ -26,13 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-
-import org.junit.jupiter.api.Test;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerOptions;
+import eu.internetofus.common.api.AbstractAPIVerticleTestCase;
 
 /**
  * Test the {@link APIVerticle}.
@@ -41,33 +35,17 @@ import io.vertx.core.http.HttpServerOptions;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class APIVerticleTest {
+public class APIVerticleTest extends AbstractAPIVerticleTestCase<APIVerticle> {
 
 	/**
-	 * Check that not stop the server if it is not started.
+	 * {@inheritDoc}
+	 *
+	 * @see APIVerticle#APIVerticle()
 	 */
-	@Test
-	public void shouldNotStopIfServerNotStarted() {
+	@Override
+	protected APIVerticle createAPIVerticle() {
 
-		final APIVerticle api = new APIVerticle();
-		assertThatCode(() -> api.stop()).doesNotThrowAnyException();
-
-	}
-
-	/**
-	 * Check that not stop the server if it is not started.
-	 */
-	@Test
-	public void shouldStopIfServerStarted() {
-
-		final APIVerticle api = new APIVerticle();
-		final HttpServerOptions options = new HttpServerOptions();
-		options.setHost("localhost");
-		options.setPort(0);
-		api.server = Vertx.vertx().createHttpServer(options);
-		assertThatCode(() -> api.stop()).doesNotThrowAnyException();
-		assertThat(api.server).isNull();
-
+		return new APIVerticle();
 	}
 
 }
