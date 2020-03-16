@@ -25,6 +25,15 @@
  */
 package eu.internetofus.wenet_interaction_protocol_engine;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.itsallcode.io.Capturable;
+import org.itsallcode.junit.sysextensions.SystemErrGuard;
+import org.itsallcode.junit.sysextensions.SystemOutGuard;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import eu.internetofus.common.AbstractMain;
 import eu.internetofus.common.AbstractMainTestCase;
 
 /**
@@ -45,6 +54,39 @@ public class MainTest extends AbstractMainTestCase<Main> {
 	protected Main createMain() {
 
 		return new Main();
+	}
+
+	/**
+	 * Verify show help message from calling main.
+	 *
+	 * @param stream captured system output stream.
+	 */
+	@ExtendWith(SystemOutGuard.class)
+	@Test
+	public void shouldShowHelpMessageFromMain(final Capturable stream) {
+
+		stream.capture();
+		Main.main("-" + AbstractMain.HELP_OPTION);
+		final String data = stream.getCapturedData();
+		assertThat(data).contains("-" + AbstractMain.HELP_OPTION, "-" + AbstractMain.VERSION_OPTION,
+				"-" + AbstractMain.CONF_DIR_OPTION, "-" + AbstractMain.PROPERTY_OPTION);
+
+	}
+
+	/**
+	 * Verify not start form main.
+	 *
+	 * @param stream captured system output stream.
+	 */
+	@ExtendWith(SystemErrGuard.class)
+	@Test
+	public void shouldNotStartFromMainFunction(final Capturable stream) {
+
+		stream.capture();
+		Main.main("-undefined");
+		final String data = stream.getCapturedData();
+		assertThat(data).contains("Can not start the WeNet interaction protocol engine!");
+
 	}
 
 }
