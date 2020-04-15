@@ -4,7 +4,7 @@ This project will be used to provide the API to manage the interaction between W
 
  - [License](LICENSE)
  - [Changes](CHANGELOG)
- - [API specification](https://bitbucket.org/wenet/wenet-components-documentation/src/master/sources/wenet-interaction-protocol-engine-api.yaml) ( [Swagger UI](http://swagger.u-hopper.com/?url=https://bitbucket.org/wenet/wenet-components-documentation/raw/master/sources/wenet-interaction-protocol-engine-api.yaml) )
+ - [API specification](https://bitbucket.org/wenet/wenet-components-documentation/src/master/sources/wenet-interaction_protocol_engine-openapi.yaml) ( [Swagger UI](http://swagger.u-hopper.com/?url=https://bitbucket.org/wenet/wenet-components-documentation/raw/master/sources/wenet-interaction_protocol_engine-openapi.yaml) )
  - [Repository](https://rosell@bitbucket.org/wenet/wenet-interaction-protocol-engine.git)
  - [Servers](#servers)
  - [Contact](#contact)

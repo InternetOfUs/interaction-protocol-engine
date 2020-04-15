@@ -50,7 +50,7 @@ public class APIVerticle extends AbstractAPIVerticle {
 	@Override
 	protected String getOpenAPIResourcePath() {
 
-		return "wenet-interaction-protocol-engine-api.yaml";
+		return "wenet-interaction_protocol_engine-openapi.yaml";
 	}
 
 	/**
