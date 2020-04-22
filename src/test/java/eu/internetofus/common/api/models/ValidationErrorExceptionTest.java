@@ -31,8 +31,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import eu.internetofus.common.api.models.ValidationErrorException;
-
 /**
  * Test the {@link ValidationErrorException}
  *

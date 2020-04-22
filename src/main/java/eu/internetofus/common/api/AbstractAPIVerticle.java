@@ -85,6 +85,7 @@ public abstract class AbstractAPIVerticle extends AbstractVerticle {
 							final int actualPort = httpServer.actualPort();
 							apiConf.put("port", actualPort);
 							Logger.info("The server is ready at http://{}:{}", host, actualPort);
+							this.startedServerAt(host, actualPort);
 							startPromise.complete();
 						}
 					});
@@ -102,6 +103,14 @@ public abstract class AbstractAPIVerticle extends AbstractVerticle {
 		});
 
 	}
+
+	/**
+	 * Called when the server has been started.
+	 *
+	 * @param host address that the HTTP server is bind.
+	 * @param port that the HTTP server is bind.
+	 */
+	protected abstract void startedServerAt(String host, int port);
 
 	/**
 	 * Mount the resources that will manage the API requests.

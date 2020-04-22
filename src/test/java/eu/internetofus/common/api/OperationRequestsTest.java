@@ -71,7 +71,7 @@ public class OperationRequestsTest {
 	}
 
 	/**
-	 * Check that convert a {@code null} array to a {@©ode null} list.
+	 * Check that convert a {@code null} array to a {@code null} list.
 	 */
 	@Test
 	public void shouldNullArrayBeNullListString() {
@@ -81,7 +81,7 @@ public class OperationRequestsTest {
 	}
 
 	/**
-	 * Check that convert an empty array to a {@©ode null} list.
+	 * Check that convert an empty array to a {@code null} list.
 	 */
 	@Test
 	public void shouldEmptyArrayBeNullListString() {
@@ -98,6 +98,17 @@ public class OperationRequestsTest {
 
 		assertThat(OperationRequests.toListString(new JsonArray().add("value").add("true").add("3")))
 				.isEqualTo(Arrays.asList("value", "true", "3"));
+
+	}
+
+	/**
+	 * Check that return an empty query object when it is not defiend.
+	 */
+	@Test
+	public void shouldEmptyQueryObjectWhenNotDefined() {
+
+		final OperationRequest context = new OperationRequest(new JsonObject());
+		assertThat(OperationRequests.getQueryParamters(context)).isEqualTo(new JsonObject());
 
 	}
 

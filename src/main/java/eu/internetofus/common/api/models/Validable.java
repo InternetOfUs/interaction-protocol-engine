@@ -26,6 +26,9 @@
 
 package eu.internetofus.common.api.models;
 
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+
 /**
  * This is implemented by any model that can validate its content.
  *
@@ -37,9 +40,14 @@ public interface Validable {
 	 * Check if the model is right.
 	 *
 	 * @param codePrefix the prefix of the code to use for the error message.
+	 * @param vertx      the event bus infrastructure to use.
 	 *
-	 * @throws ValidationErrorException If the model is not valid.
+	 *
+	 * @return the future that inform if the value is right. If it not right the
+	 *         cause will be a {@link ValidationErrorException}.
+	 *
+	 * @see ValidationErrorException
 	 */
-	void validate(String codePrefix) throws ValidationErrorException;
+	Future<Void> validate(String codePrefix, Vertx vertx);
 
 }

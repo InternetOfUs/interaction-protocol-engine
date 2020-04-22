@@ -29,9 +29,8 @@ package eu.internetofus.common.services;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 
@@ -42,66 +41,69 @@ import io.vertx.junit5.VertxTestContext;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class WeNetProfileManagerServiceTest {
+public abstract class WeNetProfileManagerServiceTestCase {
 
 	/**
 	 * Should not create a bad profile.
 	 *
-	 * @param service     to check that it can not create the profile.
+	 * @param vertx       that contains the event bus to use.
 	 * @param testContext context over the tests.
 	 */
 	@Test
-	public void shouldNotCreateBadProfile(WeNetProfileManagerService service, VertxTestContext testContext) {
+	public void shouldNotCreateBadProfile(Vertx vertx, VertxTestContext testContext) {
 
-		service.createProfile(new JsonObject().put("undefinedField", "value"), testContext.failing(handler -> {
-			testContext.completeNow();
+		WeNetProfileManagerService.createProxy(vertx).createProfile(new JsonObject().put("undefinedField", "value"),
+				testContext.failing(handler -> {
+					testContext.completeNow();
 
-		}));
+				}));
 
 	}
 
 	/**
 	 * Should not retrieve undefined profile.
 	 *
-	 * @param service     to check that it can not create the profile.
+	 * @param vertx       that contains the event bus to use.
 	 * @param testContext context over the tests.
 	 */
 	@Test
-	public void shouldNotRretrieveUndefinedProfile(WeNetProfileManagerService service, VertxTestContext testContext) {
+	public void shouldNotRretrieveUndefinedProfile(Vertx vertx, VertxTestContext testContext) {
 
-		service.retrieveProfile("undefined-profile-identifier", testContext.failing(handler -> {
-			testContext.completeNow();
+		WeNetProfileManagerService.createProxy(vertx).retrieveProfile("undefined-profile-identifier",
+				testContext.failing(handler -> {
+					testContext.completeNow();
 
-		}));
+				}));
 
 	}
 
 	/**
 	 * Should not delete undefined profile.
 	 *
-	 * @param service     to check that it can not create the profile.
+	 * @param vertx       that contains the event bus to use.
 	 * @param testContext context over the tests.
 	 */
 	@Test
-	public void shouldNotDeleteUndefinedProfile(WeNetProfileManagerService service, VertxTestContext testContext) {
+	public void shouldNotDeleteUndefinedProfile(Vertx vertx, VertxTestContext testContext) {
 
-		service.deleteProfile("undefined-profile-identifier", testContext.failing(handler -> {
-			testContext.completeNow();
+		WeNetProfileManagerService.createProxy(vertx).deleteProfile("undefined-profile-identifier",
+				testContext.failing(handler -> {
+					testContext.completeNow();
 
-		}));
+				}));
 
 	}
 
 	/**
-	 * Should retrieve created profile.
+	 * Should create, retrieve and delete a profile.
 	 *
-	 * @param service     to check that it can not create the profile.
+	 * @param vertx       that contains the event bus to use.
 	 * @param testContext context over the tests.
 	 */
 	@Test
-	public void shouldRetrieveCreatedProfile(WeNetProfileManagerService service, VertxTestContext testContext) {
+	public void shouldCreateRetrieveAndDeleteProfile(Vertx vertx, VertxTestContext testContext) {
 
+		final WeNetProfileManagerService service = WeNetProfileManagerService.createProxy(vertx);
 		service.createProfile(new JsonObject(), testContext.succeeding(create -> {
 
 			final String id = create.getString("id");

@@ -74,8 +74,7 @@ public interface WeNetInteractionProtocolEngineService {
 	}
 
 	/**
-	 * Return a community. It is used to verify if the identifier of a WeNet user is
-	 * right.
+	 * Return a community.
 	 *
 	 * @param id              identifier of the community to get.
 	 * @param retrieveHandler handler to manage the retrieve process.
@@ -83,7 +82,7 @@ public interface WeNetInteractionProtocolEngineService {
 	void retrieveCommunity(String id, Handler<AsyncResult<JsonObject>> retrieveHandler);
 
 	/**
-	 * Create a community. ATTENTION: this is used only for testing purposes.
+	 * Create a community.
 	 *
 	 * @param community     to create.
 	 * @param createHandler handler to manage the creation process.
@@ -91,9 +90,9 @@ public interface WeNetInteractionProtocolEngineService {
 	void createCommunity(JsonObject community, Handler<AsyncResult<JsonObject>> createHandler);
 
 	/**
-	 * Return a community. ATTENTION: this is used only for testing purposes.
+	 * Delete a community.
 	 *
-	 * @param id            identifier of the community to get.
+	 * @param id            identifier of the community to remove.
 	 * @param deleteHandler handler to manage the delete process.
 	 */
 	void deleteCommunity(String id, Handler<AsyncResult<Void>> deleteHandler);

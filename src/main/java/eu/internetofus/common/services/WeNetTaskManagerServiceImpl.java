@@ -83,4 +83,34 @@ public class WeNetTaskManagerServiceImpl extends Service implements WeNetTaskMan
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void createTaskType(JsonObject taskType, Handler<AsyncResult<JsonObject>> createHandler) {
+
+		this.post("/taskTypes", taskType, createHandler);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveTaskType(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
+
+		this.get("/taskTypes/" + id, retrieveHandler);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void deleteTaskType(String id, Handler<AsyncResult<Void>> deleteHandler) {
+
+		this.delete("/taskTypes/" + id, deleteHandler);
+
+	}
+
 }

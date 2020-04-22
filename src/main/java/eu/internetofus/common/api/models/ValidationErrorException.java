@@ -31,7 +31,7 @@ package eu.internetofus.common.api.models;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class ValidationErrorException extends RuntimeException {
+public class ValidationErrorException extends Exception {
 
 	/**
 	 * Serialization identifier.

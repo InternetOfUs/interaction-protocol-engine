@@ -64,14 +64,12 @@ public class Repository {
 	 *
 	 * @param collectionName of the collections that contains the models.
 	 * @param query          to obtain the components of the page.
-	 * @param fields         for the search.
-	 * @param offset         index of the first model to obtain.
-	 * @param limit          number maximum of models to return.
+	 * @param options        to apply to the search.
 	 * @param resultKey      to store the found models.
 	 * @param searchHandler  handler to manage the result action.
 	 */
-	protected void searchPageObject(String collectionName, JsonObject query, JsonObject fields, int offset, int limit,
-			String resultKey, Handler<AsyncResult<JsonObject>> searchHandler) {
+	protected void searchPageObject(String collectionName, JsonObject query, FindOptions options, String resultKey,
+			Handler<AsyncResult<JsonObject>> searchHandler) {
 
 		this.pool.count(collectionName, query, count -> {
 
@@ -82,6 +80,7 @@ public class Repository {
 			} else {
 
 				final long total = count.result().longValue();
+				final int offset = options.getSkip();
 				final JsonObject page = new JsonObject().put("offset", offset).put("total", total);
 				if (total == 0 || offset >= total) {
 
@@ -89,10 +88,6 @@ public class Repository {
 
 				} else {
 
-					final FindOptions options = new FindOptions();
-					options.setLimit(limit);
-					options.setSkip(offset);
-					options.setFields(fields);
 					this.pool.findWithOptions(collectionName, query, options, find -> {
 
 						if (find.failed()) {
@@ -176,15 +171,15 @@ public class Repository {
 	 *
 	 * @param collectionName of the collections that contains the model to store.
 	 * @param model          to store.
-	 * @param idField        name of the filed that contains the identifier. If it
-	 *                       is {@code null} is used the {@code _id}.
+	 * @param map            function to modify the stored document. If it is
+	 *                       {@code null} no modification is applied.
+	 *
 	 * @param storeHandler   handler to manage the store action.
-	 * @param fieldsToRemove fields to remove after stored the model.
 	 */
-	protected void storeOneDocument(String collectionName, JsonObject model, String idField,
-			Handler<AsyncResult<JsonObject>> storeHandler, String... fieldsToRemove) {
+	protected void storeOneDocument(String collectionName, JsonObject model, Function<JsonObject, JsonObject> map,
+			Handler<AsyncResult<JsonObject>> storeHandler) {
 
-		this.pool.save(collectionName, model, store -> {
+		this.pool.insert(collectionName, model, store -> {
 
 			if (store.failed()) {
 
@@ -192,18 +187,23 @@ public class Repository {
 
 			} else {
 
-				if (idField != null) {
+				if (map != null) {
 
-					model.put(idField, model.remove("_id"));
-				}
-				if (fieldsToRemove != null) {
+					try {
 
-					for (final String field : fieldsToRemove) {
+						final JsonObject adaptedModel = map.apply(model);
+						storeHandler.handle(Future.succeededFuture(adaptedModel));
 
-						model.remove(field);
+					} catch (final Throwable throwable) {
+
+						storeHandler.handle(Future.failedFuture(throwable));
+
 					}
+
+				} else {
+
+					storeHandler.handle(Future.succeededFuture(model));
 				}
-				storeHandler.handle(Future.succeededFuture(model));
 			}
 
 		});

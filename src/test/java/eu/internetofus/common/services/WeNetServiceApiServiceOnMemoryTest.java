@@ -28,33 +28,62 @@ package eu.internetofus.common.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
 /**
- * Test the {@link WeNetTaskManagerService}.
- *
- * @see WeNetTaskManagerService
+ * Test the {@link WeNetServiceApiServiceOnMemory}.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class WeNetTaskManagerServiceTest {
+@ExtendWith(VertxExtension.class)
+public class WeNetServiceApiServiceOnMemoryTest {
 
 	/**
-	 * Should not create a bad task.
+	 * Register the necessary services before to test.
 	 *
-	 * @param service     to check that it can not create the task.
+	 * @param vertx event bus to register the necessary services.
+	 */
+	@BeforeEach
+	public void registerServices(Vertx vertx) {
+
+		WeNetServiceApiServiceOnMemory.register(vertx);
+
+	}
+
+	/**
+	 * Should not create a bad app.
+	 *
+	 * @param vertx       that contains the event bus to use.
 	 * @param testContext context over the tests.
 	 */
 	@Test
-	public void shouldNotCreateBadTask(WeNetTaskManagerService service, VertxTestContext testContext) {
+	public void shouldNotCreateBadApp(Vertx vertx, VertxTestContext testContext) {
 
-		service.createTask(new JsonObject().put("undefinedField", "value"), testContext.failing(handler -> {
+		WeNetServiceApiService.createProxy(vertx).createApp(new JsonObject().put("undefinedField", "value"),
+				testContext.failing(handler -> {
+					testContext.completeNow();
+
+				}));
+
+	}
+
+	/**
+	 * Should not retrieve undefined app.
+	 *
+	 * @param vertx       that contains the event bus to use.
+	 * @param testContext context over the tests.
+	 */
+	@Test
+	public void shouldNotRretrieveUndefinedApp(Vertx vertx, VertxTestContext testContext) {
+
+		WeNetServiceApiService.createProxy(vertx).retrieveApp("undefined-app-identifier", testContext.failing(handler -> {
 			testContext.completeNow();
 
 		}));
@@ -62,15 +91,15 @@ public class WeNetTaskManagerServiceTest {
 	}
 
 	/**
-	 * Should not retrieve undefined task.
+	 * Should not delete undefined app.
 	 *
-	 * @param service     to check that it can not create the task.
+	 * @param vertx       that contains the event bus to use.
 	 * @param testContext context over the tests.
 	 */
 	@Test
-	public void shouldNotRretrieveUndefinedTask(WeNetTaskManagerService service, VertxTestContext testContext) {
+	public void shouldNotDeleteUndefinedApp(Vertx vertx, VertxTestContext testContext) {
 
-		service.retrieveTask("undefined-task-identifier", testContext.failing(handler -> {
+		WeNetServiceApiService.createProxy(vertx).deleteApp("undefined-app-identifier", testContext.failing(handler -> {
 			testContext.completeNow();
 
 		}));
@@ -78,39 +107,24 @@ public class WeNetTaskManagerServiceTest {
 	}
 
 	/**
-	 * Should not delete undefined task.
+	 * Should create, retrieve and delete a app.
 	 *
-	 * @param service     to check that it can not create the task.
+	 * @param vertx       that contains the event bus to use.
 	 * @param testContext context over the tests.
 	 */
 	@Test
-	public void shouldNotDeleteUndefinedTask(WeNetTaskManagerService service, VertxTestContext testContext) {
+	public void shouldCreateRetrieveAndDeleteApp(Vertx vertx, VertxTestContext testContext) {
 
-		service.deleteTask("undefined-task-identifier", testContext.failing(handler -> {
-			testContext.completeNow();
+		final WeNetServiceApiService service = WeNetServiceApiService.createProxy(vertx);
+		service.createApp(new JsonObject(), testContext.succeeding(create -> {
 
-		}));
-
-	}
-
-	/**
-	 * Should retrieve created task.
-	 *
-	 * @param service     to check that it can not create the task.
-	 * @param testContext context over the tests.
-	 */
-	@Test
-	public void shouldRetrieveCreatedTask(WeNetTaskManagerService service, VertxTestContext testContext) {
-
-		service.createTask(new JsonObject(), testContext.succeeding(create -> {
-
-			final String id = create.getString("taskId");
-			service.retrieveTask(id, testContext.succeeding(retrieve -> testContext.verify(() -> {
+			final String id = create.getString("appId");
+			service.retrieveApp(id, testContext.succeeding(retrieve -> testContext.verify(() -> {
 
 				assertThat(create).isEqualTo(retrieve);
-				service.deleteTask(id, testContext.succeeding(empty -> {
+				service.deleteApp(id, testContext.succeeding(empty -> {
 
-					service.retrieveTask(id, testContext.failing(handler -> {
+					service.retrieveApp(id, testContext.failing(handler -> {
 						testContext.completeNow();
 
 					}));

@@ -74,8 +74,7 @@ public interface WeNetTaskManagerService {
 	}
 
 	/**
-	 * Return a task. It is used to verify if the identifier of a WeNet user is
-	 * right.
+	 * Return a task.
 	 *
 	 * @param id              identifier of the task to get.
 	 * @param retrieveHandler handler to manage the retrieve process.
@@ -83,7 +82,7 @@ public interface WeNetTaskManagerService {
 	void retrieveTask(String id, Handler<AsyncResult<JsonObject>> retrieveHandler);
 
 	/**
-	 * Create a task. ATTENTION: this is used only for testing purposes.
+	 * Create a task.
 	 *
 	 * @param task          to create.
 	 * @param createHandler handler to manage the creation process.
@@ -91,11 +90,35 @@ public interface WeNetTaskManagerService {
 	void createTask(JsonObject task, Handler<AsyncResult<JsonObject>> createHandler);
 
 	/**
-	 * Return a task. ATTENTION: this is used only for testing purposes.
+	 * Delete a task.
 	 *
 	 * @param id            identifier of the task to get.
 	 * @param deleteHandler handler to manage the delete process.
 	 */
 	void deleteTask(String id, Handler<AsyncResult<Void>> deleteHandler);
+
+	/**
+	 * Return a task type.
+	 *
+	 * @param id              identifier of the task to get.
+	 * @param retrieveHandler handler to manage the retrieve process.
+	 */
+	void retrieveTaskType(String id, Handler<AsyncResult<JsonObject>> retrieveHandler);
+
+	/**
+	 * Create a task type.
+	 *
+	 * @param task          to create.
+	 * @param createHandler handler to manage the creation process.
+	 */
+	void createTaskType(JsonObject task, Handler<AsyncResult<JsonObject>> createHandler);
+
+	/**
+	 * Delete a task type.
+	 *
+	 * @param id            identifier of the task to get.
+	 * @param deleteHandler handler to manage the delete process.
+	 */
+	void deleteTaskType(String id, Handler<AsyncResult<Void>> deleteHandler);
 
 }
