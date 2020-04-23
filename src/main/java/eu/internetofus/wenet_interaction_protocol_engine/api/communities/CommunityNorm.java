@@ -61,7 +61,7 @@ public class CommunityNorm extends Model implements Validable {
 	 */
 	@Schema(
 			description = "The norm to apply into the community.",
-			ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/5c0512480f89ae267d6fc0dcf42db0f3a50d01e8/sources/wenet-models.yaml#/components/schemas/Norm")
+			ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/master/sources/wenet-models-openapi.yaml#/components/schemas/Norm")
 	public Norm norm;
 
 	/**

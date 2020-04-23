@@ -194,7 +194,7 @@ public abstract class AbstractMain {
 	}
 
 	/**
-	 * Create the main verticle taht will start the WeNet module components to
+	 * Create the main verticle that will start the WeNet module components to
 	 * deploy.
 	 *
 	 * @return an instance of the main verticle to deploy.

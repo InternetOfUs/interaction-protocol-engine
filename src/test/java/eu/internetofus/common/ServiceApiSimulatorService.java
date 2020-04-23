@@ -24,76 +24,70 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.services;
+package eu.internetofus.common;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
+import eu.internetofus.common.services.WeNetServiceApiServiceImpl;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.client.WebClientOptions;
 
 /**
- * Abstract verticle to start the services to interact with the other WeNet
- * modules.
+ * Service used to interact with the {@link ServiceApiSimulator}.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class AbstractServicesVerticle extends AbstractVerticle {
+public class ServiceApiSimulatorService extends WeNetServiceApiServiceImpl {
 
 	/**
-	 * The client to do the HTTP request to other components.
+	 * Create a new service to interact with the WeNet interaction protocol engine.
+	 *
+	 * @param client to interact with the other modules.
+	 * @param conf   configuration.
 	 */
-	protected WebClient client;
+	public ServiceApiSimulatorService(WebClient client, JsonObject conf) {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void start(Promise<Void> startPromise) throws Exception {
+		super(client, conf);
 
-		try {
-
-			final JsonObject serviceConf = this.config().getJsonObject("wenetComponents", new JsonObject());
-
-			// configure the web client
-			final JsonObject webClientConf = serviceConf.getJsonObject("webClient", new JsonObject());
-			final WebClientOptions options = new WebClientOptions(webClientConf);
-			this.client = WebClient.create(this.vertx, options);
-
-			this.registerServices(serviceConf);
-
-			startPromise.complete();
-
-		} catch (final Throwable cause) {
-
-			startPromise.fail(cause);
-		}
 	}
 
 	/**
-	 * Called when has to register the services to the Vertx event bus.
-	 *
-	 * @param serviceConf configuration of the services.
-	 *
-	 * @throws Exception If can not register or create teh service to register.
-	 */
-	protected abstract void registerServices(JsonObject serviceConf) throws Exception;
-
-	/**
-	 * Close the web client.
+	 * Call the {@link ServiceApiSimulator} to create an application.
 	 *
 	 * {@inheritDoc}
-	 *
-	 * @see #client
 	 */
 	@Override
-	public void stop() {
+	public void createApp(JsonObject app, Handler<AsyncResult<JsonObject>> createHandler) {
 
-		if (this.client != null) {
+		this.post("/app", app, createHandler);
 
-			this.client.close();
-			this.client = null;
-		}
+	}
+
+	/**
+	 * Call the {@link ServiceApiSimulator} to delete an application.
+	 *
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void deleteApp(String id, Handler<AsyncResult<Void>> deleteHandler) {
+
+		this.delete("/app/" + id, deleteHandler);
+
+	}
+
+	/**
+	 * Create a service that will link to the simulator service.
+	 *
+	 * @param context used to create the service.
+	 *
+	 * @return the created service.
+	 */
+	public static ServiceApiSimulatorService create(WeNetModuleContext context) {
+
+		final WebClient client = WebClient.create(context.vertx);
+		final JsonObject conf = context.configuration.getJsonObject("wenetComponents", new JsonObject())
+				.getJsonObject("service", new JsonObject());
+		return new ServiceApiSimulatorService(client, conf);
 	}
 
 }

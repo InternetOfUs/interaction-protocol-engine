@@ -98,7 +98,7 @@ public class PublishedNorm extends Model {
 	 */
 	@Schema(
 			description = "The published norm.",
-			ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/5c0512480f89ae267d6fc0dcf42db0f3a50d01e8/sources/wenet-models.yaml#/components/schemas/Norm")
+			ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/master/sources/wenet-models-openapi.yaml#/components/schemas/Norm")
 	public Norm norm;
 
 	/**

@@ -27,12 +27,15 @@
 package eu.internetofus.common;
 
 import java.net.ServerSocket;
+import java.util.concurrent.Semaphore;
 
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.MountableFile;
+import org.tinylog.Level;
+import org.tinylog.provider.InternalLogger;
 
 /**
  * Utility classes to manage containers.
@@ -130,13 +133,19 @@ public interface Containers {
 	/**
 	 * Create and start the task manager container.
 	 *
-	 * @param port                  to bind the task manager API on the localhost.
-	 * @param profileManagerApiPort port where the profile manager will be bind on
-	 *                              the localhost.
-	 * @param network               that shared between containers.
+	 * @param port                             to bind the task manager API on the
+	 *                                         localhost.
+	 * @param profileManagerApiPort            port where the profile manager will
+	 *                                         be bind on the localhost.
+	 * @param interactionProtocolEngineApiPort port where the interaction protocol
+	 *                                         engine will be bind on the localhost.
+	 * @param serviceApiPort                   port where the service component will
+	 *                                         be bind on the localhost.
+	 * @param network                          that shared between containers.
 	 */
 	@SuppressWarnings("resource")
-	static void createAndStartContainersForTaskManager(int port, int profileManagerApiPort, Network network) {
+	static void createAndStartContainersForTaskManager(int port, int profileManagerApiPort,
+			int interactionProtocolEngineApiPort, int serviceApiPort, Network network) {
 
 		final GenericContainer<?> taskPersistenceContainer = createMongoContainerFor(WENET_TASK_MANAGER_DB_NAME, network);
 		taskPersistenceContainer.start();
@@ -144,8 +153,13 @@ public interface Containers {
 				WENET_TASK_MANAGER_DOCKER_NAME).withStartupAttempts(1).withEnv("DB_HOST", WENET_TASK_MANAGER_DB_NAME)
 						.withEnv("WENET_PROFILE_MANAGER_API_HOST", "host.testcontainers.internal")
 						.withEnv("WENET_PROFILE_MANAGER_API_PORT", String.valueOf(profileManagerApiPort))
-						.withEnv("WENET_PROFILE_MANAGER_API_PATH", "").withNetwork(network)
-						.withFixedExposedPort(port, EXPORT_API_PORT).waitingFor(Wait.forListeningPort());
+						.withEnv("WENET_PROFILE_MANAGER_API_PATH", "")
+						.withEnv("WENET_INTERACTION_PROTOCOL_ENGINE_API_HOST", "host.testcontainers.internal")
+						.withEnv("WENET_INTERACTION_PROTOCOL_ENGINE_API_PORT", String.valueOf(interactionProtocolEngineApiPort))
+						.withEnv("WENET_INTERACTION_PROTOCOL_ENGINE_API_PATH", "")
+						.withEnv("WENET_SERVICE_API_HOST", "host.testcontainers.internal")
+						.withEnv("WENET_SERVICE_API_PORT", String.valueOf(serviceApiPort)).withEnv("WENET_SERVICE_API_PATH", "")
+						.withNetwork(network).withFixedExposedPort(port, EXPORT_API_PORT).waitingFor(Wait.forListeningPort());
 		taskManagerContainer.start();
 
 	}
@@ -158,11 +172,13 @@ public interface Containers {
 	 *                              the localhost.
 	 * @param taskManagerApiPort    port where the task manager will be bind on the
 	 *                              localhost.
+	 * @param serviceApiPort        port where the service component will be bind on
+	 *                              the localhost.
 	 * @param network               that shared between containers.
 	 */
 	@SuppressWarnings("resource")
 	static void createAndStartContainersForInteractionProtocolEngine(int port, int profileManagerApiPort,
-			int taskManagerApiPort, Network network) {
+			int taskManagerApiPort, int serviceApiPort, Network network) {
 
 		final GenericContainer<?> interactionProtocolEnginePersistenceContainer = createMongoContainerFor(
 				WENET_INTERACTION_PROTOCOL_ENGINE_DB_NAME, network);
@@ -175,8 +191,10 @@ public interface Containers {
 						.withEnv("WENET_PROFILE_MANAGER_API_PATH", "")
 						.withEnv("WENET_TASK_MANAGER_API_HOST", "host.testcontainers.internal")
 						.withEnv("WENET_TASK_MANAGER_API_PORT", String.valueOf(taskManagerApiPort))
-						.withEnv("WENET_TASK_MANAGER_API_PATH", "").withNetwork(network).withFixedExposedPort(port, EXPORT_API_PORT)
-						.waitingFor(Wait.forListeningPort());
+						.withEnv("WENET_TASK_MANAGER_API_PATH", "")
+						.withEnv("WENET_SERVICE_API_HOST", "host.testcontainers.internal")
+						.withEnv("WENET_SERVICE_API_PORT", String.valueOf(serviceApiPort)).withEnv("WENET_SERVICE_API_PATH", "")
+						.withNetwork(network).withFixedExposedPort(port, EXPORT_API_PORT).waitingFor(Wait.forListeningPort());
 		interactionProtocolEngineContainer.start();
 
 	}
@@ -213,6 +231,33 @@ public interface Containers {
 	}
 
 	/**
+	 * Create a {@link ServiceApiSimulator} to simulate the interaction with the
+	 * service api.
+	 *
+	 * @param port to link the simulator.
+	 */
+	static void createAndStartServiceApiSimulator(int port) {
+
+		try {
+
+			final Semaphore semaphore = new Semaphore(0);
+			ServiceApiSimulator.start(port).onComplete(start -> {
+				if (start.failed()) {
+
+					InternalLogger.log(Level.ERROR, start.cause(), "Could not start the ServiceApiSimulator.");
+				}
+				semaphore.release();
+			});
+			semaphore.acquire();
+
+		} catch (final Throwable throwable) {
+
+			InternalLogger.log(Level.ERROR, throwable, "Could not start the ServiceApiSimulator.");
+		}
+
+	}
+
+	/**
 	 * Create the container necessaries to start the profile manager with some
 	 * arguments.
 	 *
@@ -235,10 +280,10 @@ public interface Containers {
 
 		return new String[] { "-papi.port=" + port, "-ppersistence.host=localhost",
 				"-ppersistence.port=" + persistenceContainer.getMappedPort(EXPORT_MONGODB_PORT),
-				"-pservice.interactionProtocolEngine.host=localhost",
-				"-pservice.interactionProtocolEngine.port=" + interactionProtocolEngineApiPort,
-				"-pservice.interactionProtocolEngine.apiPath=\"\"", "-pservice.taskManager.host=localhost",
-				"-pservice.taskManager.port=" + taskManagerApiPort, "-pservice.taskManager.apiPath=\"\""
+				"-pwenetComponents.interactionProtocolEngine.host=localhost",
+				"-pwenetComponents.interactionProtocolEngine.port=" + interactionProtocolEngineApiPort,
+				"-pwenetComponents.interactionProtocolEngine.apiPath=\"\"", "-pwenetComponents.taskManager.host=localhost",
+				"-pwenetComponents.taskManager.port=" + taskManagerApiPort, "-pwenetComponents.taskManager.apiPath=\"\""
 
 		};
 	}
@@ -247,14 +292,20 @@ public interface Containers {
 	 * Create the container necessaries to start the task manager with some
 	 * arguments.
 	 *
-	 * @param port                  to bind the task manager API on the localhost.
-	 * @param profileManagerApiPort port where the profile manager will be bind on
-	 *                              the localhost.
-	 * @param network               that shared between containers.
+	 * @param port                             to bind the task manager API on the
+	 *                                         localhost.
+	 * @param profileManagerApiPort            port where the profile manager will
+	 *                                         be bind on the localhost.
+	 * @param interactionProtocolEngineApiPort port where the interaction protocol
+	 *                                         engine will be bind on the localhost.
+	 * @param serviceApiPort                   port where the service component will
+	 *                                         be bind on the localhost.
+	 * @param network                          that shared between containers.
 	 *
 	 * @return the arguments necessaries to start the task manager.
 	 */
-	static String[] createTaskManagerContainersToStartWith(int port, int profileManagerApiPort, Network network) {
+	static String[] createTaskManagerContainersToStartWith(int port, int profileManagerApiPort,
+			int interactionProtocolEngineApiPort, int serviceApiPort, Network network) {
 
 		final GenericContainer<?> persistenceContainer = Containers.createMongoContainerFor(WENET_TASK_MANAGER_DB_NAME,
 				network);
@@ -262,8 +313,12 @@ public interface Containers {
 
 		return new String[] { "-papi.port=" + port, "-ppersistence.host=localhost",
 				"-ppersistence.port=" + persistenceContainer.getMappedPort(EXPORT_MONGODB_PORT),
-				"-pservice.profileManager.host=localhost", "-pservice.profileManager.port=" + profileManagerApiPort,
-				"-pservice.profileManager.apiPath=\"\""
+				"-pwenetComponents.profileManager.host=localhost",
+				"-pwenetComponents.profileManager.port=" + profileManagerApiPort,
+				"-pwenetComponents.profileManager.apiPath=\"\"", "-pwenetComponents.interactionProtocolEngine.host=localhost",
+				"-pwenetComponents.interactionProtocolEngine.port=" + interactionProtocolEngineApiPort,
+				"-pwenetComponents.interactionProtocolEngine.apiPath=\"\"", "-pwenetComponents.service.host=localhost",
+				"-pwenetComponents.service.port=" + serviceApiPort, "-pwenetComponents.service.apiPath=\"\""
 
 		};
 	}
@@ -278,12 +333,14 @@ public interface Containers {
 	 *                              the localhost.
 	 * @param taskManagerApiPort    port where the task manager will be bind on the
 	 *                              localhost.
+	 * @param serviceApiPort        port where the service component will be bind on
+	 *                              the localhost.
 	 * @param network               that shared between containers.
 	 *
 	 * @return the arguments necessaries to start the profile manager.
 	 */
 	static String[] createInteractionProtocolEngineContainersToStartWith(int port, int profileManagerApiPort,
-			int taskManagerApiPort, Network network) {
+			int taskManagerApiPort, int serviceApiPort, Network network) {
 
 		final GenericContainer<?> persistenceContainer = Containers
 				.createMongoContainerFor(WENET_INTERACTION_PROTOCOL_ENGINE_DB_NAME, network);
@@ -291,9 +348,12 @@ public interface Containers {
 
 		return new String[] { "-papi.port=" + port, "-ppersistence.host=localhost",
 				"-ppersistence.port=" + persistenceContainer.getMappedPort(EXPORT_MONGODB_PORT),
-				"-pservice.profileManager.host=localhost", "-pservice.profileManager.port=" + profileManagerApiPort,
-				"-pservice.profileManager.apiPath=\"\"", "-pservice.taskManager.host=localhost",
-				"-pservice.taskManager.port=" + taskManagerApiPort, "-pservice.taskManager.apiPath=\"\""
+				"-pwenetComponents.profileManager.host=localhost",
+				"-pwenetComponents.profileManager.port=" + profileManagerApiPort,
+				"-pwenetComponents.profileManager.apiPath=\"\"", "-pwenetComponents.taskManager.host=localhost",
+				"-pwenetComponents.taskManager.port=" + taskManagerApiPort, "-pwenetComponents.taskManager.apiPath=\"\"",
+				"-pwenetComponents.service.host=localhost", "-pwenetComponents.service.port=" + serviceApiPort,
+				"-pwenetComponents.service.apiPath=\"\""
 
 		};
 	}

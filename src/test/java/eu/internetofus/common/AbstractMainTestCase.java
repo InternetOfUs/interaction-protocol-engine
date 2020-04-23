@@ -307,8 +307,8 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 							+ "api.port=\"80\"",
 					"-" + AbstractMain.CONF_DIR_OPTION + "undefined://bad/path/to/conf/dir",
 					"-" + AbstractMain.PROPERTY_OPTION + ",persistence.connection_string=\"undefined connection value\"",
-					"-" + AbstractMain.PROPERTY_OPTION + ",service.webClient.keepAlive=false,-" + AbstractMain.PROPERTY_OPTION
-							+ ", service.webClient.pipelining=true" })
+					"-" + AbstractMain.PROPERTY_OPTION + ",wenetComponents.webClient.keepAlive=false,-"
+							+ AbstractMain.PROPERTY_OPTION + ", wenetComponents.webClient.pipelining=true" })
 	public void shouldNotStartWithBadBasicArguments(String arguments, VertxTestContext testContext) {
 
 		final String[] args = arguments.split(",");
@@ -335,8 +335,8 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 				"-" + AbstractMain.PROPERTY_OPTION + "persistence.port=27", "-" + AbstractMain.PROPERTY_OPTION,
 				"persistence.db_name=DB_NAME", "-" + AbstractMain.PROPERTY_OPTION + "persistence.username=USER_NAME",
 				"-" + AbstractMain.PROPERTY_OPTION + " persistence.password=PASSWORD", "-" + AbstractMain.PROPERTY_OPTION,
-				"service.webClient.keepAlive=false", "-" + AbstractMain.PROPERTY_OPTION, "service.webClient.pipelining=true",
-				"-" + AbstractMain.VERSION_OPTION)).setHandler(handler -> {
+				"wenetComponents.webClient.keepAlive=false", "-" + AbstractMain.PROPERTY_OPTION,
+				"wenetComponents.webClient.pipelining=true", "-" + AbstractMain.VERSION_OPTION)).setHandler(handler -> {
 
 					final ConfigRetriever retriever = ConfigRetriever.create(Vertx.vertx(), main.retrieveOptions);
 					retriever.getConfig(testContext.succeeding(conf -> testContext.verify(() -> {
@@ -350,13 +350,13 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 						assertThat(conf.getJsonObject("persistence").getString("db_name")).isEqualTo("DB_NAME");
 						assertThat(conf.getJsonObject("persistence").getString("username")).isEqualTo("USER_NAME");
 						assertThat(conf.getJsonObject("persistence").getString("password")).isEqualTo("PASSWORD");
-						assertThat(conf.getJsonObject("service")).isNotNull();
-						assertThat(conf.getJsonObject("service").getJsonObject("webClient")).isNotNull();
-						assertThat(conf.getJsonObject("service").getJsonObject("webClient").getBoolean("keepAlive", true))
+						assertThat(conf.getJsonObject("wenetComponents")).isNotNull();
+						assertThat(conf.getJsonObject("wenetComponents").getJsonObject("webClient")).isNotNull();
+						assertThat(conf.getJsonObject("wenetComponents").getJsonObject("webClient").getBoolean("keepAlive", true))
 								.isFalse();
-						assertThat(conf.getJsonObject("service").getJsonObject("webClient").getBoolean("pipelining", false))
+						assertThat(conf.getJsonObject("wenetComponents").getJsonObject("webClient").getBoolean("pipelining", false))
 								.isTrue();
-						assertThat(conf.getJsonObject("service").getJsonObject("webClient").getBoolean("pipelining", false))
+						assertThat(conf.getJsonObject("wenetComponents").getJsonObject("webClient").getBoolean("pipelining", false))
 								.isTrue();
 
 						testContext.completeNow();

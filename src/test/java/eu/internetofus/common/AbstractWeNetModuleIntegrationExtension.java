@@ -45,6 +45,7 @@ import org.tinylog.provider.InternalLogger;
 
 import eu.internetofus.common.services.WeNetInteractionProtocolEngineService;
 import eu.internetofus.common.services.WeNetProfileManagerService;
+import eu.internetofus.common.services.WeNetServiceApiService;
 import eu.internetofus.common.services.WeNetTaskManagerService;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -237,7 +238,8 @@ public abstract class AbstractWeNetModuleIntegrationExtension implements Paramet
 		return type == WebClient.class || type == WeNetModuleContext.class || type == MongoClient.class
 				|| this.vertxExtension.supportsParameter(parameterContext, extensionContext)
 				|| type == WeNetInteractionProtocolEngineService.class || type == WeNetTaskManagerService.class
-				|| type == WeNetProfileManagerService.class;
+				|| type == WeNetProfileManagerService.class || type == WeNetServiceApiService.class
+				|| type == ServiceApiSimulatorService.class;
 
 	}
 
@@ -305,6 +307,26 @@ public abstract class AbstractWeNetModuleIntegrationExtension implements Paramet
 						return WeNetProfileManagerService.createProxy(context.vertx);
 
 					}, WeNetProfileManagerService.class);
+
+		} else if (type == WeNetServiceApiService.class) {
+
+			return extensionContext.getStore(ExtensionContext.Namespace.create(this.getClass().getName()))
+					.getOrComputeIfAbsent(WeNetServiceApiService.class.getName(), key -> {
+
+						final WeNetModuleContext context = this.getContext();
+						return WeNetServiceApiService.createProxy(context.vertx);
+
+					}, WeNetServiceApiService.class);
+
+		} else if (type == ServiceApiSimulatorService.class) {
+
+			return extensionContext.getStore(ExtensionContext.Namespace.create(this.getClass().getName()))
+					.getOrComputeIfAbsent(ServiceApiSimulatorService.class.getName(), key -> {
+
+						final WeNetModuleContext context = this.getContext();
+						return ServiceApiSimulatorService.create(context);
+
+					}, ServiceApiSimulatorService.class);
 
 		} else if (type == WeNetModuleContext.class) {
 

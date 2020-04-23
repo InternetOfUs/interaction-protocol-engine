@@ -18,12 +18,15 @@ ARG DEFAULT_DB_PORT=27017
 ARG DEFAULT_DB_NAME=wenetInteractionProtocolEngineDB
 ARG DEFAULT_DB_USER_NAME=wenetInteractionProtocolEngine
 ARG DEFAULT_DB_USER_PASSWORD=password
-ARG DEFAULT_WENET_PROFILE_MANAGER_API_HOST="wenet.iiia.csic.es"
-ARG DEFAULT_WENET_PROFILE_MANAGER_API_PORT=80
-ARG DEFAULT_WENET_PROFILE_MANAGER_API_PATH="/profile-manager/latest"
-ARG DEFAULT_WENET_TASK_MANAGER_API_HOST="wenet.iiia.csic.es"
-ARG DEFAULT_WENET_TASK_MANAGER_API_PORT=80
-ARG DEFAULT_WENET_TASK_MANAGER_API_PATH="/task-manager/latest"
+ARG DEFAULT_WENET_PROFILE_MANAGER_API_HOST="wenet.u-hopper.com"
+ARG DEFAULT_WENET_PROFILE_MANAGER_API_PORT=443
+ARG DEFAULT_WENET_PROFILE_MANAGER_API_PATH="/profile_manager"
+ARG DEFAULT_WENET_TASK_MANAGER_API_HOST="wenet.u-hopper.com"
+ARG DEFAULT_WENET_TASK_MANAGER_API_PORT=443
+ARG DEFAULT_WENET_TASK_MANAGER_API_PATH="/task_manager"
+ARG DEFAULT_WENET_SERVICE_API_HOST="wenet.u-hopper.com"
+ARG DEFAULT_WENET_SERVICE_API_PORT=443
+ARG DEFAULT_WENET_SERVICE_API_PATH="/service"
 ENV API_HOST=${DEFAULT_API_HOST}
 ENV API_PORT=${DEFAULT_API_PORT}
 ENV DB_HOST=${DEFAULT_DB_HOST}
@@ -37,6 +40,9 @@ ENV WENET_PROFILE_MANAGER_API_PATH=${DEFAULT_WENET_PROFILE_MANAGER_API_PATH}
 ENV WENET_TASK_MANAGER_API_HOST=${DEFAULT_WENET_TASK_MANAGER_API_HOST}
 ENV WENET_TASK_MANAGER_API_PORT=${DEFAULT_WENET_TASK_MANAGER_API_PORT}
 ENV WENET_TASK_MANAGER_API_PATH=${DEFAULT_WENET_TASK_MANAGER_API_PATH}
+ENV WENET_SERVICE_API_HOST=${DEFAULT_WENET_SERVICE_API_HOST}
+ENV WENET_SERVICE_API_PORT=${DEFAULT_WENET_SERVICE_API_PORT}
+ENV WENET_SERVICE_API_PATH=${DEFAULT_WENET_SERVICE_API_PATH}
 ENV RUN_ARGS=""
 
 # Create running dierectories
@@ -50,8 +56,14 @@ RUN echo "{\"api\":{\"host\":\"${DEFAULT_API_HOST}\",\"port\":${DEFAULT_API_PORT
 # Create configuration for persistence
 RUN echo "{\"persistence\":{\"db_name\":\"${DEFAULT_DB_NAME}\",\"host\":\"${DEFAULT_DB_HOST}\",\"port\":${DEFAULT_DB_PORT},\"username\":\"${DEFAULT_DB_USER_NAME}\",\"password\":\"${DEFAULT_DB_USER_PASSWORD}\"}}" > /usr/wenet/interaction-protocol-engine/etc/persistence.json
 
-# Create configuration for service
-RUN echo "{\"service\":{\"profileManager\":{\"host\":\"${DEFAULT_WENET_PROFILE_MANAGER_API_HOST}\",\"port\":${DEFAULT_WENET_PROFILE_MANAGER_API_PORT},\"apiPath\":\"${DEFAULT_WENET_PROFILE_MANAGER_API_PATH}\"},\"taskManager\":{\"host\":\"${DEFAULT_WENET_TASK_MANAGER_API_HOST}\",\"port\":${DEFAULT_WENET_TASK_MANAGER_API_PORT},\"apiPath\":\"${DEFAULT_WENET_TASK_MANAGER_API_PATH}\"}}}" > /usr/wenet/interaction-protocol-engine/etc/service.json
+# Create configuration for profile manager components
+RUN echo "{\"wenetComponents\":{\"profileManager\":{\"host\":\"${DEFAULT_WENET_PROFILE_MANAGER_API_HOST}\",\"port\":${DEFAULT_WENET_PROFILE_MANAGER_API_PORT},\"apiPath\":\"${DEFAULT_WENET_PROFILE_MANAGER_API_PATH}\"}}}" > /usr/wenet/task-manager/etc/profileManagerApi.json
+
+# Create configuration for task manager component
+RUN echo "{\"wenetComponents\":{\"taskManager\":{\"host\":\"${DEFAULT_WENET_TASK_MANAGER_API_HOST}\",\"port\":${DEFAULT_WENET_TASK_MANAGER_API_PORT},\"apiPath\":\"${DEFAULT_WENET_TASK_MANAGER_API_PATH}\"}}}" > /usr/wenet/profile-manager/etc/taskManager.json
+
+# Create configuration for service component
+RUN echo "{\"wenetComponents\":{\"service\":{\"host\":\"${DEFAULT_WENET_SERVICE_API_HOST}\",\"port\":${DEFAULT_WENET_SERVICE_API_PORT},\"apiPath\":\"${DEFAULT_WENET_SERVICE_API_PATH}\"}}}" > /usr/wenet/profile-manager/etc/serviceApi.json
 
 WORKDIR /usr/wenet/interaction-protocol-engine
 COPY --from=build /build/target/wenet-interaction-protocol-engine.jar /usr/wenet/interaction-protocol-engine/wenet-interaction-protocol-engine.jar
@@ -66,6 +78,7 @@ EXPOSE ${API_PORT}
 CMD /wait && java -jar wenet-interaction-protocol-engine.jar -c etc \
   -papi.host=${API_HOST} -papi.port=${API_PORT}\
   -ppersistence.host=${DB_HOST} -ppersistence.port=${DB_PORT} -ppersistence.db_name=${DB_NAME} -ppersistence.username=${DB_USER_NAME} -ppersistence.password=${DB_USER_PASSWORD}\
-  -pservice.profileManager.host=${WENET_PROFILE_MANAGER_API_HOST} -pservice.profileManager.port=${WENET_PROFILE_MANAGER_API_PORT} -pservice.profileManager.apiPath=${WENET_PROFILE_MANAGER_API_PATH}\
-  -pservice.taskManager.host=${WENET_PROFILE_MANAGER_API_HOST} -pservice.taskManager.port=${WENET_PROFILE_MANAGER_API_PORT} -pservice.taskManager.apiPath=${WENET_PROFILE_MANAGER_API_PATH}\
+  -pwenetComponents.profileManager.host=${WENET_PROFILE_MANAGER_API_HOST} -pwenetComponents.profileManager.port=${WENET_PROFILE_MANAGER_API_PORT} -pwenetComponents.profileManager.apiPath=${WENET_PROFILE_MANAGER_API_PATH}\
+  -pwenetComponents.taskManager.host=${WENET_TASK_MANAGER_API_HOST} -pwenetComponents.taskManager.port=${WENET_TASK_MANAGER_API_PORT} -pwenetComponents.taskManager.apiPath=${WENET_TASK_MANAGER_API_PATH}\
+  -pwenetComponents.service.host=${WENET_SERVICE_API_HOST} -pwenetComponents.service.port=${WENET_SERVICE_API_PORT} -pwenetComponents.service.apiPath=${WENET_SERVICE_API_PATH}\
   ${RUN_ARGS}
