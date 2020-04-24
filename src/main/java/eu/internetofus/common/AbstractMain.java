@@ -102,6 +102,11 @@ public abstract class AbstractMain {
 	public static final String EFFECTIVE_CONFIGURATION_PATH = "effective_configuration_path";
 
 	/**
+	 * The default path where the effective configuration will be stored.
+	 */
+	public static final String DEFAULT_EFFECTIVE_CONFIGURATION_PATH = "var/effective-conf.json";
+
+	/**
 	 * The maximum milliseconds that the system has to be open. If it is {0} or less
 	 * the system is available for ever.
 	 */
@@ -155,7 +160,7 @@ public abstract class AbstractMain {
 					try {
 
 						final Path effectiveConf = FileSystems.getDefault()
-								.getPath(conf.getString(EFFECTIVE_CONFIGURATION_PATH, "var/effective-conf.json"));
+								.getPath(conf.getString(EFFECTIVE_CONFIGURATION_PATH, DEFAULT_EFFECTIVE_CONFIGURATION_PATH));
 						Files.write(effectiveConf, conf.encodePrettily().getBytes());
 						Logger.info("Stored effective configuration at '{}'", effectiveConf);
 

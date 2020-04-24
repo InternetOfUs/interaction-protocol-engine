@@ -26,6 +26,9 @@
 
 package eu.internetofus.common.api.models.wenet;
 
+import eu.internetofus.common.Containers;
+import eu.internetofus.common.ServiceApiSimulatorService;
+import eu.internetofus.common.WeNetModuleContext;
 import eu.internetofus.common.api.models.Model;
 import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.common.services.WeNetServiceApiService;
@@ -34,6 +37,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 
 /**
@@ -168,12 +172,27 @@ public interface StoreServices {
 	 */
 	static void storeApp(App app, Vertx vertx, VertxTestContext testContext, Handler<AsyncResult<App>> storeHandler) {
 
-		WeNetServiceApiService.createProxy(vertx).createApp(app.toJsonObject(), testContext.succeeding(created -> {
+		final Handler<AsyncResult<JsonObject>> creationHandler = testContext.succeeding(created -> {
 
 			final App result = Model.fromJsonObject(created, App.class);
 			storeHandler.handle(Future.succeededFuture(result));
 
-		}));
+		});
+		final WeNetServiceApiService proxy = WeNetServiceApiService.createProxy(vertx);
+		if (!(proxy instanceof ServiceApiSimulatorService)) {
+
+			Containers.defaultEffectiveConfiguration(vertx, testContext.succeeding(conf -> {
+
+				final WeNetModuleContext context = new WeNetModuleContext(vertx, conf);
+				ServiceApiSimulatorService.create(context).createApp(app.toJsonObject(), creationHandler);
+
+			}));
+
+		} else {
+
+			proxy.createApp(app.toJsonObject(), creationHandler);
+
+		}
 
 	}
 

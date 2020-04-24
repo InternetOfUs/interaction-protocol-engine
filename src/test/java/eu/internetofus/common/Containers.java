@@ -27,6 +27,7 @@
 package eu.internetofus.common;
 
 import java.net.ServerSocket;
+import java.nio.file.FileSystems;
 import java.util.concurrent.Semaphore;
 
 import org.testcontainers.containers.FixedHostPortGenericContainer;
@@ -36,6 +37,14 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.MountableFile;
 import org.tinylog.Level;
 import org.tinylog.provider.InternalLogger;
+
+import io.vertx.config.ConfigRetriever;
+import io.vertx.config.ConfigRetrieverOptions;
+import io.vertx.config.ConfigStoreOptions;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 
 /**
  * Utility classes to manage containers.
@@ -356,6 +365,23 @@ public interface Containers {
 				"-pwenetComponents.service.apiPath=\"\""
 
 		};
+	}
+
+	/**
+	 * Return the effective configuration over the started component.
+	 *
+	 * @param vertx                event bus to use to load the configurations.
+	 * @param configurationHandler the handler of the effective configuration
+	 */
+	static void defaultEffectiveConfiguration(Vertx vertx, Handler<AsyncResult<JsonObject>> configurationHandler) {
+
+		final ConfigStoreOptions effectiveConfigurationFile = new ConfigStoreOptions().setType("file").setFormat("json")
+				.setConfig(new JsonObject().put("path", FileSystems.getDefault()
+						.getPath(AbstractMain.DEFAULT_EFFECTIVE_CONFIGURATION_PATH).toFile().getAbsolutePath()));
+
+		final ConfigRetrieverOptions options = new ConfigRetrieverOptions().addStore(effectiveConfigurationFile);
+		ConfigRetriever.create(vertx, options).getConfig(configurationHandler);
+
 	}
 
 }
