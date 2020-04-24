@@ -270,6 +270,8 @@
 					<target>${compiler.target}</target>
 					<encoding>${project.build.sourceEncoding}</encoding>
 					<useIncrementalCompilation>false</useIncrementalCompilation>
+          <compilerArgument>-Xlint:unchecked</compilerArgument>
+          <compilerArgument>-Xlint:deprecation</compilerArgument>
 				</configuration>
 				<executions>
 					<execution>

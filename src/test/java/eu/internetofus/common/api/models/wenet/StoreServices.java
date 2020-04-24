@@ -26,8 +26,6 @@
 
 package eu.internetofus.common.api.models.wenet;
 
-import static eu.internetofus.common.api.models.ValidationsTest.assertIsValid;
-
 import eu.internetofus.common.api.models.Model;
 import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.common.services.WeNetServiceApiService;
@@ -79,7 +77,7 @@ public interface StoreServices {
 
 		new WeNetUserProfileTest().createModelExample(index, vertx, testContext, testContext.succeeding(example -> {
 
-			assertIsValid(example, vertx, testContext, () -> storeProfile(example, vertx, testContext, storeHandler));
+			storeProfile(example, vertx, testContext, storeHandler);
 
 		}));
 
@@ -154,7 +152,7 @@ public interface StoreServices {
 
 		new TaskTest().createModelExample(index, vertx, testContext, testContext.succeeding(example -> {
 
-			assertIsValid(example, vertx, testContext, () -> storeTask(example, vertx, testContext, storeHandler));
+			storeTask(example, vertx, testContext, storeHandler);
 
 		}));
 

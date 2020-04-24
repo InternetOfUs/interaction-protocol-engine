@@ -110,7 +110,7 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 		stream.capture();
 		final T main = this.createMain();
 		main.startWith("-" + AbstractMain.HELP_OPTION)
-				.setHandler(testContext.succeeding(context -> testContext.verify(() -> {
+				.onComplete(testContext.succeeding(context -> testContext.verify(() -> {
 
 					final String data = stream.getCapturedData();
 					assertThat(data).contains("-" + AbstractMain.HELP_OPTION, "-" + AbstractMain.VERSION_OPTION,
@@ -134,7 +134,7 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 		stream.capture();
 		final T main = this.createMain();
 		main.startWith("-" + AbstractMain.VERSION_OPTION)
-				.setHandler(testContext.succeeding(context -> testContext.verify(() -> {
+				.onComplete(testContext.succeeding(context -> testContext.verify(() -> {
 
 					final String data = stream.getCapturedData();
 					assertThat(data).contains(Level.INFO.name());
@@ -156,7 +156,7 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 
 		stream.capture();
 		final T main = this.createMain();
-		main.startWith("-undefined").setHandler(testContext.failing(error -> testContext.verify(() -> {
+		main.startWith("-undefined").onComplete(testContext.failing(error -> testContext.verify(() -> {
 
 			final String data = stream.getCapturedData();
 			assertThat(data).contains(Level.ERROR.name(), Level.INFO.name());
@@ -179,7 +179,7 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 		stream.capture();
 		final T main = this.createMain();
 		main.startWith("-" + AbstractMain.PROPERTY_OPTION, "propertyName")
-				.setHandler(testContext.failing(error -> testContext.verify(() -> {
+				.onComplete(testContext.failing(error -> testContext.verify(() -> {
 
 					final String data = stream.getCapturedData();
 					assertThat(data).contains(Level.ERROR.name(), Level.INFO.name());
@@ -202,7 +202,7 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 		stream.capture();
 		final T main = this.createMain();
 		main.startWith("-" + AbstractMain.CONF_DIR_OPTION)
-				.setHandler(testContext.failing(error -> testContext.verify(() -> {
+				.onComplete(testContext.failing(error -> testContext.verify(() -> {
 
 					final String data = stream.getCapturedData();
 					assertThat(data).contains(Level.ERROR.name(), Level.INFO.name());
@@ -237,7 +237,7 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 
 		final T main = this.createMain();
 		main.startWith("-" + AbstractMain.CONF_DIR_OPTION, confDir.getAbsolutePath())
-				.setHandler(testContext.failing(error -> testContext.verify(() -> {
+				.onComplete(testContext.failing(error -> testContext.verify(() -> {
 
 					socket.close();
 					assertThat(error).isNotNull();
@@ -257,7 +257,7 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 	protected void assertNotStartWith(VertxTestContext testContext, String... args) {
 
 		final T main = this.createMain();
-		main.startWith(args).setHandler(testContext.failing(error -> testContext.verify(() -> {
+		main.startWith(args).onComplete(testContext.failing(error -> testContext.verify(() -> {
 
 			assertThat(error).isNotNull();
 			testContext.completeNow();
@@ -336,7 +336,7 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 				"persistence.db_name=DB_NAME", "-" + AbstractMain.PROPERTY_OPTION + "persistence.username=USER_NAME",
 				"-" + AbstractMain.PROPERTY_OPTION + " persistence.password=PASSWORD", "-" + AbstractMain.PROPERTY_OPTION,
 				"wenetComponents.webClient.keepAlive=false", "-" + AbstractMain.PROPERTY_OPTION,
-				"wenetComponents.webClient.pipelining=true", "-" + AbstractMain.VERSION_OPTION)).setHandler(handler -> {
+				"wenetComponents.webClient.pipelining=true", "-" + AbstractMain.VERSION_OPTION)).onComplete(handler -> {
 
 					final ConfigRetriever retriever = ConfigRetriever.create(Vertx.vertx(), main.retrieveOptions);
 					retriever.getConfig(testContext.succeeding(conf -> testContext.verify(() -> {
@@ -398,7 +398,7 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 		final T main = this.createMain();
 		testContext.assertComplete(
 				main.startWith("-" + AbstractMain.CONF_DIR_OPTION, etc.getAbsolutePath(), "-" + AbstractMain.VERSION_OPTION))
-				.setHandler(handler -> {
+				.onComplete(handler -> {
 
 					final ConfigRetriever retriever = ConfigRetriever.create(Vertx.vertx(), main.retrieveOptions);
 					retriever.getConfig(testContext.succeeding(conf -> testContext.verify(() -> {
@@ -457,7 +457,7 @@ public abstract class AbstractMainTestCase<T extends AbstractMain> {
 						"-" + AbstractMain.PROPERTY_OPTION + "api.port=8081",
 						"-" + AbstractMain.PROPERTY_OPTION + " persistence.db_name=\"database name\"",
 						"-" + AbstractMain.PROPERTY_OPTION, "persistence.password=PASSW0RD", "-" + AbstractMain.VERSION_OPTION))
-				.setHandler(handler -> {
+				.onComplete(handler -> {
 
 					final ConfigRetriever retriever = ConfigRetriever.create(Vertx.vertx(), main.retrieveOptions);
 					retriever.getConfig(testContext.succeeding(conf -> testContext.verify(() -> {

@@ -176,7 +176,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
 	public void shouldEmptyModelBeValid(Vertx vertx, VertxTestContext testContext) {
 
 		final WeNetUserProfile model = new WeNetUserProfile();
-		testContext.assertComplete(model.validate("codePrefix", vertx)).setHandler(result -> testContext.completeNow());
+		testContext.assertComplete(model.validate("codePrefix", vertx)).onComplete(result -> testContext.completeNow());
 
 	}
 
