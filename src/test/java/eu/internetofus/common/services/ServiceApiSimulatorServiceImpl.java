@@ -27,7 +27,6 @@
 package eu.internetofus.common.services;
 
 import eu.internetofus.common.ServiceApiSimulator;
-import eu.internetofus.common.WeNetModuleContext;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
@@ -75,21 +74,6 @@ public class ServiceApiSimulatorServiceImpl extends WeNetServiceApiServiceImpl
 
 		this.delete("/app/" + id, deleteHandler);
 
-	}
-
-	/**
-	 * Create a service that will link to the simulator service.
-	 *
-	 * @param context used to create the service.
-	 *
-	 * @return the created service.
-	 */
-	public static ServiceApiSimulatorServiceImpl create(WeNetModuleContext context) {
-
-		final WebClient client = WebClient.create(context.vertx);
-		final JsonObject conf = context.configuration.getJsonObject("wenetComponents", new JsonObject())
-				.getJsonObject("service", new JsonObject());
-		return new ServiceApiSimulatorServiceImpl(client, conf);
 	}
 
 }

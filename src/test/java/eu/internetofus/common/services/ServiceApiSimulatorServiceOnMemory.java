@@ -55,7 +55,7 @@ public class ServiceApiSimulatorServiceOnMemory implements ServiceApiSimulatorSe
 	public static void register(Vertx vertx) {
 
 		final ServiceApiSimulatorServiceOnMemory serviceOnnMemory = new ServiceApiSimulatorServiceOnMemory();
-		new ServiceBinder(vertx).setAddress(ServiceApiSimulatorService.SIMULATOR_ADDRESS)
+		new ServiceBinder(vertx).setAddress(ServiceApiSimulatorService.ADDRESS)
 				.register(ServiceApiSimulatorService.class, serviceOnnMemory);
 		new ServiceBinder(vertx).setAddress(WeNetServiceApiService.ADDRESS).register(WeNetServiceApiService.class,
 				serviceOnnMemory);

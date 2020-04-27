@@ -67,7 +67,7 @@ public abstract class AbstractWeNetModuleIntegrationExtension implements Paramet
 	/**
 	 * The started WeNet interaction protocol engine for do the integration tests.
 	 */
-	private static WeNetModuleContext context;
+	private volatile static WeNetModuleContext context;
 
 	/**
 	 * Return the defined vertx.
@@ -96,6 +96,7 @@ public abstract class AbstractWeNetModuleIntegrationExtension implements Paramet
 							} else {
 
 								context = start.result();
+								this.afterStarted(context);
 							}
 
 							semaphore.release();
@@ -122,6 +123,15 @@ public abstract class AbstractWeNetModuleIntegrationExtension implements Paramet
 			}
 		}
 		return context;
+
+	}
+
+	/**
+	 * Empty method called after the containers has been started.
+	 *
+	 * @param context that has been started.
+	 */
+	protected void afterStarted(WeNetModuleContext context) {
 
 	}
 

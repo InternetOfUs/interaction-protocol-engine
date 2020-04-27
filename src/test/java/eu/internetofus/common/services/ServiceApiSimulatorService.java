@@ -26,11 +26,14 @@
 
 package eu.internetofus.common.services;
 
+import eu.internetofus.common.WeNetModuleContext;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.serviceproxy.ServiceBinder;
 
 /**
  * The services to interact with the {@link ServiceApiSimulatorService}.
@@ -43,7 +46,7 @@ public interface ServiceApiSimulatorService {
 	/**
 	 * The address of this service.
 	 */
-	String SIMULATOR_ADDRESS = "wenet_common.service.ServiceApiSimulator";
+	String ADDRESS = "wenet_common.service.ServiceApiSimulator";
 
 	/**
 	 * Create a proxy of the {@link WeNetServiceApiService}.
@@ -54,7 +57,22 @@ public interface ServiceApiSimulatorService {
 	 */
 	static ServiceApiSimulatorService createProxy(Vertx vertx) {
 
-		return new ServiceApiSimulatorServiceVertxEBProxy(vertx, ServiceApiSimulatorServiceImpl.SIMULATOR_ADDRESS);
+		return new ServiceApiSimulatorServiceVertxEBProxy(vertx, ServiceApiSimulatorService.ADDRESS);
+	}
+
+	/**
+	 * Create a service that will link to the simulator service.
+	 *
+	 * @param context used to create the service.
+	 */
+	static void register(WeNetModuleContext context) {
+
+		final WebClient client = WebClient.create(context.vertx);
+		final JsonObject conf = context.configuration.getJsonObject("wenetComponents", new JsonObject())
+				.getJsonObject("service", new JsonObject());
+		new ServiceBinder(context.vertx).setAddress(ServiceApiSimulatorService.ADDRESS)
+				.register(ServiceApiSimulatorService.class, new ServiceApiSimulatorServiceImpl(client, conf));
+
 	}
 
 	/**
