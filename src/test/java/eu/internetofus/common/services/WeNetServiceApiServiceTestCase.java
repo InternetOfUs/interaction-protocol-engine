@@ -29,7 +29,6 @@ package eu.internetofus.common.services;
 import org.junit.jupiter.api.Test;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 
 /**
@@ -51,38 +50,6 @@ public abstract class WeNetServiceApiServiceTestCase {
 	public void shouldNotRretrieveUndefinedApp(Vertx vertx, VertxTestContext testContext) {
 
 		WeNetServiceApiService.createProxy(vertx).retrieveApp("undefined-app-identifier", testContext.failing(handler -> {
-			testContext.completeNow();
-
-		}));
-
-	}
-
-	/**
-	 * Should not delete undefined app.
-	 *
-	 * @param vertx       that contains the event bus to use.
-	 * @param testContext context over the tests.
-	 */
-	@Test
-	public void shouldNotDeleteUndefinedApp(Vertx vertx, VertxTestContext testContext) {
-
-		WeNetServiceApiService.createProxy(vertx).deleteApp("undefined-app-identifier", testContext.failing(handler -> {
-			testContext.completeNow();
-
-		}));
-
-	}
-
-	/**
-	 * Should not delete undefined app.
-	 *
-	 * @param vertx       that contains the event bus to use.
-	 * @param testContext context over the tests.
-	 */
-	@Test
-	public void shouldNotCreateBadApp(Vertx vertx, VertxTestContext testContext) {
-
-		WeNetServiceApiService.createProxy(vertx).createApp(new JsonObject(), testContext.failing(handler -> {
 			testContext.completeNow();
 
 		}));

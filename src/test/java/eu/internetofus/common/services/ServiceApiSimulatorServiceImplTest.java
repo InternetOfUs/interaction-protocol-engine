@@ -24,7 +24,7 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common;
+package eu.internetofus.common.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,20 +32,22 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import eu.internetofus.common.Containers;
+import eu.internetofus.common.WeNetModuleContext;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
 /**
- * Test the {@link ServiceApiSimulatorService}
+ * Test the {@link ServiceApiSimulatorServiceImpl}
  *
- * @see ServiceApiSimulatorService
+ * @see ServiceApiSimulatorServiceImpl
  *
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(VertxExtension.class)
-public class ServiceApiSimulatorServiceTest {
+public class ServiceApiSimulatorServiceImplTest {
 
 	/**
 	 * The context that can be used to create the clients.
@@ -75,7 +77,7 @@ public class ServiceApiSimulatorServiceTest {
 	public void shouldCreateRetrieveAndDeleteApp(Vertx vertx, VertxTestContext testContext) {
 
 		context.vertx = vertx;
-		final ServiceApiSimulatorService service = ServiceApiSimulatorService.create(context);
+		final ServiceApiSimulatorServiceImpl service = ServiceApiSimulatorServiceImpl.create(context);
 		service.createApp(new JsonObject(), testContext.succeeding(create -> {
 
 			final String id = create.getString("appId");

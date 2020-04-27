@@ -28,34 +28,20 @@ package eu.internetofus.common.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
 /**
- * Test the {@link WeNetServiceApiServiceOnMemory}.
+ * Test the {@link ServiceApiSimulatorService}
+ *
+ * @see ServiceApiSimulatorService
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@ExtendWith(VertxExtension.class)
-public class WeNetServiceApiServiceOnMemoryTest {
-
-	/**
-	 * Register the necessary services before to test.
-	 *
-	 * @param vertx event bus to register the necessary services.
-	 */
-	@BeforeEach
-	public void registerServices(Vertx vertx) {
-
-		WeNetServiceApiServiceOnMemory.register(vertx);
-
-	}
+public abstract class ServiceApiSimulatorServiceTestCase {
 
 	/**
 	 * Should not create a bad app.
@@ -66,7 +52,7 @@ public class WeNetServiceApiServiceOnMemoryTest {
 	@Test
 	public void shouldNotCreateBadApp(Vertx vertx, VertxTestContext testContext) {
 
-		WeNetServiceApiService.createProxy(vertx).createApp(new JsonObject().put("undefinedField", "value"),
+		ServiceApiSimulatorService.createProxy(vertx).createApp(new JsonObject().put("undefinedField", "value"),
 				testContext.failing(handler -> {
 					testContext.completeNow();
 
@@ -83,10 +69,11 @@ public class WeNetServiceApiServiceOnMemoryTest {
 	@Test
 	public void shouldNotRretrieveUndefinedApp(Vertx vertx, VertxTestContext testContext) {
 
-		WeNetServiceApiService.createProxy(vertx).retrieveApp("undefined-app-identifier", testContext.failing(handler -> {
-			testContext.completeNow();
+		ServiceApiSimulatorService.createProxy(vertx).retrieveApp("undefined-app-identifier",
+				testContext.failing(handler -> {
+					testContext.completeNow();
 
-		}));
+				}));
 
 	}
 
@@ -99,7 +86,7 @@ public class WeNetServiceApiServiceOnMemoryTest {
 	@Test
 	public void shouldNotDeleteUndefinedApp(Vertx vertx, VertxTestContext testContext) {
 
-		WeNetServiceApiService.createProxy(vertx).deleteApp("undefined-app-identifier", testContext.failing(handler -> {
+		ServiceApiSimulatorService.createProxy(vertx).deleteApp("undefined-app-identifier", testContext.failing(handler -> {
 			testContext.completeNow();
 
 		}));
@@ -115,7 +102,7 @@ public class WeNetServiceApiServiceOnMemoryTest {
 	@Test
 	public void shouldCreateRetrieveAndDeleteApp(Vertx vertx, VertxTestContext testContext) {
 
-		final WeNetServiceApiService service = WeNetServiceApiService.createProxy(vertx);
+		final ServiceApiSimulatorService service = ServiceApiSimulatorService.createProxy(vertx);
 		service.createApp(new JsonObject(), testContext.succeeding(create -> {
 
 			final String id = create.getString("appId");

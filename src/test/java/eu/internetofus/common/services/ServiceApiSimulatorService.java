@@ -24,70 +24,61 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common;
+package eu.internetofus.common.services;
 
-import eu.internetofus.common.services.WeNetServiceApiServiceImpl;
+import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.WebClient;
 
 /**
- * Service used to interact with the {@link ServiceApiSimulator}.
+ * The services to interact with the {@link ServiceApiSimulatorService}.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class ServiceApiSimulatorService extends WeNetServiceApiServiceImpl {
+@ProxyGen
+public interface ServiceApiSimulatorService {
 
 	/**
-	 * Create a new service to interact with the WeNet interaction protocol engine.
-	 *
-	 * @param client to interact with the other modules.
-	 * @param conf   configuration.
+	 * The address of this service.
 	 */
-	public ServiceApiSimulatorService(WebClient client, JsonObject conf) {
+	String SIMULATOR_ADDRESS = "wenet_common.service.ServiceApiSimulator";
 
-		super(client, conf);
+	/**
+	 * Create a proxy of the {@link WeNetServiceApiService}.
+	 *
+	 * @param vertx where the service has to be used.
+	 *
+	 * @return the task.
+	 */
+	static ServiceApiSimulatorService createProxy(Vertx vertx) {
 
+		return new ServiceApiSimulatorServiceVertxEBProxy(vertx, ServiceApiSimulatorServiceImpl.SIMULATOR_ADDRESS);
 	}
 
 	/**
-	 * Call the {@link ServiceApiSimulator} to create an application.
+	 * Return an application.
 	 *
-	 * {@inheritDoc}
+	 * @param id              identifier of the app to get.
+	 * @param retrieveHandler handler to manage the retrieve process.
 	 */
-	@Override
-	public void createApp(JsonObject app, Handler<AsyncResult<JsonObject>> createHandler) {
-
-		this.post("/app", app, createHandler);
-
-	}
+	void retrieveApp(String id, Handler<AsyncResult<JsonObject>> retrieveHandler);
 
 	/**
-	 * Call the {@link ServiceApiSimulator} to delete an application.
+	 * Defined method only for testing and can store an APP.
 	 *
-	 * {@inheritDoc}
+	 * @param app           to create.
+	 * @param createHandler handler to manage the creation process.
 	 */
-	@Override
-	public void deleteApp(String id, Handler<AsyncResult<Void>> deleteHandler) {
-
-		this.delete("/app/" + id, deleteHandler);
-
-	}
+	void createApp(JsonObject app, Handler<AsyncResult<JsonObject>> createHandler);
 
 	/**
-	 * Create a service that will link to the simulator service.
+	 * Defined method only for testing and can delete an APP.
 	 *
-	 * @param context used to create the service.
-	 *
-	 * @return the created service.
+	 * @param id            identifier of the application to remove.
+	 * @param deleteHandler handler to manage the delete process.
 	 */
-	public static ServiceApiSimulatorService create(WeNetModuleContext context) {
-
-		final WebClient client = WebClient.create(context.vertx);
-		final JsonObject conf = context.configuration.getJsonObject("wenetComponents", new JsonObject())
-				.getJsonObject("service", new JsonObject());
-		return new ServiceApiSimulatorService(client, conf);
-	}
+	void deleteApp(String id, Handler<AsyncResult<Void>> deleteHandler);
 
 }

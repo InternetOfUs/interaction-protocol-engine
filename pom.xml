@@ -270,7 +270,7 @@
 					<target>${compiler.target}</target>
 					<encoding>${project.build.sourceEncoding}</encoding>
 					<useIncrementalCompilation>false</useIncrementalCompilation>
-          <compilerArgument>-Xlint:all</compilerArgument>
+					<compilerArgument>-Xlint:all</compilerArgument>
 				</configuration>
 				<executions>
 					<execution>
@@ -300,6 +300,18 @@
 						<configuration>
 							<sources>
 								<source>${project.build.directory}/generated-sources/annotations/</source>
+							</sources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>add-test-source</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>add-test-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${project.build.directory}/generated-test-sources/test-annotations/</source>
 							</sources>
 						</configuration>
 					</execution>

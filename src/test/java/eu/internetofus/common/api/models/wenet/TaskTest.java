@@ -44,8 +44,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.api.models.ModelTestCase;
 import eu.internetofus.common.api.models.ValidationsTest;
+import eu.internetofus.common.services.ServiceApiSimulatorServiceOnMemory;
 import eu.internetofus.common.services.WeNetProfileManagerServiceOnMemory;
-import eu.internetofus.common.services.WeNetServiceApiServiceOnMemory;
 import eu.internetofus.common.services.WeNetTaskManagerService;
 import eu.internetofus.common.services.WeNetTaskManagerServiceOnMemory;
 import io.vertx.core.AsyncResult;
@@ -76,7 +76,7 @@ public class TaskTest extends ModelTestCase<Task> {
 
 		WeNetProfileManagerServiceOnMemory.register(vertx);
 		WeNetTaskManagerServiceOnMemory.register(vertx);
-		WeNetServiceApiServiceOnMemory.register(vertx);
+		ServiceApiSimulatorServiceOnMemory.register(vertx);
 
 	}
 

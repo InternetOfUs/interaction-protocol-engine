@@ -40,12 +40,12 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceBinder;
 
 /**
- * Implementation of the {@link WeNetServiceApiService} that can be used for
+ * Implementation of the {@link ServiceApiSimulatorService} that can be used for
  * unit testing.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class WeNetServiceApiServiceOnMemory implements WeNetServiceApiService {
+public class ServiceApiSimulatorServiceOnMemory implements ServiceApiSimulatorService, WeNetServiceApiService {
 
 	/**
 	 * Register this service.
@@ -54,8 +54,11 @@ public class WeNetServiceApiServiceOnMemory implements WeNetServiceApiService {
 	 */
 	public static void register(Vertx vertx) {
 
+		final ServiceApiSimulatorServiceOnMemory serviceOnnMemory = new ServiceApiSimulatorServiceOnMemory();
+		new ServiceBinder(vertx).setAddress(ServiceApiSimulatorService.SIMULATOR_ADDRESS)
+				.register(ServiceApiSimulatorService.class, serviceOnnMemory);
 		new ServiceBinder(vertx).setAddress(WeNetServiceApiService.ADDRESS).register(WeNetServiceApiService.class,
-				new WeNetServiceApiServiceOnMemory());
+				serviceOnnMemory);
 
 	}
 
@@ -67,7 +70,7 @@ public class WeNetServiceApiServiceOnMemory implements WeNetServiceApiService {
 	/**
 	 * Create the service.
 	 */
-	public WeNetServiceApiServiceOnMemory() {
+	public ServiceApiSimulatorServiceOnMemory() {
 
 		this.apps = new HashMap<>();
 

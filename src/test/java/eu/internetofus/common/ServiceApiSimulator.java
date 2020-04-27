@@ -26,8 +26,8 @@
 
 package eu.internetofus.common;
 
-import eu.internetofus.common.services.WeNetServiceApiService;
-import eu.internetofus.common.services.WeNetServiceApiServiceOnMemory;
+import eu.internetofus.common.services.ServiceApiSimulatorService;
+import eu.internetofus.common.services.ServiceApiSimulatorServiceOnMemory;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -40,7 +40,7 @@ import io.vertx.ext.web.Router;
 
 /**
  * Class used to simulate the interaction with the
- * {@link WeNetServiceApiService}.
+ * {@link ServiceApiSimulatorService }.
  *
  * @author UDT-IA, IIIA-CSIC
  */
@@ -112,7 +112,8 @@ public class ServiceApiSimulator extends AbstractVerticle {
 	public void start(Promise<Void> startPromise) throws Exception {
 
 		try {
-			WeNetServiceApiServiceOnMemory.register(this.vertx);
+
+			ServiceApiSimulatorServiceOnMemory.register(this.vertx);
 			this.server = this.vertx.createHttpServer();
 
 			final Router router = Router.router(this.vertx);
@@ -150,7 +151,7 @@ public class ServiceApiSimulator extends AbstractVerticle {
 		router.route(HttpMethod.GET, "/app/:appId").handler(routingContext -> {
 
 			final String appId = routingContext.request().getParam("appId");
-			WeNetServiceApiService.createProxy(this.vertx).retrieveApp(appId, retrieve -> {
+			ServiceApiSimulatorService.createProxy(this.vertx).retrieveApp(appId, retrieve -> {
 
 				final HttpServerResponse response = routingContext.response();
 				if (retrieve.failed()) {
@@ -181,7 +182,7 @@ public class ServiceApiSimulator extends AbstractVerticle {
 
 			routingContext.request().bodyHandler(body -> {
 				final JsonObject app = new JsonObject(body);
-				WeNetServiceApiService.createProxy(this.vertx).createApp(app, create -> {
+				ServiceApiSimulatorService.createProxy(this.vertx).createApp(app, create -> {
 
 					final HttpServerResponse response = routingContext.response();
 					if (create.failed()) {
@@ -214,7 +215,7 @@ public class ServiceApiSimulator extends AbstractVerticle {
 		router.route(HttpMethod.DELETE, "/app/:appId").handler(routingContext -> {
 
 			final String appId = routingContext.request().getParam("appId");
-			WeNetServiceApiService.createProxy(this.vertx).deleteApp(appId, delete -> {
+			ServiceApiSimulatorService.createProxy(this.vertx).deleteApp(appId, delete -> {
 
 				final HttpServerResponse response = routingContext.response();
 				if (delete.failed()) {

@@ -43,6 +43,7 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import org.tinylog.Level;
 import org.tinylog.provider.InternalLogger;
 
+import eu.internetofus.common.services.ServiceApiSimulatorService;
 import eu.internetofus.common.services.WeNetInteractionProtocolEngineService;
 import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.common.services.WeNetServiceApiService;
@@ -277,56 +278,6 @@ public abstract class AbstractWeNetModuleIntegrationExtension implements Paramet
 						return MongoClient.create(context.vertx, persitenceConf);
 					}, MongoClient.class);
 			return pool;
-
-		} else if (type == WeNetInteractionProtocolEngineService.class) {
-
-			return extensionContext.getStore(ExtensionContext.Namespace.create(this.getClass().getName()))
-					.getOrComputeIfAbsent(WeNetInteractionProtocolEngineService.class.getName(), key -> {
-
-						final WeNetModuleContext context = this.getContext();
-						return WeNetInteractionProtocolEngineService.createProxy(context.vertx);
-
-					}, WeNetInteractionProtocolEngineService.class);
-
-		} else if (type == WeNetTaskManagerService.class) {
-
-			return extensionContext.getStore(ExtensionContext.Namespace.create(this.getClass().getName()))
-					.getOrComputeIfAbsent(WeNetTaskManagerService.class.getName(), key -> {
-
-						final WeNetModuleContext context = this.getContext();
-						return WeNetTaskManagerService.createProxy(context.vertx);
-
-					}, WeNetTaskManagerService.class);
-
-		} else if (type == WeNetProfileManagerService.class) {
-
-			return extensionContext.getStore(ExtensionContext.Namespace.create(this.getClass().getName()))
-					.getOrComputeIfAbsent(WeNetProfileManagerService.class.getName(), key -> {
-
-						final WeNetModuleContext context = this.getContext();
-						return WeNetProfileManagerService.createProxy(context.vertx);
-
-					}, WeNetProfileManagerService.class);
-
-		} else if (type == WeNetServiceApiService.class) {
-
-			return extensionContext.getStore(ExtensionContext.Namespace.create(this.getClass().getName()))
-					.getOrComputeIfAbsent(WeNetServiceApiService.class.getName(), key -> {
-
-						final WeNetModuleContext context = this.getContext();
-						return WeNetServiceApiService.createProxy(context.vertx);
-
-					}, WeNetServiceApiService.class);
-
-		} else if (type == ServiceApiSimulatorService.class) {
-
-			return extensionContext.getStore(ExtensionContext.Namespace.create(this.getClass().getName()))
-					.getOrComputeIfAbsent(ServiceApiSimulatorService.class.getName(), key -> {
-
-						final WeNetModuleContext context = this.getContext();
-						return ServiceApiSimulatorService.create(context);
-
-					}, ServiceApiSimulatorService.class);
 
 		} else if (type == WeNetModuleContext.class) {
 

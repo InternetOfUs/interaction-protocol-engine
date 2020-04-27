@@ -26,59 +26,30 @@
 
 package eu.internetofus.common.services;
 
-import io.vertx.codegen.annotations.ProxyGen;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.serviceproxy.ServiceBinder;
+import io.vertx.junit5.VertxExtension;
 
 /**
- * The class used to interact with the WeNet interaction protocol engine.
+ * Test the {@link ServiceApiSimulatorServiceOnMemory}.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@ProxyGen
-public interface WeNetServiceApiService {
+@ExtendWith(VertxExtension.class)
+public class ServiceApiSimulatorServiceOnMemoryTest extends ServiceApiSimulatorServiceTestCase {
 
 	/**
-	 * The address of this service.
-	 */
-	String ADDRESS = "wenet_common.service.ServiceApi";
-
-	/**
-	 * Create a proxy of the {@link WeNetServiceApiService}.
+	 * Register the necessary services before to test.
 	 *
-	 * @param vertx where the service has to be used.
-	 *
-	 * @return the task.
+	 * @param vertx event bus to register the necessary services.
 	 */
-	static WeNetServiceApiService createProxy(Vertx vertx) {
+	@BeforeEach
+	public void registerServices(Vertx vertx) {
 
-		return new WeNetServiceApiServiceVertxEBProxy(vertx, WeNetServiceApiService.ADDRESS);
-	}
-
-	/**
-	 * Register this service.
-	 *
-	 * @param vertx  that contains the event bus to use.
-	 * @param client to do HTTP requests to other services.
-	 * @param conf   configuration to use.
-	 */
-	static void register(Vertx vertx, WebClient client, JsonObject conf) {
-
-		new ServiceBinder(vertx).setAddress(WeNetServiceApiService.ADDRESS).register(WeNetServiceApiService.class,
-				new WeNetServiceApiServiceImpl(client, conf));
+		ServiceApiSimulatorServiceOnMemory.register(vertx);
 
 	}
-
-	/**
-	 * Return an application.
-	 *
-	 * @param id              identifier of the app to get.
-	 * @param retrieveHandler handler to manage the retrieve process.
-	 */
-	void retrieveApp(String id, Handler<AsyncResult<JsonObject>> retrieveHandler);
 
 }
