@@ -34,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -238,6 +239,23 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
 			assertIsNotValid(model, "id", vertx, testContext);
 
 		}));
+
+	}
+
+	/**
+	 * Check that the model with an unique id.
+	 *
+	 * @param vertx       event bus to use.
+	 * @param testContext context to test.
+	 *
+	 * @see WeNetUserProfile#validate(String, Vertx)
+	 */
+	@Test
+	public void shouldBeValidWithAnNewId(Vertx vertx, VertxTestContext testContext) {
+
+		final WeNetUserProfile model = new WeNetUserProfile();
+		model.id = UUID.randomUUID().toString();
+		assertIsValid(model, vertx, testContext);
 
 	}
 

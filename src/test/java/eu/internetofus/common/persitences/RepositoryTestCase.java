@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.mongo.MongoClient;
@@ -112,6 +114,70 @@ public abstract class RepositoryTestCase<T extends Repository> {
 		final ArgumentCaptor<Handler<AsyncResult<List<JsonObject>>>> findHandler = ArgumentCaptor.forClass(Handler.class);
 		verify(pool, times(1)).findWithOptions(any(), any(), any(), findHandler.capture());
 		findHandler.getValue().handle(Future.failedFuture("Internal error"));
+
+	}
+
+	/**
+	 * Check search page return empty pagge because the model and map it.
+	 *
+	 * @param pool        mocked MongoDB client.
+	 * @param testContext test context.
+	 */
+	@Test
+	public void shouldSearchPageReturnEmptyWehnTotalIsZero(@Mock MongoClient pool, VertxTestContext testContext) {
+
+		final T repository = this.createRepository(pool);
+		final FindOptions options = new FindOptions();
+		final int offset = 23;
+		options.setSkip(offset);
+		repository.searchPageObject(null, null, options, "resultKey",
+				testContext.succeeding(page -> testContext.verify(() -> {
+
+					assertThat(page.getInteger("offset")).isEqualTo(offset);
+					assertThat(page.getLong("total")).isEqualTo(0L);
+					assertThat(page.containsKey("resultKey")).isFalse();
+					testContext.completeNow();
+				})));
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<Long>>> handler = ArgumentCaptor.forClass(Handler.class);
+		verify(pool, times(1)).count(any(), any(), handler.capture());
+		handler.getValue().handle(Future.succeededFuture(0L));
+
+	}
+
+	/**
+	 * Check store model and map it.
+	 *
+	 * @param pool        mocked MongoDB client.
+	 * @param testContext test context.
+	 */
+	@Test
+	public void shouldSearchPage(@Mock MongoClient pool, VertxTestContext testContext) {
+
+		final T repository = this.createRepository(pool);
+		final FindOptions options = new FindOptions();
+		final int offset = 23;
+		options.setSkip(offset);
+		final long total = 25;
+		final List<JsonObject> models = new ArrayList<>();
+		models.add(new JsonObject().put("id", "1"));
+		models.add(new JsonObject().put("id", "2"));
+		repository.searchPageObject(null, null, options, "resultKey",
+				testContext.succeeding(page -> testContext.verify(() -> {
+
+					assertThat(page.getInteger("offset")).isEqualTo(offset);
+					assertThat(page.getLong("total")).isEqualTo(total);
+					assertThat(page.getJsonArray("resultKey")).isEqualTo(new JsonArray(models));
+					testContext.completeNow();
+				})));
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<Long>>> handler = ArgumentCaptor.forClass(Handler.class);
+		verify(pool, times(1)).count(any(), any(), handler.capture());
+		handler.getValue().handle(Future.succeededFuture(total));
+		@SuppressWarnings("unchecked")
+		final ArgumentCaptor<Handler<AsyncResult<List<JsonObject>>>> findHandler = ArgumentCaptor.forClass(Handler.class);
+		verify(pool, times(1)).findWithOptions(any(), any(), any(), findHandler.capture());
+		findHandler.getValue().handle(Future.succeededFuture(models));
 
 	}
 

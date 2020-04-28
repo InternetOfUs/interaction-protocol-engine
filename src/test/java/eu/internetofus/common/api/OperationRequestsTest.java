@@ -71,6 +71,21 @@ public class OperationRequestsTest {
 	}
 
 	/**
+	 * Check accept a language defined on the requests.
+	 *
+	 * @param acceptLanguage header value.
+	 */
+	@Test
+	public void shouldAcceptLanguageInRequest(String acceptLanguage) {
+
+		final JsonObject headers = new JsonObject();
+		headers.put(HttpHeaders.ACCEPT_LANGUAGE, "fr-CH, fr;q=0.9, en;q=0.8, ca=0.7, es_ES=0.2,*;q=0.5");
+		final OperationRequest request = new OperationRequest(new JsonObject().put("headers", headers));
+		assertThat(OperationRequests.acceptedLanguageIn(request, "en", "ca", "es")).isEqualTo("ca");
+
+	}
+
+	/**
 	 * Check that convert a {@code null} array to a {@code null} list.
 	 */
 	@Test
