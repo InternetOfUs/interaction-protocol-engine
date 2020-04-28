@@ -57,13 +57,13 @@ RUN echo "{\"api\":{\"host\":\"${DEFAULT_API_HOST}\",\"port\":${DEFAULT_API_PORT
 RUN echo "{\"persistence\":{\"db_name\":\"${DEFAULT_DB_NAME}\",\"host\":\"${DEFAULT_DB_HOST}\",\"port\":${DEFAULT_DB_PORT},\"username\":\"${DEFAULT_DB_USER_NAME}\",\"password\":\"${DEFAULT_DB_USER_PASSWORD}\"}}" > /usr/wenet/interaction-protocol-engine/etc/persistence.json
 
 # Create configuration for profile manager components
-RUN echo "{\"wenetComponents\":{\"profileManager\":{\"host\":\"${DEFAULT_WENET_PROFILE_MANAGER_API_HOST}\",\"port\":${DEFAULT_WENET_PROFILE_MANAGER_API_PORT},\"apiPath\":\"${DEFAULT_WENET_PROFILE_MANAGER_API_PATH}\"}}}" > /usr/wenet/task-manager/etc/profileManagerApi.json
+RUN echo "{\"wenetComponents\":{\"profileManager\":{\"host\":\"${DEFAULT_WENET_PROFILE_MANAGER_API_HOST}\",\"port\":${DEFAULT_WENET_PROFILE_MANAGER_API_PORT},\"apiPath\":\"${DEFAULT_WENET_PROFILE_MANAGER_API_PATH}\"}}}" > /usr/wenet/interaction-protocol-engine/etc/profileManagerApi.json
 
 # Create configuration for task manager component
-RUN echo "{\"wenetComponents\":{\"taskManager\":{\"host\":\"${DEFAULT_WENET_TASK_MANAGER_API_HOST}\",\"port\":${DEFAULT_WENET_TASK_MANAGER_API_PORT},\"apiPath\":\"${DEFAULT_WENET_TASK_MANAGER_API_PATH}\"}}}" > /usr/wenet/profile-manager/etc/taskManager.json
+RUN echo "{\"wenetComponents\":{\"taskManager\":{\"host\":\"${DEFAULT_WENET_TASK_MANAGER_API_HOST}\",\"port\":${DEFAULT_WENET_TASK_MANAGER_API_PORT},\"apiPath\":\"${DEFAULT_WENET_TASK_MANAGER_API_PATH}\"}}}" > /usr/wenet/interaction-protocol-engine/etc/taskManager.json
 
 # Create configuration for service component
-RUN echo "{\"wenetComponents\":{\"service\":{\"host\":\"${DEFAULT_WENET_SERVICE_API_HOST}\",\"port\":${DEFAULT_WENET_SERVICE_API_PORT},\"apiPath\":\"${DEFAULT_WENET_SERVICE_API_PATH}\"}}}" > /usr/wenet/profile-manager/etc/serviceApi.json
+RUN echo "{\"wenetComponents\":{\"service\":{\"host\":\"${DEFAULT_WENET_SERVICE_API_HOST}\",\"port\":${DEFAULT_WENET_SERVICE_API_PORT},\"apiPath\":\"${DEFAULT_WENET_SERVICE_API_PATH}\"}}}" > /usr/wenet/interaction-protocol-engine/etc/serviceApi.json
 
 WORKDIR /usr/wenet/interaction-protocol-engine
 COPY --from=build /build/target/wenet-interaction-protocol-engine.jar /usr/wenet/interaction-protocol-engine/wenet-interaction-protocol-engine.jar
