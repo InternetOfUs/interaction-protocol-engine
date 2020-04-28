@@ -72,14 +72,12 @@ public class OperationRequestsTest {
 
 	/**
 	 * Check accept a language defined on the requests.
-	 *
-	 * @param acceptLanguage header value.
 	 */
 	@Test
-	public void shouldAcceptLanguageInRequest(String acceptLanguage) {
+	public void shouldAcceptLanguageInRequest() {
 
 		final JsonObject headers = new JsonObject();
-		headers.put(HttpHeaders.ACCEPT_LANGUAGE, "fr-CH, fr;q=0.9, en;q=0.8, ca=0.7, es_ES=0.2,*;q=0.5");
+		headers.put(HttpHeaders.ACCEPT_LANGUAGE, "fr-CH, fr;q=0.9, en;q=0.8, ca;q=0.7, es;q=0.3,*;q=0.5");
 		final OperationRequest request = new OperationRequest(new JsonObject().put("headers", headers));
 		assertThat(OperationRequests.acceptedLanguageIn(request, "en", "ca", "es")).isEqualTo("ca");
 

@@ -83,4 +83,14 @@ public class WeNetInteractionProtocolEngineServiceImpl extends Service
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void sendMessage(JsonObject message, Handler<AsyncResult<JsonObject>> sendHandler) {
+
+		this.post("/messages", message, sendHandler);
+
+	}
+
 }

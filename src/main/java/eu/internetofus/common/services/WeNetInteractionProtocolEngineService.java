@@ -97,4 +97,12 @@ public interface WeNetInteractionProtocolEngineService {
 	 */
 	void deleteCommunity(String id, Handler<AsyncResult<Void>> deleteHandler);
 
+	/**
+	 * Send a message to be processed.
+	 *
+	 * @param message     to be processed.
+	 * @param sendHandler handler to send process.
+	 */
+	void sendMessage(JsonObject message, Handler<AsyncResult<JsonObject>> sendHandler);
+
 }
