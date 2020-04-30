@@ -24,55 +24,50 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.persitences;
+package eu.internetofus.common.api.models.wenet;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.mock;
-
-import org.junit.jupiter.api.Test;
-
-import io.vertx.ext.mongo.MongoClient;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * General test over the classes that extends the
- * {@link AbstractPersistenceVerticle}.
- *
- * @param <T> type of persitence verticle to test.
+ * A notification to inform about a task concluded.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class AbstractPersistenceVerticleTestCase<T extends AbstractPersistenceVerticle> {
+@Schema(
+		hidden = true,
+		name = "TaskConcludedNotification",
+		description = "This notification is used in order to notify task participants that a task has been completed.")
+public class AppTaskConcludedNotification extends AppTaskNotification {
 
 	/**
-	 * Create the verticle to start the persistence repositories.
-	 *
-	 * @return the instance of the persistence verticle to test.
+	 * Explains how the task is concluded.
 	 */
-	protected abstract T createPersitenceVerticle();
-
-	/**
-	 * Check that not stop the server if it is not started.
-	 */
-	@Test
-	public void shouldNotStopIfServerNotStarted() {
-
-		final T persistence = this.createPersitenceVerticle();
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-
+	public enum Outcome {
+		/**
+		 * This happens when the task is cancelled by its creator.
+		 */
+		cancelled,
+		/**
+		 * This happens when the task completes correctly.
+		 */
+		successfull,
+		/**
+		 * This happens when the task is not completed, because something went wrong.
+		 */
+		failed;
 	}
 
 	/**
-	 * Check that not stop the server if it is not started.
+	 * The identifier of the concluded.
 	 */
-	@Test
-	public void shouldStopIfServerStarted() {
+	@Schema(description = "The outcome of the task (has it been completed with success or not).", example = "successfull")
+	public Outcome outcome;
 
-		final T persistence = this.createPersitenceVerticle();
-		persistence.pool = mock(MongoClient.class);
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-		assertThat(persistence.pool).isNull();
+	/**
+	 * Create a new task concluded notification.
+	 */
+	public AppTaskConcludedNotification() {
 
+		this.notificationType = NotificationType.taskConcluded;
 	}
-
 }

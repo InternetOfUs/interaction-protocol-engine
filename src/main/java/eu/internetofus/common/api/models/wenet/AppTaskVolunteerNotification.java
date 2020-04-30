@@ -24,55 +24,32 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.persitences;
+package eu.internetofus.common.api.models.wenet;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.mock;
-
-import org.junit.jupiter.api.Test;
-
-import io.vertx.ext.mongo.MongoClient;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * General test over the classes that extends the
- * {@link AbstractPersistenceVerticle}.
- *
- * @param <T> type of persitence verticle to test.
+ * A notification to inform about a task volunteer.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class AbstractPersistenceVerticleTestCase<T extends AbstractPersistenceVerticle> {
+@Schema(
+		hidden = true,
+		name = "TaskVolunteerNotification",
+		description = "This notification is used in order to notify the task creator that a new volunteer is proposing to participate to the task.")
+public class AppTaskVolunteerNotification extends AppTaskNotification {
 
 	/**
-	 * Create the verticle to start the persistence repositories.
-	 *
-	 * @return the instance of the persistence verticle to test.
+	 * The identifier of the volunteer.
 	 */
-	protected abstract T createPersitenceVerticle();
+	@Schema(description = "The wenet id of the user who is volunteering for the task.", example = "289615821")
+	public String volunteerId;
 
 	/**
-	 * Check that not stop the server if it is not started.
+	 * Create a new task volunteer notification.
 	 */
-	@Test
-	public void shouldNotStopIfServerNotStarted() {
+	public AppTaskVolunteerNotification() {
 
-		final T persistence = this.createPersitenceVerticle();
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-
+		this.notificationType = NotificationType.taskVolunteer;
 	}
-
-	/**
-	 * Check that not stop the server if it is not started.
-	 */
-	@Test
-	public void shouldStopIfServerStarted() {
-
-		final T persistence = this.createPersitenceVerticle();
-		persistence.pool = mock(MongoClient.class);
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-		assertThat(persistence.pool).isNull();
-
-	}
-
 }

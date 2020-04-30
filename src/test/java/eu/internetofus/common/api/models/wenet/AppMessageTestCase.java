@@ -24,55 +24,30 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.persitences;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.mock;
-
-import org.junit.jupiter.api.Test;
-
-import io.vertx.ext.mongo.MongoClient;
+package eu.internetofus.common.api.models.wenet;
 
 /**
- * General test over the classes that extends the
- * {@link AbstractPersistenceVerticle}.
+ * Test the classes that extends the {@link AppMessage}
  *
- * @param <T> type of persitence verticle to test.
+ * @param <T> type of message to test.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class AbstractPersistenceVerticleTestCase<T extends AbstractPersistenceVerticle> {
+public abstract class AppMessageTestCase<T extends AppMessage> extends AppBaseMessageTestCase<T> {
 
 	/**
-	 * Create the verticle to start the persistence repositories.
+	 * {@inheritDoc}
 	 *
-	 * @return the instance of the persistence verticle to test.
+	 * @see #createEmptyMessage()
 	 */
-	protected abstract T createPersitenceVerticle();
+	@Override
+	public T createModelExample(int index) {
 
-	/**
-	 * Check that not stop the server if it is not started.
-	 */
-	@Test
-	public void shouldNotStopIfServerNotStarted() {
-
-		final T persistence = this.createPersitenceVerticle();
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-
-	}
-
-	/**
-	 * Check that not stop the server if it is not started.
-	 */
-	@Test
-	public void shouldStopIfServerStarted() {
-
-		final T persistence = this.createPersitenceVerticle();
-		persistence.pool = mock(MongoClient.class);
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-		assertThat(persistence.pool).isNull();
-
+		final T model = this.createEmptyMessage();
+		model.recipientId = "RecipientId_" + index;
+		model.title = "Title_" + index;
+		model.text = "Text_" + index;
+		return model;
 	}
 
 }

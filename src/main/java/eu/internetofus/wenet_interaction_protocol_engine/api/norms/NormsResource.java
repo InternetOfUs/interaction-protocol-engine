@@ -52,6 +52,11 @@ import io.vertx.ext.web.api.OperationResponse;
 public class NormsResource implements Norms {
 
 	/**
+	 * The event bus that is using.
+	 */
+	protected Vertx vertx;
+
+	/**
 	 * The repository to manage the norms.
 	 */
 	protected NormsRepository repository;
@@ -75,6 +80,7 @@ public class NormsResource implements Norms {
 	 */
 	public NormsResource(Vertx vertx) {
 
+		this.vertx = vertx;
 		this.repository = NormsRepository.createProxy(vertx);
 		this.profileManager = WeNetProfileManagerService.createProxy(vertx);
 	}
@@ -95,7 +101,7 @@ public class NormsResource implements Norms {
 
 		} else {
 
-			publishedNorm.validate("bad_publishedNorm", this.profileManager, validation -> {
+			publishedNorm.validate("bad_publishedNorm", this.vertx).onComplete(validation -> {
 
 				if (validation.failed()) {
 
@@ -212,7 +218,7 @@ public class NormsResource implements Norms {
 
 				} else {
 
-					target.merge("bad_publishedNorm", source, this.profileManager, merge -> {
+					target.merge(source, "bad_publishedNorm", this.vertx).onComplete(merge -> {
 
 						if (merge.failed()) {
 

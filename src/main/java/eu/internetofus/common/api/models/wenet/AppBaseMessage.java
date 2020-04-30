@@ -24,35 +24,49 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
+package eu.internetofus.common.api.models.wenet;
+
+import eu.internetofus.common.api.models.Model;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * A norm operator.
+ * The base message model.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-// @Schema(description = "The possible norms operators")
-public enum NormOperator {
+@Schema(hidden = true, name = "message", description = "The base message to send to any application.")
+public class AppBaseMessage extends Model {
 
 	/**
-	 * Equals operator.
+	 * The possible message types.
 	 */
-	EQUALS,
+	public enum Type {
+		/**
+		 * The message is a textual.
+		 */
+		textualMessage,
+		/**
+		 * The message is a notification.
+		 */
+		taskNotification,
+		/**
+		 * The message is an event.
+		 */
+		event;
+
+	}
+
 	/**
-	 * Less than operator.
+	 * The type of the message.
 	 */
-	LESS_THAN,
+	@Schema(description = "The type of the message.", example = "textualMessage")
+	public Type type;
+
 	/**
-	 * Greater than operator.
+	 * Create a message.
 	 */
-	GREATER_THAN,
-	/**
-	 * Less or equals than operator.
-	 */
-	LESS_EQ_THAN,
-	/**
-	 * Greater or equals than operator.
-	 */
-	GREATER_EQ_THAN;
+	protected AppBaseMessage() {
+
+	}
 
 }

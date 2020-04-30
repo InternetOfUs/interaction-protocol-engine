@@ -26,12 +26,15 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.communities;
 
-import eu.internetofus.common.api.models.Model;
 import eu.internetofus.common.api.models.Validable;
 import eu.internetofus.common.api.models.ValidationErrorException;
 import eu.internetofus.common.api.models.Validations;
-import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norm;
+import eu.internetofus.common.api.models.wenet.CreateUpdateTsDetails;
+import eu.internetofus.common.api.models.wenet.Norm;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 
 /**
  * A norm associated to a community.
@@ -39,22 +42,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(description = "A norm that is applied in a community")
-public class CommunityNorm extends Model implements Validable {
+public class CommunityNorm extends CreateUpdateTsDetails implements Validable {
 
 	/**
 	 * The identifier of the community norm.
 	 */
 	@Schema(description = "The identifier of the community norm.", example = "bf274393-1e7b-4d40-a897-88cb96277edd")
-	public String _id;
-
-	/**
-	 * The difference, measured in milliseconds, between the norm is applied in the
-	 * community and midnight, January 1, 1970 UTC.
-	 */
-	@Schema(
-			description = "The difference, measured in seconds, between the norm is applied in the community and midnight, January 1, 1970 UTC.",
-			example = "15678423")
-	public long sinceTime;
+	public String id;
 
 	/**
 	 * The norm to apply to the community.
@@ -68,24 +62,25 @@ public class CommunityNorm extends Model implements Validable {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void validate(String codePrefix) throws ValidationErrorException {
+	public Future<Void> validate(String codePrefix, Vertx vertx) {
 
-		this._id = Validations.validateNullableStringField(codePrefix, "_id", 255, this._id);
-		if (this._id != null) {
+		final Promise<Void> promise = Promise.promise();
+		Future<Void> future = promise.future();
+		try {
 
-			throw new ValidationErrorException(codePrefix + "._id",
-					"You can not specify the identifier of the community norm to create");
+			this.id = Validations.validateNullableStringField(codePrefix, "id", 255, this.id);
+			if (this.norm != null) {
 
+				future = future.compose(map -> this.norm.validate(codePrefix + ".norm", vertx));
+			}
+			promise.complete();
+
+		} catch (final ValidationErrorException validationError) {
+
+			promise.fail(validationError);
 		}
 
-		if (this.norm == null) {
-
-			throw new ValidationErrorException(codePrefix + ".norm", "You must specify a norm");
-
-		} else {
-
-			this.norm.validate(codePrefix + ".norm");
-		}
+		return future;
 
 	}
 

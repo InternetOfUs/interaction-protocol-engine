@@ -31,6 +31,7 @@ import eu.internetofus.common.persitences.Repository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.mongo.MongoClient;
 
 /**
@@ -63,7 +64,11 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 	public void searchPublishedNormObject(String id, Handler<AsyncResult<JsonObject>> searchHandler) {
 
 		final JsonObject query = new JsonObject().put("_id", id);
-		this.findOneDocument(PUBLISHED_NORMS_COLLECTION, query, null, null, searchHandler);
+		this.findOneDocument(PUBLISHED_NORMS_COLLECTION, query, null, found -> {
+			final String _id = (String) found.remove("_id");
+			return found.put("id", _id);
+		}, searchHandler);
+
 	}
 
 	/**
@@ -72,10 +77,19 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 	@Override
 	public void storePublishedNorm(JsonObject norm, Handler<AsyncResult<JsonObject>> storeHandler) {
 
+		final String id = (String) norm.remove("id");
+		if (id != null) {
+
+			norm.put("_id", id);
+		}
 		final long now = TimeManager.now();
 		norm.put("publishTime", now);
-		this.storeOneDocument(PUBLISHED_NORMS_COLLECTION, norm, null, storeHandler);
+		this.storeOneDocument(PUBLISHED_NORMS_COLLECTION, norm, stored -> {
 
+			final String _id = (String) stored.remove("_id");
+			return stored.put("id", _id);
+
+		}, storeHandler);
 	}
 
 	/**
@@ -84,10 +98,11 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 	@Override
 	public void updatePublishedNorm(JsonObject norm, Handler<AsyncResult<Void>> updateHandler) {
 
-		final String id = norm.getString("_id");
+		final Object id = norm.remove("id");
 		final JsonObject query = new JsonObject().put("_id", id);
+		final long now = TimeManager.now();
+		norm.put("publishTime", now);
 		this.updateOneDocument(PUBLISHED_NORMS_COLLECTION, query, norm, updateHandler);
-
 	}
 
 	/**
@@ -108,7 +123,11 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 	public void searchPublishedNormsPageObject(JsonObject query, int offset, int limit,
 			Handler<AsyncResult<JsonObject>> searchHandler) {
 
-		this.searchPageObject(PUBLISHED_NORMS_COLLECTION, query, null, offset, limit, "norms", searchHandler);
+		final FindOptions options = new FindOptions();
+		options.setSkip(offset);
+		options.setLimit(limit);
+
+		this.searchPageObject(PUBLISHED_NORMS_COLLECTION, query, options, "norms", searchHandler);
 
 	}
 

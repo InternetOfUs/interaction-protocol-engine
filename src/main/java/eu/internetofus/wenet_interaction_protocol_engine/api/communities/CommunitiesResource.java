@@ -35,7 +35,6 @@ import org.tinylog.Logger;
 import eu.internetofus.common.api.OperationReponseHandlers;
 import eu.internetofus.common.api.OperationRequests;
 import eu.internetofus.common.api.models.Model;
-import eu.internetofus.common.api.models.ValidationErrorException;
 import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
 import io.vertx.core.AsyncResult;
@@ -51,6 +50,11 @@ import io.vertx.ext.web.api.OperationResponse;
  * @author UDT-IA, IIIA-CSIC
  */
 public class CommunitiesResource implements Communities {
+
+	/**
+	 * The event bus that is using.
+	 */
+	protected Vertx vertx;
 
 	/**
 	 * The repository to manage the communities.
@@ -76,6 +80,7 @@ public class CommunitiesResource implements Communities {
 	 */
 	public CommunitiesResource(Vertx vertx) {
 
+		this.vertx = vertx;
 		this.repository = CommunitiesRepository.createProxy(vertx);
 		this.profileManager = WeNetProfileManagerService.createProxy(vertx);
 	}
@@ -96,28 +101,32 @@ public class CommunitiesResource implements Communities {
 
 		} else {
 
-			try {
+			community.validate("bad_community", this.vertx).onComplete(validation -> {
 
-				community.validate("bad_community");
-				this.repository.storeCommunity(community, stored -> {
+				if (validation.failed()) {
 
-					if (stored.failed()) {
+					final Throwable cause = validation.cause();
+					Logger.debug(cause, "The {} is not valid.", community);
+					OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
-						final Throwable cause = stored.cause();
-						Logger.debug(cause, "Cannot store  {}.", community);
-						OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+				} else {
+					this.repository.storeCommunity(community, stored -> {
 
-					} else {
+						if (stored.failed()) {
 
-						OperationReponseHandlers.responseOk(resultHandler, stored.result());
-					}
-				});
+							final Throwable cause = stored.cause();
+							Logger.debug(cause, "Cannot store  {}.", community);
+							OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
-			} catch (final ValidationErrorException cause) {
+						} else {
 
-				Logger.debug(cause, "The {} is not valid.", community);
-				OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
-			}
+							OperationReponseHandlers.responseOk(resultHandler, stored.result());
+						}
+					});
+
+				}
+
+			});
 		}
 
 	}
@@ -175,38 +184,43 @@ public class CommunitiesResource implements Communities {
 
 				} else {
 
-					try {
+					target.merge(source, "bad_new_profile", this.vertx).onComplete(merge -> {
 
-						final Community merged = target.merge(source, "bad_new_community");
-						if (merged.equals(target)) {
+						if (merge.failed()) {
 
-							OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST,
-									"community_to_update_equal_to_original", "You can not update the community '" + communityId
-											+ "', because the new values is equals to the current one.");
+							final Throwable cause = merge.cause();
+							Logger.debug(cause, "Cannot update  {} with {}.", target, source);
+							OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
 						} else {
 
-							this.repository.updateCommunity(merged, update -> {
+							final Community merged = merge.result();
+							if (merged.equals(target)) {
 
-								if (update.failed()) {
+								OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST,
+										"community_to_update_equal_to_original", "You can not update the community '" + communityId
+												+ "', because the new values is equals to the current one.");
 
-									final Throwable cause = update.cause();
-									Logger.debug(cause, "Cannot update  {}.", target);
-									OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+							} else {
 
-								} else {
+								this.repository.updateCommunity(merged, update -> {
 
-									OperationReponseHandlers.responseOk(resultHandler, merged);
+									if (update.failed()) {
 
-								}
+										final Throwable cause = update.cause();
+										Logger.debug(cause, "Cannot update  {}.", target);
+										OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
-							});
+									} else {
+
+										OperationReponseHandlers.responseOk(resultHandler, merged);
+
+									}
+
+								});
+							}
 						}
-
-					} catch (final ValidationErrorException cause) {
-						Logger.debug(cause, "Cannot update  {} with {}.", target, source);
-						OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
-					}
+					});
 				}
 			});
 		}
@@ -437,41 +451,46 @@ public class CommunitiesResource implements Communities {
 
 		} else {
 
-			try {
+			communityNorm.validate("bad_community_norm", this.vertx).onComplete(validation -> {
 
-				communityNorm.validate("bad_community_norm");
-				this.repository.searchCommunity(communityId, searchCommunity -> {
+				if (validation.failed()) {
 
-					if (searchCommunity.failed()) {
+					final Throwable cause = validation.cause();
+					Logger.debug(cause, "The {} is not valid.", communityNorm);
+					OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
-						OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND, "not_found_community",
-								"The community to add the norm is not defined");
+				} else {
 
-					} else {
+					this.repository.searchCommunity(communityId, searchCommunity -> {
 
-						this.repository.storeCommunityNorm(communityId, communityNorm, stored -> {
+						if (searchCommunity.failed()) {
 
-							if (stored.failed()) {
+							OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND, "not_found_community",
+									"The community to add the norm is not defined");
 
-								final Throwable cause = stored.cause();
-								Logger.debug(cause, "Cannot store  {}.", communityNorm);
-								OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+						} else {
 
-							} else {
+							this.repository.storeCommunityNorm(communityId, communityNorm, stored -> {
 
-								OperationReponseHandlers.responseOk(resultHandler, stored.result());
-							}
-						});
+								if (stored.failed()) {
 
-					}
+									final Throwable cause = stored.cause();
+									Logger.debug(cause, "Cannot store  {}.", communityNorm);
+									OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
-				});
+								} else {
 
-			} catch (final ValidationErrorException cause) {
+									OperationReponseHandlers.responseOk(resultHandler, stored.result());
+								}
+							});
 
-				Logger.debug(cause, "The {} is not valid.", communityNorm);
-				OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
-			}
+						}
+
+					});
+
+				}
+
+			});
 
 		}
 	}

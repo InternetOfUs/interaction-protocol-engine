@@ -26,9 +26,6 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.ParameterContext;
-import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.Network;
 
@@ -36,8 +33,7 @@ import eu.internetofus.common.AbstractMain;
 import eu.internetofus.common.AbstractWeNetModuleIntegrationExtension;
 import eu.internetofus.common.Containers;
 import eu.internetofus.common.WeNetModuleContext;
-import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
-import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
+import eu.internetofus.common.services.ServiceApiSimulatorService;
 
 /**
  * Extension used to run integration tests over the WeNet interaction protocol
@@ -51,45 +47,9 @@ public class WeNetInteractionProtocolEngineIntegrationExtension extends Abstract
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
-			throws ParameterResolutionException {
+	protected void afterStarted(WeNetModuleContext context) {
 
-		final Class<?> type = parameterContext.getParameter().getType();
-		return super.supportsParameter(parameterContext, extensionContext) || type == CommunitiesRepository.class
-				|| type == NormsRepository.class;
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
-			throws ParameterResolutionException {
-
-		final Class<?> type = parameterContext.getParameter().getType();
-		if (type == CommunitiesRepository.class) {
-
-			return extensionContext.getStore(ExtensionContext.Namespace.create(this.getClass().getName()))
-					.getOrComputeIfAbsent(CommunitiesRepository.class.getName(), key -> {
-
-						final WeNetModuleContext context = this.getContext();
-						return CommunitiesRepository.createProxy(context.vertx);
-					}, CommunitiesRepository.class);
-
-		} else if (type == NormsRepository.class) {
-
-			return extensionContext.getStore(ExtensionContext.Namespace.create(this.getClass().getName()))
-					.getOrComputeIfAbsent(NormsRepository.class.getName(), key -> {
-
-						final WeNetModuleContext context = this.getContext();
-						return NormsRepository.createProxy(context.vertx);
-					}, NormsRepository.class);
-
-		} else {
-
-			return super.resolveParameter(parameterContext, extensionContext);
-		}
+		ServiceApiSimulatorService.register(context);
 	}
 
 	/**

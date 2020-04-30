@@ -24,55 +24,59 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.persitences;
+package eu.internetofus.common.api.models.wenet;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.mock;
-
-import org.junit.jupiter.api.Test;
-
-import io.vertx.ext.mongo.MongoClient;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * General test over the classes that extends the
- * {@link AbstractPersistenceVerticle}.
- *
- * @param <T> type of persitence verticle to test.
+ * A notification about a {@link Task} to send to an {@link App}.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class AbstractPersistenceVerticleTestCase<T extends AbstractPersistenceVerticle> {
+@Schema(hidden = true, name = "taskNotification", description = "A notification to inform about the task status.")
+public class AppTaskNotification extends AppMessage {
 
 	/**
-	 * Create the verticle to start the persistence repositories.
-	 *
-	 * @return the instance of the persistence verticle to test.
+	 * The identifier of the task notification.
 	 */
-	protected abstract T createPersitenceVerticle();
+	@Schema(description = "The identifier of the target task.", example = "28961582-84d2-41d1-b555-c09dce046831")
+	public String taskId;
 
 	/**
-	 * Check that not stop the server if it is not started.
+	 * The possible notification types.
 	 */
-	@Test
-	public void shouldNotStopIfServerNotStarted() {
-
-		final T persistence = this.createPersitenceVerticle();
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
+	public enum NotificationType {
+		/**
+		 * The notification that exist a new task that you can help to do.
+		 */
+		taskProposal,
+		/**
+		 * The notification to inform of a volunteer.
+		 */
+		taskVolunteer,
+		/**
+		 * The notification to inform that exist a message form an user.
+		 */
+		messageFromUser,
+		/**
+		 * The notification to inform that the task has concluded.
+		 */
+		taskConcluded;
 
 	}
 
 	/**
-	 * Check that not stop the server if it is not started.
+	 * The identifier of the task notification.
 	 */
-	@Test
-	public void shouldStopIfServerStarted() {
+	@Schema(description = "The type of the notification.", example = "taskProposal")
+	public NotificationType notificationType;
 
-		final T persistence = this.createPersitenceVerticle();
-		persistence.pool = mock(MongoClient.class);
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-		assertThat(persistence.pool).isNull();
+	/**
+	 * Create a new textual message.
+	 */
+	protected AppTaskNotification() {
 
+		this.type = Type.taskNotification;
 	}
 
 }

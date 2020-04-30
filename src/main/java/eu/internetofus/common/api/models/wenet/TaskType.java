@@ -130,7 +130,7 @@ public class TaskType extends Model implements Validable, Mergeable<TaskType> {
 						} else {
 
 							verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".id",
-									"The user '" + this.id + "' has already a profile."));
+									"The '" + this.id + "' is already used by a task type."));
 						}
 					});
 					return verifyNotRepeatedIdPromise.future();

@@ -65,7 +65,7 @@ import io.vertx.ext.web.api.generator.WebApiServiceGen;
 public interface Communities {
 
 	/**
-	 * The path to the version resource.
+	 * The path to the service.
 	 */
 	String PATH = "/communities";
 

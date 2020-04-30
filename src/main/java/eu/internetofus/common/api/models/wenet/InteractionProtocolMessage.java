@@ -29,8 +29,11 @@ package eu.internetofus.common.api.models.wenet;
 import java.util.List;
 
 import eu.internetofus.common.api.models.Model;
+import eu.internetofus.common.api.models.Validable;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 
 /**
  * A message that can be interchange in an interaction protocol.
@@ -38,7 +41,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(name = "message", description = "A message that can be interchange in an interaction protocol.")
-public class Message extends Model {
+public class InteractionProtocolMessage extends Model implements Validable {
 
 	/**
 	 * The identifier of the user that is sending the message.
@@ -86,5 +89,15 @@ public class Message extends Model {
 					ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/master/sources/wenet-models-openapi.yaml#/components/schemas/Norm"),
 			arraySchema = @Schema(description = "The norms to apply over the message"))
 	public List<Norm> norms;
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Future<Void> validate(String codePrefix, Vertx vertx) {
+
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

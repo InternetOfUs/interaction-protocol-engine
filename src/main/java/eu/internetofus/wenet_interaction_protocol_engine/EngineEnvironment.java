@@ -1,0 +1,147 @@
+/*
+ * -----------------------------------------------------------------------------
+ *
+ * Copyright (c) 2019 - 2022 UDT-IA, IIIA-CSIC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ * -----------------------------------------------------------------------------
+ */
+
+package eu.internetofus.wenet_interaction_protocol_engine;
+
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import org.tinylog.Logger;
+
+import eu.internetofus.common.api.models.Model;
+import eu.internetofus.common.api.models.wenet.App;
+import eu.internetofus.common.api.models.wenet.InteractionProtocolMessage;
+import eu.internetofus.common.api.models.wenet.Task;
+import eu.internetofus.common.api.models.wenet.WeNetUserProfile;
+import eu.internetofus.common.services.WeNetProfileManagerService;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+
+/**
+ * Contains the information of an environment.
+ *
+ * @author UDT-IA, IIIA-CSIC
+ */
+public class EngineEnvironment {
+
+	/**
+	 * The profile of the user that has send the message.
+	 */
+	public WeNetUserProfile sender;
+
+	/**
+	 * The application that has send the message.
+	 */
+	public App app;
+
+	/**
+	 * The task associated to the message.
+	 */
+	public Task task;
+
+	/**
+	 * Load a field and set into the environment.
+	 *
+	 * @param loader the function to load the necessary field.
+	 * @param name   of the field.
+	 * @param type   of the field.
+	 * @param setter action to set the loaded model into the environment.
+	 *
+	 * @param <T>    type of model for the field.
+	 *
+	 * @return the future that will provide the loaded field.
+	 */
+	protected static <T extends Model> Function<EngineEnvironment, Future<EngineEnvironment>> loadField(
+			Consumer<Handler<AsyncResult<JsonObject>>> loader, String name, Class<T> type,
+			BiConsumer<EngineEnvironment, T> setter) {
+
+		return env -> {
+
+			final Promise<EngineEnvironment> loadPromise = Promise.promise();
+			loader.accept(load -> {
+				if (load.failed()) {
+
+					Logger.error(load.cause(), "Can not load the {}", name);
+
+				} else {
+
+					final JsonObject object = load.result();
+					final T result = Model.fromJsonObject(object, type);
+					if (result == null) {
+
+						Logger.error(load.cause(), "{} is not a valid {} for the {}", object, type, name);
+
+					} else {
+
+						setter.accept(env, result);
+					}
+				}
+				loadPromise.complete(env);
+			});
+			return loadPromise.future();
+		};
+	}
+
+	/**
+	 * Called when want to load the necessary information into the environment.
+	 *
+	 * @param vertx   event bus to use.
+	 * @param message with the information that has to been loaded.
+	 *
+	 * @return the loaded environment.
+	 */
+	public static Future<EngineEnvironment> create(Vertx vertx, InteractionProtocolMessage message) {
+
+		final Promise<EngineEnvironment> promise = Promise.promise();
+		Future<EngineEnvironment> future = promise.future();
+
+		if (message.senderId != null) {
+			future = future.compose(
+					loadField(load -> WeNetProfileManagerService.createProxy(vertx).retrieveProfile(message.senderId, load),
+							"sender", WeNetUserProfile.class, (env, profile) -> env.sender = profile));
+		}
+		if (message.appId != null) {
+			future = future
+					.compose(loadField(load -> WeNetProfileManagerService.createProxy(vertx).retrieveProfile(message.appId, load),
+							"app", App.class, (env, profile) -> env.app = profile));
+		}
+		if (message.taskId != null) {
+			future = future.compose(
+					loadField(load -> WeNetProfileManagerService.createProxy(vertx).retrieveProfile(message.taskId, load), "task",
+							Task.class, (env, profile) -> env.task = profile));
+		}
+
+		promise.complete(new EngineEnvironment());
+		return future;
+
+	}
+
+}

@@ -24,55 +24,38 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.persitences;
+package eu.internetofus.common.api.models.wenet;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.Test;
 
-import io.vertx.ext.mongo.MongoClient;
+import eu.internetofus.common.api.models.ModelTestCase;
 
 /**
- * General test over the classes that extends the
- * {@link AbstractPersistenceVerticle}.
+ * Test the classes that extends the {@link AppBaseMessage}
  *
- * @param <T> type of persitence verticle to test.
+ * @param <T> type of message to test.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class AbstractPersistenceVerticleTestCase<T extends AbstractPersistenceVerticle> {
+public abstract class AppBaseMessageTestCase<T extends AppBaseMessage> extends ModelTestCase<T> {
 
 	/**
-	 * Create the verticle to start the persistence repositories.
+	 * Create an empty message.
 	 *
-	 * @return the instance of the persistence verticle to test.
+	 * @return the created empty message.
 	 */
-	protected abstract T createPersitenceVerticle();
+	public abstract T createEmptyMessage();
 
 	/**
-	 * Check that not stop the server if it is not started.
+	 * Verify that is the the type of the message when it is created.
 	 */
 	@Test
-	public void shouldNotStopIfServerNotStarted() {
+	public void shouldHaveType() {
 
-		final T persistence = this.createPersitenceVerticle();
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-
-	}
-
-	/**
-	 * Check that not stop the server if it is not started.
-	 */
-	@Test
-	public void shouldStopIfServerStarted() {
-
-		final T persistence = this.createPersitenceVerticle();
-		persistence.pool = mock(MongoClient.class);
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-		assertThat(persistence.pool).isNull();
-
+		final T model = this.createEmptyMessage();
+		assertThat(model.type).isNotNull();
 	}
 
 }

@@ -24,55 +24,50 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.persitences;
+package eu.internetofus.common.api.models.wenet;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.Test;
 
-import io.vertx.ext.mongo.MongoClient;
-
 /**
- * General test over the classes that extends the
- * {@link AbstractPersistenceVerticle}.
+ * Test the classes that extends the {@link AppTaskNotification}
  *
- * @param <T> type of persitence verticle to test.
+ * @param <T> type of notification to test.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class AbstractPersistenceVerticleTestCase<T extends AbstractPersistenceVerticle> {
+public abstract class AppTaskNotificationTestCase<T extends AppTaskNotification> extends AppMessageTestCase<T> {
 
 	/**
-	 * Create the verticle to start the persistence repositories.
-	 *
-	 * @return the instance of the persistence verticle to test.
-	 */
-	protected abstract T createPersitenceVerticle();
-
-	/**
-	 * Check that not stop the server if it is not started.
+	 * Verify that is the the notification has a type.
 	 */
 	@Test
-	public void shouldNotStopIfServerNotStarted() {
+	public void shouldHaveNotificationType() {
 
-		final T persistence = this.createPersitenceVerticle();
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-
+		final T model = this.createEmptyMessage();
+		assertThat(model.notificationType).isNotNull();
 	}
 
 	/**
-	 * Check that not stop the server if it is not started.
+	 * Verify that the type is a task notification.
 	 */
 	@Test
-	public void shouldStopIfServerStarted() {
+	public void shouldTypeByTaskNotification() {
 
-		final T persistence = this.createPersitenceVerticle();
-		persistence.pool = mock(MongoClient.class);
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-		assertThat(persistence.pool).isNull();
+		final T model = this.createEmptyMessage();
+		assertThat(model.type).isEqualTo(AppBaseMessage.Type.taskNotification);
+	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public T createModelExample(int index) {
+
+		final T model = super.createModelExample(index);
+		model.taskId = "TaskId_" + index;
+		return model;
 	}
 
 }

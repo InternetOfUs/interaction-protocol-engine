@@ -28,13 +28,17 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.communities;
 
 import java.util.List;
 
-import eu.internetofus.common.api.models.Model;
+import eu.internetofus.common.api.models.Mergeable;
+import eu.internetofus.common.api.models.Merges;
 import eu.internetofus.common.api.models.Validable;
 import eu.internetofus.common.api.models.ValidationErrorException;
 import eu.internetofus.common.api.models.Validations;
-import eu.internetofus.wenet_interaction_protocol_engine.Mergeable;
+import eu.internetofus.common.api.models.wenet.CreateUpdateTsDetails;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 
 /**
  * A community that an user plays.
@@ -42,13 +46,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(name = "Community", description = "This component describes a community of users.")
-public class Community extends Model implements Validable, Mergeable<Community> {
+public class Community extends CreateUpdateTsDetails implements Validable, Mergeable<Community> {
 
 	/**
 	 * The identifier of the community.
 	 */
 	@Schema(description = "The identifier of the community.", example = "bf274393-1e7b-4d40-a897-88cb96277edd")
-	public String _id;
+	public String id;
 
 	/**
 	 * The name of the community.
@@ -83,48 +87,21 @@ public class Community extends Model implements Validable, Mergeable<Community> 
 	public String avatar;
 
 	/**
-	 * The time since the community is active. it is measured as the difference,
-	 * measured in seconds, between the community is active and midnight, January 1,
-	 * 1970 UTC.
-	 */
-	@Schema(
-			description = "The difference, measured in seconds, between the community is active and midnight, January 1, 1970 UTC.",
-			example = "1571412479710")
-	public long sinceTime;
-
-	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void validate(String codePrefix) throws ValidationErrorException {
-
-		this._id = Validations.validateNullableStringField(codePrefix, "id", 255, this._id);
-		if (this._id != null) {
-
-			throw new ValidationErrorException(codePrefix + "._id",
-					"You can not specify the identifier of the community to create");
-
-		}
-		this.name = Validations.validateNullableStringField(codePrefix, "name", 255, this.name);
-		this.description = Validations.validateNullableStringField(codePrefix, "description", 255, this.description);
-		this.keywords = Validations.validateNullableListStringField(codePrefix, "keywords", 255, this.keywords);
-		this.avatar = Validations.validateNullableURLField(codePrefix, "avatar", this.avatar);
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Community merge(Community source, String codePrefix) throws ValidationErrorException {
+	public Future<Community> merge(Community source, String codePrefix, Vertx vertx) {
 
 		if (source == null) {
 
-			return this;
+			return Future.succeededFuture(this);
 
 		} else {
+			final Promise<Community> promise = Promise.promise();
+			Future<Community> future = promise.future();
 
 			final Community merged = new Community();
+
 			merged.name = source.name;
 			if (merged.name == null) {
 
@@ -149,11 +126,52 @@ public class Community extends Model implements Validable, Mergeable<Community> 
 				merged.avatar = this.avatar;
 			}
 
-			merged.validate(codePrefix);
+			future = future.compose(Merges.validateMerged(codePrefix, vertx));
 
-			merged._id = this._id;
-			merged.sinceTime = this.sinceTime;
-			return merged;
+			promise.complete(merged);
+			// When merged set the fixed field values
+			future = future.map(mergedValidatedModel -> {
+
+				mergedValidatedModel.id = this.id;
+				mergedValidatedModel._creationTs = this._creationTs;
+				mergedValidatedModel._lastUpdateTs = this._lastUpdateTs;
+				return mergedValidatedModel;
+			});
+
+			return future;
+
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Future<Void> validate(String codePrefix, Vertx vertx) {
+
+		final Promise<Void> promise = Promise.promise();
+		final Future<Void> future = promise.future();
+		try {
+
+			this.id = Validations.validateNullableStringField(codePrefix, "id", 255, this.id);
+			if (this.id != null) {
+
+				throw new ValidationErrorException(codePrefix + ".id",
+						"You can not specify the identifier of the community to create");
+
+			}
+			this.name = Validations.validateNullableStringField(codePrefix, "name", 255, this.name);
+			this.description = Validations.validateNullableStringField(codePrefix, "description", 255, this.description);
+			this.keywords = Validations.validateNullableListStringField(codePrefix, "keywords", 255, this.keywords);
+			this.avatar = Validations.validateNullableURLField(codePrefix, "avatar", this.avatar);
+
+			promise.complete();
+
+		} catch (final ValidationErrorException validationError) {
+
+			promise.fail(validationError);
+		}
+
+		return future;
 	}
 }

@@ -24,55 +24,42 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.persitences;
+package eu.internetofus.common.api.models.wenet;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.mock;
-
-import org.junit.jupiter.api.Test;
-
-import io.vertx.ext.mongo.MongoClient;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * General test over the classes that extends the
- * {@link AbstractPersistenceVerticle}.
- *
- * @param <T> type of persitence verticle to test.
+ * A message to send to an {@link App}.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class AbstractPersistenceVerticleTestCase<T extends AbstractPersistenceVerticle> {
+@Schema(hidden = true, name = "message", description = "A message that can be send into an application.")
+public class AppMessage extends AppBaseMessage {
 
 	/**
-	 * Create the verticle to start the persistence repositories.
-	 *
-	 * @return the instance of the persistence verticle to test.
+	 * The identifier of the user to send the message.
 	 */
-	protected abstract T createPersitenceVerticle();
+	@Schema(
+			description = "The WeNet identifier of the user the message is meant for",
+			example = "a6822c47-f1b8-4c21-80bd-1d025266c3c7")
+	public String recipientId;
 
 	/**
-	 * Check that not stop the server if it is not started.
+	 * The identifier of the user to send the message.
 	 */
-	@Test
-	public void shouldNotStopIfServerNotStarted() {
+	@Schema(description = "The title of the message", example = "Help me!")
+	public String title;
 
-		final T persistence = this.createPersitenceVerticle();
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
+	/**
+	 * The identifier of the user to send the message.
+	 */
+	@Schema(description = "The message for the user", example = "Can you help me with something?")
+	public String text;
+
+	/**
+	 * Create a message.
+	 */
+	protected AppMessage() {
 
 	}
-
-	/**
-	 * Check that not stop the server if it is not started.
-	 */
-	@Test
-	public void shouldStopIfServerStarted() {
-
-		final T persistence = this.createPersitenceVerticle();
-		persistence.pool = mock(MongoClient.class);
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-		assertThat(persistence.pool).isNull();
-
-	}
-
 }

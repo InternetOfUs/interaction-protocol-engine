@@ -33,6 +33,7 @@ import eu.internetofus.common.services.AbstractServicesVerticle;
 import eu.internetofus.wenet_interaction_protocol_engine.api.APIVerticle;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.PersistenceVerticle;
 import eu.internetofus.wenet_interaction_protocol_engine.services.ServicesVerticle;
+import io.vertx.core.Promise;
 
 /**
  * The Main verticle that deploy the necessary verticles for the WeNet
@@ -41,6 +42,34 @@ import eu.internetofus.wenet_interaction_protocol_engine.services.ServicesVertic
  * @author UDT-IA, IIIA-CSIC
  */
 public class MainVerticle extends AbstractMainVerticle {
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void start(Promise<Void> startPromise) throws Exception {
+
+		EngineWorker.deploy(this.vertx, this.config(), deploy -> {
+
+			if (deploy.failed()) {
+
+				startPromise.fail(deploy.cause());
+
+			} else {
+
+				try {
+
+					MainVerticle.super.start(startPromise);
+
+				} catch (final Exception cause) {
+
+					startPromise.fail(cause);
+				}
+			}
+
+		});
+
+	}
 
 	/**
 	 * {@inheritDoc}

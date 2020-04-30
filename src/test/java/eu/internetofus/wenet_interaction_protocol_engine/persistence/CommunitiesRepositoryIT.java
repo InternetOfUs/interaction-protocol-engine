@@ -28,29 +28,19 @@ package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.tinylog.Level;
-import org.tinylog.provider.InternalLogger;
 
 import eu.internetofus.common.TimeManager;
-import eu.internetofus.common.api.models.Model;
-import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
-import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunitiesPage;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Community;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityMember;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityNorm;
-import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityNormTest;
-import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityNormsPage;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunityTest;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
@@ -69,52 +59,54 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can not found a community if it is not defined.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunity(String, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotFoundUndefinedCommunity(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldNotFoundUndefinedCommunity(Vertx vertx, VertxTestContext testContext) {
 
-		repository.searchCommunity("undefined community identifier", testContext.failing(failed -> {
-			testContext.completeNow();
-		}));
+		CommunitiesRepository.createProxy(vertx).searchCommunity("undefined community identifier",
+				testContext.failing(failed -> {
+					testContext.completeNow();
+				}));
 
 	}
 
 	/**
 	 * Verify that can not found a community object if it is not defined.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityObject(String,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotFoundUndefinedCommunityObject(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldNotFoundUndefinedCommunityObject(Vertx vertx, VertxTestContext testContext) {
 
-		repository.searchCommunityObject("undefined community identifier", testContext.failing(failed -> {
-			testContext.completeNow();
-		}));
+		CommunitiesRepository.createProxy(vertx).searchCommunityObject("undefined community identifier",
+				testContext.failing(failed -> {
+					testContext.completeNow();
+				}));
 
 	}
 
 	/**
 	 * Verify that can found a community.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunity(String, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunity(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldFoundCommunity(Vertx vertx, VertxTestContext testContext) {
 
-		repository.storeCommunity(new Community(), testContext.succeeding(storedCommunity -> {
+		CommunitiesRepository.createProxy(vertx).storeCommunity(new Community(), testContext.succeeding(storedCommunity -> {
 
-			repository.searchCommunity(storedCommunity._id,
+			CommunitiesRepository.createProxy(vertx).searchCommunity(storedCommunity.id,
 					testContext.succeeding(foundCommunity -> testContext.verify(() -> {
 						assertThat(foundCommunity).isEqualTo(storedCommunity);
 						testContext.completeNow();
@@ -127,38 +119,38 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can found a community object.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityObject(String,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunityObject(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldFoundCommunityObject(Vertx vertx, VertxTestContext testContext) {
 
-		repository.storeCommunity(new JsonObject(), testContext.succeeding(storedCommunity -> {
+		CommunitiesRepository.createProxy(vertx).storeCommunity(new JsonObject(),
+				testContext.succeeding(storedCommunity -> {
 
-			repository.searchCommunityObject(storedCommunity.getString("_id"),
-					testContext.succeeding(foundCommunity -> testContext.verify(() -> {
-						assertThat(foundCommunity).isEqualTo(storedCommunity);
-						testContext.completeNow();
-					})));
+					CommunitiesRepository.createProxy(vertx).searchCommunityObject(storedCommunity.getString("id"),
+							testContext.succeeding(foundCommunity -> testContext.verify(() -> {
+								assertThat(foundCommunity).isEqualTo(storedCommunity);
+								testContext.completeNow();
+							})));
 
-		}));
+				}));
 
 	}
 
 	/**
 	 * Verify that can not store a community that can not be an object.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#storeCommunity(Community, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotStoreACommunityThatCanNotBeAnObject(CommunitiesRepository repository,
-			VertxTestContext testContext) {
+	public void shouldNotStoreACommunityThatCanNotBeAnObject(Vertx vertx, VertxTestContext testContext) {
 
 		final Community community = new Community() {
 
@@ -171,8 +163,8 @@ public class CommunitiesRepositoryIT {
 				return null;
 			}
 		};
-		community._id = "undefined community identifier";
-		repository.storeCommunity(community, testContext.failing(failed -> {
+		community.id = "undefined community identifier";
+		CommunitiesRepository.createProxy(vertx).storeCommunity(community, testContext.failing(failed -> {
 			testContext.completeNow();
 		}));
 
@@ -181,61 +173,63 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can store a community.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#storeCommunity(Community, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldStoreCommunity(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldStoreCommunity(Vertx vertx, VertxTestContext testContext) {
 
 		final Community community = new Community();
-		repository.storeCommunity(community, testContext.succeeding(storedCommunity -> testContext.verify(() -> {
+		CommunitiesRepository.createProxy(vertx).storeCommunity(community,
+				testContext.succeeding(storedCommunity -> testContext.verify(() -> {
 
-			assertThat(storedCommunity).isNotNull();
-			assertThat(storedCommunity._id).isNotEmpty();
-			testContext.completeNow();
-		})));
+					assertThat(storedCommunity).isNotNull();
+					assertThat(storedCommunity.id).isNotEmpty();
+					testContext.completeNow();
+				})));
 
 	}
 
 	/**
 	 * Verify that can store a community object.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#storeCommunity(JsonObject, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldStoreCommunityObject(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldStoreCommunityObject(Vertx vertx, VertxTestContext testContext) {
 
 		final long now = TimeManager.now();
-		repository.storeCommunity(new JsonObject(), testContext.succeeding(storedCommunity -> testContext.verify(() -> {
+		CommunitiesRepository.createProxy(vertx).storeCommunity(new JsonObject(),
+				testContext.succeeding(storedCommunity -> testContext.verify(() -> {
 
-			assertThat(storedCommunity).isNotNull();
-			final String id = storedCommunity.getString("_id");
-			assertThat(id).isNotEmpty();
-			assertThat(storedCommunity.getLong("sinceTime", 0l)).isNotEqualTo(0).isGreaterThanOrEqualTo(now);
-			testContext.completeNow();
-		})));
+					assertThat(storedCommunity).isNotNull();
+					final String id = storedCommunity.getString("id");
+					assertThat(id).isNotEmpty();
+					assertThat(storedCommunity.getLong("_creationTs", 0l)).isNotEqualTo(0).isGreaterThanOrEqualTo(now);
+					testContext.completeNow();
+				})));
 
 	}
 
 	/**
 	 * Verify that can not update a community if it is not defined.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#updateCommunity(Community, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotUpdateUndefinedCommunity(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldNotUpdateUndefinedCommunity(Vertx vertx, VertxTestContext testContext) {
 
 		final Community community = new Community();
-		community._id = "undefined community identifier";
-		repository.updateCommunity(community, testContext.failing(failed -> {
+		community.id = "undefined community identifier";
+		CommunitiesRepository.createProxy(vertx).updateCommunity(community, testContext.failing(failed -> {
 			testContext.completeNow();
 		}));
 
@@ -244,16 +238,16 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can not update a community if it is not defined.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#updateCommunity(JsonObject, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotUpdateUndefinedCommunityObject(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldNotUpdateUndefinedCommunityObject(Vertx vertx, VertxTestContext testContext) {
 
-		final JsonObject community = new JsonObject().put("_id", "undefined community identifier");
-		repository.updateCommunity(community, testContext.failing(failed -> {
+		final JsonObject community = new JsonObject().put("id", "undefined community identifier");
+		CommunitiesRepository.createProxy(vertx).updateCommunity(community, testContext.failing(failed -> {
 			testContext.completeNow();
 		}));
 
@@ -262,14 +256,13 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can not update a community if it is not defined.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#updateCommunity(Community, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotUpdateACommunityThatCanNotBeAnObject(CommunitiesRepository repository,
-			VertxTestContext testContext) {
+	public void shouldNotUpdateACommunityThatCanNotBeAnObject(Vertx vertx, VertxTestContext testContext) {
 
 		final Community community = new Community() {
 
@@ -282,8 +275,8 @@ public class CommunitiesRepositoryIT {
 				return null;
 			}
 		};
-		community._id = "undefined community identifier";
-		repository.updateCommunity(community, testContext.failing(failed -> {
+		community.id = "undefined community identifier";
+		CommunitiesRepository.createProxy(vertx).updateCommunity(community, testContext.failing(failed -> {
 			testContext.completeNow();
 		}));
 
@@ -292,57 +285,62 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can update a community.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#updateCommunity(Community, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldUpdateCommunity(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldUpdateCommunity(Vertx vertx, VertxTestContext testContext) {
 
 		final Community community = new Community();
 
-		repository.storeCommunity(community, testContext.succeeding(stored -> testContext.verify(() -> {
+		CommunitiesRepository.createProxy(vertx).storeCommunity(community,
+				testContext.succeeding(stored -> testContext.verify(() -> {
 
-			final Community update = new CommunityTest().createModelExample(23);
-			update._id = stored._id;
-			repository.updateCommunity(update, testContext.succeeding(empty -> testContext.verify(() -> {
+					final Community update = new CommunityTest().createModelExample(23);
+					update.id = stored.id;
+					CommunitiesRepository.createProxy(vertx).updateCommunity(update,
+							testContext.succeeding(empty -> testContext.verify(() -> {
 
-				repository.searchCommunity(stored._id, testContext.succeeding(foundCommunity -> testContext.verify(() -> {
-					assertThat(foundCommunity).isEqualTo(update);
-					testContext.completeNow();
+								CommunitiesRepository.createProxy(vertx).searchCommunity(stored.id,
+										testContext.succeeding(foundCommunity -> testContext.verify(() -> {
+											assertThat(foundCommunity).isEqualTo(update);
+											testContext.completeNow();
+										})));
+							})));
+
 				})));
-			})));
-
-		})));
 
 	}
 
 	/**
 	 * Verify that update a defined community object.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityObject(String,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldUpdateCommunityObject(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldUpdateCommunityObject(Vertx vertx, VertxTestContext testContext) {
 
-		repository.storeCommunity(new JsonObject().put("name", "Community name"),
+		CommunitiesRepository.createProxy(vertx).storeCommunity(new JsonObject().put("name", "Community name"),
 				testContext.succeeding(stored -> testContext.verify(() -> {
 
-					final String id = stored.getString("_id");
-					final JsonObject update = new JsonObject().put("_id", id).put("name", "New community name");
-					repository.updateCommunity(update, testContext.succeeding(empty -> testContext.verify(() -> {
+					final String id = stored.getString("id");
+					final JsonObject update = new JsonObject().put("id", id).put("name", "New community name");
+					CommunitiesRepository.createProxy(vertx).updateCommunity(update,
+							testContext.succeeding(empty -> testContext.verify(() -> {
 
-						repository.searchCommunityObject(id, testContext.succeeding(foundCommunity -> testContext.verify(() -> {
-							stored.put("name", "New community name");
-							assertThat(foundCommunity).isEqualTo(stored);
-							testContext.completeNow();
-						})));
-					})));
+								CommunitiesRepository.createProxy(vertx).searchCommunityObject(id,
+										testContext.succeeding(foundCommunity -> testContext.verify(() -> {
+											stored.put("name", "New community name");
+											assertThat(foundCommunity).isEqualTo(stored);
+											testContext.completeNow();
+										})));
+							})));
 
 				})));
 
@@ -351,37 +349,38 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can not delete a community if it is not defined.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#deleteCommunity(String, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotDeleteUndefinedCommunity(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldNotDeleteUndefinedCommunity(Vertx vertx, VertxTestContext testContext) {
 
-		repository.deleteCommunity("undefined community identifier", testContext.failing(failed -> {
-			testContext.completeNow();
-		}));
+		CommunitiesRepository.createProxy(vertx).deleteCommunity("undefined community identifier",
+				testContext.failing(failed -> {
+					testContext.completeNow();
+				}));
 
 	}
 
 	/**
 	 * Verify that can delete a community.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#deleteCommunity(String, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldDeleteCommunity(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldDeleteCommunity(Vertx vertx, VertxTestContext testContext) {
 
-		repository.storeCommunity(new JsonObject(), testContext.succeeding(stored -> {
+		CommunitiesRepository.createProxy(vertx).storeCommunity(new JsonObject(), testContext.succeeding(stored -> {
 
-			final String id = stored.getString("_id");
-			repository.deleteCommunity(id, testContext.succeeding(success -> {
+			final String id = stored.getString("id");
+			CommunitiesRepository.createProxy(vertx).deleteCommunity(id, testContext.succeeding(success -> {
 
-				repository.searchCommunityObject(id, testContext.failing(search -> {
+				CommunitiesRepository.createProxy(vertx).searchCommunityObject(id, testContext.failing(search -> {
 
 					testContext.completeNow();
 
@@ -394,7 +393,8 @@ public class CommunitiesRepositoryIT {
 	}
 
 	/**
-	 * Remove all the communities defined on the repository.
+	 * Remove all the communities defined on the
+	 * CommunitiesRepository.createProxy(vertx).
 	 *
 	 * @param pool that create the mongo connections.
 	 */
@@ -413,628 +413,702 @@ public class CommunitiesRepositoryIT {
 
 	}
 
-	/**
-	 * Remove all the communities defined on the repository.
-	 *
-	 * @param repository to use.
-	 * @param max        number of communities to try to create.
-	 *
-	 * @return the communities that has been created.
-	 */
-	public static final <T extends CommunitiesRepository> List<Community> createAndStoreSomeCommunities(T repository,
-			int max) {
-
-		final List<Community> communities = new ArrayList<>();
-		final Semaphore semaphore = new Semaphore(0);
-		createNextCommunity(repository, communities, max, semaphore);
-
-		try {
-			semaphore.acquire(max);
-		} catch (final InterruptedException ignored) {
-		}
-
-		return communities;
-	}
-
-	/**
-	 * Create an store a community.
-	 *
-	 * @param repository  to use.
-	 * @param communities that has been created.
-	 * @param tries       number maximum of times to create a community.
-	 * @param semaphore   to inform when the community is created.
-	 */
-	private static <T extends CommunitiesRepository> void createNextCommunity(T repository, List<Community> communities,
-			int tries, Semaphore semaphore) {
-
-		final Community community = new CommunityTest().createModelExample(communities.size());
-		repository.storeCommunity(community, stored -> {
-			if (!stored.failed()) {
-
-				communities.add(stored.result());
-
-			}
-			if (tries > 1) {
-				createNextCommunity(repository, communities, tries - 1, semaphore);
-			}
-			semaphore.release();
-		});
-
-	}
-
-	/**
-	 * Verify that can find all the communities.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindAllCommunities(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		final List<Community> communities = createAndStoreSomeCommunities(repository, 23);
-
-		final String name = null;
-		final String description = null;
-		final List<String> keywords = null;
-		final String avatar = null;
-		final Long sinceFrom = null;
-		final Long sinceTo = null;
-		final int offset = 0;
-		final int limit = 100;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(offset);
-					assertThat(foundPage.total).isEqualTo(23);
-					assertThat(foundPage.communities).isEqualTo(communities);
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that can find some communities on a range.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindCommunitiesInARange(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		final List<Community> communities = createAndStoreSomeCommunities(repository, 23);
-
-		final String name = null;
-		final String description = null;
-		final List<String> keywords = null;
-		final String avatar = null;
-		final Long sinceFrom = null;
-		final Long sinceTo = null;
-		final int offset = 5;
-		final int limit = 10;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(offset);
-					assertThat(foundPage.total).isEqualTo(23);
-					assertThat(foundPage.communities).isEqualTo(communities.subList(5, 15));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that can find some communities with a specific name.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindCommunitiesWithAName(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		final List<Community> communities = createAndStoreSomeCommunities(repository, 23);
-
-		final String name = ".+1\\d";
-		final String description = null;
-		final List<String> keywords = null;
-		final String avatar = null;
-		final Long sinceFrom = null;
-		final Long sinceTo = null;
-		final int offset = 0;
-		final int limit = 100;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(0);
-					assertThat(foundPage.total).isEqualTo(10);
-					assertThat(foundPage.communities).isEqualTo(communities.subList(10, 20));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that can find some communities with a specific description.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindCommunitiesWithADescription(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		final List<Community> communities = createAndStoreSomeCommunities(repository, 23);
-
-		final String name = null;
-		final String description = ".+2\\d";
-		final List<String> keywords = null;
-		final String avatar = null;
-		final Long sinceFrom = null;
-		final Long sinceTo = null;
-		final int offset = 0;
-		final int limit = 100;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(0);
-					assertThat(foundPage.total).isEqualTo(3);
-					assertThat(foundPage.communities).isEqualTo(communities.subList(20, 23));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that can find some communities with a specific keywords.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindCommunitiesWithKeywords(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		final List<Community> communities = createAndStoreSomeCommunities(repository, 23);
-
-		final String name = null;
-		final String description = null;
-		final List<String> keywords = new ArrayList<>();
-		keywords.add("keyword 19");
-		keywords.add("keyword 21");
-		final String avatar = null;
-		final Long sinceFrom = null;
-		final Long sinceTo = null;
-		final int offset = 0;
-		final int limit = 100;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(0);
-					assertThat(foundPage.total).isEqualTo(2);
-					assertThat(foundPage.communities).isEqualTo(communities.subList(20, 22));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that can find some communities with a one keyword.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindCommunitiesWithKeyword(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		final List<Community> communities = createAndStoreSomeCommunities(repository, 23);
-
-		final String name = null;
-		final String description = null;
-		final List<String> keywords = new ArrayList<>();
-		keywords.add("keyword 19");
-		final String avatar = null;
-		final Long sinceFrom = null;
-		final Long sinceTo = null;
-		final int offset = 0;
-		final int limit = 100;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(0);
-					assertThat(foundPage.total).isEqualTo(4);
-					assertThat(foundPage.communities).isEqualTo(communities.subList(18, 22));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that can find some communities with a specific avatar.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindCommunitiesWithAnAvatar(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		final List<Community> communities = createAndStoreSomeCommunities(repository, 23);
-
-		final String name = null;
-		final String description = null;
-		final List<String> keywords = null;
-		final String avatar = ".+r\\d\\.png";
-		final Long sinceFrom = null;
-		final Long sinceTo = null;
-		final int offset = 0;
-		final int limit = 100;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(0);
-					assertThat(foundPage.total).isEqualTo(10);
-					assertThat(foundPage.communities).isEqualTo(communities.subList(0, 10));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Create an aggregate some communities with a fake {@link Community#sinceTime}.
-	 *
-	 * @param pool that create the mongo connections.
-	 * @param max  number of communities to try to create.
-	 *
-	 * @return the aggregated communities.
-	 */
-	public static List<Community> createAndStoreSomeCommunitiesWithFakeSinceTime(MongoClient pool, int max) {
-
-		final List<Community> communities = new ArrayList<>();
-		final Semaphore semaphore = new Semaphore(0);
-		createNextCommunityWithFakeSinceTime(pool, communities, max, semaphore);
-
-		try {
-			semaphore.acquire(max);
-		} catch (final InterruptedException ignored) {
-		}
-
-		return communities;
-
-	}
-
-	/**
-	 * Create an store a community with a fake since time.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param communities that has been created.
-	 * @param tries       number maximum of times to create a community.
-	 * @param semaphore   to inform when the community is created.
-	 */
-	private static void createNextCommunityWithFakeSinceTime(MongoClient pool, List<Community> communities, int tries,
-			Semaphore semaphore) {
-
-		final int index = communities.size();
-		final Community community = new CommunityTest().createModelExample(index);
-		community.sinceTime = index * 100000;
-		pool.save(CommunitiesRepositoryImpl.COMMUNITIES_COLLECTION, community.toJsonObject(), stored -> {
-			if (!stored.failed()) {
-
-				community._id = stored.result();
-				communities.add(community);
-
-			}
-			if (tries > 1) {
-				createNextCommunityWithFakeSinceTime(pool, communities, tries - 1, semaphore);
-			}
-			semaphore.release();
-		});
-
-	}
-
-	/**
-	 * Verify that can find some communities since a from time.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindCommunitiesSinceAFromTime(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		final List<Community> communities = createAndStoreSomeCommunitiesWithFakeSinceTime(pool, 23);
-
-		final String name = null;
-		final String description = null;
-		final List<String> keywords = null;
-		final String avatar = null;
-		final Long sinceFrom = 1500000l;
-		final Long sinceTo = null;
-		final int offset = 0;
-		final int limit = 100;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(0);
-					assertThat(foundPage.total).isEqualTo(8);
-					assertThat(foundPage.communities).isEqualTo(communities.subList(15, 23));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that can find some communities since a to time.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindCommunitiesSinceAToTime(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		final List<Community> communities = createAndStoreSomeCommunitiesWithFakeSinceTime(pool, 23);
-
-		final String name = null;
-		final String description = null;
-		final List<String> keywords = null;
-		final String avatar = null;
-		final Long sinceFrom = null;
-		final Long sinceTo = 1500000l;
-		final int offset = 0;
-		final int limit = 100;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(0);
-					assertThat(foundPage.total).isEqualTo(16);
-					assertThat(foundPage.communities).isEqualTo(communities.subList(0, 16));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that can find some communities since time in a range.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindCommunitiesSinceTimeInARange(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		final List<Community> communities = createAndStoreSomeCommunitiesWithFakeSinceTime(pool, 23);
-
-		final String name = null;
-		final String description = null;
-		final List<String> keywords = null;
-		final String avatar = null;
-		final Long sinceFrom = 1200000l;
-		final Long sinceTo = 1800000l;
-		final int offset = 0;
-		final int limit = 100;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(0);
-					assertThat(foundPage.total).isEqualTo(7);
-					assertThat(foundPage.communities).isEqualTo(communities.subList(12, 19));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that can find some communities.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindCommunities(MongoClient pool, CommunitiesRepository repository, VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		final List<Community> communities = createAndStoreSomeCommunitiesWithFakeSinceTime(pool, 23);
-
-		final String name = ".+ 1\\d";
-		final String description = "3|4|5|6";
-		final List<String> keywords = new ArrayList<>();
-		keywords.add("\\d{2}");
-		final String avatar = ".*png";
-		final Long sinceFrom = 1200000l;
-		final Long sinceTo = 1800000l;
-		final int offset = 1;
-		final int limit = 2;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(1);
-					assertThat(foundPage.total).isEqualTo(4);
-					assertThat(foundPage.communities).isEqualTo(communities.subList(14, 16));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that can find an empty community page if any community match.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindEmptyCommunitiesPageIfAnyMatch(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		final String name = null;
-		final String description = null;
-		final List<String> keywords = new ArrayList<>();
-		final String avatar = null;
-		final Long sinceFrom = null;
-		final Long sinceTo = null;
-		final int offset = 0;
-		final int limit = 100;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(0);
-					assertThat(foundPage.total).isEqualTo(0);
-					assertThat(foundPage.communities).isNull();
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that can find an empty community page if any community match.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunitiesPageObject(String, String, List,
-	 *      String, Long, Long, int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFindEmptyCommunitiesPageIfOffsetIsOutOfRange(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		removeAllCommunities(pool);
-		createAndStoreSomeCommunities(repository, 2);
-		final String name = null;
-		final String description = null;
-		final List<String> keywords = new ArrayList<>();
-		final String avatar = null;
-		final Long sinceFrom = null;
-		final Long sinceTo = null;
-		final int offset = 3;
-		final int limit = 100;
-		repository.searchCommunitiesPageObject(name, description, keywords, avatar, sinceFrom, sinceTo, offset, limit,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunitiesPage foundPage = Model.fromJsonObject(found, CommunitiesPage.class);
-					assertThat(foundPage.offset).isEqualTo(3);
-					assertThat(foundPage.total).isEqualTo(2);
-					assertThat(foundPage.communities).isNull();
-
-					testContext.completeNow();
-				})));
-
-	}
+	// /**
+	// * Remove all the communities defined on the
+	// * CommunitiesRepository.createProxy(vertx).
+	// *
+	// * @param repository to use.
+	// * @param max number of communities to try to create.
+	// *
+	// * @return the communities that has been created.
+	// */
+	// public static final <T extends CommunitiesRepository> List<Community>
+	// createAndStoreSomeCommunities(T repository,
+	// int max) {
+	//
+	// final List<Community> communities = new ArrayList<>();
+	// final Semaphore semaphore = new Semaphore(0);
+	// createNextCommunity(repository, communities, max, semaphore);
+	//
+	// try {
+	// semaphore.acquire(max);
+	// } catch (final InterruptedException ignored) {
+	// }
+	//
+	// return communities;
+	// }
+
+	// /**
+	// * Create an store a community.
+	// *
+	// * @param repository to use.
+	// * @param communities that has been created.
+	// * @param tries number maximum of times to create a community.
+	// * @param semaphore to inform when the community is created.
+	// */
+	// private static <T extends CommunitiesRepository> void createNextCommunity(T
+	// repository, List<Community> communities,
+	// int tries, Semaphore semaphore) {
+	//
+	// final Community community = new
+	// CommunityTest().createModelExample(communities.size());
+	// CommunitiesRepository.createProxy(vertx).storeCommunity(community, stored ->
+	// {
+	// if (!stored.failed()) {
+	//
+	// communities.add(stored.result());
+	//
+	// }
+	// if (tries > 1) {
+	// createNextCommunity(repository, communities, tries - 1, semaphore);
+	// }
+	// semaphore.release();
+	// });
+	//
+	// }
+	//
+	// /**
+	// * Verify that can find all the communities.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindAllCommunities(Vertx vertx, VertxTestContext
+	// testContext) {
+	//
+	// removeAllCommunities(pool);
+	// final List<Community> communities = createAndStoreSomeCommunities(repository,
+	// 23);
+	//
+	// final String name = null;
+	// final String description = null;
+	// final List<String> keywords = null;
+	// final String avatar = null;
+	// final Long sinceFrom = null;
+	// final Long sinceTo = null;
+	// final int offset = 0;
+	// final int limit = 100;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(offset);
+	// assertThat(foundPage.total).isEqualTo(23);
+	// assertThat(foundPage.communities).isEqualTo(communities);
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Verify that can find some communities on a range.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindCommunitiesInARange(Vertx vertx, VertxTestContext
+	// testContext) {
+	//
+	// removeAllCommunities(pool);
+	// final List<Community> communities = createAndStoreSomeCommunities(repository,
+	// 23);
+	//
+	// final String name = null;
+	// final String description = null;
+	// final List<String> keywords = null;
+	// final String avatar = null;
+	// final Long sinceFrom = null;
+	// final Long sinceTo = null;
+	// final int offset = 5;
+	// final int limit = 10;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(offset);
+	// assertThat(foundPage.total).isEqualTo(23);
+	// assertThat(foundPage.communities).isEqualTo(communities.subList(5, 15));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Verify that can find some communities with a specific name.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindCommunitiesWithAName(Vertx vertx, VertxTestContext
+	// testContext) {
+	//
+	// removeAllCommunities(pool);
+	// final List<Community> communities = createAndStoreSomeCommunities(repository,
+	// 23);
+	//
+	// final String name = ".+1\\d";
+	// final String description = null;
+	// final List<String> keywords = null;
+	// final String avatar = null;
+	// final Long sinceFrom = null;
+	// final Long sinceTo = null;
+	// final int offset = 0;
+	// final int limit = 100;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(0);
+	// assertThat(foundPage.total).isEqualTo(10);
+	// assertThat(foundPage.communities).isEqualTo(communities.subList(10, 20));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Verify that can find some communities with a specific description.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindCommunitiesWithADescription(Vertx vertx,
+	// VertxTestContext testContext) {
+	//
+	// removeAllCommunities(pool);
+	// final List<Community> communities = createAndStoreSomeCommunities(repository,
+	// 23);
+	//
+	// final String name = null;
+	// final String description = ".+2\\d";
+	// final List<String> keywords = null;
+	// final String avatar = null;
+	// final Long sinceFrom = null;
+	// final Long sinceTo = null;
+	// final int offset = 0;
+	// final int limit = 100;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(0);
+	// assertThat(foundPage.total).isEqualTo(3);
+	// assertThat(foundPage.communities).isEqualTo(communities.subList(20, 23));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Verify that can find some communities with a specific keywords.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindCommunitiesWithKeywords(Vertx vertx, VertxTestContext
+	// testContext) {
+	//
+	// removeAllCommunities(pool);
+	// final List<Community> communities = createAndStoreSomeCommunities(repository,
+	// 23);
+	//
+	// final String name = null;
+	// final String description = null;
+	// final List<String> keywords = new ArrayList<>();
+	// keywords.add("keyword 19");
+	// keywords.add("keyword 21");
+	// final String avatar = null;
+	// final Long sinceFrom = null;
+	// final Long sinceTo = null;
+	// final int offset = 0;
+	// final int limit = 100;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(0);
+	// assertThat(foundPage.total).isEqualTo(2);
+	// assertThat(foundPage.communities).isEqualTo(communities.subList(20, 22));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Verify that can find some communities with a one keyword.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindCommunitiesWithKeyword(Vertx vertx, VertxTestContext
+	// testContext) {
+	//
+	// removeAllCommunities(pool);
+	// final List<Community> communities = createAndStoreSomeCommunities(repository,
+	// 23);
+	//
+	// final String name = null;
+	// final String description = null;
+	// final List<String> keywords = new ArrayList<>();
+	// keywords.add("keyword 19");
+	// final String avatar = null;
+	// final Long sinceFrom = null;
+	// final Long sinceTo = null;
+	// final int offset = 0;
+	// final int limit = 100;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(0);
+	// assertThat(foundPage.total).isEqualTo(4);
+	// assertThat(foundPage.communities).isEqualTo(communities.subList(18, 22));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Verify that can find some communities with a specific avatar.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindCommunitiesWithAnAvatar(Vertx vertx, VertxTestContext
+	// testContext) {
+	//
+	// removeAllCommunities(pool);
+	// final List<Community> communities = createAndStoreSomeCommunities(repository,
+	// 23);
+	//
+	// final String name = null;
+	// final String description = null;
+	// final List<String> keywords = null;
+	// final String avatar = ".+r\\d\\.png";
+	// final Long sinceFrom = null;
+	// final Long sinceTo = null;
+	// final int offset = 0;
+	// final int limit = 100;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(0);
+	// assertThat(foundPage.total).isEqualTo(10);
+	// assertThat(foundPage.communities).isEqualTo(communities.subList(0, 10));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Create an aggregate some communities with a fake
+	// * {@link Community#_creationTs}.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param max number of communities to try to create.
+	// *
+	// * @return the aggregated communities.
+	// */
+	// public static List<Community>
+	// createAndStoreSomeCommunitiesWithFake_creationTs(int max) {
+	//
+	// final List<Community> communities = new ArrayList<>();
+	// final Semaphore semaphore = new Semaphore(0);
+	// createNextCommunityWithFake_creationTs(pool, communities, max, semaphore);
+	//
+	// try {
+	// semaphore.acquire(max);
+	// } catch (final InterruptedException ignored) {
+	// }
+	//
+	// return communities;
+	//
+	// }
+	//
+	// /**
+	// * Create an store a community with a fake since time.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param communities that has been created.
+	// * @param tries number maximum of times to create a community.
+	// * @param semaphore to inform when the community is created.
+	// */
+	// private static void createNextCommunityWithFake_creationTs(List<Community>
+	// communities, int tries,
+	// Semaphore semaphore) {
+	//
+	// final int index = communities.size();
+	// final Community community = new CommunityTest().createModelExample(index);
+	// community._creationTs = index * 100000;
+	// pool.save(CommunitiesRepositoryImpl.COMMUNITIES_COLLECTION,
+	// community.toJsonObject(), stored -> {
+	// if (!stored.failed()) {
+	//
+	// community.id = stored.result();
+	// communities.add(community);
+	//
+	// }
+	// if (tries > 1) {
+	// createNextCommunityWithFake_creationTs(pool, communities, tries - 1,
+	// semaphore);
+	// }
+	// semaphore.release();
+	// });
+	//
+	// }
+	//
+	// /**
+	// * Verify that can find some communities since a from time.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindCommunitiesSinceAFromTime(Vertx vertx, VertxTestContext
+	// testContext) {
+	//
+	// removeAllCommunities(pool);
+	// final List<Community> communities =
+	// createAndStoreSomeCommunitiesWithFake_creationTs(pool, 23);
+	//
+	// final String name = null;
+	// final String description = null;
+	// final List<String> keywords = null;
+	// final String avatar = null;
+	// final Long sinceFrom = 1500000l;
+	// final Long sinceTo = null;
+	// final int offset = 0;
+	// final int limit = 100;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(0);
+	// assertThat(foundPage.total).isEqualTo(8);
+	// assertThat(foundPage.communities).isEqualTo(communities.subList(15, 23));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Verify that can find some communities since a to time.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindCommunitiesSinceAToTime(Vertx vertx, VertxTestContext
+	// testContext) {
+	//
+	// removeAllCommunities(pool);
+	// final List<Community> communities =
+	// createAndStoreSomeCommunitiesWithFake_creationTs(pool, 23);
+	//
+	// final String name = null;
+	// final String description = null;
+	// final List<String> keywords = null;
+	// final String avatar = null;
+	// final Long sinceFrom = null;
+	// final Long sinceTo = 1500000l;
+	// final int offset = 0;
+	// final int limit = 100;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(0);
+	// assertThat(foundPage.total).isEqualTo(16);
+	// assertThat(foundPage.communities).isEqualTo(communities.subList(0, 16));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Verify that can find some communities since time in a range.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindCommunities_creationTsInARange(Vertx vertx,
+	// VertxTestContext testContext) {
+	//
+	// removeAllCommunities(pool);
+	// final List<Community> communities =
+	// createAndStoreSomeCommunitiesWithFake_creationTs(pool, 23);
+	//
+	// final String name = null;
+	// final String description = null;
+	// final List<String> keywords = null;
+	// final String avatar = null;
+	// final Long sinceFrom = 1200000l;
+	// final Long sinceTo = 1800000l;
+	// final int offset = 0;
+	// final int limit = 100;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(0);
+	// assertThat(foundPage.total).isEqualTo(7);
+	// assertThat(foundPage.communities).isEqualTo(communities.subList(12, 19));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Verify that can find some communities.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindCommunities(Vertx vertx, VertxTestContext testContext)
+	// {
+	//
+	// removeAllCommunities(pool);
+	// final List<Community> communities =
+	// createAndStoreSomeCommunitiesWithFake_creationTs(pool, 23);
+	//
+	// final String name = ".+ 1\\d";
+	// final String description = "3|4|5|6";
+	// final List<String> keywords = new ArrayList<>();
+	// keywords.add("\\d{2}");
+	// final String avatar = ".*png";
+	// final Long sinceFrom = 1200000l;
+	// final Long sinceTo = 1800000l;
+	// final int offset = 1;
+	// final int limit = 2;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(1);
+	// assertThat(foundPage.total).isEqualTo(4);
+	// assertThat(foundPage.communities).isEqualTo(communities.subList(14, 16));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Verify that can find an empty community page if any community match.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindEmptyCommunitiesPageIfAnyMatch(Vertx vertx,
+	// VertxTestContext testContext) {
+	//
+	// removeAllCommunities(pool);
+	// final String name = null;
+	// final String description = null;
+	// final List<String> keywords = new ArrayList<>();
+	// final String avatar = null;
+	// final Long sinceFrom = null;
+	// final Long sinceTo = null;
+	// final int offset = 0;
+	// final int limit = 100;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(0);
+	// assertThat(foundPage.total).isEqualTo(0);
+	// assertThat(foundPage.communities).isNull();
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+
+	// /**
+	// * Verify that can find an empty community page if any community match.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunitiesPageObject(String, String,
+	// List,
+	// * String, Long, Long, int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// @Execution(ExecutionMode.SAME_THREAD)
+	// public void shouldFindEmptyCommunitiesPageIfOffsetIsOutOfRange(Vertx vertx,
+	// VertxTestContext testContext) {
+	//
+	// removeAllCommunities(pool);
+	// createAndStoreSomeCommunities(repository, 2);
+	// final String name = null;
+	// final String description = null;
+	// final List<String> keywords = new ArrayList<>();
+	// final String avatar = null;
+	// final Long sinceFrom = null;
+	// final Long sinceTo = null;
+	// final int offset = 3;
+	// final int limit = 100;
+	// CommunitiesRepository.createProxy(vertx).searchCommunitiesPageObject(name,
+	// description, keywords, avatar, sinceFrom,
+	// sinceTo, offset, limit, testContext.succeeding(found -> testContext.verify(()
+	// -> {
+	//
+	// final CommunitiesPage foundPage = Model.fromJsonObject(found,
+	// CommunitiesPage.class);
+	// assertThat(foundPage.offset).isEqualTo(3);
+	// assertThat(foundPage.total).isEqualTo(2);
+	// assertThat(foundPage.communities).isNull();
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
 
 	/**
 	 * Verify that can not found a community member.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityMember(String, String,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotFoundCommunityMember(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldNotFoundCommunityMember(Vertx vertx, VertxTestContext testContext) {
 
-		repository.searchCommunityMember("undefined community identifier", "undefined user id",
-				testContext.failing(failed -> {
+		CommunitiesRepository.createProxy(vertx).searchCommunityMember("undefined community identifier",
+				"undefined user id", testContext.failing(failed -> {
 					testContext.completeNow();
 				}));
 
@@ -1043,57 +1117,52 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can found a community member.
 	 *
-	 *
-	 * @param profileManager service to manage profile managers.
-	 * @param repository     to test.
-	 * @param testContext    context that executes the test.
+	 * @param vertx       event bus to use.
+	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityMember(String, String,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunityMember(WeNetProfileManagerService profileManager, CommunitiesRepository repository,
-			VertxTestContext testContext) {
+	public void shouldFoundCommunityMember(Vertx vertx, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final CommunityMember member = new CommunityMember();
 		member.userId = UUID.randomUUID().toString();
 		final long now = TimeManager.now();
-		repository.storeCommunityMember(communityId, member, testContext.succeeding(storedMember -> {
-			repository.searchCommunityMember(communityId, member.userId,
-					testContext.succeeding(foundCommunity -> testContext.verify(() -> {
-						final CommunityMember expectedMember = new CommunityMember();
-						expectedMember.userId = member.userId;
-						expectedMember.joinTime = foundCommunity.joinTime;
-						assertThat(foundCommunity).isEqualTo(expectedMember);
-						assertThat(foundCommunity.joinTime).isGreaterThanOrEqualTo(now);
-						testContext.completeNow();
-					})));
-		}));
+		CommunitiesRepository.createProxy(vertx).storeCommunityMember(communityId, member,
+				testContext.succeeding(storedMember -> {
+					CommunitiesRepository.createProxy(vertx).searchCommunityMember(communityId, member.userId,
+							testContext.succeeding(foundCommunity -> testContext.verify(() -> {
+								final CommunityMember expectedMember = new CommunityMember();
+								expectedMember.userId = member.userId;
+								expectedMember.joinTime = foundCommunity.joinTime;
+								assertThat(foundCommunity).isEqualTo(expectedMember);
+								assertThat(foundCommunity.joinTime).isGreaterThanOrEqualTo(now);
+								testContext.completeNow();
+							})));
+				}));
 
 	}
 
 	/**
 	 * Verify that can found a community member object.
 	 *
-	 *
-	 * @param profileManager service to manage profile managers.
-	 * @param repository     to test.
-	 * @param testContext    context that executes the test.
+	 * @param vertx       event bus to use.
+	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityMemberObject(String, String,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunityMemberObject(WeNetProfileManagerService profileManager,
-			CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldFoundCommunityMemberObject(Vertx vertx, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final String userId = UUID.randomUUID().toString();
 		final long now = TimeManager.now();
-		repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", userId),
-				testContext.succeeding(storedMember -> {
-					repository.searchCommunityMemberObject(communityId, userId,
+		CommunitiesRepository.createProxy(vertx).storeCommunityMemberObject(communityId,
+				new JsonObject().put("userId", userId), testContext.succeeding(storedMember -> {
+					CommunitiesRepository.createProxy(vertx).searchCommunityMemberObject(communityId, userId,
 							testContext.succeeding(foundCommunity -> testContext.verify(() -> {
 								assertThat(foundCommunity).isNotNull();
 								assertThat(foundCommunity.getString("userId")).isEqualTo(userId);
@@ -1107,15 +1176,14 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can not store a community member that can not be an object.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#storeCommunityMember(String,CommunityMember,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotStoreACommunityMemberThatCanNotBeAnObject(CommunitiesRepository repository,
-			VertxTestContext testContext) {
+	public void shouldNotStoreACommunityMemberThatCanNotBeAnObject(Vertx vertx, VertxTestContext testContext) {
 
 		final CommunityMember communityMember = new CommunityMember() {
 
@@ -1128,27 +1196,28 @@ public class CommunitiesRepositoryIT {
 				return null;
 			}
 		};
-		repository.storeCommunityMember("communityId", communityMember, testContext.failing(failed -> {
-			testContext.completeNow();
-		}));
+		CommunitiesRepository.createProxy(vertx).storeCommunityMember("communityId", communityMember,
+				testContext.failing(failed -> {
+					testContext.completeNow();
+				}));
 
 	}
 
 	/**
 	 * Verify that can store a community member.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#storeCommunityMember(String, CommunityMember,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldStoreCommunityMember(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldStoreCommunityMember(Vertx vertx, VertxTestContext testContext) {
 
 		final long now = TimeManager.now();
 		final CommunityMember communityMember = new CommunityMember();
-		repository.storeCommunityMember("communityId", communityMember,
+		CommunitiesRepository.createProxy(vertx).storeCommunityMember("communityId", communityMember,
 				testContext.succeeding(storedCommunityMember -> testContext.verify(() -> {
 
 					assertThat(storedCommunityMember).isNotNull();
@@ -1161,17 +1230,17 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can store a community member object.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#storeCommunityMemberObject(String,JsonObject,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldStoreCommunityMemberObject(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldStoreCommunityMemberObject(Vertx vertx, VertxTestContext testContext) {
 
 		final long now = TimeManager.now();
-		repository.storeCommunityMemberObject("communityId", new JsonObject(),
+		CommunitiesRepository.createProxy(vertx).storeCommunityMemberObject("communityId", new JsonObject(),
 				testContext.succeeding(storedCommunityMember -> testContext.verify(() -> {
 
 					assertThat(storedCommunityMember).isNotNull();
@@ -1184,55 +1253,55 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can not update a community member if it is not defined.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotUpdateUndefinedCommunityMember(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldNotUpdateUndefinedCommunityMember(Vertx vertx, VertxTestContext testContext) {
 
 		final CommunityMember communityMember = new CommunityMember();
 		communityMember.userId = "undefined community member identifier";
-		repository.updateCommunityMember("communityId", communityMember, testContext.failing(failed -> {
-			testContext.completeNow();
-		}));
+		CommunitiesRepository.createProxy(vertx).updateCommunityMember("communityId", communityMember,
+				testContext.failing(failed -> {
+					testContext.completeNow();
+				}));
 
 	}
 
 	/**
 	 * Verify that can not update a community member if it is not defined.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#updateCommunityMemberObject(String,JsonObject,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotUpdateUndefinedCommunityMemberObject(CommunitiesRepository repository,
-			VertxTestContext testContext) {
+	public void shouldNotUpdateUndefinedCommunityMemberObject(Vertx vertx, VertxTestContext testContext) {
 
 		final JsonObject communityMember = new JsonObject().put("userId", "undefined community member identifier");
-		repository.updateCommunityMemberObject("communityId", communityMember, testContext.failing(failed -> {
-			testContext.completeNow();
-		}));
+		CommunitiesRepository.createProxy(vertx).updateCommunityMemberObject("communityId", communityMember,
+				testContext.failing(failed -> {
+					testContext.completeNow();
+				}));
 
 	}
 
 	/**
 	 * Verify that can not update a community member if it is not defined.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#updateCommunityMember(String,CommunityMember,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotUpdateACommunityMemberThatCanNotBeAnObject(CommunitiesRepository repository,
-			VertxTestContext testContext) {
+	public void shouldNotUpdateACommunityMemberThatCanNotBeAnObject(Vertx vertx, VertxTestContext testContext) {
 
 		final CommunityMember communityMember = new CommunityMember() {
 
@@ -1246,85 +1315,91 @@ public class CommunitiesRepositoryIT {
 			}
 		};
 		communityMember.userId = "undefined community member identifier";
-		repository.updateCommunityMember("communityId", communityMember, testContext.failing(failed -> {
-			testContext.completeNow();
-		}));
+		CommunitiesRepository.createProxy(vertx).updateCommunityMember("communityId", communityMember,
+				testContext.failing(failed -> {
+					testContext.completeNow();
+				}));
 
 	}
 
 	/**
 	 * Verify that update a community member.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#storeCommunityMember(String,CommunityMember,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldUpdateACommunityMember(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldUpdateACommunityMember(Vertx vertx, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final CommunityMember communityMember = new CommunityMember();
 		communityMember.userId = UUID.randomUUID().toString();
-		repository.storeCommunityMember(communityId, communityMember, testContext.succeeding(stored -> {
+		CommunitiesRepository.createProxy(vertx).storeCommunityMember(communityId, communityMember,
+				testContext.succeeding(stored -> {
 
-			final CommunityMember member = new CommunityMember();
-			member.userId = communityMember.userId;
-			repository.updateCommunityMember(communityId, member, testContext.succeeding(update -> {
-				testContext.completeNow();
-			}));
+					final CommunityMember member = new CommunityMember();
+					member.userId = communityMember.userId;
+					CommunitiesRepository.createProxy(vertx).updateCommunityMember(communityId, member,
+							testContext.succeeding(update -> {
+								testContext.completeNow();
+							}));
 
-		}));
+				}));
 
 	}
 
 	/**
 	 * Verify that delete a community member.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#deleteCommunityMember(String, String,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldDeleteCommunityMember(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldDeleteCommunityMember(Vertx vertx, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final CommunityMember communityMember = new CommunityMember();
 		final String userId = UUID.randomUUID().toString();
 		communityMember.userId = userId;
-		repository.storeCommunityMember(communityId, communityMember, testContext.succeeding(stored -> {
+		CommunitiesRepository.createProxy(vertx).storeCommunityMember(communityId, communityMember,
+				testContext.succeeding(stored -> {
 
-			repository.deleteCommunityMember(communityId, userId, testContext.succeeding(delete -> {
+					CommunitiesRepository.createProxy(vertx).deleteCommunityMember(communityId, userId,
+							testContext.succeeding(delete -> {
 
-				repository.searchCommunityMember(communityId, userId, testContext.failing(search -> {
-					testContext.completeNow();
+								CommunitiesRepository.createProxy(vertx).searchCommunityMember(communityId, userId,
+										testContext.failing(search -> {
+											testContext.completeNow();
+										}));
+
+							}));
 				}));
-
-			}));
-		}));
 
 	}
 
 	/**
 	 * Verify that found an empty community member page.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityMembersPageObject(String, Long,
 	 *      Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundEmptyCommunityMemberPage(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldFoundEmptyCommunityMemberPage(Vertx vertx, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final CommunityMember communityMember = new CommunityMember();
 		final String userId = UUID.randomUUID().toString();
 		communityMember.userId = userId;
-		repository.searchCommunityMembersPageObject(communityId, null, null, 0, 100,
+		CommunitiesRepository.createProxy(vertx).searchCommunityMembersPageObject(communityId, null, null, 0, 100,
 				testContext.succeeding(page -> testContext.verify(() -> {
 
 					assertThat(page.getLong("offset")).isEqualTo(0L);
@@ -1338,24 +1413,24 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that found some community user members.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityMembersPageObject(String, Long,
 	 *      Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunityMemberPage(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldFoundCommunityMemberPage(Vertx vertx, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", UUID.randomUUID().toString()),
-				testContext.succeeding(stored1 -> {
+		CommunitiesRepository.createProxy(vertx).storeCommunityMemberObject(communityId,
+				new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored1 -> {
 
-					repository.storeCommunityMemberObject(communityId,
+					CommunitiesRepository.createProxy(vertx).storeCommunityMemberObject(communityId,
 							new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored2 -> {
 
-								repository.searchCommunityMembersPageObject(communityId, null, null, 0, 100,
-										testContext.succeeding(page -> testContext.verify(() -> {
+								CommunitiesRepository.createProxy(vertx).searchCommunityMembersPageObject(communityId, null, null, 0,
+										100, testContext.succeeding(page -> testContext.verify(() -> {
 
 											assertThat(page.getLong("offset")).isEqualTo(0L);
 											assertThat(page.getLong("total")).isEqualTo(2L);
@@ -1374,26 +1449,25 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that found some community user members with a join from.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityMembersPageObject(String, Long,
 	 *      Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunityMemberPageWithJoinFrom(CommunitiesRepository repository,
-			VertxTestContext testContext) {
+	public void shouldFoundCommunityMemberPageWithJoinFrom(Vertx vertx, VertxTestContext testContext) {
 
 		final long now = TimeManager.now();
 		final String communityId = UUID.randomUUID().toString();
-		repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", UUID.randomUUID().toString()),
-				testContext.succeeding(stored1 -> {
+		CommunitiesRepository.createProxy(vertx).storeCommunityMemberObject(communityId,
+				new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored1 -> {
 
-					repository.storeCommunityMemberObject(communityId,
+					CommunitiesRepository.createProxy(vertx).storeCommunityMemberObject(communityId,
 							new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored2 -> {
 
-								repository.searchCommunityMembersPageObject(communityId, now, null, 0, 100,
-										testContext.succeeding(page -> testContext.verify(() -> {
+								CommunitiesRepository.createProxy(vertx).searchCommunityMembersPageObject(communityId, now, null, 0,
+										100, testContext.succeeding(page -> testContext.verify(() -> {
 
 											assertThat(page.getLong("offset")).isEqualTo(0L);
 											assertThat(page.getLong("total")).isEqualTo(2L);
@@ -1412,25 +1486,25 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that found some community user members with a join to.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityMembersPageObject(String, Long,
 	 *      Long, int, int, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunityMemberPageWithJoinTo(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldFoundCommunityMemberPageWithJoinTo(Vertx vertx, VertxTestContext testContext) {
 
 		final long now = TimeManager.now();
 		final String communityId = UUID.randomUUID().toString();
-		repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", UUID.randomUUID().toString()),
-				testContext.succeeding(stored1 -> {
+		CommunitiesRepository.createProxy(vertx).storeCommunityMemberObject(communityId,
+				new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored1 -> {
 
-					repository.storeCommunityMemberObject(communityId,
+					CommunitiesRepository.createProxy(vertx).storeCommunityMemberObject(communityId,
 							new JsonObject().put("userId", UUID.randomUUID().toString()), testContext.succeeding(stored2 -> {
 
-								repository.searchCommunityMembersPageObject(communityId, null, now + 1, 0, 100,
-										testContext.succeeding(page -> testContext.verify(() -> {
+								CommunitiesRepository.createProxy(vertx).searchCommunityMembersPageObject(communityId, null, now + 1, 0,
+										100, testContext.succeeding(page -> testContext.verify(() -> {
 
 											assertThat(page.getLong("offset")).isEqualTo(0L);
 											assertThat(page.getLong("total")).isEqualTo(2L);
@@ -1449,16 +1523,16 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can not found a community norm.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityNorm(String, String,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotFoundCommunityNorm(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldNotFoundCommunityNorm(Vertx vertx, VertxTestContext testContext) {
 
-		repository.searchCommunityNorm("undefined community identifier", "undefined norm id",
+		CommunitiesRepository.createProxy(vertx).searchCommunityNorm("undefined community identifier", "undefined norm id",
 				testContext.failing(failed -> {
 					testContext.completeNow();
 				}));
@@ -1468,78 +1542,73 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can found a community norm.
 	 *
-	 *
-	 * @param profileManager service to manage profile managers.
-	 * @param repository     to test.
-	 * @param testContext    context that executes the test.
+	 * @param vertx       event bus to use.
+	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityNorm(String, String,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunityNorm(WeNetProfileManagerService profileManager, CommunitiesRepository repository,
-			VertxTestContext testContext) {
+	public void shouldFoundCommunityNorm(Vertx vertx, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final CommunityNorm norm = new CommunityNorm();
-		norm._id = UUID.randomUUID().toString();
+		norm.id = UUID.randomUUID().toString();
 		final long now = TimeManager.now();
-		repository.storeCommunityNorm(communityId, norm, testContext.succeeding(storedNorm -> {
-			repository.searchCommunityNorm(communityId, norm._id,
-					testContext.succeeding(foundCommunity -> testContext.verify(() -> {
-						final CommunityNorm expectedNorm = new CommunityNorm();
-						expectedNorm._id = norm._id;
-						expectedNorm.sinceTime = foundCommunity.sinceTime;
-						assertThat(foundCommunity).isEqualTo(expectedNorm);
-						assertThat(foundCommunity.sinceTime).isGreaterThanOrEqualTo(now);
-						testContext.completeNow();
-					})));
-		}));
+		CommunitiesRepository.createProxy(vertx).storeCommunityNorm(communityId, norm,
+				testContext.succeeding(storedNorm -> {
+					CommunitiesRepository.createProxy(vertx).searchCommunityNorm(communityId, norm.id,
+							testContext.succeeding(foundCommunity -> testContext.verify(() -> {
+								final CommunityNorm expectedNorm = new CommunityNorm();
+								expectedNorm.id = norm.id;
+								expectedNorm._creationTs = foundCommunity._creationTs;
+								assertThat(foundCommunity).isEqualTo(expectedNorm);
+								assertThat(foundCommunity._creationTs).isGreaterThanOrEqualTo(now);
+								testContext.completeNow();
+							})));
+				}));
 
 	}
 
 	/**
 	 * Verify that can found a community norm object.
 	 *
-	 *
-	 * @param profileManager service to manage profile managers.
-	 * @param repository     to test.
-	 * @param testContext    context that executes the test.
+	 * @param vertx       event bus to use.
+	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityNormObject(String, String,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunityNormObject(WeNetProfileManagerService profileManager,
-			CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldFoundCommunityNormObject(Vertx vertx, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final long now = TimeManager.now();
-		repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(storedNorm -> {
-			final String normId = storedNorm.getString("_id");
-			repository.searchCommunityNormObject(communityId, normId,
-					testContext.succeeding(foundCommunity -> testContext.verify(() -> {
-						assertThat(foundCommunity).isNotNull();
-						assertThat(foundCommunity.getString("_id")).isEqualTo(normId);
-						assertThat(foundCommunity.getLong("sinceTime")).isGreaterThanOrEqualTo(now);
-						testContext.completeNow();
-					})));
-		}));
+		CommunitiesRepository.createProxy(vertx).storeCommunityNormObject(communityId, new JsonObject(),
+				testContext.succeeding(storedNorm -> {
+					final String normId = storedNorm.getString("id");
+					CommunitiesRepository.createProxy(vertx).searchCommunityNormObject(communityId, normId,
+							testContext.succeeding(foundCommunity -> testContext.verify(() -> {
+								assertThat(foundCommunity).isNotNull();
+								assertThat(foundCommunity.getString("id")).isEqualTo(normId);
+								assertThat(foundCommunity.getLong("_creationTs")).isGreaterThanOrEqualTo(now);
+								testContext.completeNow();
+							})));
+				}));
 
 	}
 
 	/**
 	 * Verify that can not store a community norm that can not be an object.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#storeCommunityNorm(String,CommunityNorm,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotStoreACommunityNormThatCanNotBeAnObject(CommunitiesRepository repository,
-			VertxTestContext testContext) {
+	public void shouldNotStoreACommunityNormThatCanNotBeAnObject(Vertx vertx, VertxTestContext testContext) {
 
 		final CommunityNorm communityNorm = new CommunityNorm() {
 
@@ -1552,31 +1621,32 @@ public class CommunitiesRepositoryIT {
 				return null;
 			}
 		};
-		repository.storeCommunityNorm("communityId", communityNorm, testContext.failing(failed -> {
-			testContext.completeNow();
-		}));
+		CommunitiesRepository.createProxy(vertx).storeCommunityNorm("communityId", communityNorm,
+				testContext.failing(failed -> {
+					testContext.completeNow();
+				}));
 
 	}
 
 	/**
 	 * Verify that can store a community norm.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#storeCommunityNorm(String, CommunityNorm,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldStoreCommunityNorm(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldStoreCommunityNorm(Vertx vertx, VertxTestContext testContext) {
 
 		final long now = TimeManager.now();
 		final CommunityNorm communityNorm = new CommunityNorm();
-		repository.storeCommunityNorm("communityId", communityNorm,
+		CommunitiesRepository.createProxy(vertx).storeCommunityNorm("communityId", communityNorm,
 				testContext.succeeding(storedCommunityNorm -> testContext.verify(() -> {
 
 					assertThat(storedCommunityNorm).isNotNull();
-					assertThat(storedCommunityNorm.sinceTime).isGreaterThanOrEqualTo(now);
+					assertThat(storedCommunityNorm._creationTs).isGreaterThanOrEqualTo(now);
 					testContext.completeNow();
 				})));
 
@@ -1585,21 +1655,21 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that can store a community norm object.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#storeCommunityNormObject(String,JsonObject,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldStoreCommunityNormObject(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldStoreCommunityNormObject(Vertx vertx, VertxTestContext testContext) {
 
 		final long now = TimeManager.now();
-		repository.storeCommunityNormObject("communityId", new JsonObject(),
+		CommunitiesRepository.createProxy(vertx).storeCommunityNormObject("communityId", new JsonObject(),
 				testContext.succeeding(storedCommunityNorm -> testContext.verify(() -> {
 
 					assertThat(storedCommunityNorm).isNotNull();
-					assertThat(storedCommunityNorm.getLong("sinceTime", 0l)).isNotEqualTo(0).isGreaterThanOrEqualTo(now);
+					assertThat(storedCommunityNorm.getLong("_creationTs", 0l)).isNotEqualTo(0).isGreaterThanOrEqualTo(now);
 					testContext.completeNow();
 				})));
 
@@ -1608,49 +1678,52 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that delete a community norm.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#deleteCommunityNorm(String, String,
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldDeleteCommunityNorm(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldDeleteCommunityNorm(Vertx vertx, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final CommunityNorm communityNorm = new CommunityNorm();
 		final String normId = UUID.randomUUID().toString();
-		communityNorm._id = normId;
-		repository.storeCommunityNorm(communityId, communityNorm, testContext.succeeding(stored -> {
+		communityNorm.id = normId;
+		CommunitiesRepository.createProxy(vertx).storeCommunityNorm(communityId, communityNorm,
+				testContext.succeeding(stored -> {
 
-			repository.deleteCommunityNorm(communityId, normId, testContext.succeeding(delete -> {
+					CommunitiesRepository.createProxy(vertx).deleteCommunityNorm(communityId, normId,
+							testContext.succeeding(delete -> {
 
-				repository.searchCommunityNorm(communityId, normId, testContext.failing(search -> {
-					testContext.completeNow();
+								CommunitiesRepository.createProxy(vertx).searchCommunityNorm(communityId, normId,
+										testContext.failing(search -> {
+											testContext.completeNow();
+										}));
+
+							}));
 				}));
-
-			}));
-		}));
 
 	}
 
 	/**
 	 * Verify that found an empty community norm page.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
 	 *      int, int, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundEmptyCommunityNormPage(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldFoundEmptyCommunityNormPage(Vertx vertx, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final CommunityNorm communityNorm = new CommunityNorm();
 		final String normId = UUID.randomUUID().toString();
-		communityNorm._id = normId;
-		repository.searchCommunityNormsPageObject(communityId, null, null, 0, 100,
+		communityNorm.id = normId;
+		CommunitiesRepository.createProxy(vertx).searchCommunityNormsPageObject(communityId, null, null, 0, 100,
 				testContext.succeeding(page -> testContext.verify(() -> {
 
 					assertThat(page.getLong("offset")).isEqualTo(0L);
@@ -1664,298 +1737,326 @@ public class CommunitiesRepositoryIT {
 	/**
 	 * Verify that found some community norm norms.
 	 *
-	 * @param repository  to test.
+	 * @param vertx       event bus to use.
 	 * @param testContext context that executes the test.
 	 *
 	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
 	 *      int, int, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunityNormPage(CommunitiesRepository repository, VertxTestContext testContext) {
+	public void shouldFoundCommunityNormPage(Vertx vertx, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
-		repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored1 -> {
+		CommunitiesRepository.createProxy(vertx).storeCommunityNormObject(communityId, new JsonObject(),
+				testContext.succeeding(stored1 -> {
 
-			repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored2 -> {
+					CommunitiesRepository.createProxy(vertx).storeCommunityNormObject(communityId, new JsonObject(),
+							testContext.succeeding(stored2 -> {
 
-				repository.searchCommunityNormsPageObject(communityId, null, null, 0, 100,
-						testContext.succeeding(page -> testContext.verify(() -> {
+								CommunitiesRepository.createProxy(vertx).searchCommunityNormsPageObject(communityId, null, null, 0, 100,
+										testContext.succeeding(page -> testContext.verify(() -> {
 
-							assertThat(page.getLong("offset")).isEqualTo(0L);
-							assertThat(page.getLong("total")).isEqualTo(2L);
-							final JsonArray norms = page.getJsonArray("norms", new JsonArray());
-							assertThat(norms.size()).isEqualTo(2);
-							assertThat(norms.getJsonObject(0).getString("_id")).isEqualTo(stored1.getString("_id"));
-							assertThat(norms.getJsonObject(1).getString("_id")).isEqualTo(stored2.getString("_id"));
-							testContext.completeNow();
-						})));
+											assertThat(page.getLong("offset")).isEqualTo(0L);
+											assertThat(page.getLong("total")).isEqualTo(2L);
+											final JsonArray norms = page.getJsonArray("norms", new JsonArray());
+											assertThat(norms.size()).isEqualTo(2);
+											assertThat(norms.getJsonObject(0).getString("id")).isEqualTo(stored1.getString("id"));
+											assertThat(norms.getJsonObject(1).getString("id")).isEqualTo(stored2.getString("id"));
+											testContext.completeNow();
+										})));
 
-			}));
-		}));
-
-	}
-
-	/**
-	 * Create some community members
-	 *
-	 * @param communityId identifier of the community to add the members.
-	 * @param pool        connection to the mongo database.
-	 * @param max         number of members to create.
-	 *
-	 * @return the community members with a fake join time.
-	 */
-	public static List<CommunityMember> createCommunityMembersWithFakeJoinTime(String communityId, MongoClient pool,
-			int max) {
-
-		final List<CommunityMember> members = new ArrayList<>();
-		final Semaphore semaphore = new Semaphore(0);
-
-		createNextMember(semaphore, members, communityId, pool, max);
-
-		try {
-			semaphore.acquire(max);
-		} catch (final InterruptedException ignored) {
-		}
-
-		return members;
+							}));
+				}));
 
 	}
 
-	/**
-	 * Create and store the next community member.
-	 *
-	 * @param semaphore   to inform when the member is created.
-	 * @param members     list to store the created member.
-	 * @param communityId identifier of the community to add the members.
-	 * @param pool        connection to the mongo database.
-	 * @param max         number of members to create.
-	 */
-	private static void createNextMember(Semaphore semaphore, List<CommunityMember> members, String communityId,
-			MongoClient pool, int max) {
-
-		final String userId = UUID.randomUUID().toString();
-		final long joinTime = members.size() * 100000;
-		pool.save(CommunitiesRepositoryImpl.COMMUNITY_MEMBERS_COLLECTION,
-				new JsonObject().put("communityId", communityId).put("userId", userId).put("joinTime", joinTime), save -> {
-
-					if (save.failed()) {
-
-						InternalLogger.log(Level.ERROR, save.cause());
-					}
-					final CommunityMember member = new CommunityMember();
-					member.userId = userId;
-					member.joinTime = joinTime;
-					members.add(member);
-					if (members.size() < max) {
-
-						createNextMember(semaphore, members, communityId, pool, max);
-					}
-					semaphore.release();
-				});
-
-	}
-
-	/**
-	 * Create an aggregate some communities with a fake {@link Community#sinceTime}.
-	 *
-	 * @param communityId identifier where the norm will be stored.
-	 * @param pool        that create the mongo connections.
-	 * @param max         number of communities to try to create.
-	 *
-	 * @return the aggregated communities.
-	 */
-	public static List<CommunityNorm> createAndStoreSomeCommunityNormsWithFakeSinceTime(String communityId,
-			MongoClient pool, int max) {
-
-		final List<CommunityNorm> communityNormss = new ArrayList<>();
-		final Semaphore semaphore = new Semaphore(0);
-		createNextCommunityNormWithFakeSinceTime(communityId, pool, communityNormss, max, semaphore);
-
-		try {
-			semaphore.acquire(max);
-		} catch (final InterruptedException ignored) {
-		}
-
-		return communityNormss;
-
-	}
-
-	/**
-	 * Create an store a community norm with a fake since time.
-	 *
-	 * @param communityId    identifier where the norm will be stored.
-	 * @param pool           that create the mongo connections.
-	 * @param communityNorms that has been created.
-	 * @param tries          number maximum of times to create a community norm.
-	 * @param semaphore      to inform when the community is created.
-	 */
-	private static void createNextCommunityNormWithFakeSinceTime(String communityId, MongoClient pool,
-			List<CommunityNorm> communityNorms, int tries, Semaphore semaphore) {
-
-		final int index = communityNorms.size();
-		final CommunityNorm communityNorm = new CommunityNormTest().createModelExample(index);
-		communityNorm.sinceTime = index * 100000;
-		pool.save(CommunitiesRepositoryImpl.COMMUNITY_NORMS_COLLECTION,
-				communityNorm.toJsonObject().put("communityId", communityId), stored -> {
-					if (!stored.failed()) {
-
-						communityNorm._id = stored.result();
-						communityNorms.add(communityNorm);
-
-					}
-					if (tries > 1) {
-						createNextCommunityNormWithFakeSinceTime(communityId, pool, communityNorms, tries - 1, semaphore);
-					}
-					semaphore.release();
-				});
-
-	}
-
-	/**
-	 * Verify that found some community norms with a since from.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
-	 *      int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	public void shouldFoundCommunityNormsPageWithSinceFrom(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityNorm> communityNorms = createAndStoreSomeCommunityNormsWithFakeSinceTime(communityId, pool, 23);
-		repository.searchCommunityNormsPageObject(communityId, 1500000l, null, 0, 100,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunityNormsPage foundPage = Model.fromJsonObject(found, CommunityNormsPage.class);
-					assertThat(foundPage.offset).isEqualTo(0);
-					assertThat(foundPage.total).isEqualTo(8);
-					assertThat(foundPage.norms).isEqualTo(communityNorms.subList(15, 23));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that found some community norms with a since to.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
-	 *      int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	public void shouldFoundCommunityNormsPageWithSinceTo(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityNorm> communityNorms = createAndStoreSomeCommunityNormsWithFakeSinceTime(communityId, pool, 23);
-		repository.searchCommunityNormsPageObject(communityId, null, 1500000l, 0, 100,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunityNormsPage foundPage = Model.fromJsonObject(found, CommunityNormsPage.class);
-					assertThat(foundPage.offset).isEqualTo(0);
-					assertThat(foundPage.total).isEqualTo(16);
-					assertThat(foundPage.norms).isEqualTo(communityNorms.subList(0, 16));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Verify that found some community norms with a since range.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param repository  to test.
-	 * @param testContext context that executes the test.
-	 *
-	 * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long, Long,
-	 *      int, int, io.vertx.core.Handler)
-	 */
-	@Test
-	public void shouldFoundCommunityNormsPageWithSinceRange(MongoClient pool, CommunitiesRepository repository,
-			VertxTestContext testContext) {
-
-		final String communityId = UUID.randomUUID().toString();
-		final List<CommunityNorm> communityNorms = createAndStoreSomeCommunityNormsWithFakeSinceTime(communityId, pool, 23);
-		repository.searchCommunityNormsPageObject(communityId, 1500000l, 2100000l, 2, 3,
-				testContext.succeeding(found -> testContext.verify(() -> {
-
-					final CommunityNormsPage foundPage = Model.fromJsonObject(found, CommunityNormsPage.class);
-					assertThat(foundPage.offset).isEqualTo(2);
-					assertThat(foundPage.total).isEqualTo(7);
-					assertThat(foundPage.norms).isEqualTo(communityNorms.subList(17, 20));
-
-					testContext.completeNow();
-				})));
-
-	}
-
-	/**
-	 * Create some community norms
-	 *
-	 * @param communityId identifier of the community to add the norms.
-	 * @param pool        connection to the mongo database.
-	 * @param max         number of norms to create.
-	 *
-	 * @return the community norms with a fake since time.
-	 */
-	public static List<CommunityNorm> createCommunityNormsWithFakeSinceTime(String communityId, MongoClient pool,
-			int max) {
-
-		final List<CommunityNorm> norms = new ArrayList<>();
-		final Semaphore semaphore = new Semaphore(0);
-
-		createNextNorm(semaphore, norms, communityId, pool, max);
-
-		try {
-			semaphore.acquire(max);
-		} catch (final InterruptedException ignored) {
-		}
-
-		return norms;
-
-	}
-
-	/**
-	 * Create and store the next community norm.
-	 *
-	 * @param semaphore   to inform when the norm is created.
-	 * @param norms       list to store the created norm.
-	 * @param communityId identifier of the community to add the norms.
-	 * @param pool        connection to the mongo database.
-	 * @param max         number of norms to create.
-	 */
-	private static void createNextNorm(Semaphore semaphore, List<CommunityNorm> norms, String communityId,
-			MongoClient pool, int max) {
-
-		final String userId = UUID.randomUUID().toString();
-		final long sinceTime = norms.size() * 100000;
-		pool.save(CommunitiesRepositoryImpl.COMMUNITY_NORMS_COLLECTION,
-				new JsonObject().put("communityId", communityId).put("_id", userId).put("sinceTime", sinceTime), save -> {
-
-					if (save.failed()) {
-
-						InternalLogger.log(Level.ERROR, save.cause());
-					}
-					final CommunityNorm norm = new CommunityNorm();
-					norm._id = userId;
-					norm.sinceTime = sinceTime;
-					norms.add(norm);
-					if (norms.size() < max) {
-
-						createNextNorm(semaphore, norms, communityId, pool, max);
-					}
-					semaphore.release();
-				});
-
-	}
+	// /**
+	// * Create some community members
+	// *
+	// * @param communityId identifier of the community to add the members.
+	// * @param pool connection to the mongo database.
+	// * @param max number of members to create.
+	// *
+	// * @return the community members with a fake join time.
+	// */
+	// public static List<CommunityMember>
+	// createCommunityMembersWithFakeJoinTime(String communityId,
+	// int max) {
+	//
+	// final List<CommunityMember> members = new ArrayList<>();
+	// final Semaphore semaphore = new Semaphore(0);
+	//
+	// createNextMember(semaphore, members, communityId, pool, max);
+	//
+	// try {
+	// semaphore.acquire(max);
+	// } catch (final InterruptedException ignored) {
+	// }
+	//
+	// return members;
+	//
+	// }
+	//
+	// /**
+	// * Create and store the next community member.
+	// *
+	// * @param semaphore to inform when the member is created.
+	// * @param members list to store the created member.
+	// * @param communityId identifier of the community to add the members.
+	// * @param pool connection to the mongo database.
+	// * @param max number of members to create.
+	// */
+	// private static void createNextMember(Semaphore semaphore,
+	// List<CommunityMember> members, String communityId,
+	// int max) {
+	//
+	// final String userId = UUID.randomUUID().toString();
+	// final long joinTime = members.size() * 100000;
+	// pool.save(CommunitiesRepositoryImpl.COMMUNITY_MEMBERS_COLLECTION,
+	// new JsonObject().put("communityId", communityId).put("userId",
+	// userId).put("joinTime", joinTime), save -> {
+	//
+	// if (save.failed()) {
+	//
+	// InternalLogger.log(Level.ERROR, save.cause());
+	// }
+	// final CommunityMember member = new CommunityMember();
+	// member.userId = userId;
+	// member.joinTime = joinTime;
+	// members.add(member);
+	// if (members.size() < max) {
+	//
+	// createNextMember(semaphore, members, communityId, pool, max);
+	// }
+	// semaphore.release();
+	// });
+	//
+	// }
+	//
+	// /**
+	// * Create an aggregate some communities with a fake
+	// * {@link Community#_creationTs}.
+	// *
+	// * @param communityId identifier where the norm will be stored.
+	// * @param pool that create the mongo connections.
+	// * @param max number of communities to try to create.
+	// *
+	// * @return the aggregated communities.
+	// */
+	// public static List<CommunityNorm>
+	// createAndStoreSomeCommunityNormsWithFake_creationTs(String communityId,
+	// int max) {
+	//
+	// final List<CommunityNorm> communityNormss = new ArrayList<>();
+	// final Semaphore semaphore = new Semaphore(0);
+	// createNextCommunityNormWithFake_creationTs(communityId, pool,
+	// communityNormss, max, semaphore);
+	//
+	// try {
+	// semaphore.acquire(max);
+	// } catch (final InterruptedException ignored) {
+	// }
+	//
+	// return communityNormss;
+	//
+	// }
+	//
+	// /**
+	// * Create an store a community norm with a fake since time.
+	// *
+	// * @param communityId identifier where the norm will be stored.
+	// * @param pool that create the mongo connections.
+	// * @param communityNorms that has been created.
+	// * @param tries number maximum of times to create a community norm.
+	// * @param semaphore to inform when the community is created.
+	// */
+	// private static void createNextCommunityNormWithFake_creationTs(String
+	// communityId,
+	// List<CommunityNorm> communityNorms, int tries, Semaphore semaphore) {
+	//
+	// final int index = communityNorms.size();
+	// final CommunityNorm communityNorm = new
+	// CommunityNormTest().createModelExample(index);
+	// communityNorm._creationTs = index * 100000;
+	// pool.save(CommunitiesRepositoryImpl.COMMUNITY_NORMS_COLLECTION,
+	// communityNorm.toJsonObject().put("communityId", communityId), stored -> {
+	// if (!stored.failed()) {
+	//
+	// communityNorm.id = stored.result();
+	// communityNorms.add(communityNorm);
+	//
+	// }
+	// if (tries > 1) {
+	// createNextCommunityNormWithFake_creationTs(communityId, pool, communityNorms,
+	// tries - 1, semaphore);
+	// }
+	// semaphore.release();
+	// });
+	//
+	// }
+	//
+	// /**
+	// * Verify that found some community norms with a since from.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long,
+	// Long,
+	// * int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// public void shouldFoundCommunityNormsPageWithSinceFrom( Vertx vertx,
+	// VertxTestContext testContext) {
+	//
+	// final String communityId = UUID.randomUUID().toString();
+	// final List<CommunityNorm> communityNorms =
+	// createAndStoreSomeCommunityNormsWithFake_creationTs(communityId, pool,
+	// 23);
+	// CommunitiesRepository.createProxy(vertx).searchCommunityNormsPageObject(communityId,
+	// 1500000l, null, 0, 100,
+	// testContext.succeeding(found -> testContext.verify(() -> {
+	//
+	// final CommunityNormsPage foundPage = Model.fromJsonObject(found,
+	// CommunityNormsPage.class);
+	// assertThat(foundPage.offset).isEqualTo(0);
+	// assertThat(foundPage.total).isEqualTo(8);
+	// assertThat(foundPage.norms).isEqualTo(communityNorms.subList(15, 23));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Verify that found some community norms with a since to.
+	// *
+	// * @param pool that create the mongo connections.
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long,
+	// Long,
+	// * int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// public void shouldFoundCommunityNormsPageWithSinceTo( Vertx vertx,
+	// VertxTestContext testContext) {
+	//
+	// final String communityId = UUID.randomUUID().toString();
+	// final List<CommunityNorm> communityNorms =
+	// createAndStoreSomeCommunityNormsWithFake_creationTs(communityId, pool,
+	// 23);
+	// CommunitiesRepository.createProxy(vertx).searchCommunityNormsPageObject(communityId,
+	// null, 1500000l, 0, 100,
+	// testContext.succeeding(found -> testContext.verify(() -> {
+	//
+	// final CommunityNormsPage foundPage = Model.fromJsonObject(found,
+	// CommunityNormsPage.class);
+	// assertThat(foundPage.offset).isEqualTo(0);
+	// assertThat(foundPage.total).isEqualTo(16);
+	// assertThat(foundPage.norms).isEqualTo(communityNorms.subList(0, 16));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Verify that found some community norms with a since range.
+	// *
+	// * @param vertx event bus to use.
+	// * @param testContext context that executes the test.
+	// *
+	// * @see CommunitiesRepository#searchCommunityNormsPageObject(String, Long,
+	// Long,
+	// * int, int, io.vertx.core.Handler)
+	// */
+	// @Test
+	// public void shouldFoundCommunityNormsPageWithSinceRange( Vertx vertx,
+	// VertxTestContext testContext) {
+	//
+	// final String communityId = UUID.randomUUID().toString();
+	// final List<CommunityNorm> communityNorms =
+	// createAndStoreSomeCommunityNormsWithFake_creationTs(communityId, pool,
+	// 23);
+	// CommunitiesRepository.createProxy(vertx).searchCommunityNormsPageObject(communityId,
+	// 1500000l, 2100000l, 2, 3,
+	// testContext.succeeding(found -> testContext.verify(() -> {
+	//
+	// final CommunityNormsPage foundPage = Model.fromJsonObject(found,
+	// CommunityNormsPage.class);
+	// assertThat(foundPage.offset).isEqualTo(2);
+	// assertThat(foundPage.total).isEqualTo(7);
+	// assertThat(foundPage.norms).isEqualTo(communityNorms.subList(17, 20));
+	//
+	// testContext.completeNow();
+	// })));
+	//
+	// }
+	//
+	// /**
+	// * Create some community norms
+	// *
+	// * @param communityId identifier of the community to add the norms.
+	// * @param pool connection to the mongo database.
+	// * @param max number of norms to create.
+	// *
+	// * @return the community norms with a fake since time.
+	// */
+	// public static List<CommunityNorm>
+	// createCommunityNormsWithFake_creationTs(String communityId,
+	// int max) {
+	//
+	// final List<CommunityNorm> norms = new ArrayList<>();
+	// final Semaphore semaphore = new Semaphore(0);
+	//
+	// createNextNorm(semaphore, norms, communityId, pool, max);
+	//
+	// try {
+	// semaphore.acquire(max);
+	// } catch (final InterruptedException ignored) {
+	// }
+	//
+	// return norms;
+	//
+	// }
+	//
+	// /**
+	// * Create and store the next community norm.
+	// *
+	// * @param semaphore to inform when the norm is created.
+	// * @param norms list to store the created norm.
+	// * @param communityId identifier of the community to add the norms.
+	// * @param pool connection to the mongo database.
+	// * @param max number of norms to create.
+	// */
+	// private static void createNextNorm(Semaphore semaphore, List<CommunityNorm>
+	// norms, String communityId,
+	// int max) {
+	//
+	// final String userId = UUID.randomUUID().toString();
+	// final long _creationTs = norms.size() * 100000;
+	// pool.save(CommunitiesRepositoryImpl.COMMUNITY_NORMS_COLLECTION,
+	// new JsonObject().put("communityId", communityId).put("id",
+	// userId).put("_creationTs", _creationTs), save -> {
+	//
+	// if (save.failed()) {
+	//
+	// InternalLogger.log(Level.ERROR, save.cause());
+	// }
+	// final CommunityNorm norm = new CommunityNorm();
+	// norm.id = userId;
+	// norm._creationTs = _creationTs;
+	// norms.add(norm);
+	// if (norms.size() < max) {
+	//
+	// createNextNorm(semaphore, norms, communityId, pool, max);
+	// }
+	// semaphore.release();
+	// });
+	//
+	// }
 
 }

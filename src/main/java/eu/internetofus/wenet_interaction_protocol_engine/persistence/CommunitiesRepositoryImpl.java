@@ -31,6 +31,7 @@ import eu.internetofus.common.persitences.Repository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.mongo.MongoClient;
 
 /**
@@ -73,7 +74,11 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	public void searchCommunityObject(String id, Handler<AsyncResult<JsonObject>> searchHandler) {
 
 		final JsonObject query = new JsonObject().put("_id", id);
-		this.findOneDocument(COMMUNITIES_COLLECTION, query, null, null, searchHandler);
+		this.findOneDocument(COMMUNITIES_COLLECTION, query, null, found -> {
+			final String _id = (String) found.remove("_id");
+			return found.put("id", _id);
+		}, searchHandler);
+
 	}
 
 	/**
@@ -82,9 +87,20 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	@Override
 	public void storeCommunity(JsonObject community, Handler<AsyncResult<JsonObject>> storeHandler) {
 
+		final String id = (String) community.remove("id");
+		if (id != null) {
+
+			community.put("_id", id);
+		}
 		final long now = TimeManager.now();
-		community.put("sinceTime", now);
-		this.storeOneDocument(COMMUNITIES_COLLECTION, community, null, storeHandler);
+		community.put("_creationTs", now);
+		community.put("_lastUpdateTs", now);
+		this.storeOneDocument(COMMUNITIES_COLLECTION, community, stored -> {
+
+			final String _id = (String) stored.remove("_id");
+			return stored.put("id", _id);
+
+		}, storeHandler);
 
 	}
 
@@ -94,8 +110,10 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	@Override
 	public void updateCommunity(JsonObject community, Handler<AsyncResult<Void>> updateHandler) {
 
-		final String id = community.getString("_id");
+		final Object id = community.remove("id");
 		final JsonObject query = new JsonObject().put("_id", id);
+		final long now = TimeManager.now();
+		community.put("_lastUpdateTs", now);
 		this.updateOneDocument(COMMUNITIES_COLLECTION, query, community, updateHandler);
 
 	}
@@ -118,7 +136,11 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 	public void searchCommunityPageObject(JsonObject query, int offset, int limit,
 			Handler<AsyncResult<JsonObject>> searchHandler) {
 
-		this.searchPageObject(COMMUNITIES_COLLECTION, query, null, offset, limit, "communities", searchHandler);
+		final FindOptions options = new FindOptions();
+		options.setSkip(offset);
+		options.setLimit(limit);
+
+		this.searchPageObject(COMMUNITIES_COLLECTION, query, options, "communities", searchHandler);
 
 	}
 
@@ -145,7 +167,10 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 		final long now = TimeManager.now();
 		member.put("joinTime", now);
 		member.put("communityId", communityId);
-		this.storeOneDocument(COMMUNITY_MEMBERS_COLLECTION, member, null, storeHandler, "_id", "communityId");
+		this.storeOneDocument(COMMUNITY_MEMBERS_COLLECTION, member, stored -> {
+			stored.remove("_id");
+			return stored;
+		}, storeHandler);
 
 	}
 
@@ -181,8 +206,11 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 			Handler<AsyncResult<JsonObject>> searchHandler) {
 
 		query.put("communityId", communityId);
-		this.searchPageObject(COMMUNITY_MEMBERS_COLLECTION, query, new JsonObject().put("communityId", 0).put("_id", 0),
-				offset, limit, "members", searchHandler);
+		final FindOptions options = new FindOptions();
+		options.setSkip(offset);
+		options.setLimit(limit);
+		options.getFields().put("communityId", 0).put("_id", 0);
+		this.searchPageObject(COMMUNITY_MEMBERS_COLLECTION, query, options, "members", searchHandler);
 
 	}
 
@@ -209,7 +237,7 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 		final long now = TimeManager.now();
 		norm.put("sinceTime", now);
 		norm.put("communityId", communityId);
-		this.storeOneDocument(COMMUNITY_NORMS_COLLECTION, norm, null, storeHandler, "communityId");
+		this.storeOneDocument(COMMUNITY_NORMS_COLLECTION, norm, null, storeHandler);
 
 	}
 
@@ -232,8 +260,12 @@ public class CommunitiesRepositoryImpl extends Repository implements Communities
 			Handler<AsyncResult<JsonObject>> searchHandler) {
 
 		query.put("communityId", communityId);
-		this.searchPageObject(COMMUNITY_NORMS_COLLECTION, query, new JsonObject().put("communityId", 0), offset, limit,
-				"norms", searchHandler);
+		final FindOptions options = new FindOptions();
+		options.setSkip(offset);
+		options.setLimit(limit);
+		options.getFields().put("communityId", 0);
+
+		this.searchPageObject(COMMUNITY_NORMS_COLLECTION, query, options, "norms", searchHandler);
 
 	}
 

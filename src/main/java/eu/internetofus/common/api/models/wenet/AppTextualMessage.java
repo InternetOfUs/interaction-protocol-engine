@@ -24,29 +24,24 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine;
+package eu.internetofus.common.api.models.wenet;
 
-import eu.internetofus.common.api.models.ValidationErrorException;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * This is implemented by any model that can merge to another model.
- *
- * @param <T> type of models that can be merged.
+ * A message to send to an {@link App}.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public interface Mergeable<T> {
+@Schema(hidden = true, name = "message", description = "A textual message that can be send into an application.")
+public class AppTextualMessage extends AppMessage {
 
 	/**
-	 * Merge this model with anther.
-	 *
-	 * @param source     model to merge.
-	 * @param codePrefix the prefix of the code to use for the error message.
-	 *
-	 * @return the merged model.
-	 *
-	 * @throws ValidationErrorException If the merged model is not valid.
+	 * Create a new textual message.
 	 */
-	T merge(T source, String codePrefix) throws ValidationErrorException;
+	public AppTextualMessage() {
+
+		this.type = Type.textualMessage;
+	}
 
 }

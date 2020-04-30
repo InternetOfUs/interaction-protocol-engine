@@ -24,55 +24,26 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.persitences;
+package eu.internetofus.common.api.models.wenet;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.mock;
-
-import org.junit.jupiter.api.Test;
-
-import io.vertx.ext.mongo.MongoClient;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * General test over the classes that extends the
- * {@link AbstractPersistenceVerticle}.
- *
- * @param <T> type of persitence verticle to test.
+ * A notification to inform about a task proposal.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class AbstractPersistenceVerticleTestCase<T extends AbstractPersistenceVerticle> {
+@Schema(
+		hidden = true,
+		name = "TaskProposalNotification",
+		description = "This notification is used in order to propose a user to volunteer to a newly created task.")
+public class AppTaskProposalNotification extends AppTaskNotification {
 
 	/**
-	 * Create the verticle to start the persistence repositories.
-	 *
-	 * @return the instance of the persistence verticle to test.
+	 * Create a new task proposal notification.
 	 */
-	protected abstract T createPersitenceVerticle();
+	public AppTaskProposalNotification() {
 
-	/**
-	 * Check that not stop the server if it is not started.
-	 */
-	@Test
-	public void shouldNotStopIfServerNotStarted() {
-
-		final T persistence = this.createPersitenceVerticle();
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-
+		this.notificationType = NotificationType.taskProposal;
 	}
-
-	/**
-	 * Check that not stop the server if it is not started.
-	 */
-	@Test
-	public void shouldStopIfServerStarted() {
-
-		final T persistence = this.createPersitenceVerticle();
-		persistence.pool = mock(MongoClient.class);
-		assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-		assertThat(persistence.pool).isNull();
-
-	}
-
 }

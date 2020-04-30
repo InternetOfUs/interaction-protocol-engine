@@ -28,15 +28,20 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
 import java.util.List;
 
+import eu.internetofus.common.api.models.Mergeable;
+import eu.internetofus.common.api.models.Merges;
 import eu.internetofus.common.api.models.Model;
+import eu.internetofus.common.api.models.Validable;
 import eu.internetofus.common.api.models.ValidationErrorException;
 import eu.internetofus.common.api.models.Validations;
+import eu.internetofus.common.api.models.wenet.Norm;
 import eu.internetofus.common.services.WeNetProfileManagerService;
+import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 
 /**
  * A norm that has been published.
@@ -44,13 +49,13 @@ import io.vertx.core.Handler;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(description = "A norm that is published to share with all the WeNet users.")
-public class PublishedNorm extends Model {
+public class PublishedNorm extends Model implements Validable, Mergeable<PublishedNorm> {
 
 	/**
 	 * The identifier of the published norm.
 	 */
 	@Schema(description = "The identifier of the published norm.", example = "bf274393-1e7b-4d40-a897-88cb96277edd")
-	public String _id;
+	public String id;
 
 	/**
 	 * The name of the published norm.
@@ -102,81 +107,88 @@ public class PublishedNorm extends Model {
 	public Norm norm;
 
 	/**
-	 * Check that the model is valid.
-	 *
-	 * @param codePrefix        the prefix of the code to use for the error message.
-	 * @param profileManager    service to manage the profile manager.
-	 * @param validationHandler handler to inform of the validation process.
-	 *
+	 * {@inheritDoc}
 	 */
-	public void validate(String codePrefix, WeNetProfileManagerService profileManager,
-			Handler<AsyncResult<Void>> validationHandler) {
+	@Override
+	public Future<Void> validate(String codePrefix, Vertx vertx) {
 
-		if (this.norm == null) {
+		final Promise<Void> promise = Promise.promise();
+		Future<Void> future = promise.future();
+		try {
 
-			validationHandler.handle(Future
-					.failedFuture(new ValidationErrorException(codePrefix + ".norm", "It is necessary a norm to publish.")));
+			this.id = Validations.validateNullableStringField(codePrefix, "id", 255, this.id);
+			if (this.id != null) {
 
-		} else {
-			try {
+				future = future.compose(mapper -> {
 
-				this._id = Validations.validateNullableStringField(codePrefix, "id", 255, this._id);
-				if (this._id != null) {
+					final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
+					NormsRepository.createProxy(vertx).searchPublishedNorm(this.id, search -> {
 
-					throw new ValidationErrorException(codePrefix + "._id",
-							"You can not specify the identifier of the published norm");
+						if (search.failed()) {
 
-				}
-				this.name = Validations.validateNullableStringField(codePrefix, "name", 255, this.name);
-				this.description = Validations.validateNullableStringField(codePrefix, "description", 255, this.description);
-				this.keywords = Validations.validateNullableListStringField(codePrefix, "keywords", 255, this.keywords);
-				this.norm.validate(codePrefix + ".norm");
-
-				if (this.publisherId == null) {
-
-					validationHandler.handle(Future.succeededFuture());
-
-				} else {
-
-					profileManager.retrieveProfile(this.publisherId, retrieve -> {
-
-						if (retrieve.failed()) {
-
-							validationHandler.handle(Future.failedFuture(new ValidationErrorException(codePrefix + ".publisherId",
-									"The published identifier is not valid, because it is not an active user profile.")));
+							verifyNotRepeatedIdPromise.complete();
 
 						} else {
 
-							validationHandler.handle(Future.succeededFuture());
+							verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".id",
+									"The '" + this.id + "' is already used by a published norm."));
 						}
 					});
-				}
-
-			} catch (final ValidationErrorException error) {
-
-				validationHandler.handle(Future.failedFuture(error));
+					return verifyNotRepeatedIdPromise.future();
+				});
 			}
 
+			this.name = Validations.validateNullableStringField(codePrefix, "name", 255, this.name);
+			this.description = Validations.validateNullableStringField(codePrefix, "description", 1023, this.description);
+			this.keywords = Validations.validateNullableListStringField(codePrefix, "keywords", 255, this.keywords);
+			this.publisherId = Validations.validateNullableStringField(codePrefix, "publisherId", 255, this.publisherId);
+			if (this.publisherId != null) {
+
+				future = future.compose(mapper -> {
+
+					final Promise<Void> verifyPublishedExistPromise = Promise.promise();
+					WeNetProfileManagerService.createProxy(vertx).retrieveProfile(this.publisherId, profile -> {
+
+						if (!profile.failed()) {
+
+							verifyPublishedExistPromise.fail(new ValidationErrorException(codePrefix + "publisherId",
+									"The '" + this.publisherId + "' is not defined as an user."));
+
+						} else {
+							verifyPublishedExistPromise.complete();
+						}
+					});
+					return verifyPublishedExistPromise.future();
+				});
+			}
+
+			if (this.norm == null) {
+
+				promise.fail(new ValidationErrorException(codePrefix + ".norm", "you must specify a norm."));
+
+			} else {
+
+				future = future.compose(map -> this.norm.validate(codePrefix + ".norm", vertx));
+				promise.complete();
+			}
+
+		} catch (final ValidationErrorException validationError) {
+
+			promise.fail(validationError);
 		}
+
+		return future;
 	}
 
 	/**
-	 * Merge this model with another.
-	 *
-	 * @param codePrefix     the prefix of the code to use for the error message.
-	 * @param source         model to merge
-	 * @param profileManager service to manage the profile manager.
-	 * @param mergeHandler   handler to inform of the merged model.
-	 *
+	 * {@inheritDoc}
 	 */
-	public void merge(String codePrefix, PublishedNorm source, WeNetProfileManagerService profileManager,
-			Handler<AsyncResult<PublishedNorm>> mergeHandler) {
+	@Override
+	public Future<PublishedNorm> merge(PublishedNorm source, String codePrefix, Vertx vertx) {
 
-		if (source == null) {
-
-			mergeHandler.handle(Future.succeededFuture(this));
-
-		} else {
+		final Promise<PublishedNorm> promise = Promise.promise();
+		Future<PublishedNorm> future = promise.future();
+		if (source != null) {
 
 			final PublishedNorm merged = new PublishedNorm();
 			merged.name = source.name;
@@ -184,7 +196,6 @@ public class PublishedNorm extends Model {
 
 				merged.name = this.name;
 			}
-
 			merged.description = source.description;
 			if (merged.description == null) {
 
@@ -196,51 +207,34 @@ public class PublishedNorm extends Model {
 
 				merged.keywords = this.keywords;
 			}
-
 			merged.publisherId = source.publisherId;
 			if (merged.publisherId == null) {
 
 				merged.publisherId = this.publisherId;
 			}
 
-			if (this.norm == null) {
-
-				merged.norm = source.norm;
-
-			} else {
+			merged.norm = source.norm;
+			if (merged.norm == null) {
 
 				merged.norm = new Norm();
 			}
 
-			merged.validate(codePrefix, profileManager, validation -> {
+			future = future.compose(Merges.validateMerged(codePrefix, vertx));
+			future = future.compose(Merges.mergeField(this.norm, source.norm, codePrefix + ".norm", vertx,
+					(model, mergedNorm) -> model.norm = mergedNorm));
 
-				if (validation.failed()) {
+			promise.complete(merged);
+			future = future.map(mergedValidatedModel -> {
 
-					mergeHandler.handle(Future.failedFuture(validation.cause()));
-
-				} else {
-
-					try {
-
-						if (this.norm != null) {
-
-							merged.norm = this.norm.merge(source.norm, codePrefix + ".norm");
-						}
-
-						merged._id = this._id;
-						merged.publishTime = this.publishTime;
-						mergeHandler.handle(Future.succeededFuture(merged));
-
-					} catch (final ValidationErrorException error) {
-
-						mergeHandler.handle(Future.failedFuture(error));
-					}
-
-				}
-
+				mergedValidatedModel.id = this.id;
+				return mergedValidatedModel;
 			});
-		}
 
+		} else {
+
+			promise.complete(this);
+		}
+		return future;
 	}
 
 }

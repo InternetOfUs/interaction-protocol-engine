@@ -27,13 +27,17 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api;
 
 import eu.internetofus.common.api.AbstractAPIVerticle;
+import eu.internetofus.common.services.WeNetInteractionProtocolEngineService;
+import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Communities;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunitiesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.NormsResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.versions.Versions;
 import eu.internetofus.wenet_interaction_protocol_engine.api.versions.VersionsResource;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.serviceproxy.ServiceBinder;
 
 /**
@@ -69,6 +73,25 @@ public class APIVerticle extends AbstractAPIVerticle {
 
 		routerFactory.mountServiceInterface(Norms.class, Norms.ADDRESS);
 		new ServiceBinder(this.vertx).setAddress(Norms.ADDRESS).register(Norms.class, new NormsResource(this.vertx));
+
+	}
+
+	/**
+	 * Register the services provided by the API.
+	 *
+	 * {@inheritDoc}
+	 *
+	 * @see WeNetProfileManagerService
+	 */
+	@Override
+	protected void startedServerAt(String host, int port) {
+
+		final JsonObject conf = new JsonObject();
+		conf.put("host", host);
+		conf.put("port", port);
+		conf.put("apiPath", "");
+		final WebClient client = WebClient.create(this.vertx);
+		WeNetInteractionProtocolEngineService.register(this.vertx, client, conf);
 
 	}
 
