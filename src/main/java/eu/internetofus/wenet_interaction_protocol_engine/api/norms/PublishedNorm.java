@@ -30,10 +30,10 @@ import java.util.List;
 
 import eu.internetofus.common.api.models.Mergeable;
 import eu.internetofus.common.api.models.Merges;
-import eu.internetofus.common.api.models.Model;
 import eu.internetofus.common.api.models.Validable;
 import eu.internetofus.common.api.models.ValidationErrorException;
 import eu.internetofus.common.api.models.Validations;
+import eu.internetofus.common.api.models.wenet.CreateUpdateTsDetails;
 import eu.internetofus.common.api.models.wenet.Norm;
 import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
@@ -49,7 +49,7 @@ import io.vertx.core.Vertx;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(description = "A norm that is published to share with all the WeNet users.")
-public class PublishedNorm extends Model implements Validable, Mergeable<PublishedNorm> {
+public class PublishedNorm extends CreateUpdateTsDetails implements Validable, Mergeable<PublishedNorm> {
 
 	/**
 	 * The identifier of the published norm.
@@ -88,15 +88,6 @@ public class PublishedNorm extends Model implements Validable, Mergeable<Publish
 			description = "The identifier of the user that has published the norm.",
 			example = "bf274393-1e7b-4d40-a897-88cb96277edd")
 	public String publisherId;
-
-	/**
-	 * The difference, measured in milliseconds, between the time when the norm was
-	 * published and midnight, January 1, 1970 UTC.
-	 */
-	@Schema(
-			description = "The difference, measured in seconds, between the time when the norm was published and midnight, January 1, 1970 UTC.",
-			example = "1571413067381")
-	public long publishTime;
 
 	/**
 	 * The norm.
@@ -227,6 +218,8 @@ public class PublishedNorm extends Model implements Validable, Mergeable<Publish
 			future = future.map(mergedValidatedModel -> {
 
 				mergedValidatedModel.id = this.id;
+				mergedValidatedModel._creationTs = this._creationTs;
+				mergedValidatedModel._lastUpdateTs = this._lastUpdateTs;
 				return mergedValidatedModel;
 			});
 

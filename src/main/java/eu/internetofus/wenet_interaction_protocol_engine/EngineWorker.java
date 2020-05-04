@@ -28,17 +28,14 @@ package eu.internetofus.wenet_interaction_protocol_engine;
 
 import org.tinylog.Logger;
 
+import eu.internetofus.common.Worker;
 import eu.internetofus.common.api.models.wenet.AppTextualMessage;
 import eu.internetofus.common.api.models.wenet.InteractionProtocolMessage;
 import eu.internetofus.common.api.models.wenet.SocialNetworkRelationship;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 
@@ -48,26 +45,13 @@ import io.vertx.ext.web.client.WebClientOptions;
  *
  * @author UDT-IA, IIIA-CSIC
  */
+@Worker
 public class EngineWorker extends AbstractVerticle implements Handler<Message<InteractionProtocolMessage>> {
 
 	/**
 	 * The address used to send messages to the worker.
 	 */
 	public static final String ADDRESSS = "eu.internetofus.wenet_interaction_protocol_engine.worker";
-
-	/**
-	 * Deploy an instance of this worker.
-	 *
-	 * @param vertx         event bus to use.
-	 * @param config        configuration to use.
-	 * @param deployHandler the handler of the deployment result.
-	 */
-	public static void deploy(Vertx vertx, JsonObject config, Handler<AsyncResult<String>> deployHandler) {
-
-		vertx.deployVerticle(EngineWorker.class, new DeploymentOptions(config).setConfig(config).setWorker(true),
-				deployHandler);
-
-	}
 
 	/**
 	 * {@inheritDoc}

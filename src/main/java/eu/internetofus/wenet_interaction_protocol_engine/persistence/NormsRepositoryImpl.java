@@ -83,7 +83,8 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 			norm.put("_id", id);
 		}
 		final long now = TimeManager.now();
-		norm.put("publishTime", now);
+		norm.put("_creationTs", now);
+		norm.put("_lastUpdateTs", now);
 		this.storeOneDocument(PUBLISHED_NORMS_COLLECTION, norm, stored -> {
 
 			final String _id = (String) stored.remove("_id");
@@ -99,9 +100,10 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 	public void updatePublishedNorm(JsonObject norm, Handler<AsyncResult<Void>> updateHandler) {
 
 		final Object id = norm.remove("id");
+		norm.remove("_creationTs");
 		final JsonObject query = new JsonObject().put("_id", id);
 		final long now = TimeManager.now();
-		norm.put("publishTime", now);
+		norm.put("_lastUpdateTs", now);
 		this.updateOneDocument(PUBLISHED_NORMS_COLLECTION, query, norm, updateHandler);
 	}
 

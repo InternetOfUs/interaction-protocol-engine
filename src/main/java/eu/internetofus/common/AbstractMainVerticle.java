@@ -26,9 +26,10 @@
 
 package eu.internetofus.common;
 
-import eu.internetofus.common.api.AbstractAPIVerticle;
-import eu.internetofus.common.persitences.AbstractPersistenceVerticle;
-import eu.internetofus.common.services.AbstractServicesVerticle;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Promise;
@@ -46,62 +47,56 @@ public abstract class AbstractMainVerticle extends AbstractVerticle {
 	@Override
 	public void start(Promise<Void> startPromise) throws Exception {
 
-		final DeploymentOptions options = new DeploymentOptions(this.config()).setConfig(this.config());
-		this.vertx.deployVerticle(this.getPersistenceVerticleClass(), options, deployPersistence -> {
+		final List<Class<? extends AbstractVerticle>> verticlesToDeploy = new ArrayList<>(
+				Arrays.asList(this.getVerticleClassesToDeploy()));
 
-			if (deployPersistence.failed()) {
-
-				startPromise.fail(deployPersistence.cause());
-
-			} else {
-
-				this.vertx.deployVerticle(this.getServiceVerticleClass(), options, deployService -> {
-
-					if (deployService.failed()) {
-
-						startPromise.fail(deployService.cause());
-
-					} else {
-
-						this.vertx.deployVerticle(this.getAPIVerticleClass(), options, deployAPI -> {
-
-							if (deployAPI.failed()) {
-
-								startPromise.fail(deployAPI.cause());
-
-							} else {
-
-								startPromise.complete();
-							}
-						});
-
-					}
-				});
-			}
-
-		});
+		this.deployNextVerticle(verticlesToDeploy, startPromise);
 
 	}
 
 	/**
-	 * Return the vertice class to start the persistence repositories.
+	 * DEploy the next verticle.
 	 *
-	 * @return the class to start the persistence repositories.
+	 * @param verticlesToDeploy the list of verticles to deploy.
+	 * @param startPromise      promise to inform when all the verticles has been
+	 *                          deployed.
 	 */
-	protected abstract Class<? extends AbstractPersistenceVerticle> getPersistenceVerticleClass();
+	private void deployNextVerticle(List<Class<? extends AbstractVerticle>> verticlesToDeploy,
+			Promise<Void> startPromise) {
+
+		if (verticlesToDeploy.isEmpty()) {
+
+			startPromise.complete();
+
+		} else {
+
+			final Class<? extends AbstractVerticle> verticle = verticlesToDeploy.remove(0);
+			final DeploymentOptions options = new DeploymentOptions(this.config()).setConfig(this.config());
+			if (verticle.isAnnotationPresent(Worker.class)) {
+
+				options.setWorker(true);
+			}
+			this.vertx.deployVerticle(verticle, options, deploy -> {
+
+				if (deploy.failed()) {
+
+					startPromise.fail(deploy.cause());
+
+				} else {
+
+					this.deployNextVerticle(verticlesToDeploy, startPromise);
+				}
+			});
+
+		}
+
+	}
 
 	/**
-	 * Return the vertice class to start and bind the API web services.
+	 * Return the verticle classes to deploy.
 	 *
-	 * @return the class that bind the API.
+	 * @return the classes of the verticles to deploy.
 	 */
-	protected abstract Class<? extends AbstractAPIVerticle> getAPIVerticleClass();
-
-	/**
-	 * Return the vertice class to start the services.
-	 *
-	 * @return the class that start the services.
-	 */
-	protected abstract Class<? extends AbstractServicesVerticle> getServiceVerticleClass();
+	protected abstract Class<? extends AbstractVerticle>[] getVerticleClassesToDeploy();
 
 }

@@ -30,7 +30,6 @@ import java.util.ArrayList;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.api.models.ModelTestCase;
 import eu.internetofus.common.api.models.wenet.NormTest;
 import eu.internetofus.common.services.WeNetProfileManagerService;
@@ -66,7 +65,6 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 			model.keywords.add("keyword " + i);
 		}
 		model.publisherId = "Published identifier " + index;
-		model.publishTime = index * 100000;
 		model.norm = new NormTest().createModelExample(index);
 
 		return model;
@@ -92,7 +90,6 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 
 				final PublishedNorm result = new PublishedNormTest().createModelExample(index);
 				result.publisherId = create.result().getString("id");
-				result.publishTime = TimeManager.now();
 				createHandler.handle(Future.succeededFuture(result));
 			}
 

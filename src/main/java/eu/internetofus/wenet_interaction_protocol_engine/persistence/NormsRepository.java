@@ -133,27 +133,45 @@ public interface NormsRepository {
 
 		} else {
 
-			this.storePublishedNorm(object, stored -> {
-				if (stored.failed()) {
+			this.storePublishedNorm(object, this.createHandlerMapJsonObjectToPublichedNorm(storeHandler));
 
-					storeHandler.handle(Future.failedFuture(stored.cause()));
+		}
+	}
+
+	/**
+	 * Create a map to convert a {@link JsonObject} that responds an action to the
+	 * respective norm.
+	 *
+	 * @param handler that will receive the result of the action.
+	 *
+	 * @return the handler that convert the {@link JsonObject} result
+	 *
+	 */
+	private Handler<AsyncResult<JsonObject>> createHandlerMapJsonObjectToPublichedNorm(
+			Handler<AsyncResult<PublishedNorm>> handler) {
+
+		return action -> {
+
+			if (action.failed()) {
+
+				handler.handle(Future.failedFuture(action.cause()));
+
+			} else {
+
+				final JsonObject value = action.result();
+				final PublishedNorm storedNorm = Model.fromJsonObject(value, PublishedNorm.class);
+				if (storedNorm == null) {
+
+					handler.handle(Future.failedFuture("The stored published norm is not valid."));
 
 				} else {
 
-					final JsonObject value = stored.result();
-					final PublishedNorm storedNorm = Model.fromJsonObject(value, PublishedNorm.class);
-					if (storedNorm == null) {
-
-						storeHandler.handle(Future.failedFuture("The stored published norm is not valid."));
-
-					} else {
-
-						storeHandler.handle(Future.succeededFuture(storedNorm));
-					}
-
+					handler.handle(Future.succeededFuture(storedNorm));
 				}
-			});
-		}
+
+			}
+
+		};
 	}
 
 	/**
@@ -181,6 +199,7 @@ public interface NormsRepository {
 		} else {
 
 			this.updatePublishedNorm(object, updateHandler);
+
 		}
 	}
 

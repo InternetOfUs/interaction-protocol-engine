@@ -45,6 +45,7 @@ import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.CommunitiesRepository;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
@@ -86,7 +87,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that return a defined community.
 	 *
-	 * @param repository  to access the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -94,8 +95,9 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunity(CommunitiesRepository repository, WebClient client, VertxTestContext testContext) {
+	public void shouldFoundCommunity(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(community -> {
 
 			testRequest(client, HttpMethod.GET, Communities.PATH + "/" + community.id)
@@ -163,7 +165,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that store a community.
 	 *
-	 * @param repository     that manage the communities.
+	 * @param vertx          event bus to use.
 	 * @param profileManager service to create user profiles.
 	 * @param client         to connect to the server.
 	 * @param testContext    context to test.
@@ -172,8 +174,8 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldStoreCommunity(CommunitiesRepository repository, WeNetProfileManagerService profileManager,
-			WebClient client, VertxTestContext testContext) {
+	public void shouldStoreCommunity(Vertx vertx, WeNetProfileManagerService profileManager, WebClient client,
+			VertxTestContext testContext) {
 
 		final Community community = new CommunityTest().createModelExample(1);
 		testRequest(client, HttpMethod.POST, Communities.PATH).expect(res -> {
@@ -184,6 +186,7 @@ public class CommunitiesIT {
 			community.id = stored.id;
 			community._creationTs = stored._creationTs;
 			assertThat(stored).isEqualTo(community);
+			final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 			repository.searchCommunity(stored.id, testContext.succeeding(foundCommunity -> testContext.verify(() -> {
 
 				assertThat(foundCommunity).isEqualTo(stored);
@@ -198,7 +201,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that store an empty community.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -206,8 +209,7 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldStoreEmptyCommunity(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldStoreEmptyCommunity(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final Community community = new Community();
 		testRequest(client, HttpMethod.POST, Communities.PATH).expect(res -> {
@@ -218,6 +220,7 @@ public class CommunitiesIT {
 			community.id = stored.id;
 			community._creationTs = stored._creationTs;
 			assertThat(stored).isEqualTo(community);
+			final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 			repository.searchCommunity(stored.id, testContext.succeeding(foundCommunity -> testContext.verify(() -> {
 
 				assertThat(foundCommunity).isEqualTo(stored);
@@ -232,7 +235,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that store a simple community.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -240,8 +243,7 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldStoreSimpleCommunity(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldStoreSimpleCommunity(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final Community community = new CommunityTest().createModelExample(1);
 		testRequest(client, HttpMethod.POST, Communities.PATH).expect(res -> {
@@ -253,6 +255,7 @@ public class CommunitiesIT {
 			assertThat(stored).isNotNull().isNotEqualTo(community);
 			community._creationTs = stored._creationTs;
 			assertThat(stored).isEqualTo(community);
+			final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 			repository.searchCommunity(stored.id, testContext.succeeding(foundCommunity -> testContext.verify(() -> {
 
 				assertThat(foundCommunity).isEqualTo(stored);
@@ -292,7 +295,7 @@ public class CommunitiesIT {
 	 * Verify that return error when try to update with a model that is not a
 	 * community.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -300,9 +303,10 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotUpdateCommunityWithANotCommunityObject(CommunitiesRepository repository, WebClient client,
+	public void shouldNotUpdateCommunityWithANotCommunityObject(Vertx vertx, WebClient client,
 			VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(community -> {
 
 			testRequest(client, HttpMethod.PUT, Communities.PATH + "/" + community.id).expect(res -> {
@@ -320,7 +324,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that not update a community if any change is done.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -328,9 +332,10 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotUpdateCommunityBecauseNotChangesHasDone(CommunitiesRepository repository, WebClient client,
+	public void shouldNotUpdateCommunityBecauseNotChangesHasDone(Vertx vertx, WebClient client,
 			VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(community -> {
 
 			testRequest(client, HttpMethod.PUT, Communities.PATH + "/" + community.id).expect(res -> {
@@ -349,7 +354,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that not update a community because the source is not valid.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -357,9 +362,9 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotUpdateCommunityBecauseBadSource(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldNotUpdateCommunityBecauseBadSource(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(community -> {
 
 			testRequest(client, HttpMethod.PUT, Communities.PATH + "/" + community.id).expect(res -> {
@@ -386,7 +391,7 @@ public class CommunitiesIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldUpdateCommunity(CommunitiesRepository repository, WebClient
+	// public void shouldUpdateCommunity(Vertx vertx, WebClient
 	// client, VertxTestContext testContext) {
 	//
 	// final Community created = new CommunityTest().createModelExample(23);
@@ -440,7 +445,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that can delete a community.
 	 *
-	 * @param repository  to access the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -448,8 +453,9 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldDeleteCommunity(CommunitiesRepository repository, WebClient client, VertxTestContext testContext) {
+	public void shouldDeleteCommunity(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new Community(), testContext.succeeding(storedCommunity -> {
 
 			testRequest(client, HttpMethod.DELETE, Communities.PATH + "/" + storedCommunity.id)
@@ -475,7 +481,7 @@ public class CommunitiesIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldUpdateCommunityName(CommunitiesRepository repository,
+	// public void shouldUpdateCommunityName(Vertx vertx,
 	// WebClient client,
 	// VertxTestContext testContext) {
 	//
@@ -553,7 +559,7 @@ public class CommunitiesIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldUpdateCommunityKeyword(CommunitiesRepository repository,
+	// public void shouldUpdateCommunityKeyword(Vertx vertx,
 	// WebClient client,
 	// VertxTestContext testContext) {
 	//
@@ -594,7 +600,7 @@ public class CommunitiesIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldUpdateCommunityAvatar(CommunitiesRepository repository,
+	// public void shouldUpdateCommunityAvatar(Vertx vertx,
 	// WebClient client,
 	// VertxTestContext testContext) {
 	//
@@ -625,7 +631,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that not update a community since time.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -633,9 +639,9 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotUpdateCommunity_creationTs(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldNotUpdateCommunity_creationTs(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(community -> {
 
 			testRequest(client, HttpMethod.PUT, Communities.PATH + "/" + community.id).expect(res -> {
@@ -654,7 +660,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that not update a community since time.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -662,9 +668,9 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotUpdateCommunityId(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldNotUpdateCommunityId(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(community -> {
 
 			testRequest(client, HttpMethod.PUT, Communities.PATH + "/" + community.id).expect(res -> {
@@ -683,7 +689,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that found some communities by its name.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -691,16 +697,16 @@ public class CommunitiesIT {
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunitiesByName(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldFoundCommunitiesByName(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final Community community1 = new CommunityTest().createModelExample(1);
 		final String name = UUID.randomUUID().toString();
 		community1.name = name + " 1";
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(community1, testContext.succeeding(storedCommunity1 -> {
 
 			final Community community2 = new CommunityTest().createModelExample(2);
-			community2.name = name + " 1";
+			community2.name = name + " 2";
 			repository.storeCommunity(community2, testContext.succeeding(storedCommunity2 -> {
 
 				testRequest(client, HttpMethod.GET, Communities.PATH).with(queryParam("name", name)).expect(res -> {
@@ -720,7 +726,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that found some communities by its description.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -728,12 +734,12 @@ public class CommunitiesIT {
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunitiesByDescription(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldFoundCommunitiesByDescription(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final Community community1 = new CommunityTest().createModelExample(1);
 		final String description = UUID.randomUUID().toString();
 		community1.description += description;
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(community1, testContext.succeeding(storedCommunity1 -> {
 
 			final Community community2 = new CommunityTest().createModelExample(2);
@@ -758,7 +764,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that found some communities by a keyword.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -766,12 +772,12 @@ public class CommunitiesIT {
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunitiesByAKeyword(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldFoundCommunitiesByAKeyword(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final Community community1 = new CommunityTest().createModelExample(1);
 		final String keyword = UUID.randomUUID().toString();
 		community1.keywords.add(keyword);
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(community1, testContext.succeeding(storedCommunity1 -> {
 
 			final Community community2 = new CommunityTest().createModelExample(2);
@@ -796,7 +802,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that found some communities by some keyword.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -804,12 +810,12 @@ public class CommunitiesIT {
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunitiesBySomeKeyword(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldFoundCommunitiesBySomeKeyword(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final Community community1 = new CommunityTest().createModelExample(1);
 		final String keyword = UUID.randomUUID().toString();
 		community1.keywords.add(keyword);
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(community1, testContext.succeeding(storedCommunity1 -> {
 
 			final Community community2 = new CommunityTest().createModelExample(2);
@@ -839,7 +845,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that found some communities by its avatar.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -847,12 +853,12 @@ public class CommunitiesIT {
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundCommunitiesByAvatar(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldFoundCommunitiesByAvatar(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final Community community1 = new CommunityTest().createModelExample(1);
 		final String avatar = "http://host.com/avatar_" + UUID.randomUUID().toString() + ".png";
 		community1.avatar = avatar;
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(community1, testContext.succeeding(storedCommunity1 -> {
 
 			final Community community2 = new CommunityTest().createModelExample(2);
@@ -1054,7 +1060,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that return a community member.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1062,12 +1068,12 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldRetrieveCommunityMember(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldRetrieveCommunityMember(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final CommunityMember member = new CommunityMember();
 		member.userId = UUID.randomUUID().toString();
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunityMember(communityId, member, testContext.succeeding(stored -> {
 
 			testRequest(client, HttpMethod.GET,
@@ -1111,7 +1117,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that delete a community member.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1119,12 +1125,12 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldDeleteCommunityMember(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldDeleteCommunityMember(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final CommunityMember member = new CommunityMember();
 		member.userId = UUID.randomUUID().toString();
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunityMember(communityId, member, testContext.succeeding(stored -> {
 
 			testRequest(client, HttpMethod.DELETE,
@@ -1165,7 +1171,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that return a page with some members.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1173,10 +1179,10 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldRetrieveCommunityMembersPage(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldRetrieveCommunityMembersPage(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", UUID.randomUUID().toString()),
 				testContext.succeeding(stored1 -> {
 
@@ -1211,7 +1217,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that return a page with some members with an offset.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1219,10 +1225,11 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldRetrieveCommunityMembersPageWithAnOffset(CommunitiesRepository repository, WebClient client,
+	public void shouldRetrieveCommunityMembersPageWithAnOffset(Vertx vertx, WebClient client,
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", UUID.randomUUID().toString()),
 				testContext.succeeding(stored1 -> {
 
@@ -1256,7 +1263,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that return a page with some members with a limit.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1264,10 +1271,11 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldRetrieveCommunityMembersPageWithALimit(CommunitiesRepository repository, WebClient client,
+	public void shouldRetrieveCommunityMembersPageWithALimit(Vertx vertx, WebClient client,
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", UUID.randomUUID().toString()),
 				testContext.succeeding(stored1 -> {
 
@@ -1302,7 +1310,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that return a page with some members with an offset and a limit.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1310,10 +1318,11 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldRetrieveCommunityMembersPageWithOffsetAndLimit(CommunitiesRepository repository, WebClient client,
+	public void shouldRetrieveCommunityMembersPageWithOffsetAndLimit(Vertx vertx, WebClient client,
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunityMemberObject(communityId, new JsonObject().put("userId", UUID.randomUUID().toString()),
 				testContext.succeeding(stored1 -> {
 
@@ -1504,7 +1513,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that can not create an empty community member.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1512,9 +1521,9 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotCreateEmptyCommunityMember(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldNotCreateEmptyCommunityMember(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(storedCommunity -> {
 
 			testRequest(client, HttpMethod.POST, Communities.PATH + "/" + storedCommunity.id + Communities.MEMBERS_PATH)
@@ -1563,7 +1572,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that can not create a community member if the user is not defined.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1571,9 +1580,10 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotCreateCommunityMemberBecauseUserNotDefined(CommunitiesRepository repository, WebClient client,
+	public void shouldNotCreateCommunityMemberBecauseUserNotDefined(Vertx vertx, WebClient client,
 			VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(storedCommunity -> {
 
 			testRequest(client, HttpMethod.POST, Communities.PATH + "/" + storedCommunity.id + Communities.MEMBERS_PATH)
@@ -1592,7 +1602,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that create a community member.
 	 *
-	 * @param repository     to manage the communities.
+	 * @param vertx          event bus to use.
 	 * @param profileManager to manage the profiles.
 	 * @param client         to connect to the server.
 	 * @param testContext    context to test.
@@ -1601,9 +1611,10 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldCreateCommunityMember(CommunitiesRepository repository, WeNetProfileManagerService profileManager,
-			WebClient client, VertxTestContext testContext) {
+	public void shouldCreateCommunityMember(Vertx vertx, WeNetProfileManagerService profileManager, WebClient client,
+			VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(storedCommunity -> {
 
 			profileManager.createProfile(new JsonObject(), testContext.succeeding(createdProfile -> {
@@ -1628,7 +1639,7 @@ public class CommunitiesIT {
 	 * Verify that can not create a community member because the user is already a
 	 * member.
 	 *
-	 * @param repository     to manage the communities.
+	 * @param vertx          event bus to use.
 	 * @param profileManager to manage the profiles.
 	 * @param client         to connect to the server.
 	 * @param testContext    context to test.
@@ -1637,9 +1648,10 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotCreateCommunityMemberBecauseItIsAlreadyAMember(CommunitiesRepository repository,
+	public void shouldNotCreateCommunityMemberBecauseItIsAlreadyAMember(Vertx vertx,
 			WeNetProfileManagerService profileManager, WebClient client, VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(storedCommunity -> {
 
 			profileManager.createProfile(new JsonObject(), testContext.succeeding(createdProfile -> {
@@ -1694,7 +1706,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that return a community norm.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1702,11 +1714,11 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldRetrieveCommunityNorm(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldRetrieveCommunityNorm(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final CommunityNorm norm = new CommunityNorm();
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunityNorm(communityId, norm, testContext.succeeding(stored -> {
 
 			testRequest(client, HttpMethod.GET, Communities.PATH + "/" + communityId + Norms.PATH + "/" + stored.id)
@@ -1749,7 +1761,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that delete a community norm.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1757,11 +1769,11 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldDeleteCommunityNorm(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldDeleteCommunityNorm(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
 		final CommunityNorm norm = new CommunityNorm();
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunityNorm(communityId, norm, testContext.succeeding(stored -> {
 
 			testRequest(client, HttpMethod.DELETE, Communities.PATH + "/" + communityId + Norms.PATH + "/" + stored.id)
@@ -1802,7 +1814,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that return a page with some norms.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1810,10 +1822,10 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldRetrieveCommunityNormsPage(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldRetrieveCommunityNormsPage(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored1 -> {
 
 			repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored2 -> {
@@ -1843,7 +1855,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that return a page with some norms with an offset.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1851,10 +1863,11 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldRetrieveCommunityNormsPageWithAnOffset(CommunitiesRepository repository, WebClient client,
+	public void shouldRetrieveCommunityNormsPageWithAnOffset(Vertx vertx, WebClient client,
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored1 -> {
 
 			repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored2 -> {
@@ -1884,7 +1897,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that return a page with some norms with a limit.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1892,10 +1905,10 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldRetrieveCommunityNormsPageWithALimit(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldRetrieveCommunityNormsPageWithALimit(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored1 -> {
 
 			repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored2 -> {
@@ -1926,7 +1939,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that return a page with some norms with an offset and a limit.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -1934,10 +1947,11 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldRetrieveCommunityNormsPageWithOffsetAndLimit(CommunitiesRepository repository, WebClient client,
+	public void shouldRetrieveCommunityNormsPageWithOffsetAndLimit(Vertx vertx, WebClient client,
 			VertxTestContext testContext) {
 
 		final String communityId = UUID.randomUUID().toString();
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored1 -> {
 
 			repository.storeCommunityNormObject(communityId, new JsonObject(), testContext.succeeding(stored2 -> {
@@ -2121,7 +2135,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that can not create an empty community norm.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -2129,9 +2143,9 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotCreateEmptyCommunityNorm(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldNotCreateEmptyCommunityNorm(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(storedCommunity -> {
 
 			testRequest(client, HttpMethod.POST, Communities.PATH + "/" + storedCommunity.id + Norms.PATH).expect(res -> {
@@ -2173,7 +2187,7 @@ public class CommunitiesIT {
 	/**
 	 * Verify that create a community norm.
 	 *
-	 * @param repository  to manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -2181,9 +2195,9 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldCreateCommunityNorm(CommunitiesRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldCreateCommunityNorm(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(storedCommunity -> {
 
 			final long now = TimeManager.now();
@@ -2202,7 +2216,7 @@ public class CommunitiesIT {
 	 * Verify that return error when try to add a community norm with an object that
 	 * is not a community norm.
 	 *
-	 * @param repository  that manage the communities.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -2210,9 +2224,10 @@ public class CommunitiesIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldNotCreateCommunityNormWithANotCommunityNormObject(CommunitiesRepository repository,
-			WebClient client, VertxTestContext testContext) {
+	public void shouldNotCreateCommunityNormWithANotCommunityNormObject(Vertx vertx, WebClient client,
+			VertxTestContext testContext) {
 
+		final CommunitiesRepository repository = CommunitiesRepository.createProxy(vertx);
 		repository.storeCommunity(new CommunityTest().createModelExample(1), testContext.succeeding(community -> {
 
 			testRequest(client, HttpMethod.POST, Communities.PATH + "/" + community.id + Norms.PATH).expect(res -> {

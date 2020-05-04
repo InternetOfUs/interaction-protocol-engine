@@ -24,30 +24,22 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine;
+package eu.internetofus.common;
 
-import eu.internetofus.common.AbstractMainVerticle;
-import eu.internetofus.wenet_interaction_protocol_engine.api.APIVerticle;
-import eu.internetofus.wenet_interaction_protocol_engine.persistence.PersistenceVerticle;
-import eu.internetofus.wenet_interaction_protocol_engine.services.ServicesVerticle;
-import io.vertx.core.AbstractVerticle;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * The Main verticle that deploy the necessary verticles for the WeNet
- * interactiomn protocol engine.
+ * Annotate a verticle to be deployed as worker.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class MainVerticle extends AbstractMainVerticle {
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	protected Class<? extends AbstractVerticle>[] getVerticleClassesToDeploy() {
-
-		return new Class[] { ServicesVerticle.class, PersistenceVerticle.class, APIVerticle.class, EngineWorker.class };
-	}
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface Worker {
 
 }

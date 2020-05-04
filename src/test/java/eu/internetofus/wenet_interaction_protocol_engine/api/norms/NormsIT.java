@@ -27,28 +27,23 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
 import static eu.internetofus.common.api.HttpResponses.assertThatBodyIs;
-import static eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepositoryIT.createAndStoreSomeFakePublishNorms;
-import static eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepositoryIT.removeAllNorms;
 import static io.vertx.junit5.web.TestRequest.queryParam;
 import static io.vertx.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response.Status;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import eu.internetofus.common.api.models.ErrorMessage;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxTestContext;
 
@@ -89,7 +84,7 @@ public class NormsIT {
 	/**
 	 * Verify that return a defined published norm.
 	 *
-	 * @param repository  to access the norms.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -97,20 +92,21 @@ public class NormsIT {
 	 *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundPublishedNorm(NormsRepository repository, WebClient client, VertxTestContext testContext) {
+	public void shouldFoundPublishedNorm(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
-		repository.storePublishedNorm(new PublishedNormTest().createModelExample(1), testContext.succeeding(stored -> {
+		NormsRepository.createProxy(vertx).storePublishedNorm(new PublishedNormTest().createModelExample(1),
+				testContext.succeeding(stored -> {
 
-			testRequest(client, HttpMethod.GET, Norms.PATH + "/" + stored.id).expect(res -> testContext.verify(() -> {
+					testRequest(client, HttpMethod.GET, Norms.PATH + "/" + stored.id).expect(res -> testContext.verify(() -> {
 
-				assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-				final PublishedNorm found = assertThatBodyIs(PublishedNorm.class, res);
-				assertThat(found).isEqualTo(stored);
-				testContext.completeNow();
+						assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+						final PublishedNorm found = assertThatBodyIs(PublishedNorm.class, res);
+						assertThat(found).isEqualTo(stored);
+						testContext.completeNow();
 
-			})).send(testContext);
+					})).send(testContext);
 
-		}));
+				}));
 
 	}
 
@@ -175,7 +171,7 @@ public class NormsIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldStorePublishedNorm(NormsRepository repository,
+	// public void shouldStorePublishedNorm(Vertx vertx,
 	// WeNetProfileManagerService profileManager,
 	// WebClient client, VertxTestContext testContext) {
 	//
@@ -216,7 +212,7 @@ public class NormsIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldStoreMinimumValidPublishedNorm(NormsRepository repository,
+	// public void shouldStoreMinimumValidPublishedNorm(Vertx vertx,
 	// WebClient client,
 	// VertxTestContext testContext) {
 	//
@@ -317,7 +313,7 @@ public class NormsIT {
 	// public void
 	// shouldNotUpdatePublishedNormBecauseNotChangesHasDone(WeNetProfileManagerService
 	// profileManager,
-	// NormsRepository repository, WebClient client, VertxTestContext testContext) {
+	// Vertx vertx, WebClient client, VertxTestContext testContext) {
 	//
 	// PublishedNormTest.createValidPublishedNormExample(1, profileManager,
 	// testContext.succeeding(created -> {
@@ -387,7 +383,7 @@ public class NormsIT {
 	// */
 	// @Test
 	// public void shouldUpdatePublishedNorm(WeNetProfileManagerService
-	// profileManager, NormsRepository repository,
+	// profileManager, Vertx vertx,
 	// WebClient client, VertxTestContext testContext) {
 	//
 	// PublishedNormTest.createValidPublishedNormExample(23, profileManager,
@@ -452,7 +448,7 @@ public class NormsIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldDeletePublishedNorm(NormsRepository repository, WebClient
+	// public void shouldDeletePublishedNorm(Vertx vertx, WebClient
 	// client, VertxTestContext testContext) {
 	//
 	// repository.storePublishedNorm(new PublishedNorm(),
@@ -484,7 +480,7 @@ public class NormsIT {
 	// */
 	// @Test
 	// public void shouldUpdatePublishedNormName(WeNetProfileManagerService
-	// profileManager, NormsRepository repository,
+	// profileManager, Vertx vertx,
 	// WebClient client, VertxTestContext testContext) {
 	//
 	// PublishedNormTest.createValidPublishedNormExample(23, profileManager,
@@ -525,7 +521,7 @@ public class NormsIT {
 	// @Test
 	// public void shouldUpdatePublishedNormDescription(WeNetProfileManagerService
 	// profileManager,
-	// NormsRepository repository, WebClient client, VertxTestContext testContext) {
+	// Vertx vertx, WebClient client, VertxTestContext testContext) {
 	//
 	// PublishedNormTest.createValidPublishedNormExample(23, profileManager,
 	// testContext.succeeding(created -> {
@@ -564,7 +560,7 @@ public class NormsIT {
 	// */
 	// @Test
 	// public void shouldUpdatePublishedNormKeyword(WeNetProfileManagerService
-	// profileManager, NormsRepository repository,
+	// profileManager, Vertx vertx,
 	// WebClient client, VertxTestContext testContext) {
 	//
 	// PublishedNormTest.createValidPublishedNormExample(23, profileManager,
@@ -608,7 +604,7 @@ public class NormsIT {
 	// @Test
 	// public void shouldUpdatePublishedNormPublisherId(WeNetProfileManagerService
 	// profileManager,
-	// NormsRepository repository, WebClient client, VertxTestContext testContext) {
+	// Vertx vertx, WebClient client, VertxTestContext testContext) {
 	//
 	// profileManager.createProfile(new JsonObject(),
 	// testContext.succeeding(createdProfile -> {
@@ -680,7 +676,7 @@ public class NormsIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldNotUpdatePublishedNormId(NormsRepository repository,
+	// public void shouldNotUpdatePublishedNormId(Vertx vertx,
 	// WebClient client,
 	// VertxTestContext testContext) {
 	//
@@ -714,7 +710,7 @@ public class NormsIT {
 	// */
 	// @Test
 	// public void shouldUpdateNormOnPublishedNorm(WeNetProfileManagerService
-	// profileManager, NormsRepository repository,
+	// profileManager, Vertx vertx,
 	// WebClient client, VertxTestContext testContext) {
 	//
 	// PublishedNormTest.createValidPublishedNormExample(23, profileManager,
@@ -754,7 +750,7 @@ public class NormsIT {
 	// */
 	// @Test
 	// public void shouldNotUpdateNormOnPublishedNorm(WeNetProfileManagerService
-	// profileManager, NormsRepository repository,
+	// profileManager, Vertx vertx,
 	// WebClient client, VertxTestContext testContext) {
 	//
 	// PublishedNormTest.createValidPublishedNormExample(23, profileManager,
@@ -783,7 +779,7 @@ public class NormsIT {
 	/**
 	 * Verify that found some norms by its name.
 	 *
-	 * @param repository  that manage the norms.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -791,35 +787,38 @@ public class NormsIT {
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundNormsByName(NormsRepository repository, WebClient client, VertxTestContext testContext) {
+	public void shouldFoundNormsByName(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final PublishedNorm publishedNorm1 = new PublishedNormTest().createModelExample(1);
 		final String name = UUID.randomUUID().toString();
 		publishedNorm1.name = name + " 1";
-		repository.storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
+		NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm1,
+				testContext.succeeding(storedPublishedNorm1 -> {
 
-			final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
-			publishedNorm2.name = name + " 1";
-			repository.storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
+					final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
+					publishedNorm2.name += " " + name + " 2";
+					NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm2,
+							testContext.succeeding(storedPublishedNorm2 -> {
 
-				testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("name", name)).expect(res -> {
+								testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("name", ".*" + name + ".*"))
+										.expect(res -> {
 
-					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-					final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
-					assertThat(page.offset).isEqualTo(0);
-					assertThat(page.total).isEqualTo(2);
-					assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
-					testContext.completeNow();
+											assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+											final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
+											assertThat(page.offset).isEqualTo(0);
+											assertThat(page.total).isEqualTo(2);
+											assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
+											testContext.completeNow();
 
-				}).send(testContext);
-			}));
-		}));
+										}).send(testContext);
+							}));
+				}));
 	}
 
 	/**
 	 * Verify that found some norms by its description.
 	 *
-	 * @param repository  that manage the norms.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -827,37 +826,38 @@ public class NormsIT {
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundNormsByDescription(NormsRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldFoundNormsByDescription(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final PublishedNorm publishedNorm1 = new PublishedNormTest().createModelExample(1);
 		final String description = UUID.randomUUID().toString();
 		publishedNorm1.description += description;
-		repository.storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
+		NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm1,
+				testContext.succeeding(storedPublishedNorm1 -> {
 
-			final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
-			publishedNorm2.description = description + " " + publishedNorm2.description;
-			repository.storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
+					final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
+					publishedNorm2.description = description + " " + publishedNorm2.description;
+					NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm2,
+							testContext.succeeding(storedPublishedNorm2 -> {
 
-				testRequest(client, HttpMethod.GET, Norms.PATH)
-						.with(queryParam("description", description), queryParam("offset", "1")).expect(res -> {
+								testRequest(client, HttpMethod.GET, Norms.PATH)
+										.with(queryParam("description", description), queryParam("offset", "1")).expect(res -> {
 
-							assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-							final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
-							assertThat(page.offset).isEqualTo(1);
-							assertThat(page.total).isEqualTo(2);
-							assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm2);
-							testContext.completeNow();
+											assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+											final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
+											assertThat(page.offset).isEqualTo(1);
+											assertThat(page.total).isEqualTo(2);
+											assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm2);
+											testContext.completeNow();
 
-						}).send(testContext);
-			}));
-		}));
+										}).send(testContext);
+							}));
+				}));
 	}
 
 	/**
 	 * Verify that found some norms by a keyword.
 	 *
-	 * @param repository  that manage the norms.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -865,36 +865,38 @@ public class NormsIT {
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundNormsByAKeyword(NormsRepository repository, WebClient client, VertxTestContext testContext) {
+	public void shouldFoundNormsByAKeyword(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final PublishedNorm publishedNorm1 = new PublishedNormTest().createModelExample(1);
 		final String keyword = UUID.randomUUID().toString();
 		publishedNorm1.keywords.add(keyword);
-		repository.storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
+		NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm1,
+				testContext.succeeding(storedPublishedNorm1 -> {
 
-			final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
-			publishedNorm2.keywords.add(keyword);
-			repository.storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
+					final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
+					publishedNorm2.keywords.add(keyword);
+					NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm2,
+							testContext.succeeding(storedPublishedNorm2 -> {
 
-				testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("keyword", keyword), queryParam("limit", "1"))
-						.expect(res -> {
+								testRequest(client, HttpMethod.GET, Norms.PATH)
+										.with(queryParam("keyword", keyword), queryParam("limit", "1")).expect(res -> {
 
-							assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-							final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
-							assertThat(page.offset).isEqualTo(0);
-							assertThat(page.total).isEqualTo(2);
-							assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1);
-							testContext.completeNow();
+											assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+											final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
+											assertThat(page.offset).isEqualTo(0);
+											assertThat(page.total).isEqualTo(2);
+											assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1);
+											testContext.completeNow();
 
-						}).send(testContext);
-			}));
-		}));
+										}).send(testContext);
+							}));
+				}));
 	}
 
 	/**
 	 * Verify that found some norms by some keyword.
 	 *
-	 * @param repository  that manage the norms.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -902,12 +904,12 @@ public class NormsIT {
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundNormsBySomeKeyword(NormsRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldFoundNormsBySomeKeyword(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final PublishedNorm publishedNorm1 = new PublishedNormTest().createModelExample(1);
 		final String keyword = UUID.randomUUID().toString();
 		publishedNorm1.keywords.add(keyword);
+		final NormsRepository repository = NormsRepository.createProxy(vertx);
 		repository.storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
 
 			final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
@@ -937,7 +939,7 @@ public class NormsIT {
 	/**
 	 * Verify that found some norms by its publisherId.
 	 *
-	 * @param repository  that manage the norms.
+	 * @param vertx       event bus to use.
 	 * @param client      to connect to the server.
 	 * @param testContext context to test.
 	 *
@@ -945,12 +947,12 @@ public class NormsIT {
 	 *      io.vertx.core.Handler)
 	 */
 	@Test
-	public void shouldFoundNormsByPublisherId(NormsRepository repository, WebClient client,
-			VertxTestContext testContext) {
+	public void shouldFoundNormsByPublisherId(Vertx vertx, WebClient client, VertxTestContext testContext) {
 
 		final PublishedNorm publishedNorm1 = new PublishedNormTest().createModelExample(1);
 		final String publisherId = "http://host.com/publisherId_" + UUID.randomUUID().toString() + ".png";
 		publishedNorm1.publisherId = publisherId;
+		final NormsRepository repository = NormsRepository.createProxy(vertx);
 		repository.storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
 
 			final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
@@ -969,96 +971,6 @@ public class NormsIT {
 				}).send(testContext);
 			}));
 		}));
-	}
-
-	/**
-	 * Verify that found some norms by its publish from.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param client      to connect to the server.
-	 * @param testContext context to test.
-	 *
-	 * @see Norms#retrievePublishedNormsPage(io.vertx.ext.web.api.OperationRequest,
-	 *      io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFoundNormsByPublishFrom(MongoClient pool, WebClient client, VertxTestContext testContext) {
-
-		removeAllNorms(pool);
-		final List<PublishedNorm> norms = createAndStoreSomeFakePublishNorms(pool, 23);
-
-		testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("publishFrom", "0"), queryParam("offset", "7"))
-				.expect(res -> {
-
-					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-					final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
-					assertThat(page.offset).isEqualTo(7);
-					assertThat(page.total).isEqualTo(23);
-					assertThat(page.norms).isEqualTo(norms.subList(7, 17));
-					testContext.completeNow();
-
-				}).send(testContext);
-	}
-
-	/**
-	 * Verify that found some norms by its publish to.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param client      to connect to the server.
-	 * @param testContext context to test.
-	 *
-	 * @see Norms#retrievePublishedNormsPage(io.vertx.ext.web.api.OperationRequest,
-	 *      io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFoundNormsByPublishTo(MongoClient pool, WebClient client, VertxTestContext testContext) {
-
-		removeAllNorms(pool);
-		final List<PublishedNorm> norms = createAndStoreSomeFakePublishNorms(pool, 23);
-
-		testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("publishTo", "10000000"), queryParam("limit", "7"))
-				.expect(res -> {
-
-					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-					final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
-					assertThat(page.offset).isEqualTo(0);
-					assertThat(page.total).isEqualTo(23);
-					assertThat(page.norms).isEqualTo(norms.subList(0, 7));
-					testContext.completeNow();
-
-				}).send(testContext);
-	}
-
-	/**
-	 * Verify that found some norms by its publish range.
-	 *
-	 * @param pool        that create the mongo connections.
-	 * @param client      to connect to the server.
-	 * @param testContext context to test.
-	 *
-	 * @see Norms#retrievePublishedNormsPage(io.vertx.ext.web.api.OperationRequest,
-	 *      io.vertx.core.Handler)
-	 */
-	@Test
-	@Execution(ExecutionMode.SAME_THREAD)
-	public void shouldFoundNormsByPublishRange(MongoClient pool, WebClient client, VertxTestContext testContext) {
-
-		removeAllNorms(pool);
-		final List<PublishedNorm> norms = createAndStoreSomeFakePublishNorms(pool, 23);
-
-		testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("publishFrom", "700000"),
-				queryParam("publishTo", "1300000"), queryParam("offset", "1"), queryParam("limit", "3")).expect(res -> {
-
-					assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-					final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
-					assertThat(page.offset).isEqualTo(1);
-					assertThat(page.total).isEqualTo(7);
-					assertThat(page.norms).isEqualTo(norms.subList(8, 11));
-					testContext.completeNow();
-
-				}).send(testContext);
 	}
 
 	/**

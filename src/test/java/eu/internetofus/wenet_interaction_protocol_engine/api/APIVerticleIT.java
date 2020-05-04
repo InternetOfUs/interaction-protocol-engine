@@ -56,6 +56,6 @@ public class APIVerticleIT extends AbstractAPIVerticleIntegrationTestCase {
 	@Override
 	protected JsonObject createBadRequestPostBody() {
 
-		return new JsonObject().put("_id", new JsonObject().put("key", "value"));
+		return new JsonObject().put("id", new JsonObject().put("key", "value"));
 	}
 }
