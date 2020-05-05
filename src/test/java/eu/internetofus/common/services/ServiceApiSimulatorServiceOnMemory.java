@@ -55,8 +55,8 @@ public class ServiceApiSimulatorServiceOnMemory implements ServiceApiSimulatorSe
 	public static void register(Vertx vertx) {
 
 		final ServiceApiSimulatorServiceOnMemory serviceOnnMemory = new ServiceApiSimulatorServiceOnMemory();
-		new ServiceBinder(vertx).setAddress(ServiceApiSimulatorService.ADDRESS)
-				.register(ServiceApiSimulatorService.class, serviceOnnMemory);
+		new ServiceBinder(vertx).setAddress(ServiceApiSimulatorService.ADDRESS).register(ServiceApiSimulatorService.class,
+				serviceOnnMemory);
 		new ServiceBinder(vertx).setAddress(WeNetServiceApiService.ADDRESS).register(WeNetServiceApiService.class,
 				serviceOnnMemory);
 
@@ -132,7 +132,7 @@ public class ServiceApiSimulatorServiceOnMemory implements ServiceApiSimulatorSe
 	 * {@inheritDoc}
 	 */
 	@Override
-	public synchronized void deleteApp(String id, Handler<AsyncResult<Void>> deleteHandler) {
+	public synchronized void deleteApp(String id, Handler<AsyncResult<JsonObject>> deleteHandler) {
 
 		final JsonObject app = this.apps.remove(id);
 		if (app == null) {

@@ -29,9 +29,9 @@ package eu.internetofus.common.api;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
+import eu.internetofus.common.api.models.ErrorException;
 import eu.internetofus.common.api.models.ErrorMessage;
 import eu.internetofus.common.api.models.Model;
-import eu.internetofus.common.api.models.ValidationErrorException;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -66,9 +66,9 @@ public interface OperationReponseHandlers {
 		} else {
 
 			String code;
-			if (throwable instanceof ValidationErrorException) {
+			if (throwable instanceof ErrorException) {
 
-				code = ((ValidationErrorException) throwable).getCode();
+				code = ((ErrorException) throwable).getCode();
 
 			} else {
 

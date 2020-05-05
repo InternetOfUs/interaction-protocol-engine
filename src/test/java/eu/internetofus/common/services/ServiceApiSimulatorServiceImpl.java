@@ -70,7 +70,7 @@ public class ServiceApiSimulatorServiceImpl extends WeNetServiceApiServiceImpl
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void deleteApp(String id, Handler<AsyncResult<Void>> deleteHandler) {
+	public void deleteApp(String id, Handler<AsyncResult<JsonObject>> deleteHandler) {
 
 		this.delete("/app/" + id, deleteHandler);
 

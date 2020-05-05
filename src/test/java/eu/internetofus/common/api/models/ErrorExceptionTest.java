@@ -31,11 +31,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 /**
- * Test the {@link ValidationErrorException}
+ * Test the {@link ErrorException}
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class ValidationErrorExceptionTest {
+public class ErrorExceptionTest {
 
 	/**
 	 * Check that create with a code and message.
@@ -43,7 +43,21 @@ public class ValidationErrorExceptionTest {
 	@Test
 	public void shouldCreateWithCodeAndMessage() {
 
-		final ValidationErrorException error = new ValidationErrorException("code", "message");
+		final ErrorException error = new ErrorException("code", "message");
+		assertThat(error.getCode()).isEqualTo("code");
+		assertThat(error.getMessage()).isEqualTo("message");
+	}
+
+	/**
+	 * Check that create with an {@link ErrorMessage}.
+	 */
+	@Test
+	public void shouldCreateWithAnErrorMessage() {
+
+		final ErrorMessage errorMessage = new ErrorMessage();
+		errorMessage.message = "message";
+		errorMessage.code = "code";
+		final ErrorException error = new ErrorException(errorMessage);
 		assertThat(error.getCode()).isEqualTo("code");
 		assertThat(error.getMessage()).isEqualTo("message");
 	}
@@ -55,7 +69,7 @@ public class ValidationErrorExceptionTest {
 	public void shouldCreateWithCodeAndCause() {
 
 		final Throwable cause = new Throwable("cause");
-		final ValidationErrorException error = new ValidationErrorException("code", cause);
+		final ErrorException error = new ErrorException("code", cause);
 		assertThat(error.getCode()).isEqualTo("code");
 		assertThat(error.getMessage()).isEqualTo(cause.toString());
 		assertThat(error.getCause()).isEqualTo(cause);
@@ -68,7 +82,7 @@ public class ValidationErrorExceptionTest {
 	public void shouldCreateWithCodeCauseAndMessage() {
 
 		final Throwable cause = new Throwable("cause");
-		final ValidationErrorException error = new ValidationErrorException("code", "message", cause);
+		final ErrorException error = new ErrorException("code", "message", cause);
 		assertThat(error.getCode()).isEqualTo("code");
 		assertThat(error.getMessage()).isEqualTo("message");
 		assertThat(error.getCause()).isEqualTo(cause);

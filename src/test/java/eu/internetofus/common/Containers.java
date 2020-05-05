@@ -162,13 +162,15 @@ public interface Containers {
 				WENET_TASK_MANAGER_DOCKER_NAME).withStartupAttempts(1).withEnv("DB_HOST", WENET_TASK_MANAGER_DB_NAME)
 						.withEnv("WENET_PROFILE_MANAGER_API_HOST", "host.testcontainers.internal")
 						.withEnv("WENET_PROFILE_MANAGER_API_PORT", String.valueOf(profileManagerApiPort))
-						.withEnv("WENET_PROFILE_MANAGER_API_PATH", "")
+						.withEnv("WENET_PROFILE_MANAGER_API_SSL", "false").withEnv("WENET_PROFILE_MANAGER_API_PATH", "")
 						.withEnv("WENET_INTERACTION_PROTOCOL_ENGINE_API_HOST", "host.testcontainers.internal")
 						.withEnv("WENET_INTERACTION_PROTOCOL_ENGINE_API_PORT", String.valueOf(interactionProtocolEngineApiPort))
+						.withEnv("WENET_INTERACTION_PROTOCOL_ENGINE_API_SSL", "false")
 						.withEnv("WENET_INTERACTION_PROTOCOL_ENGINE_API_PATH", "")
 						.withEnv("WENET_SERVICE_API_HOST", "host.testcontainers.internal")
-						.withEnv("WENET_SERVICE_API_PORT", String.valueOf(serviceApiPort)).withEnv("WENET_SERVICE_API_PATH", "")
-						.withNetwork(network).withFixedExposedPort(port, EXPORT_API_PORT).waitingFor(Wait.forListeningPort());
+						.withEnv("WENET_SERVICE_API_PORT", String.valueOf(serviceApiPort)).withEnv("WENET_SERVICE_API_SSL", "false")
+						.withEnv("WENET_SERVICE_API_PATH", "").withNetwork(network).withFixedExposedPort(port, EXPORT_API_PORT)
+						.waitingFor(Wait.forListeningPort());
 		taskManagerContainer.start();
 
 	}
@@ -197,13 +199,14 @@ public interface Containers {
 						.withEnv("DB_HOST", WENET_INTERACTION_PROTOCOL_ENGINE_DB_NAME)
 						.withEnv("WENET_PROFILE_MANAGER_API_HOST", "host.testcontainers.internal")
 						.withEnv("WENET_PROFILE_MANAGER_API_PORT", String.valueOf(profileManagerApiPort))
-						.withEnv("WENET_PROFILE_MANAGER_API_PATH", "")
+						.withEnv("WENET_PROFILE_MANAGER_API_SSL", "false").withEnv("WENET_PROFILE_MANAGER_API_PATH", "")
 						.withEnv("WENET_TASK_MANAGER_API_HOST", "host.testcontainers.internal")
 						.withEnv("WENET_TASK_MANAGER_API_PORT", String.valueOf(taskManagerApiPort))
-						.withEnv("WENET_TASK_MANAGER_API_PATH", "")
+						.withEnv("WENET_TASK_MANAGER_API_SSL", "false").withEnv("WENET_TASK_MANAGER_API_PATH", "")
 						.withEnv("WENET_SERVICE_API_HOST", "host.testcontainers.internal")
-						.withEnv("WENET_SERVICE_API_PORT", String.valueOf(serviceApiPort)).withEnv("WENET_SERVICE_API_PATH", "")
-						.withNetwork(network).withFixedExposedPort(port, EXPORT_API_PORT).waitingFor(Wait.forListeningPort());
+						.withEnv("WENET_SERVICE_API_PORT", String.valueOf(serviceApiPort)).withEnv("WENET_SERVICE_API_SSL", "false")
+						.withEnv("WENET_SERVICE_API_PATH", "").withNetwork(network).withFixedExposedPort(port, EXPORT_API_PORT)
+						.waitingFor(Wait.forListeningPort());
 		interactionProtocolEngineContainer.start();
 
 	}
@@ -230,9 +233,10 @@ public interface Containers {
 				WENET_PROFILE_MANAGER_DOCKER_NAME).withStartupAttempts(1).withEnv("DB_HOST", WENET_PROFILE_MANAGER_DB_NAME)
 						.withEnv("WENET_TASK_MANAGER_API_HOST", "host.testcontainers.internal")
 						.withEnv("WENET_TASK_MANAGER_API_PORT", String.valueOf(taskManagerApiPort))
-						.withEnv("WENET_TASK_MANAGER_API_PATH", "")
+						.withEnv("WENET_TASK_MANAGER_API_SSL", "false").withEnv("WENET_TASK_MANAGER_API_PATH", "")
 						.withEnv("WENET_INTERACTION_PROTOCOL_ENGINE_API_HOST", "host.testcontainers.internal")
 						.withEnv("WENET_INTERACTION_PROTOCOL_ENGINE_API_PORT", String.valueOf(interactionProtocolEngineApiPort))
+						.withEnv("WENET_INTERACTION_PROTOCOL_ENGINE_API_SSL", "false")
 						.withEnv("WENET_INTERACTION_PROTOCOL_ENGINE_API_PATH", "").withNetwork(network)
 						.withFixedExposedPort(port, EXPORT_API_PORT).waitingFor(Wait.forListeningPort());
 		profileManagerContainer.start();
@@ -291,8 +295,10 @@ public interface Containers {
 				"-ppersistence.port=" + persistenceContainer.getMappedPort(EXPORT_MONGODB_PORT),
 				"-pwenetComponents.interactionProtocolEngine.host=localhost",
 				"-pwenetComponents.interactionProtocolEngine.port=" + interactionProtocolEngineApiPort,
+				"-pwenetComponents.interactionProtocolEngine.ssl=false",
 				"-pwenetComponents.interactionProtocolEngine.apiPath=\"\"", "-pwenetComponents.taskManager.host=localhost",
-				"-pwenetComponents.taskManager.port=" + taskManagerApiPort, "-pwenetComponents.taskManager.apiPath=\"\""
+				"-pwenetComponents.taskManager.port=" + taskManagerApiPort, "-pwenetComponents.taskManager.ssl=false",
+				"-pwenetComponents.taskManager.apiPath=\"\""
 
 		};
 	}
@@ -323,11 +329,13 @@ public interface Containers {
 		return new String[] { "-papi.port=" + port, "-ppersistence.host=localhost",
 				"-ppersistence.port=" + persistenceContainer.getMappedPort(EXPORT_MONGODB_PORT),
 				"-pwenetComponents.profileManager.host=localhost",
-				"-pwenetComponents.profileManager.port=" + profileManagerApiPort,
+				"-pwenetComponents.profileManager.port=" + profileManagerApiPort, "-pwenetComponents.profileManager.ssl=false",
 				"-pwenetComponents.profileManager.apiPath=\"\"", "-pwenetComponents.interactionProtocolEngine.host=localhost",
 				"-pwenetComponents.interactionProtocolEngine.port=" + interactionProtocolEngineApiPort,
+				"-pwenetComponents.interactionProtocolEngine.ssl=false",
 				"-pwenetComponents.interactionProtocolEngine.apiPath=\"\"", "-pwenetComponents.service.host=localhost",
-				"-pwenetComponents.service.port=" + serviceApiPort, "-pwenetComponents.service.apiPath=\"\""
+				"-pwenetComponents.service.port=" + serviceApiPort, "-pwenetComponents.service.ssl=false",
+				"-pwenetComponents.service.apiPath=\"\""
 
 		};
 	}
@@ -358,10 +366,11 @@ public interface Containers {
 		return new String[] { "-papi.port=" + port, "-ppersistence.host=localhost",
 				"-ppersistence.port=" + persistenceContainer.getMappedPort(EXPORT_MONGODB_PORT),
 				"-pwenetComponents.profileManager.host=localhost",
-				"-pwenetComponents.profileManager.port=" + profileManagerApiPort,
+				"-pwenetComponents.profileManager.port=" + profileManagerApiPort, "-pwenetComponents.profileManager.ssl=false",
 				"-pwenetComponents.profileManager.apiPath=\"\"", "-pwenetComponents.taskManager.host=localhost",
-				"-pwenetComponents.taskManager.port=" + taskManagerApiPort, "-pwenetComponents.taskManager.apiPath=\"\"",
-				"-pwenetComponents.service.host=localhost", "-pwenetComponents.service.port=" + serviceApiPort,
+				"-pwenetComponents.taskManager.port=" + taskManagerApiPort, "-pwenetComponents.taskManager.ssl=false",
+				"-pwenetComponents.taskManager.apiPath=\"\"", "-pwenetComponents.service.host=localhost",
+				"-pwenetComponents.service.port=" + serviceApiPort, "-pwenetComponents.service.ssl=false",
 				"-pwenetComponents.service.apiPath=\"\""
 
 		};

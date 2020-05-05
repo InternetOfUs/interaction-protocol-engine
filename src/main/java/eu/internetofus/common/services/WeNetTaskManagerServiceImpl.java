@@ -77,7 +77,7 @@ public class WeNetTaskManagerServiceImpl extends Service implements WeNetTaskMan
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void deleteTask(String id, Handler<AsyncResult<Void>> deleteHandler) {
+	public void deleteTask(String id, Handler<AsyncResult<JsonObject>> deleteHandler) {
 
 		this.delete("/tasks/" + id, deleteHandler);
 
@@ -107,7 +107,7 @@ public class WeNetTaskManagerServiceImpl extends Service implements WeNetTaskMan
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void deleteTaskType(String id, Handler<AsyncResult<Void>> deleteHandler) {
+	public void deleteTaskType(String id, Handler<AsyncResult<JsonObject>> deleteHandler) {
 
 		this.delete("/tasks/types/" + id, deleteHandler);
 

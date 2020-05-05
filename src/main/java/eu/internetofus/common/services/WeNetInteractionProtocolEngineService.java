@@ -95,7 +95,7 @@ public interface WeNetInteractionProtocolEngineService {
 	 * @param id            identifier of the community to remove.
 	 * @param deleteHandler handler to manage the delete process.
 	 */
-	void deleteCommunity(String id, Handler<AsyncResult<Void>> deleteHandler);
+	void deleteCommunity(String id, Handler<AsyncResult<JsonObject>> deleteHandler);
 
 	/**
 	 * Send a message to be processed.

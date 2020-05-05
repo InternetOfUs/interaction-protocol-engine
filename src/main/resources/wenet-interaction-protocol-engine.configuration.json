@@ -23,16 +23,19 @@
 		"profileManager": {
 			"host": "wenet.u-hopper.com",
 			"port": 443,
+			"ssl":true,
 			"apiPath": "/profile_manager"
 		},
 		"taskManager": {
 			"host": "wenet.u-hopper.com",
 			"port": 443,
+			"ssl":true,
 			"apiPath": "/task_manager"
 		},
 		"service": {
 			"host": "wenet.u-hopper.com",
 			"port": 443,
+			"ssl":true,
 			"apiPath": "/service"
 		}
 	}

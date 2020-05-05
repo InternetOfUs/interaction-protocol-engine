@@ -95,7 +95,7 @@ public interface WeNetTaskManagerService {
 	 * @param id            identifier of the task to get.
 	 * @param deleteHandler handler to manage the delete process.
 	 */
-	void deleteTask(String id, Handler<AsyncResult<Void>> deleteHandler);
+	void deleteTask(String id, Handler<AsyncResult<JsonObject>> deleteHandler);
 
 	/**
 	 * Return a task type.
@@ -119,6 +119,6 @@ public interface WeNetTaskManagerService {
 	 * @param id            identifier of the task to get.
 	 * @param deleteHandler handler to manage the delete process.
 	 */
-	void deleteTaskType(String id, Handler<AsyncResult<Void>> deleteHandler);
+	void deleteTaskType(String id, Handler<AsyncResult<JsonObject>> deleteHandler);
 
 }

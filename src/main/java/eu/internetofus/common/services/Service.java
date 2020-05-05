@@ -28,6 +28,9 @@ package eu.internetofus.common.services;
 
 import javax.ws.rs.core.Response.Status;
 
+import eu.internetofus.common.api.models.ErrorException;
+import eu.internetofus.common.api.models.ErrorMessage;
+import eu.internetofus.common.api.models.Model;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -59,6 +62,11 @@ public class Service {
 	protected String host;
 
 	/**
+	 * This is {@code true} if has to use an SSL connection.
+	 */
+	protected boolean ssl;
+
+	/**
 	 * The API path of the service.
 	 */
 	protected String apiPath;
@@ -74,6 +82,7 @@ public class Service {
 		this.client = client;
 		this.port = conf.getInteger("port", 8080);
 		this.host = conf.getString("host", "localhost");
+		this.ssl = conf.getBoolean("ssl", false);
 		this.apiPath = conf.getString("apiPath", "/api");
 
 	}
@@ -89,35 +98,79 @@ public class Service {
 	protected void post(String path, JsonObject content, Handler<AsyncResult<JsonObject>> postHandler) {
 
 		final String requestURI = this.apiPath + path;
-		this.client.post(this.port, this.host, requestURI).sendJson(content, post -> {
+		this.client.post(this.port, this.host, requestURI).ssl(this.ssl).sendJson(content,
+				this.responseHandler(postHandler));
 
-			if (post.failed()) {
+	}
 
-				postHandler.handle(Future.failedFuture(post.cause()));
+	/**
+	 * Put a resource.
+	 *
+	 * @param path       to the resource to put.
+	 * @param content    resource to put.
+	 * @param putHandler the handler to manager the puted resource.
+	 *
+	 */
+	protected void put(String path, JsonObject content, Handler<AsyncResult<JsonObject>> putHandler) {
 
-			} else {
+		final String requestURI = this.apiPath + path;
+		this.client.put(this.port, this.host, requestURI).ssl(this.ssl).sendJson(content, this.responseHandler(putHandler));
 
-				try {
+	}
 
-					final HttpResponse<Buffer> result = post.result();
+	/**
+	 * Create a handler to manage the response of an HTTP request.
+	 *
+	 * @param actionHandler handler to manage the action result.
+	 *
+	 * @return the handler to manage the answer got an HTTP action.
+	 */
+	protected Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler(Handler<AsyncResult<JsonObject>> actionHandler) {
+
+		return action -> {
+
+			try {
+
+				if (action.failed()) {
+
+					actionHandler.handle(Future.failedFuture(action.cause()));
+
+				} else {
+
+					final HttpResponse<Buffer> result = action.result();
 					if (Status.Family.familyOf(result.statusCode()) == Status.Family.SUCCESSFUL) {
 
-						final JsonObject createdProfile = result.bodyAsJsonObject();
-						postHandler.handle(Future.succeededFuture(createdProfile));
+						if (result.statusCode() == Status.NO_CONTENT.getStatusCode()) {
+
+							actionHandler.handle(Future.succeededFuture());
+
+						} else {
+
+							final JsonObject body = result.bodyAsJsonObject();
+							actionHandler.handle(Future.succeededFuture(body));
+						}
 
 					} else {
 
-						postHandler.handle(Future.failedFuture(result.statusMessage()));
+						final ErrorMessage errorMessage = Model.fromBuffer(result.body(), ErrorMessage.class);
+						if (errorMessage == null) {
+
+							actionHandler.handle(Future.failedFuture(result.statusMessage()));
+
+						} else {
+
+							actionHandler.handle(Future.failedFuture(new ErrorException(errorMessage)));
+						}
 					}
 
-				} catch (final Throwable cause) {
-					// cannot obtain the received profile
-					postHandler.handle(Future.failedFuture(cause));
 				}
 
+			} catch (final Throwable cause) {
+				// cannot obtain the received profile
+				actionHandler.handle(Future.failedFuture(cause));
 			}
-		});
 
+		};
 	}
 
 	/**
@@ -129,26 +182,7 @@ public class Service {
 	protected void get(String path, Handler<AsyncResult<JsonObject>> getHandler) {
 
 		final String requestURI = this.apiPath + path;
-		this.client.get(this.port, this.host, requestURI).send(get -> {
-
-			if (get.failed()) {
-
-				getHandler.handle(Future.failedFuture(get.cause()));
-
-			} else {
-
-				final HttpResponse<Buffer> result = get.result();
-				if (Status.Family.familyOf(result.statusCode()) == Status.Family.SUCCESSFUL) {
-
-					final JsonObject createdProfile = result.bodyAsJsonObject();
-					getHandler.handle(Future.succeededFuture(createdProfile));
-
-				} else {
-
-					getHandler.handle(Future.failedFuture(result.statusMessage()));
-				}
-			}
-		});
+		this.client.get(this.port, this.host, requestURI).ssl(this.ssl).send(this.responseHandler(getHandler));
 
 	}
 
@@ -158,28 +192,10 @@ public class Service {
 	 * @param path          of the resource to delete.
 	 * @param deleteHandler the handler to manage the receiver resource.
 	 */
-	protected void delete(String path, Handler<AsyncResult<Void>> deleteHandler) {
+	protected void delete(String path, Handler<AsyncResult<JsonObject>> deleteHandler) {
 
 		final String requestURI = this.apiPath + path;
-		this.client.delete(this.port, this.host, requestURI).send(delete -> {
-
-			if (delete.failed()) {
-
-				deleteHandler.handle(Future.failedFuture(delete.cause()));
-
-			} else {
-
-				final HttpResponse<Buffer> result = delete.result();
-				if (Status.Family.familyOf(result.statusCode()) == Status.Family.SUCCESSFUL) {
-
-					deleteHandler.handle(Future.succeededFuture());
-
-				} else {
-
-					deleteHandler.handle(Future.failedFuture(result.statusMessage()));
-				}
-			}
-		});
+		this.client.delete(this.port, this.host, requestURI).ssl(this.ssl).send(this.responseHandler(deleteHandler));
 
 	}
 

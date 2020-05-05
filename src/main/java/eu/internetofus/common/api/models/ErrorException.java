@@ -27,11 +27,11 @@
 package eu.internetofus.common.api.models;
 
 /**
- * This exception explains why a model is not valid.
+ * This exception explains an error that happens.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class ValidationErrorException extends ErrorException {
+public class ErrorException extends Exception {
 
 	/**
 	 * Serialization identifier.
@@ -39,14 +39,20 @@ public class ValidationErrorException extends ErrorException {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * Create a new validation error exception.
+	 * The code of the error.
+	 */
+	protected String code;
+
+	/**
+	 * Create a new error exception.
 	 *
 	 * @param code    for the error message.
 	 * @param message a brief description of the error to be read by a human.
 	 */
-	public ValidationErrorException(String code, String message) {
+	public ErrorException(String code, String message) {
 
-		super(code, message);
+		super(message);
+		this.code = code;
 
 	}
 
@@ -57,9 +63,10 @@ public class ValidationErrorException extends ErrorException {
 	 * @param message a brief description of the error to be read by a human.
 	 * @param cause   because the model is not right.
 	 */
-	public ValidationErrorException(String code, String message, Throwable cause) {
+	public ErrorException(String code, String message, Throwable cause) {
 
-		super(code, message, cause);
+		super(message, cause);
+		this.code = code;
 
 	}
 
@@ -69,10 +76,35 @@ public class ValidationErrorException extends ErrorException {
 	 * @param code  for the error message.
 	 * @param cause because the model is not right.
 	 */
-	public ValidationErrorException(String code, Throwable cause) {
+	public ErrorException(String code, Throwable cause) {
 
-		super(code, cause);
+		super(cause);
+		this.code = code;
 
+	}
+
+	/**
+	 * Return the exception equivalent to an {@link ErrorMessage}.
+	 *
+	 * @param errorMessage to convert to an exception.
+	 */
+	public ErrorException(ErrorMessage errorMessage) {
+
+		super(errorMessage.message);
+		this.code = errorMessage.code;
+
+	}
+
+	/**
+	 * The code associated to the error.
+	 *
+	 * @return the error code.
+	 *
+	 * @see #code
+	 */
+	public String getCode() {
+
+		return this.code;
 	}
 
 }

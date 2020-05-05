@@ -77,7 +77,7 @@ public class WeNetInteractionProtocolEngineServiceImpl extends Service
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void deleteCommunity(String id, Handler<AsyncResult<Void>> deleteHandler) {
+	public void deleteCommunity(String id, Handler<AsyncResult<JsonObject>> deleteHandler) {
 
 		this.delete("/communities/" + id, deleteHandler);
 

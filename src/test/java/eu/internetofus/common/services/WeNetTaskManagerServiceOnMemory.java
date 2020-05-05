@@ -136,7 +136,7 @@ public class WeNetTaskManagerServiceOnMemory implements WeNetTaskManagerService 
 	 * {@inheritDoc}
 	 */
 	@Override
-	public synchronized void deleteTask(String id, Handler<AsyncResult<Void>> deleteHandler) {
+	public synchronized void deleteTask(String id, Handler<AsyncResult<JsonObject>> deleteHandler) {
 
 		final JsonObject task = this.tasks.remove(id);
 		if (task == null) {
@@ -207,7 +207,7 @@ public class WeNetTaskManagerServiceOnMemory implements WeNetTaskManagerService 
 	 * {@inheritDoc}
 	 */
 	@Override
-	public synchronized void deleteTaskType(String id, Handler<AsyncResult<Void>> deleteHandler) {
+	public synchronized void deleteTaskType(String id, Handler<AsyncResult<JsonObject>> deleteHandler) {
 
 		final JsonObject taskType = this.taskTypes.remove(id);
 		if (taskType == null) {

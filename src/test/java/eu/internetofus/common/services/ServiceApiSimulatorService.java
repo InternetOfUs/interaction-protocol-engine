@@ -97,6 +97,6 @@ public interface ServiceApiSimulatorService {
 	 * @param id            identifier of the application to remove.
 	 * @param deleteHandler handler to manage the delete process.
 	 */
-	void deleteApp(String id, Handler<AsyncResult<Void>> deleteHandler);
+	void deleteApp(String id, Handler<AsyncResult<JsonObject>> deleteHandler);
 
 }

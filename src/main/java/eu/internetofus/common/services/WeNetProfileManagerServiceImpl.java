@@ -77,7 +77,7 @@ public class WeNetProfileManagerServiceImpl extends Service implements WeNetProf
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void deleteProfile(String id, Handler<AsyncResult<Void>> deleteHandler) {
+	public void deleteProfile(String id, Handler<AsyncResult<JsonObject>> deleteHandler) {
 
 		this.delete("/profiles/" + id, deleteHandler);
 

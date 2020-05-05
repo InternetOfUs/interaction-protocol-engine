@@ -129,7 +129,7 @@ public class WeNetProfileManagerServiceOnMemory implements WeNetProfileManagerSe
 	 * {@inheritDoc}
 	 */
 	@Override
-	public synchronized void deleteProfile(String id, Handler<AsyncResult<Void>> deleteHandler) {
+	public synchronized void deleteProfile(String id, Handler<AsyncResult<JsonObject>> deleteHandler) {
 
 		final JsonObject profile = this.profiles.remove(id);
 		if (profile == null) {
