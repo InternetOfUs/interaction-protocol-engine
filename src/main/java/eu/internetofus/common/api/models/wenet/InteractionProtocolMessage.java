@@ -96,8 +96,7 @@ public class InteractionProtocolMessage extends Model implements Validable {
 	@Override
 	public Future<Void> validate(String codePrefix, Vertx vertx) {
 
-		// TODO Auto-generated method stub
-		return null;
+		return Future.succeededFuture();
 	}
 
 }

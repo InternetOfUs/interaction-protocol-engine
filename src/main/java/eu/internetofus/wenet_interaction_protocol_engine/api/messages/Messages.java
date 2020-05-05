@@ -64,6 +64,11 @@ public interface Messages {
 	String PATH = "/messages";
 
 	/**
+	 * The address of this service.
+	 */
+	String ADDRESS = "wenet_interaction_protocol_engine.api.messages";
+
+	/**
 	 * Called when want to send a message in an interaction protocol.
 	 *
 	 * @param body          the message to publish on the protocol.

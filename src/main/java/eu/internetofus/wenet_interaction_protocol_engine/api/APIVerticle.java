@@ -31,6 +31,8 @@ import eu.internetofus.common.services.WeNetInteractionProtocolEngineService;
 import eu.internetofus.common.services.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Communities;
 import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunitiesResource;
+import eu.internetofus.wenet_interaction_protocol_engine.api.messages.Messages;
+import eu.internetofus.wenet_interaction_protocol_engine.api.messages.MessagesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.NormsResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.versions.Versions;
@@ -74,6 +76,10 @@ public class APIVerticle extends AbstractAPIVerticle {
 		routerFactory.mountServiceInterface(Norms.class, Norms.ADDRESS);
 		new ServiceBinder(this.vertx).setAddress(Norms.ADDRESS).register(Norms.class, new NormsResource(this.vertx));
 
+		routerFactory.mountServiceInterface(Messages.class, Messages.ADDRESS);
+		new ServiceBinder(this.vertx).setAddress(Messages.ADDRESS).register(Messages.class,
+				new MessagesResource(this.vertx));
+
 	}
 
 	/**
@@ -89,6 +95,7 @@ public class APIVerticle extends AbstractAPIVerticle {
 		final JsonObject conf = new JsonObject();
 		conf.put("host", host);
 		conf.put("port", port);
+		conf.put("ssl", false);
 		conf.put("apiPath", "");
 		final WebClient client = WebClient.create(this.vertx);
 		WeNetInteractionProtocolEngineService.register(this.vertx, client, conf);
