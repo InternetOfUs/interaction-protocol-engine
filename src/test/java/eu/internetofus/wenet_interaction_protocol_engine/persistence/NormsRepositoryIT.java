@@ -28,10 +28,13 @@ package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.common.TimeManager;
+import eu.internetofus.common.api.models.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNorm;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNormTest;
@@ -390,6 +393,43 @@ public class NormsRepositoryIT {
 			}));
 
 		}));
+
+	}
+
+	/**
+	 * Verify that can obtain the published norms.
+	 *
+	 * @param vertx       event bus to use.
+	 * @param testContext context that executes the test.
+	 *
+	 * @see NormsRepository#searchPublishedNormsPageObject(JsonObject, int, int,
+	 *      io.vertx.core.Handler)
+	 */
+	@Test
+	public void shoulFoundPublishedNormPage(Vertx vertx, VertxTestContext testContext) {
+
+		final NormsRepository repository = NormsRepository.createProxy(vertx);
+		final String name = UUID.randomUUID().toString();
+		repository.searchPublishedNormsPageObject(name, null, null, null, null, null, 0, 10,
+				testContext.succeeding(found -> testContext.verify(() -> {
+
+					assertThat(found.getLong("total")).isEqualTo(0l);
+					assertThat(found.getJsonArray("norms", null)).isNull();
+					final PublishedNorm norm1 = new PublishedNormTest().createModelExample(1);
+					norm1.name = name;
+					repository.storePublishedNorm(norm1, testContext.succeeding(stored1 -> testContext.verify(() -> {
+						repository.searchPublishedNormsPageObject(name, null, null, null, null, null, 0, 10,
+								testContext.succeeding(found2 -> testContext.verify(() -> {
+									assertThat(found.getLong("total")).isEqualTo(1l);
+									assertThat(found.getJsonArray("norms", null)).isNotNull();
+									assertThat(Model.fromJsonObject(found.getJsonArray("norms").getJsonObject(0), PublishedNorm.class))
+											.isEqualTo(norm1);
+
+									testContext.completeNow();
+								})));
+					})));
+
+				})));
 
 	}
 

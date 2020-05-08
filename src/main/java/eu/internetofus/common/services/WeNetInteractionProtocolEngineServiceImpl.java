@@ -57,36 +57,6 @@ public class WeNetInteractionProtocolEngineServiceImpl extends Service
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void createCommunity(JsonObject community, Handler<AsyncResult<JsonObject>> createHandler) {
-
-		this.post("/communities", community, createHandler);
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void retrieveCommunity(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
-
-		this.get("/communities/" + id, retrieveHandler);
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void deleteCommunity(String id, Handler<AsyncResult<JsonObject>> deleteHandler) {
-
-		this.delete("/communities/" + id, deleteHandler);
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
 	public void sendMessage(JsonObject message, Handler<AsyncResult<JsonObject>> sendHandler) {
 
 		this.post("/messages", message, sendHandler);

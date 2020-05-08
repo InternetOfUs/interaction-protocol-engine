@@ -38,12 +38,13 @@ import eu.internetofus.common.api.models.wenet.InteractionProtocolMessage;
 import eu.internetofus.common.api.models.wenet.Task;
 import eu.internetofus.common.api.models.wenet.WeNetUserProfile;
 import eu.internetofus.common.services.WeNetProfileManagerService;
+import eu.internetofus.common.services.WeNetServiceApiService;
+import eu.internetofus.common.services.WeNetTaskManagerService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 
 /**
  * Contains the information of an environment.
@@ -79,9 +80,8 @@ public class EngineEnvironment {
 	 *
 	 * @return the future that will provide the loaded field.
 	 */
-	protected static <T extends Model> Function<EngineEnvironment, Future<EngineEnvironment>> loadField(
-			Consumer<Handler<AsyncResult<JsonObject>>> loader, String name, Class<T> type,
-			BiConsumer<EngineEnvironment, T> setter) {
+	protected static <T extends Model> Function<EngineEnvironment, Future<EngineEnvironment>> loadField(Class<T> type,
+			Consumer<Handler<AsyncResult<T>>> loader, String name, BiConsumer<EngineEnvironment, T> setter) {
 
 		return env -> {
 
@@ -93,16 +93,8 @@ public class EngineEnvironment {
 
 				} else {
 
-					final JsonObject object = load.result();
-					final T result = Model.fromJsonObject(object, type);
-					if (result == null) {
-
-						Logger.error(load.cause(), "{} is not a valid {} for the {}", object, type, name);
-
-					} else {
-
-						setter.accept(env, result);
-					}
+					final T result = load.result();
+					setter.accept(env, result);
 				}
 				loadPromise.complete(env);
 			});
@@ -124,19 +116,26 @@ public class EngineEnvironment {
 		Future<EngineEnvironment> future = promise.future();
 
 		if (message.senderId != null) {
-			future = future.compose(
-					loadField(load -> WeNetProfileManagerService.createProxy(vertx).retrieveProfile(message.senderId, load),
-							"sender", WeNetUserProfile.class, (env, profile) -> env.sender = profile));
+
+			future = future.compose(loadField(WeNetUserProfile.class, loader -> {
+				WeNetProfileManagerService.createProxy(vertx).retrieveProfile(message.senderId, loader);
+			}, "sender", (env, profile) -> env.sender = profile));
+
 		}
 		if (message.appId != null) {
-			future = future
-					.compose(loadField(load -> WeNetProfileManagerService.createProxy(vertx).retrieveProfile(message.appId, load),
-							"app", App.class, (env, profile) -> env.app = profile));
+
+			future = future.compose(loadField(App.class, loader -> {
+				WeNetServiceApiService.createProxy(vertx).retrieveApp(message.appId, loader);
+			}, "app", (env, profile) -> env.app = profile));
+
 		}
+
 		if (message.taskId != null) {
-			future = future.compose(
-					loadField(load -> WeNetProfileManagerService.createProxy(vertx).retrieveProfile(message.taskId, load), "task",
-							Task.class, (env, profile) -> env.task = profile));
+
+			future = future.compose(loadField(Task.class, loader -> {
+				WeNetTaskManagerService.createProxy(vertx).retrieveTask(message.taskId, loader);
+			}, "task", (env, profile) -> env.task = profile));
+
 		}
 
 		promise.complete(new EngineEnvironment());

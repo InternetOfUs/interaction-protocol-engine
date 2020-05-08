@@ -119,7 +119,7 @@ public class SocialPractice extends Model implements Validable, Mergeable<Social
 					future = future.compose(mapper -> this.materials.validate(codePrefix + ".materials", vertx));
 				}
 
-				future = future.compose(Validations.validate(this.norms, codePrefix + ".norms", vertx));
+				future = future.compose(Validations.validate(this.norms, (a, b) -> a.equals(b), codePrefix + ".norms", vertx));
 
 				return future;
 			}

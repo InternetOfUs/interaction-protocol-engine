@@ -41,6 +41,7 @@ import eu.internetofus.common.api.models.wenet.Routine;
 import eu.internetofus.common.api.models.wenet.SocialPractice;
 import eu.internetofus.common.api.models.wenet.TaskAttribute;
 import eu.internetofus.common.api.models.wenet.TaskAttributeType;
+import eu.internetofus.common.api.models.wenet.TaskTransactionType;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -77,9 +78,17 @@ public interface Merges {
 			if (source != null) {
 
 				final List<T> original = new ArrayList<>();
+				final List<T> originalMerged = new ArrayList<>();
 				if (target != null) {
 
-					original.addAll(target);
+					for (final T element : target) {
+
+						if (hasIdentifier.test(element)) {
+
+							original.add(element);
+						}
+					}
+
 				}
 				INDEX: for (int index = 0; index < source.size(); index++) {
 
@@ -93,13 +102,23 @@ public interface Merges {
 							final T targetElement = original.get(j);
 							if (equalsIdentifier.test(targetElement, sourceElement)) {
 
-								original.remove(j);
+								originalMerged.add(original.remove(j));
 								future = future
 										.compose(merged -> targetElement.merge(sourceElement, codeElement, vertx).map(mergedElement -> {
 											merged.add(mergedElement);
 											return merged;
 										}));
 								continue INDEX;
+							}
+
+						}
+						for (final T element : originalMerged) {
+
+							if (equalsIdentifier.test(element, sourceElement)) {
+
+								future = Future
+										.failedFuture(new ValidationErrorException(codeElement, "This model is already merged."));
+								break INDEX;
 							}
 
 						}
@@ -363,6 +382,30 @@ public interface Merges {
 		return Merges.mergeFieldList(targetTaskAttributeTypes, sourceTaskAttributeTypes, codePrefix, vertx,
 				taskattributetype -> taskattributetype.name != null, (targetTaskAttributeType,
 						sourceTaskAttributeType) -> targetTaskAttributeType.name.equals(sourceTaskAttributeType.name),
+				setter);
+
+	}
+
+	/**
+	 * Merge two list of task transaction types.
+	 *
+	 * @param targetTaskTransactionTypes target task transaction types to merge.
+	 * @param sourceTaskTransactionTypes source task transaction types to merge.
+	 * @param codePrefix                 prefix for the error code.
+	 * @param vertx                      the event bus infrastructure to use.
+	 * @param setter                     function to set the merged field list into
+	 *                                   the merged model.
+	 *
+	 * @return the future that will provide the merged list of task transaction
+	 *         types.
+	 */
+	static <M> Function<M, Future<M>> mergeTaskTransactionTypes(List<TaskTransactionType> targetTaskTransactionTypes,
+			List<TaskTransactionType> sourceTaskTransactionTypes, String codePrefix, Vertx vertx,
+			BiConsumer<M, List<TaskTransactionType>> setter) {
+
+		return Merges.mergeFieldList(targetTaskTransactionTypes, sourceTaskTransactionTypes, codePrefix, vertx,
+				taskTransactionType -> taskTransactionType.label != null, (targetTaskTransactionType,
+						sourceTaskTransactionType) -> targetTaskTransactionType.label.equals(sourceTaskTransactionType.label),
 				setter);
 
 	}

@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+import eu.internetofus.common.api.models.wenet.WeNetUserProfile;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
@@ -104,9 +105,9 @@ public abstract class WeNetProfileManagerServiceTestCase {
 	public void shouldCreateRetrieveAndDeleteProfile(Vertx vertx, VertxTestContext testContext) {
 
 		final WeNetProfileManagerService service = WeNetProfileManagerService.createProxy(vertx);
-		service.createProfile(new JsonObject(), testContext.succeeding(create -> {
+		service.createProfile(new WeNetUserProfile(), testContext.succeeding(create -> {
 
-			final String id = create.getString("id");
+			final String id = create.id;
 			service.retrieveProfile(id, testContext.succeeding(retrieve -> testContext.verify(() -> {
 
 				assertThat(create).isEqualTo(retrieve);

@@ -67,7 +67,7 @@ public class WeNetTaskManagerServiceImpl extends Service implements WeNetTaskMan
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void retrieveTask(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
+	public void retrieveJsonTask(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
 
 		this.get("/tasks/" + id, retrieveHandler);
 
@@ -97,7 +97,7 @@ public class WeNetTaskManagerServiceImpl extends Service implements WeNetTaskMan
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void retrieveTaskType(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
+	public void retrieveJsonTaskType(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
 
 		this.get("/tasks/types/" + id, retrieveHandler);
 

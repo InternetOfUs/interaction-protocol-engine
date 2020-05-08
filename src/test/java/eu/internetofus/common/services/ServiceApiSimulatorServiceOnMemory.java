@@ -30,12 +30,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.validation.constraints.NotNull;
+
 import eu.internetofus.common.api.models.Model;
 import eu.internetofus.common.api.models.wenet.App;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceBinder;
 
@@ -68,11 +71,27 @@ public class ServiceApiSimulatorServiceOnMemory implements ServiceApiSimulatorSe
 	private final Map<String, JsonObject> apps;
 
 	/**
+	 * The callback messages to an application.
+	 */
+	private final Map<String, JsonArray> callbacks;
+
+	/**
 	 * Create the service.
 	 */
 	public ServiceApiSimulatorServiceOnMemory() {
 
 		this.apps = new HashMap<>();
+		this.callbacks = new HashMap<>();
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveApp(@NotNull String id, @NotNull Handler<AsyncResult<App>> retrieveHandler) {
+
+		this.retrieveJsonApp(id, Service.handlerForModel(App.class, retrieveHandler));
 
 	}
 
@@ -95,6 +114,12 @@ public class ServiceApiSimulatorServiceOnMemory implements ServiceApiSimulatorSe
 				id = UUID.randomUUID().toString();
 				app.put("appId", id);
 			}
+			String callback = app.getString("messageCallbackUrl");
+			if (callback != null && callback.endsWith("/:appId")) {
+
+				callback = callback.substring(0, callback.length() - 6) + id;
+				app.put("messageCallbackUrl", callback);
+			}
 
 			if (this.apps.containsKey(id)) {
 
@@ -113,7 +138,7 @@ public class ServiceApiSimulatorServiceOnMemory implements ServiceApiSimulatorSe
 	 * {@inheritDoc}
 	 */
 	@Override
-	public synchronized void retrieveApp(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
+	public synchronized void retrieveJsonApp(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
 
 		final JsonObject app = this.apps.get(id);
 		if (app == null) {
@@ -143,6 +168,66 @@ public class ServiceApiSimulatorServiceOnMemory implements ServiceApiSimulatorSe
 
 			deleteHandler.handle(Future.succeededFuture());
 
+		}
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public synchronized void retrieveJsonCallbacks(String appId, Handler<AsyncResult<JsonObject>> handler) {
+
+		final JsonArray messages = this.callbacks.get(appId);
+		if (messages == null) {
+			// no messages
+			handler.handle(Future.failedFuture("No callbacks defined for the application"));
+
+		} else {
+
+			handler.handle(Future.succeededFuture(new JsonObject().put("messages", messages)));
+		}
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public synchronized void addJsonCallBack(String appId, JsonObject message, Handler<AsyncResult<JsonObject>> handler) {
+
+		if (this.apps.containsKey(appId)) {
+
+			JsonArray messages = this.callbacks.get(appId);
+			if (messages == null) {
+
+				messages = new JsonArray();
+				this.callbacks.put(appId, messages);
+			}
+			messages.add(message);
+
+			handler.handle(Future.succeededFuture(message));
+
+		} else {
+
+			handler.handle(Future.failedFuture("No Application associated to the ID"));
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void deleteCallbacks(String appId, Handler<AsyncResult<JsonObject>> handler) {
+
+		final JsonArray messages = this.callbacks.remove(appId);
+		if (messages == null) {
+			// no messages
+			handler.handle(Future.failedFuture("No callbacks defined for the application"));
+
+		} else {
+
+			handler.handle(Future.succeededFuture(new JsonObject().put("messages", messages)));
 		}
 
 	}

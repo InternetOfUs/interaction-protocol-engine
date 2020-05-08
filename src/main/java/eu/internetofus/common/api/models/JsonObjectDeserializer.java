@@ -24,29 +24,63 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.communities;
+package eu.internetofus.common.api.models;
 
-import eu.internetofus.common.api.models.ModelTestCase;
+import java.io.IOException;
+import java.util.Map;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+
+import io.vertx.core.json.JsonObject;
 
 /**
- * Test the {@link CommunityMember}
- *
- * @see CommunityMember
+ * The component to deserialize a {@link JsonObject} to any of it possible sub
+ * types.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class CommunityMemberTest extends ModelTestCase<CommunityMember> {
+public class JsonObjectDeserializer extends StdDeserializer<JsonObject> {
 
 	/**
-	 * {@inheritDoc}
+	 * Serial version identifier.
 	 */
-	@Override
-	public CommunityMember createModelExample(int index) {
+	private static final long serialVersionUID = 1L;
 
-		final CommunityMember model = new CommunityMember();
-		model.userId = null;
-		model.joinTime = index * 100000;
-		return model;
+	/**
+	 * The type for the deserializer.
+	 */
+	private final TypeReference<Map<String, Object>> type = new TypeReference<Map<String, Object>>() {
+	};
+
+	/**
+	 * Create a new deserializer
+	 */
+	public JsonObjectDeserializer() {
+
+		this(null);
+	}
+
+	/**
+	 * Create a new deserializer for a type.
+	 *
+	 * @param type for the deserializer
+	 */
+	public JsonObjectDeserializer(final Class<?> type) {
+
+		super(type);
+	}
+
+	@Override
+	public JsonObject deserialize(final JsonParser jsonParser, final DeserializationContext context) throws IOException {
+
+		final ObjectCodec objectCodec = jsonParser.getCodec();
+		final Map<String, Object> value = objectCodec.readValue(jsonParser, this.type);
+
+		return new JsonObject(value);
 	}
 
 }

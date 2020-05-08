@@ -28,6 +28,10 @@ package eu.internetofus.common.api.models.wenet;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import eu.internetofus.common.api.models.JsonObjectDeserializer;
+import eu.internetofus.common.api.models.Model;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -37,7 +41,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(hidden = true, name = "App", description = "The app of a wenet use case scenario.")
-public class App extends CreateUpdateTsDetails {
+public class App extends Model {
+
+	/**
+	 * The instant of the creation.
+	 */
+	@Schema(description = "The UTC epoch timestamp representing the account creation instant.", example = "1563871899")
+	public long creationTs;
+
+	/**
+	 * The instant of the last update.
+	 */
+	@Schema(description = "The UTC epoch timestamp representing the last update instant.", example = "1563898764")
+	public long lastUpdateTs;
 
 	/**
 	 * The identifier of the application.
@@ -62,15 +78,17 @@ public class App extends CreateUpdateTsDetails {
 	/**
 	 * The metadata of the application.
 	 */
-	@Schema(description = "App metadata (such as its name and description).")
+	@Schema(type = "object", description = "App metadata (such as its name and description).")
+	@JsonDeserialize(using = JsonObjectDeserializer.class)
 	public Object metadata;
 
 	/**
 	 * The platform that the application is allowed to use.
 	 */
 	@ArraySchema(
-			schema = @Schema(implementation = Object.class),
+			schema = @Schema(type = "object"),
 			arraySchema = @Schema(description = "The allowed platform for the application."))
+	@JsonDeserialize(contentUsing = JsonObjectDeserializer.class)
 	public List<Object> allowedPlatforms;
 
 }

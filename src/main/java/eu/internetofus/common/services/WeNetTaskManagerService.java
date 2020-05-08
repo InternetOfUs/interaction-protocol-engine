@@ -26,6 +26,11 @@
 
 package eu.internetofus.common.services;
 
+import javax.validation.constraints.NotNull;
+
+import eu.internetofus.common.api.models.wenet.Task;
+import eu.internetofus.common.api.models.wenet.TaskType;
+import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -74,12 +79,33 @@ public interface WeNetTaskManagerService {
 	}
 
 	/**
+	 * Search for a {@link Task} in Json format.
+	 *
+	 * @param id              identifier of the task to get.
+	 * @param retrieveHandler handler to manage the retrieve process.
+	 */
+	void retrieveJsonTask(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> retrieveHandler);
+
+	/**
 	 * Return a task.
 	 *
 	 * @param id              identifier of the task to get.
 	 * @param retrieveHandler handler to manage the retrieve process.
 	 */
-	void retrieveTask(String id, Handler<AsyncResult<JsonObject>> retrieveHandler);
+	@GenIgnore
+	default void retrieveTask(@NotNull String id, @NotNull Handler<AsyncResult<Task>> retrieveHandler) {
+
+		this.retrieveJsonTask(id, Service.handlerForModel(Task.class, retrieveHandler));
+
+	}
+
+	/**
+	 * Create a {@link Task} in Json format.
+	 *
+	 * @param task          to create.
+	 * @param createHandler handler to manage the creation process.
+	 */
+	void createTask(@NotNull JsonObject task, @NotNull Handler<AsyncResult<JsonObject>> createHandler);
 
 	/**
 	 * Create a task.
@@ -87,7 +113,11 @@ public interface WeNetTaskManagerService {
 	 * @param task          to create.
 	 * @param createHandler handler to manage the creation process.
 	 */
-	void createTask(JsonObject task, Handler<AsyncResult<JsonObject>> createHandler);
+	@GenIgnore
+	default void createTask(@NotNull Task task, @NotNull Handler<AsyncResult<Task>> createHandler) {
+
+		this.createTask(task.toJsonObject(), Service.handlerForModel(Task.class, createHandler));
+	}
 
 	/**
 	 * Delete a task.
@@ -95,7 +125,15 @@ public interface WeNetTaskManagerService {
 	 * @param id            identifier of the task to get.
 	 * @param deleteHandler handler to manage the delete process.
 	 */
-	void deleteTask(String id, Handler<AsyncResult<JsonObject>> deleteHandler);
+	void deleteTask(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> deleteHandler);
+
+	/**
+	 * Return a {@link TaskType} in Json format.
+	 *
+	 * @param id              identifier of the task to get.
+	 * @param retrieveHandler handler to manage the retrieve process.
+	 */
+	void retrieveJsonTaskType(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> retrieveHandler);
 
 	/**
 	 * Return a task type.
@@ -103,15 +141,33 @@ public interface WeNetTaskManagerService {
 	 * @param id              identifier of the task to get.
 	 * @param retrieveHandler handler to manage the retrieve process.
 	 */
-	void retrieveTaskType(String id, Handler<AsyncResult<JsonObject>> retrieveHandler);
+	@GenIgnore
+	default void retrieveTaskType(@NotNull String id, @NotNull Handler<AsyncResult<TaskType>> retrieveHandler) {
+
+		this.retrieveJsonTaskType(id, Service.handlerForModel(TaskType.class, retrieveHandler));
+
+	}
 
 	/**
-	 * Create a task type.
+	 * Create a {@link TaskType} in Json format.
 	 *
 	 * @param task          to create.
 	 * @param createHandler handler to manage the creation process.
 	 */
-	void createTaskType(JsonObject task, Handler<AsyncResult<JsonObject>> createHandler);
+	void createTaskType(@NotNull JsonObject task, @NotNull Handler<AsyncResult<JsonObject>> createHandler);
+
+	/**
+	 * Create a task type.
+	 *
+	 * @param taskType      to create.
+	 * @param createHandler handler to manage the creation process.
+	 */
+	@GenIgnore
+	default void createTaskType(@NotNull TaskType taskType, @NotNull Handler<AsyncResult<TaskType>> createHandler) {
+
+		this.createTaskType(taskType.toJsonObject(), Service.handlerForModel(TaskType.class, createHandler));
+
+	}
 
 	/**
 	 * Delete a task type.
@@ -119,6 +175,6 @@ public interface WeNetTaskManagerService {
 	 * @param id            identifier of the task to get.
 	 * @param deleteHandler handler to manage the delete process.
 	 */
-	void deleteTaskType(String id, Handler<AsyncResult<JsonObject>> deleteHandler);
+	void deleteTaskType(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> deleteHandler);
 
 }

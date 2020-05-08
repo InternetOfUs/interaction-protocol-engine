@@ -29,8 +29,6 @@ package eu.internetofus.wenet_interaction_protocol_engine.api;
 import eu.internetofus.common.api.AbstractAPIVerticle;
 import eu.internetofus.common.services.WeNetInteractionProtocolEngineService;
 import eu.internetofus.common.services.WeNetProfileManagerService;
-import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Communities;
-import eu.internetofus.wenet_interaction_protocol_engine.api.communities.CommunitiesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.Messages;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.MessagesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
@@ -68,10 +66,6 @@ public class APIVerticle extends AbstractAPIVerticle {
 		routerFactory.mountServiceInterface(Versions.class, Versions.ADDRESS);
 		new ServiceBinder(this.vertx).setAddress(Versions.ADDRESS).register(Versions.class,
 				new VersionsResource(this.config()));
-
-		routerFactory.mountServiceInterface(Communities.class, Communities.ADDRESS);
-		new ServiceBinder(this.vertx).setAddress(Communities.ADDRESS).register(Communities.class,
-				new CommunitiesResource(this.vertx));
 
 		routerFactory.mountServiceInterface(Norms.class, Norms.ADDRESS);
 		new ServiceBinder(this.vertx).setAddress(Norms.ADDRESS).register(Norms.class, new NormsResource(this.vertx));

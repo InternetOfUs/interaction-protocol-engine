@@ -67,7 +67,7 @@ public class WeNetProfileManagerServiceImpl extends Service implements WeNetProf
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void retrieveProfile(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
+	public void retrieveJsonProfile(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
 
 		this.get("/profiles/" + id, retrieveHandler);
 

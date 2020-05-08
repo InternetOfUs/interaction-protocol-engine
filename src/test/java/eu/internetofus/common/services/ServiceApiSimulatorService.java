@@ -26,7 +26,11 @@
 
 package eu.internetofus.common.services;
 
+import javax.validation.constraints.NotNull;
+
 import eu.internetofus.common.WeNetModuleContext;
+import eu.internetofus.common.api.models.wenet.App;
+import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -76,12 +80,25 @@ public interface ServiceApiSimulatorService {
 	}
 
 	/**
+	 * Return an {@link App} in JSON format.
+	 *
+	 * @param id              identifier of the app to get.
+	 * @param retrieveHandler handler to manage the retrieve process.
+	 */
+	void retrieveJsonApp(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> retrieveHandler);
+
+	/**
 	 * Return an application.
 	 *
 	 * @param id              identifier of the app to get.
 	 * @param retrieveHandler handler to manage the retrieve process.
 	 */
-	void retrieveApp(String id, Handler<AsyncResult<JsonObject>> retrieveHandler);
+	@GenIgnore
+	default void retrieveApp(@NotNull String id, @NotNull Handler<AsyncResult<App>> retrieveHandler) {
+
+		this.retrieveJsonApp(id, Service.handlerForModel(App.class, retrieveHandler));
+
+	}
 
 	/**
 	 * Defined method only for testing and can store an APP.
@@ -89,7 +106,20 @@ public interface ServiceApiSimulatorService {
 	 * @param app           to create.
 	 * @param createHandler handler to manage the creation process.
 	 */
-	void createApp(JsonObject app, Handler<AsyncResult<JsonObject>> createHandler);
+	void createApp(@NotNull JsonObject app, @NotNull Handler<AsyncResult<JsonObject>> createHandler);
+
+	/**
+	 * Defined method only for testing and can store an APP.
+	 *
+	 * @param app           to create.
+	 * @param createHandler handler to manage the creation process.
+	 */
+	@GenIgnore
+	default void createApp(@NotNull App app, @NotNull Handler<AsyncResult<App>> createHandler) {
+
+		this.createApp(app.toJsonObject(), Service.handlerForModel(App.class, createHandler));
+
+	}
 
 	/**
 	 * Defined method only for testing and can delete an APP.
@@ -97,6 +127,31 @@ public interface ServiceApiSimulatorService {
 	 * @param id            identifier of the application to remove.
 	 * @param deleteHandler handler to manage the delete process.
 	 */
-	void deleteApp(String id, Handler<AsyncResult<JsonObject>> deleteHandler);
+	void deleteApp(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> deleteHandler);
+
+	/**
+	 * Return all the callbacks messages received by an {@link App}.
+	 *
+	 * @param id              identifier of the app to get the callback messages.
+	 * @param retrieveHandler handler to manage the retrieve process.
+	 */
+	void retrieveJsonCallbacks(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> retrieveHandler);
+
+	/**
+	 * Add a callback message for an application.
+	 *
+	 * @param appId   identifier of the application to add the message.
+	 * @param message callback message.
+	 * @param handler to manage the adding.
+	 */
+	void addJsonCallBack(String appId, JsonObject message, Handler<AsyncResult<JsonObject>> handler);
+
+	/**
+	 * Delete all the callbacks for an application.
+	 *
+	 * @param appId   identifier of the application to delete all the callbacks.
+	 * @param handler to manage the delete.
+	 */
+	void deleteCallbacks(String appId, Handler<AsyncResult<JsonObject>> handler);
 
 }

@@ -29,8 +29,6 @@ package eu.internetofus.common.api.models.wenet;
 import static eu.internetofus.common.api.models.ValidationsTest.assertIsNotValid;
 import static eu.internetofus.common.api.models.ValidationsTest.assertIsValid;
 
-import java.util.ArrayList;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,11 +36,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import eu.internetofus.common.api.models.ModelTestCase;
-import eu.internetofus.common.api.models.ValidationsTest;
 import eu.internetofus.common.services.ServiceApiSimulatorServiceOnMemory;
 import eu.internetofus.common.services.WeNetProfileManagerServiceOnMemory;
 import eu.internetofus.common.services.WeNetTaskManagerServiceOnMemory;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
@@ -79,9 +77,8 @@ public class TaskTransactionTest extends ModelTestCase<TaskTransaction> {
 		assert index >= 0;
 		final TaskTransaction model = new TaskTransaction();
 		model.taskId = "taskId" + index;
-		model.typeId = "typeId" + index;
-		model.attributes = new ArrayList<>();
-		model.attributes.add(new TaskAttributeTest().createModelExample(index));
+		model.label = "label" + index;
+		model.attributes = new JsonObject().put("index", index);
 		return model;
 
 	}
@@ -143,27 +140,11 @@ public class TaskTransactionTest extends ModelTestCase<TaskTransaction> {
 	 * @see Task#validate(String, Vertx)
 	 */
 	@Test
-	public void shouldTaskTransactionBeNotValidWithoutTaskTypeId(Vertx vertx, VertxTestContext testContext) {
+	public void shouldTaskTransactionBeNotValidWithoutTaskLabel(Vertx vertx, VertxTestContext testContext) {
 
 		final TaskTransaction model = this.createModelExample(1);
-		model.typeId = null;
-		assertIsNotValid(model, "typeId", vertx, testContext);
-	}
-
-	/**
-	 * A task transaction with bad attribute cannot be valid.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Task#validate(String, Vertx)
-	 */
-	@Test
-	public void shouldTaskTransactionBeNotValidWithBadAttribute(Vertx vertx, VertxTestContext testContext) {
-
-		final TaskTransaction model = this.createModelExample(1);
-		model.attributes.get(0).name = ValidationsTest.STRING_256;
-		assertIsNotValid(model, "attributes[0].name", vertx, testContext);
+		model.label = null;
+		assertIsNotValid(model, "label", vertx, testContext);
 	}
 
 }

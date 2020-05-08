@@ -41,7 +41,6 @@ public class PersistenceVerticle extends AbstractPersistenceVerticle {
 	@Override
 	protected void registerRepositories() throws Exception {
 
-		CommunitiesRepository.register(this.vertx, this.pool);
 		NormsRepository.register(this.vertx, this.pool);
 
 	}

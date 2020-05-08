@@ -30,6 +30,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+import eu.internetofus.common.api.models.wenet.TaskTest;
+import eu.internetofus.common.api.models.wenet.TaskType;
+import eu.internetofus.common.api.models.wenet.TaskTypeTest;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
@@ -100,26 +103,27 @@ public abstract class WeNetTaskManagerServiceTestCase {
 	@Test
 	public void shouldCreateRetrieveAndDeleteTask(Vertx vertx, VertxTestContext testContext) {
 
-		final WeNetTaskManagerService service = WeNetTaskManagerService.createProxy(vertx);
-		service.createTask(new JsonObject(), testContext.succeeding(create -> {
+		new TaskTest().createModelExample(1, vertx, testContext, testContext.succeeding(task -> {
+			final WeNetTaskManagerService service = WeNetTaskManagerService.createProxy(vertx);
+			service.createTask(task, testContext.succeeding(create -> {
 
-			final String id = create.getString("id");
-			service.retrieveTask(id, testContext.succeeding(retrieve -> testContext.verify(() -> {
+				final String id = create.id;
+				service.retrieveTask(id, testContext.succeeding(retrieve -> testContext.verify(() -> {
 
-				assertThat(create).isEqualTo(retrieve);
-				service.deleteTask(id, testContext.succeeding(empty -> {
+					assertThat(create).isEqualTo(retrieve);
+					service.deleteTask(id, testContext.succeeding(empty -> {
 
-					service.retrieveTask(id, testContext.failing(handler -> {
-						testContext.completeNow();
+						service.retrieveTask(id, testContext.failing(handler -> {
+							testContext.completeNow();
+
+						}));
 
 					}));
 
-				}));
+				})));
 
-			})));
-
+			}));
 		}));
-
 	}
 
 	/**
@@ -182,10 +186,11 @@ public abstract class WeNetTaskManagerServiceTestCase {
 	@Test
 	public void shouldCreateRetrieveAndDeleteTaskType(Vertx vertx, VertxTestContext testContext) {
 
+		final TaskType taskType = new TaskTypeTest().createModelExample(1);
 		final WeNetTaskManagerService service = WeNetTaskManagerService.createProxy(vertx);
-		service.createTaskType(new JsonObject(), testContext.succeeding(create -> {
+		service.createTaskType(taskType, testContext.succeeding(create -> {
 
-			final String id = create.getString("id");
+			final String id = create.id;
 			service.retrieveTaskType(id, testContext.succeeding(retrieve -> testContext.verify(() -> {
 
 				assertThat(create).isEqualTo(retrieve);

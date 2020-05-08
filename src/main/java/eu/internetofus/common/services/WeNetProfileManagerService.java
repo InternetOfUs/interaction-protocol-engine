@@ -26,6 +26,10 @@
 
 package eu.internetofus.common.services;
 
+import javax.validation.constraints.NotNull;
+
+import eu.internetofus.common.api.models.wenet.WeNetUserProfile;
+import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -74,12 +78,34 @@ public interface WeNetProfileManagerService {
 	}
 
 	/**
+	 * Create a {@link WeNetUserProfile} in Json format.
+	 *
+	 * @param profile       to create.
+	 * @param createHandler handler to manage the creation process.
+	 */
+	void createProfile(@NotNull JsonObject profile, @NotNull Handler<AsyncResult<JsonObject>> createHandler);
+
+	/**
 	 * Create a profile.
 	 *
 	 * @param profile       to create.
 	 * @param createHandler handler to manage the creation process.
 	 */
-	void createProfile(JsonObject profile, Handler<AsyncResult<JsonObject>> createHandler);
+	@GenIgnore
+	default void createProfile(@NotNull WeNetUserProfile profile,
+			@NotNull Handler<AsyncResult<WeNetUserProfile>> createHandler) {
+
+		this.createProfile(profile.toJsonObject(), Service.handlerForModel(WeNetUserProfile.class, createHandler));
+
+	}
+
+	/**
+	 * Return a {@link WeNetUserProfile} in Json format.
+	 *
+	 * @param id              identifier of the profile to get.
+	 * @param retrieveHandler handler to manage the retrieve process.
+	 */
+	void retrieveJsonProfile(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> retrieveHandler);
 
 	/**
 	 * Return a profile.
@@ -87,7 +113,12 @@ public interface WeNetProfileManagerService {
 	 * @param id              identifier of the profile to get.
 	 * @param retrieveHandler handler to manage the retrieve process.
 	 */
-	void retrieveProfile(String id, Handler<AsyncResult<JsonObject>> retrieveHandler);
+	@GenIgnore
+	default void retrieveProfile(@NotNull String id, @NotNull Handler<AsyncResult<WeNetUserProfile>> retrieveHandler) {
+
+		this.retrieveJsonProfile(id, Service.handlerForModel(WeNetUserProfile.class, retrieveHandler));
+
+	}
 
 	/**
 	 * Delete a profile.
@@ -95,6 +126,6 @@ public interface WeNetProfileManagerService {
 	 * @param id            identifier of the profile to get.
 	 * @param deleteHandler handler to manage the delete process.
 	 */
-	void deleteProfile(String id, Handler<AsyncResult<JsonObject>> deleteHandler);
+	void deleteProfile(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> deleteHandler);
 
 }

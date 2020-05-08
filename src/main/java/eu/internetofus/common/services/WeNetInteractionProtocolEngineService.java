@@ -26,6 +26,10 @@
 
 package eu.internetofus.common.services;
 
+import javax.validation.constraints.NotNull;
+
+import eu.internetofus.common.api.models.wenet.InteractionProtocolMessage;
+import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -74,28 +78,12 @@ public interface WeNetInteractionProtocolEngineService {
 	}
 
 	/**
-	 * Return a community.
+	 * Send a message to be processed.
 	 *
-	 * @param id              identifier of the community to get.
-	 * @param retrieveHandler handler to manage the retrieve process.
+	 * @param message     to be processed.
+	 * @param sendHandler handler to send process.
 	 */
-	void retrieveCommunity(String id, Handler<AsyncResult<JsonObject>> retrieveHandler);
-
-	/**
-	 * Create a community.
-	 *
-	 * @param community     to create.
-	 * @param createHandler handler to manage the creation process.
-	 */
-	void createCommunity(JsonObject community, Handler<AsyncResult<JsonObject>> createHandler);
-
-	/**
-	 * Delete a community.
-	 *
-	 * @param id            identifier of the community to remove.
-	 * @param deleteHandler handler to manage the delete process.
-	 */
-	void deleteCommunity(String id, Handler<AsyncResult<JsonObject>> deleteHandler);
+	void sendMessage(@NotNull JsonObject message, @NotNull Handler<AsyncResult<JsonObject>> sendHandler);
 
 	/**
 	 * Send a message to be processed.
@@ -103,6 +91,11 @@ public interface WeNetInteractionProtocolEngineService {
 	 * @param message     to be processed.
 	 * @param sendHandler handler to send process.
 	 */
-	void sendMessage(JsonObject message, Handler<AsyncResult<JsonObject>> sendHandler);
+	@GenIgnore
+	default void sendMessage(@NotNull InteractionProtocolMessage message,
+			@NotNull Handler<AsyncResult<InteractionProtocolMessage>> sendHandler) {
+
+		this.sendMessage(message.toJsonObject(), Service.handlerForModel(InteractionProtocolMessage.class, sendHandler));
+	}
 
 }

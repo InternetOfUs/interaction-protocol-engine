@@ -28,7 +28,10 @@ package eu.internetofus.common.api.models.wenet;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import eu.internetofus.common.TimeManager;
+import eu.internetofus.common.api.models.JsonObjectDeserializer;
 import eu.internetofus.common.api.models.Mergeable;
 import eu.internetofus.common.api.models.Merges;
 import eu.internetofus.common.api.models.Validable;
@@ -42,6 +45,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 
 /**
  * The profile of a WeNet user.
@@ -121,10 +125,9 @@ public class Task extends CreateUpdateTsDetails implements Validable, Mergeable<
 	/**
 	 * The set of norms that define the interaction of the user when do the task.
 	 */
-	@ArraySchema(
-			schema = @Schema(implementation = TaskAttribute.class),
-			arraySchema = @Schema(description = "The set of norms that define the interaction of the user when do the task."))
-	public List<TaskAttribute> attributes;
+	@Schema(type = "object", description = "The set of norms that define the interaction of the user when do the task.")
+	@JsonDeserialize(using = JsonObjectDeserializer.class)
+	public JsonObject attributes;
 
 	/**
 	 * {@inheritDoc}
@@ -157,69 +160,60 @@ public class Task extends CreateUpdateTsDetails implements Validable, Mergeable<
 					return verifyNotRepeatedIdPromise.future();
 				});
 			}
-			this.taskTypeId = Validations.validateNullableStringField(codePrefix, "taskTypeId", 255, this.taskTypeId);
-			if (this.taskTypeId != null) {
+			this.taskTypeId = Validations.validateStringField(codePrefix, "taskTypeId", 255, this.taskTypeId);
+			future = future.compose(mapper -> {
 
-				future = future.compose(mapper -> {
+				final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
+				WeNetTaskManagerService.createProxy(vertx).retrieveTaskType(this.taskTypeId, taskType -> {
 
-					final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
-					WeNetTaskManagerService.createProxy(vertx).retrieveTaskType(this.taskTypeId, taskType -> {
+					if (!taskType.failed()) {
 
-						if (!taskType.failed()) {
+						verifyNotRepeatedIdPromise.complete();
 
-							verifyNotRepeatedIdPromise.complete();
+					} else {
 
-						} else {
-
-							verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".taskTypeId",
-									"The '" + this.taskTypeId + "' is not defined."));
-						}
-					});
-					return verifyNotRepeatedIdPromise.future();
+						verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".taskTypeId",
+								"The '" + this.taskTypeId + "' is not defined."));
+					}
 				});
-			}
-			this.requesterId = Validations.validateNullableStringField(codePrefix, "requesterId", 255, this.requesterId);
-			if (this.requesterId != null) {
+				return verifyNotRepeatedIdPromise.future();
+			});
+			this.requesterId = Validations.validateStringField(codePrefix, "requesterId", 255, this.requesterId);
+			future = future.compose(mapper -> {
 
-				future = future.compose(mapper -> {
+				final Promise<Void> verifyRequesterIdExistPromise = Promise.promise();
+				WeNetProfileManagerService.createProxy(vertx).retrieveProfile(this.requesterId, search -> {
 
-					final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
-					WeNetProfileManagerService.createProxy(vertx).retrieveProfile(this.requesterId, requester -> {
+					if (!search.failed()) {
 
-						if (!requester.failed()) {
+						verifyRequesterIdExistPromise.complete();
 
-							verifyNotRepeatedIdPromise.complete();
+					} else {
 
-						} else {
-
-							verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".requesterId",
-									"The '" + this.requesterId + "' is not defined."));
-						}
-					});
-					return verifyNotRepeatedIdPromise.future();
+						verifyRequesterIdExistPromise.fail(new ValidationErrorException(codePrefix + ".requesterId",
+								"The '" + this.requesterId + "' is not defined.", search.cause()));
+					}
 				});
-			}
-			this.appId = Validations.validateNullableStringField(codePrefix, "appId", 255, this.appId);
-			if (this.appId != null) {
+				return verifyRequesterIdExistPromise.future();
+			});
+			this.appId = Validations.validateStringField(codePrefix, "appId", 255, this.appId);
+			future = future.compose(mapper -> {
 
-				future = future.compose(mapper -> {
+				final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
+				WeNetServiceApiService.createProxy(vertx).retrieveApp(this.appId, app -> {
 
-					final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
-					WeNetServiceApiService.createProxy(vertx).retrieveApp(this.appId, app -> {
+					if (!app.failed()) {
 
-						if (!app.failed()) {
+						verifyNotRepeatedIdPromise.complete();
 
-							verifyNotRepeatedIdPromise.complete();
+					} else {
 
-						} else {
-
-							verifyNotRepeatedIdPromise.fail(
-									new ValidationErrorException(codePrefix + ".appId", "The '" + this.appId + "' is not defined."));
-						}
-					});
-					return verifyNotRepeatedIdPromise.future();
+						verifyNotRepeatedIdPromise
+								.fail(new ValidationErrorException(codePrefix + ".appId", "The '" + this.appId + "' is not defined."));
+					}
 				});
-			}
+				return verifyNotRepeatedIdPromise.future();
+			});
 
 			this.startTs = Validations.validateNullableTimeStamp(codePrefix, "startTs", this.startTs, TimeManager.now() + 1,
 					false, Long.MAX_VALUE, true);
@@ -227,8 +221,9 @@ public class Task extends CreateUpdateTsDetails implements Validable, Mergeable<
 					Long.MAX_VALUE, true);
 			this.deadlineTs = Validations.validateNullableTimeStamp(codePrefix, "deadlineTs", this.deadlineTs, this.startTs,
 					false, this.endTs, false);
-			future = future.compose(Validations.validate(this.norms, codePrefix + ".norms", vertx));
-			future = future.compose(Validations.validate(this.attributes, codePrefix + ".attributes", vertx));
+			future = future.compose(Validations.validate(this.norms, (a, b) -> a.equals(b), codePrefix + ".norms", vertx));
+
+			// TODO check the attributes fetch the attributes on the type
 
 			promise.complete();
 
@@ -286,6 +281,12 @@ public class Task extends CreateUpdateTsDetails implements Validable, Mergeable<
 			merged.deadlineTs = this.deadlineTs;
 		}
 
+		merged.attributes = source.attributes;
+		if (merged.attributes == null) {
+
+			merged.attributes = this.attributes;
+		}
+
 		future = future.compose(Merges.validateMerged(codePrefix, vertx));
 
 		future = future.compose(Merges.mergeField(this.goal, source.goal, codePrefix + ".goal", vertx,
@@ -294,11 +295,6 @@ public class Task extends CreateUpdateTsDetails implements Validable, Mergeable<
 		future = future
 				.compose(Merges.mergeNorms(this.norms, source.norms, codePrefix + ".norms", vertx, (model, mergedNorms) -> {
 					model.norms = mergedNorms;
-				}));
-
-		future = future.compose(Merges.mergeTaskAttributes(this.attributes, source.attributes, codePrefix + ".attributes",
-				vertx, (model, mergedAttributes) -> {
-					model.attributes = mergedAttributes;
 				}));
 
 		promise.complete(merged);

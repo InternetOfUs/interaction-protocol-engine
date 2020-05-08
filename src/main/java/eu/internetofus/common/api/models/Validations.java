@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.LocaleUtils;
@@ -351,6 +352,8 @@ public interface Validations {
 	 * Validate a fields that contains a list of models.
 	 *
 	 * @param models     to validate.
+	 * @param predicate  used to compare if two models are equals, to check de
+	 *                   duplicated.
 	 * @param codePrefix the prefix of the code to use for the error message.
 	 * @param vertx      the event bus infrastructure to use.
 	 *
@@ -360,17 +363,18 @@ public interface Validations {
 	 *
 	 * @see ValidationErrorException
 	 */
-	static Function<Void, Future<Void>> validate(List<? extends Validable> models, String codePrefix, Vertx vertx) {
+	static <T extends Validable> Function<Void, Future<Void>> validate(List<T> models, BiPredicate<T, T> predicate,
+			String codePrefix, Vertx vertx) {
 
 		return mapper -> {
 			final Promise<Void> promise = Promise.promise();
 			Future<Void> future = promise.future();
 			if (models != null) {
 
-				final ListIterator<? extends Validable> iterator = models.listIterator();
+				final ListIterator<T> iterator = models.listIterator();
 				while (iterator.hasNext()) {
 
-					final Validable model = iterator.next();
+					final T model = iterator.next();
 					if (model == null) {
 
 						iterator.remove();
@@ -382,16 +386,18 @@ public interface Validations {
 						future = future.compose(elementMapper -> model.validate(modelPrefix, vertx));
 						future = future.compose(elementMapper -> {
 
-							final int firstIndex = models.indexOf(model);
-							if (firstIndex != index) {
+							for (int firstIndex = 0; firstIndex < index; firstIndex++) {
 
-								return Future.failedFuture(new ValidationErrorException(modelPrefix,
-										"This model is already defined at '" + firstIndex + "'."));
+								final T element = models.get(firstIndex);
+								if (predicate.test(element, model)) {
 
-							} else {
+									return Future.failedFuture(new ValidationErrorException(modelPrefix,
+											"This model is already defined at '" + firstIndex + "'."));
 
-								return Future.succeededFuture();
+								}
 							}
+
+							return Future.succeededFuture();
 
 						});
 					}

@@ -29,7 +29,6 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 import java.util.List;
 
 import eu.internetofus.common.api.models.Model;
-import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Community;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -57,7 +56,7 @@ public class PublishedNormsPage extends Model {
 	 * The published norms.
 	 */
 	@ArraySchema(
-			schema = @Schema(implementation = Community.class),
+			schema = @Schema(implementation = PublishedNorm.class),
 			arraySchema = @Schema(description = "The set of published norms found"))
 	public List<PublishedNorm> norms;
 

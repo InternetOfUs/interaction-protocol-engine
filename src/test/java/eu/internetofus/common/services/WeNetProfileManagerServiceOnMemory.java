@@ -110,7 +110,7 @@ public class WeNetProfileManagerServiceOnMemory implements WeNetProfileManagerSe
 	 * {@inheritDoc}
 	 */
 	@Override
-	public synchronized void retrieveProfile(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
+	public synchronized void retrieveJsonProfile(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
 
 		final JsonObject profile = this.profiles.get(id);
 		if (profile == null) {

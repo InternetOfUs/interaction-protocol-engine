@@ -46,7 +46,6 @@ import eu.internetofus.common.api.models.ModelTestCase;
 import eu.internetofus.common.api.models.ValidationsTest;
 import eu.internetofus.common.services.ServiceApiSimulatorServiceOnMemory;
 import eu.internetofus.common.services.WeNetProfileManagerServiceOnMemory;
-import eu.internetofus.common.services.WeNetTaskManagerService;
 import eu.internetofus.common.services.WeNetTaskManagerServiceOnMemory;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -97,8 +96,7 @@ public class TaskTest extends ModelTestCase<Task> {
 		model.deadlineTs = model.startTs + 200000l + index;
 		model.norms = new ArrayList<>();
 		model.norms.add(new NormTest().createModelExample(index));
-		model.attributes = new ArrayList<>();
-		model.attributes.add(new TaskAttributeTest().createModelExample(index));
+		model.attributes = new JsonObject().put("index", index);
 		model._creationTs = 1234567891 + index;
 		model._lastUpdateTs = 1234567991 + index * 2;
 		return model;
@@ -133,9 +131,9 @@ public class TaskTest extends ModelTestCase<Task> {
 	 * @see Task#validate(String, Vertx)
 	 */
 	@Test
-	public void shouldEmptyTaskBeValid(Vertx vertx, VertxTestContext testContext) {
+	public void shouldEmptyTaskNotBeValid(Vertx vertx, VertxTestContext testContext) {
 
-		assertIsValid(new Task(), vertx, testContext);
+		assertIsNotValid(new Task(), vertx, testContext);
 
 	}
 
@@ -148,11 +146,12 @@ public class TaskTest extends ModelTestCase<Task> {
 	 * @see Task#validate(String, Vertx)
 	 */
 	@Test
-	public void shouldTaskWithOnlyIdBeValid(Vertx vertx, VertxTestContext testContext) {
+	public void shouldTaskWithoutIdBeValid(Vertx vertx, VertxTestContext testContext) {
 
-		final Task model = new Task();
-		model.id = UUID.randomUUID().toString();
-		assertIsValid(model, vertx, testContext);
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+			model.id = null;
+			assertIsValid(model, vertx, testContext);
+		}));
 
 	}
 
@@ -169,7 +168,7 @@ public class TaskTest extends ModelTestCase<Task> {
 
 		StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext, testContext.succeeding(profile -> {
 
-			StoreServices.storeTaskType(new TaskType(), vertx, testContext, testContext.succeeding(taskType -> {
+			StoreServices.storeTaskTypeExample(index, vertx, testContext, testContext.succeeding(taskType -> {
 
 				StoreServices.storeApp(new App(), vertx, testContext, testContext.succeeding(app -> {
 
@@ -196,12 +195,13 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldNotBeValidWithAnExistingId(Vertx vertx, VertxTestContext testContext) {
 
-		WeNetTaskManagerService.createProxy(vertx).createTask(new JsonObject(), testContext.succeeding(created -> {
+		StoreServices.storeTaskExample(1, vertx, testContext, testContext.succeeding(created -> {
+			this.createModelExample(2, vertx, testContext, testContext.succeeding(model -> {
 
-			final Task model = new Task();
-			model.id = created.getString("id");
-			assertIsNotValid(model, "id", vertx, testContext);
+				model.id = created.id;
+				assertIsNotValid(model, "id", vertx, testContext);
 
+			}));
 		}));
 
 	}
@@ -217,9 +217,52 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldNotBeValidWithALargeTaskTypeId(Vertx vertx, VertxTestContext testContext) {
 
-		final Task model = new Task();
-		model.taskTypeId = ValidationsTest.STRING_256;
-		assertIsNotValid(model, "taskTypeId", vertx, testContext);
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.taskTypeId = ValidationsTest.STRING_256;
+			assertIsNotValid(model, "taskTypeId", vertx, testContext);
+
+		}));
+
+	}
+
+	/**
+	 * Check that can not be valid with a large identifier.
+	 *
+	 * @param vertx       event bus to use.
+	 * @param testContext test context to use.
+	 *
+	 * @see Task#validate(String, Vertx)
+	 */
+	@Test
+	public void shouldNotBeValidWithALargeId(Vertx vertx, VertxTestContext testContext) {
+
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.id = ValidationsTest.STRING_256;
+			assertIsNotValid(model, "id", vertx, testContext);
+
+		}));
+
+	}
+
+	/**
+	 * Check that can not be valid without task type identifier.
+	 *
+	 * @param vertx       event bus to use.
+	 * @param testContext test context to use.
+	 *
+	 * @see Task#validate(String, Vertx)
+	 */
+	@Test
+	public void shouldNotBeValidWithoutTaskTypeId(Vertx vertx, VertxTestContext testContext) {
+
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.taskTypeId = null;
+			assertIsNotValid(model, "taskTypeId", vertx, testContext);
+
+		}));
 
 	}
 
@@ -234,9 +277,12 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldNotBeValidWithAnUndefinedTaskTypeId(Vertx vertx, VertxTestContext testContext) {
 
-		final Task model = new Task();
-		model.taskTypeId = "Undefined-task-type-ID";
-		assertIsNotValid(model, "taskTypeId", vertx, testContext);
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.taskTypeId = "Undefined-task-type-ID";
+			assertIsNotValid(model, "taskTypeId", vertx, testContext);
+
+		}));
 
 	}
 
@@ -251,9 +297,32 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldNotBeValidWithALargeRequesterId(Vertx vertx, VertxTestContext testContext) {
 
-		final Task model = new Task();
-		model.requesterId = ValidationsTest.STRING_256;
-		assertIsNotValid(model, "requesterId", vertx, testContext);
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.requesterId = ValidationsTest.STRING_256;
+			assertIsNotValid(model, "requesterId", vertx, testContext);
+
+		}));
+
+	}
+
+	/**
+	 * Check that can not be valid without requester identifier.
+	 *
+	 * @param vertx       event bus to use.
+	 * @param testContext test context to use.
+	 *
+	 * @see Task#validate(String, Vertx)
+	 */
+	@Test
+	public void shouldNotBeValidWithoutRequesterId(Vertx vertx, VertxTestContext testContext) {
+
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.requesterId = null;
+			assertIsNotValid(model, "requesterId", vertx, testContext);
+
+		}));
 
 	}
 
@@ -268,9 +337,12 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldNotBeValidWithAnUndefinedRequesterId(Vertx vertx, VertxTestContext testContext) {
 
-		final Task model = new Task();
-		model.requesterId = "Undefined-requester-id";
-		assertIsNotValid(model, "requesterId", vertx, testContext);
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.requesterId = "Undefined-requester-id";
+			assertIsNotValid(model, "requesterId", vertx, testContext);
+
+		}));
 
 	}
 
@@ -285,9 +357,32 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldNotBeValidWithALargeAppId(Vertx vertx, VertxTestContext testContext) {
 
-		final Task model = new Task();
-		model.appId = ValidationsTest.STRING_256;
-		assertIsNotValid(model, "appId", vertx, testContext);
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.appId = ValidationsTest.STRING_256;
+			assertIsNotValid(model, "appId", vertx, testContext);
+
+		}));
+
+	}
+
+	/**
+	 * Check that can not be valid without an application identifier.
+	 *
+	 * @param vertx       event bus to use.
+	 * @param testContext test context to use.
+	 *
+	 * @see Task#validate(String, Vertx)
+	 */
+	@Test
+	public void shouldNotBeValidWithoutAppId(Vertx vertx, VertxTestContext testContext) {
+
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.appId = null;
+			assertIsNotValid(model, "appId", vertx, testContext);
+
+		}));
 
 	}
 
@@ -302,9 +397,12 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldNotBeValidWithAnUndefinedAppId(Vertx vertx, VertxTestContext testContext) {
 
-		final Task model = new Task();
-		model.appId = "Undefined-app-id";
-		assertIsNotValid(model, "appId", vertx, testContext);
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.appId = "Undefined-app-id";
+			assertIsNotValid(model, "appId", vertx, testContext);
+
+		}));
 
 	}
 
@@ -319,9 +417,13 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldNotBeValidWithATooSoonStartTimeStampn(Vertx vertx, VertxTestContext testContext) {
 
-		final Task model = new Task();
-		model.startTs = TimeManager.now();
-		assertIsNotValid(model, "startTs", vertx, testContext);
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.startTs = TimeManager.now();
+			assertIsNotValid(model, "startTs", vertx, testContext);
+			testContext.completeNow();
+
+		}));
 
 	}
 
@@ -336,10 +438,13 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldNotBeValidWithATooSoonEndTimeStampn(Vertx vertx, VertxTestContext testContext) {
 
-		final Task model = new Task();
-		model.startTs = TimeManager.now() + 10000;
-		model.endTs = TimeManager.now();
-		assertIsNotValid(model, "endTs", vertx, testContext);
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.startTs = TimeManager.now() + 10000;
+			model.endTs = TimeManager.now();
+			assertIsNotValid(model, "endTs", vertx, testContext);
+
+		}));
 
 	}
 
@@ -354,11 +459,14 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldNotBeValidWithATooSoonDeadlineTimeStampn(Vertx vertx, VertxTestContext testContext) {
 
-		final Task model = new Task();
-		model.startTs = TimeManager.now() + 10000;
-		model.endTs = model.startTs + 20000;
-		model.deadlineTs = model.startTs;
-		assertIsNotValid(model, "deadlineTs", vertx, testContext);
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.startTs = TimeManager.now() + 10000;
+			model.endTs = model.startTs + 20000;
+			model.deadlineTs = model.startTs;
+			assertIsNotValid(model, "deadlineTs", vertx, testContext);
+
+		}));
 
 	}
 
@@ -373,11 +481,14 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldNotBeValidWithATooLateDeadlineTimeStampn(Vertx vertx, VertxTestContext testContext) {
 
-		final Task model = new Task();
-		model.startTs = TimeManager.now() + 10000;
-		model.endTs = model.startTs + 20000;
-		model.deadlineTs = model.endTs;
-		assertIsNotValid(model, "deadlineTs", vertx, testContext);
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+			model.startTs = TimeManager.now() + 10000;
+			model.endTs = model.startTs + 20000;
+			model.deadlineTs = model.endTs;
+			assertIsNotValid(model, "deadlineTs", vertx, testContext);
+
+		}));
 
 	}
 
@@ -392,34 +503,16 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldNotBeValidWithABadNorms(Vertx vertx, VertxTestContext testContext) {
 
-		final Task model = new Task();
-		model.norms = new ArrayList<>();
-		model.norms.add(new NormTest().createModelExample(1));
-		model.norms.add(new NormTest().createModelExample(2));
-		model.norms.add(new NormTest().createModelExample(3));
-		model.norms.get(1).attribute = ValidationsTest.STRING_256;
-		assertIsNotValid(model, "norms[1].attribute", vertx, testContext);
+		this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
 
-	}
+			model.norms = new ArrayList<>();
+			model.norms.add(new NormTest().createModelExample(1));
+			model.norms.add(new NormTest().createModelExample(2));
+			model.norms.add(new NormTest().createModelExample(3));
+			model.norms.get(1).attribute = ValidationsTest.STRING_256;
+			assertIsNotValid(model, "norms[1].attribute", vertx, testContext);
 
-	/**
-	 * Check that not accept profiles with bad attributes.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext context to test.
-	 *
-	 * @see WeNetUserProfile#validate(String, Vertx)
-	 */
-	@Test
-	public void shouldNotBeValidWithABadAttributes(Vertx vertx, VertxTestContext testContext) {
-
-		final Task model = new Task();
-		model.attributes = new ArrayList<>();
-		model.attributes.add(new TaskAttributeTest().createModelExample(1));
-		model.attributes.add(new TaskAttributeTest().createModelExample(2));
-		model.attributes.add(new TaskAttributeTest().createModelExample(3));
-		model.attributes.get(1).name = ValidationsTest.STRING_256;
-		assertIsNotValid(model, "attributes[1].name", vertx, testContext);
+		}));
 
 	}
 
@@ -990,123 +1083,16 @@ public class TaskTest extends ModelTestCase<Task> {
 	@Test
 	public void shouldOnlyMergeNewAttributes(Vertx vertx, VertxTestContext testContext) {
 
-		this.createModelExample(1, vertx, testContext, testContext.succeeding(targetToStore -> {
+		StoreServices.storeTaskExample(1, vertx, testContext, testContext.succeeding(target -> {
 
-			StoreServices.storeTask(targetToStore, vertx, testContext, testContext.succeeding(target -> {
+			final Task source = new Task();
+			source.attributes = new JsonObject().put("index", 2);
+			assertCanMerge(target, source, vertx, testContext, merged -> {
 
-				final Task source = new Task();
-				source.attributes = new ArrayList<>();
-				source.attributes.add(new TaskAttributeTest().createModelExample(2));
-				assertCanMerge(target, source, vertx, testContext, merged -> {
-
-					assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
-					target.attributes.clear();
-					target.attributes.add(new TaskAttributeTest().createModelExample(2));
-					target.attributes.get(0).name = merged.attributes.get(0).name;
-					assertThat(merged).isEqualTo(target).isNotEqualTo(source);
-				});
-
-			}));
-
-		}));
-
-	}
-
-	/**
-	 * Check that merge when only is modified the {@link Task#attributes}.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext context to test.
-	 *
-	 * @see WeNetUserProfile#merge(WeNetUserProfile, String, Vertx)
-	 */
-	@Test
-	public void shouldOnlyMergeAddingNewAttribute(Vertx vertx, VertxTestContext testContext) {
-
-		this.createModelExample(1, vertx, testContext, testContext.succeeding(targetToStore -> {
-
-			StoreServices.storeTask(targetToStore, vertx, testContext, testContext.succeeding(target -> {
-
-				final Task source = new Task();
-				source.attributes = new ArrayList<>();
-				source.attributes.add(new TaskAttributeTest().createModelExample(2));
-				source.attributes.addAll(target.attributes);
-				assertCanMerge(target, source, vertx, testContext, merged -> {
-
-					assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
-					target.attributes.add(0, new TaskAttributeTest().createModelExample(2));
-					target.attributes.get(0).name = merged.attributes.get(0).name;
-					assertThat(merged).isEqualTo(target).isNotEqualTo(source);
-				});
-
-			}));
-
-		}));
-
-	}
-
-	/**
-	 * Check that merge when only is modified the {@link Task#attributes}.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext context to test.
-	 *
-	 * @see WeNetUserProfile#merge(WeNetUserProfile, String, Vertx)
-	 */
-	@Test
-	public void shouldOnlyMergeDeleteAttribute(Vertx vertx, VertxTestContext testContext) {
-
-		this.createModelExample(1, vertx, testContext, testContext.succeeding(targetToStore -> {
-
-			targetToStore.attributes.get(0).name = UUID.randomUUID().toString();
-			final TaskAttribute attributeToMantain = new TaskAttributeTest().createModelExample(2);
-			attributeToMantain.name = UUID.randomUUID().toString();
-			targetToStore.attributes.add(attributeToMantain);
-
-			StoreServices.storeTask(targetToStore, vertx, testContext, testContext.succeeding(target -> {
-
-				final Task source = new Task();
-				source.attributes = new ArrayList<>();
-				source.attributes.add(new TaskAttribute());
-				source.attributes.get(0).name = attributeToMantain.name;
-				source.attributes.get(0).value = "TaskAttribute";
-				assertCanMerge(target, source, vertx, testContext, merged -> {
-
-					assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
-					target.attributes.clear();
-					attributeToMantain.value = "TaskAttribute";
-					target.attributes.add(attributeToMantain);
-					assertThat(merged).isEqualTo(target).isNotEqualTo(source);
-
-				});
-
-			}));
-
-		}));
-
-	}
-
-	/**
-	 * Check that can not merge when the {@link Task#attributes} has a bas value.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext context to test.
-	 *
-	 * @see WeNetUserProfile#merge(WeNetUserProfile, String, Vertx)
-	 */
-	@Test
-	public void shouldNotMergeWithBadAttributes(Vertx vertx, VertxTestContext testContext) {
-
-		this.createModelExample(1, vertx, testContext, testContext.succeeding(targetToStore -> {
-
-			StoreServices.storeTask(targetToStore, vertx, testContext, testContext.succeeding(target -> {
-
-				final Task source = new Task();
-				source.attributes = new ArrayList<>();
-				source.attributes.add(new TaskAttribute());
-				source.attributes.get(0).name = ValidationsTest.STRING_256;
-				assertCannotMerge(target, source, "attributes[0].name", vertx, testContext);
-			}));
+				assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
+				target.attributes = new JsonObject().put("index", 2);
+				assertThat(merged).isEqualTo(target).isNotEqualTo(source);
+			});
 
 		}));
 

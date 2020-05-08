@@ -121,6 +121,9 @@ public class ServiceApiSimulator extends AbstractVerticle {
 			this.createHandlerForGetApp(router);
 			this.createHandlerForPostApp(router);
 			this.createHandlerForDeleteApp(router);
+			this.createHandlerForPostCallback(router);
+			this.createHandlerForGetCallbacks(router);
+			this.createHandlerForDeleteCallbacks(router);
 
 			this.server.requestHandler(router).listen(this.port, start -> {
 
@@ -151,7 +154,7 @@ public class ServiceApiSimulator extends AbstractVerticle {
 		router.route(HttpMethod.GET, "/app/:appId").handler(routingContext -> {
 
 			final String appId = routingContext.request().getParam("appId");
-			ServiceApiSimulatorService.createProxy(this.vertx).retrieveApp(appId, retrieve -> {
+			ServiceApiSimulatorService.createProxy(this.vertx).retrieveJsonApp(appId, retrieve -> {
 
 				final HttpServerResponse response = routingContext.response();
 				if (retrieve.failed()) {
@@ -182,6 +185,11 @@ public class ServiceApiSimulator extends AbstractVerticle {
 
 			routingContext.request().bodyHandler(body -> {
 				final JsonObject app = new JsonObject(body);
+				if (!app.containsKey("messageCallbackUrl")) {
+					String callback = routingContext.request().absoluteURI().toString();
+					callback = callback.substring(0, callback.lastIndexOf("/app")) + "/callback/:appId";
+					app.put("messageCallbackUrl", callback);
+				}
 				ServiceApiSimulatorService.createProxy(this.vertx).createApp(app, create -> {
 
 					final HttpServerResponse response = routingContext.response();
@@ -216,6 +224,105 @@ public class ServiceApiSimulator extends AbstractVerticle {
 
 			final String appId = routingContext.request().getParam("appId");
 			ServiceApiSimulatorService.createProxy(this.vertx).deleteApp(appId, delete -> {
+
+				final HttpServerResponse response = routingContext.response();
+				if (delete.failed()) {
+
+					response.putHeader("content-type", "text/plain");
+					response.setStatusCode(400);
+					response.end(delete.cause().getMessage());
+
+				} else {
+
+					response.putHeader("content-type", "application/json");
+					response.setStatusCode(204);
+					response.end();
+				}
+
+			});
+		});
+
+	}
+
+	/**
+	 * Handle the petition to post a callback message for an application.
+	 *
+	 * @param router for the server.
+	 */
+	protected void createHandlerForPostCallback(Router router) {
+
+		router.route(HttpMethod.POST, "/callback/:appId").handler(routingContext -> {
+
+			final String appId = routingContext.request().getParam("appId");
+			routingContext.request().bodyHandler(body -> {
+
+				final JsonObject message = new JsonObject(body);
+				ServiceApiSimulatorService.createProxy(this.vertx).addJsonCallBack(appId, message, create -> {
+
+					final HttpServerResponse response = routingContext.response();
+					if (create.failed()) {
+
+						response.putHeader("content-type", "text/plain");
+						response.setStatusCode(400);
+						response.end(create.cause().getMessage());
+
+					} else {
+
+						response.putHeader("content-type", "application/json");
+						response.setStatusCode(200);
+						response.end(create.result().encode());
+					}
+
+				});
+
+			});
+		});
+
+	}
+
+	/**
+	 * Handle the petition to return the callback message for an application.
+	 *
+	 * @param router for the server.
+	 */
+	protected void createHandlerForGetCallbacks(Router router) {
+
+		router.route(HttpMethod.GET, "/callback/:appId").handler(routingContext -> {
+
+			final String appId = routingContext.request().getParam("appId");
+			ServiceApiSimulatorService.createProxy(this.vertx).retrieveJsonCallbacks(appId, create -> {
+
+				final HttpServerResponse response = routingContext.response();
+				if (create.failed()) {
+
+					response.putHeader("content-type", "text/plain");
+					response.setStatusCode(400);
+					response.end(create.cause().getMessage());
+
+				} else {
+
+					response.putHeader("content-type", "application/json");
+					response.setStatusCode(200);
+					response.end(create.result().encode());
+				}
+
+			});
+
+		});
+
+	}
+
+	/**
+	 * Handle the petition to delete all the cllbacks over an application.
+	 *
+	 * @param router for the server.
+	 */
+	protected void createHandlerForDeleteCallbacks(Router router) {
+
+		router.route(HttpMethod.DELETE, "/callback/:appId").handler(routingContext -> {
+
+			final String appId = routingContext.request().getParam("appId");
+			ServiceApiSimulatorService.createProxy(this.vertx).deleteCallbacks(appId, delete -> {
 
 				final HttpServerResponse response = routingContext.response();
 				if (delete.failed()) {

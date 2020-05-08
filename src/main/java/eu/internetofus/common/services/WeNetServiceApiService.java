@@ -26,6 +26,10 @@
 
 package eu.internetofus.common.services;
 
+import javax.validation.constraints.NotNull;
+
+import eu.internetofus.common.api.models.wenet.App;
+import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -74,11 +78,24 @@ public interface WeNetServiceApiService {
 	}
 
 	/**
+	 * Return an {@link App} in JSON format.
+	 *
+	 * @param id              identifier of the app to get.
+	 * @param retrieveHandler handler to manage the retrieve process.
+	 */
+	void retrieveJsonApp(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> retrieveHandler);
+
+	/**
 	 * Return an application.
 	 *
 	 * @param id              identifier of the app to get.
 	 * @param retrieveHandler handler to manage the retrieve process.
 	 */
-	void retrieveApp(String id, Handler<AsyncResult<JsonObject>> retrieveHandler);
+	@GenIgnore
+	default void retrieveApp(@NotNull String id, @NotNull Handler<AsyncResult<App>> retrieveHandler) {
+
+		this.retrieveJsonApp(id, Service.handlerForModel(App.class, retrieveHandler));
+
+	}
 
 }

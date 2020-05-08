@@ -30,7 +30,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+import eu.internetofus.common.api.models.wenet.App;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 
@@ -50,9 +52,48 @@ public abstract class ServiceApiSimulatorServiceTestCase {
 	 * @param testContext context over the tests.
 	 */
 	@Test
-	public void shouldNotCreateBadApp(Vertx vertx, VertxTestContext testContext) {
+	public void shouldNotCreateBadJsonApp(Vertx vertx, VertxTestContext testContext) {
 
 		ServiceApiSimulatorService.createProxy(vertx).createApp(new JsonObject().put("undefinedField", "value"),
+				testContext.failing(handler -> {
+					testContext.completeNow();
+
+				}));
+
+	}
+
+	/**
+	 * Should not create a bad app.
+	 *
+	 * @param vertx       that contains the event bus to use.
+	 * @param testContext context over the tests.
+	 */
+	@Test
+	public void shouldNotCreateAnAppWithExistingId(Vertx vertx, VertxTestContext testContext) {
+
+		ServiceApiSimulatorService.createProxy(vertx).createApp(new JsonObject(), testContext.succeeding(created -> {
+
+			final App app = new App();
+			app.appId = created.getString("appId");
+			ServiceApiSimulatorService.createProxy(vertx).createApp(app, testContext.failing(handler -> {
+				testContext.completeNow();
+
+			}));
+
+		}));
+
+	}
+
+	/**
+	 * Should not retrieve undefined app.
+	 *
+	 * @param vertx       that contains the event bus to use.
+	 * @param testContext context over the tests.
+	 */
+	@Test
+	public void shouldNotRetrieveJsonFromUndefinedApp(Vertx vertx, VertxTestContext testContext) {
+
+		ServiceApiSimulatorService.createProxy(vertx).retrieveJsonApp("undefined-app-identifier",
 				testContext.failing(handler -> {
 					testContext.completeNow();
 
@@ -67,7 +108,7 @@ public abstract class ServiceApiSimulatorServiceTestCase {
 	 * @param testContext context over the tests.
 	 */
 	@Test
-	public void shouldNotRretrieveUndefinedApp(Vertx vertx, VertxTestContext testContext) {
+	public void shouldNotRetrieveUndefinedApp(Vertx vertx, VertxTestContext testContext) {
 
 		ServiceApiSimulatorService.createProxy(vertx).retrieveApp("undefined-app-identifier",
 				testContext.failing(handler -> {
@@ -103,9 +144,9 @@ public abstract class ServiceApiSimulatorServiceTestCase {
 	public void shouldCreateRetrieveAndDeleteApp(Vertx vertx, VertxTestContext testContext) {
 
 		final ServiceApiSimulatorService service = ServiceApiSimulatorService.createProxy(vertx);
-		service.createApp(new JsonObject(), testContext.succeeding(create -> {
+		service.createApp(new App(), testContext.succeeding(create -> {
 
-			final String id = create.getString("appId");
+			final String id = create.appId;
 			service.retrieveApp(id, testContext.succeeding(retrieve -> testContext.verify(() -> {
 
 				assertThat(create).isEqualTo(retrieve);
@@ -120,6 +161,97 @@ public abstract class ServiceApiSimulatorServiceTestCase {
 
 			})));
 
+		}));
+
+	}
+
+	/**
+	 * Should not retrieve callbacks from an undefined app.
+	 *
+	 * @param vertx       that contains the event bus to use.
+	 * @param testContext context over the tests.
+	 */
+	@Test
+	public void shouldFailRetrieveCallbacksFromUndefinedApp(Vertx vertx, VertxTestContext testContext) {
+
+		ServiceApiSimulatorService.createProxy(vertx).retrieveJsonCallbacks("undefined-app-identifier",
+				testContext.failing(handler -> {
+					testContext.completeNow();
+
+				}));
+
+	}
+
+	/**
+	 * Should not add callbacks into an undefined app.
+	 *
+	 * @param vertx       that contains the event bus to use.
+	 * @param testContext context over the tests.
+	 */
+	@Test
+	public void shouldFailAddCallbackIntoUndefinedApp(Vertx vertx, VertxTestContext testContext) {
+
+		ServiceApiSimulatorService.createProxy(vertx).addJsonCallBack("undefined-app-identifier", new JsonObject(),
+				testContext.failing(handler -> {
+					testContext.completeNow();
+
+				}));
+
+	}
+
+	/**
+	 * Should not delete callbacks from an undefined app.
+	 *
+	 * @param vertx       that contains the event bus to use.
+	 * @param testContext context over the tests.
+	 */
+	@Test
+	public void shouldFailDeletCallbackIntoUndefinedApp(Vertx vertx, VertxTestContext testContext) {
+
+		ServiceApiSimulatorService.createProxy(vertx).deleteCallbacks("undefined-app-identifier",
+				testContext.failing(handler -> {
+					testContext.completeNow();
+
+				}));
+
+	}
+
+	/**
+	 * Should create, retrieve and delete a app.
+	 *
+	 * @param vertx       that contains the event bus to use.
+	 * @param testContext context over the tests.
+	 */
+	@Test
+	public void shouldAddRetrieveAndDeleteCallbacksFromAnApp(Vertx vertx, VertxTestContext testContext) {
+
+		final ServiceApiSimulatorService service = ServiceApiSimulatorService.createProxy(vertx);
+		service.createApp(new App(), testContext.succeeding(created -> {
+
+			final String id = created.appId;
+			final JsonObject message = new JsonObject().put("key", "value");
+			service.addJsonCallBack(id, message, testContext.succeeding(added1 -> testContext.verify(() -> {
+
+				assertThat(message).isEqualTo(added1);
+				final JsonObject message2 = new JsonObject().put("key2", "value2");
+				service.addJsonCallBack(id, message2, testContext.succeeding(added2 -> testContext.verify(() -> {
+
+					assertThat(message2).isEqualTo(added2);
+					service.retrieveJsonCallbacks(id, testContext.succeeding(retrieve -> testContext.verify(() -> {
+
+						assertThat(retrieve)
+								.isEqualTo(new JsonObject().put("messages", new JsonArray().add(message).add(message2)));
+
+						service.deleteCallbacks(id, testContext.succeeding(empty -> {
+
+							service.retrieveJsonCallbacks(id, testContext.failing(handler -> {
+								testContext.completeNow();
+
+							}));
+						}));
+					})));
+				})));
+			})));
 		}));
 
 	}

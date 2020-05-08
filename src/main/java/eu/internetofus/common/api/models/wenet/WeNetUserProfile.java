@@ -216,14 +216,20 @@ public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable
 					this.phoneNumber);
 			this.avatar = Validations.validateNullableURLField(codePrefix, "avatar", this.avatar);
 			this.nationality = Validations.validateNullableStringField(codePrefix, "nationality", 255, this.nationality);
-			future = future.compose(Validations.validate(this.languages, codePrefix + ".languages", vertx));
+			future = future
+					.compose(Validations.validate(this.languages, (a, b) -> a.equals(b), codePrefix + ".languages", vertx));
 			this.occupation = Validations.validateNullableStringField(codePrefix, "occupation", 255, this.occupation);
-			future = future.compose(Validations.validate(this.norms, codePrefix + ".norms", vertx));
-			future = future.compose(Validations.validate(this.plannedActivities, codePrefix + ".plannedActivities", vertx));
-			future = future.compose(Validations.validate(this.relevantLocations, codePrefix + ".relevantLocations", vertx));
-			future = future.compose(Validations.validate(this.relationships, codePrefix + ".relationships", vertx));
-			future = future.compose(Validations.validate(this.socialPractices, codePrefix + ".socialPractices", vertx));
-			future = future.compose(Validations.validate(this.personalBehaviors, codePrefix + ".personalBehaviors", vertx));
+			future = future.compose(Validations.validate(this.norms, (a, b) -> a.equals(b), codePrefix + ".norms", vertx));
+			future = future.compose(Validations.validate(this.plannedActivities, (a, b) -> a.equals(b),
+					codePrefix + ".plannedActivities", vertx));
+			future = future.compose(Validations.validate(this.relevantLocations, (a, b) -> a.equals(b),
+					codePrefix + ".relevantLocations", vertx));
+			future = future.compose(
+					Validations.validate(this.relationships, (a, b) -> a.equals(b), codePrefix + ".relationships", vertx));
+			future = future.compose(
+					Validations.validate(this.socialPractices, (a, b) -> a.equals(b), codePrefix + ".socialPractices", vertx));
+			future = future.compose(Validations.validate(this.personalBehaviors, (a, b) -> a.equals(b),
+					codePrefix + ".personalBehaviors", vertx));
 
 			promise.complete();
 

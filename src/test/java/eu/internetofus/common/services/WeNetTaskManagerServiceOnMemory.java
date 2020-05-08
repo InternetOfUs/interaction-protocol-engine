@@ -117,7 +117,7 @@ public class WeNetTaskManagerServiceOnMemory implements WeNetTaskManagerService 
 	 * {@inheritDoc}
 	 */
 	@Override
-	public synchronized void retrieveTask(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
+	public synchronized void retrieveJsonTask(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
 
 		final JsonObject task = this.tasks.get(id);
 		if (task == null) {
@@ -188,7 +188,7 @@ public class WeNetTaskManagerServiceOnMemory implements WeNetTaskManagerService 
 	 * {@inheritDoc}
 	 */
 	@Override
-	public synchronized void retrieveTaskType(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
+	public synchronized void retrieveJsonTaskType(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
 
 		final JsonObject taskType = this.taskTypes.get(id);
 		if (taskType == null) {

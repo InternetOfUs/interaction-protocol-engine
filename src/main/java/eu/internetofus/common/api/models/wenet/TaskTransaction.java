@@ -26,17 +26,18 @@
 
 package eu.internetofus.common.api.models.wenet;
 
-import java.util.List;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import eu.internetofus.common.api.models.JsonObjectDeserializer;
 import eu.internetofus.common.api.models.Model;
 import eu.internetofus.common.api.models.Validable;
 import eu.internetofus.common.api.models.ValidationErrorException;
 import eu.internetofus.common.api.models.Validations;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 
 /**
  * Describe a transition to do over a task.
@@ -55,16 +56,15 @@ public class TaskTransaction extends Model implements Validable {
 	/**
 	 * The identifier of the task type.
 	 */
-	@Schema(description = "The identifier of the task type associated to it.", example = "2d1x4g3jsuy")
-	public String typeId;
+	@Schema(description = "The label associated to the transaction type.", example = "acceptVolunteer")
+	public String label;
 
 	/**
 	 * The attributes set to the transaction.
 	 */
-	@ArraySchema(
-			schema = @Schema(implementation = TaskAttribute.class),
-			arraySchema = @Schema(description = "The attributes that are set to the transaction."))
-	public List<TaskAttribute> attributes;
+	@Schema(type = "object", description = "The attributes that are set in the associated transaction type.")
+	@JsonDeserialize(using = JsonObjectDeserializer.class)
+	public JsonObject attributes;
 
 	/**
 	 * {@inheritDoc}
@@ -73,12 +73,12 @@ public class TaskTransaction extends Model implements Validable {
 	public Future<Void> validate(String codePrefix, Vertx vertx) {
 
 		final Promise<Void> promise = Promise.promise();
-		Future<Void> future = promise.future();
+		final Future<Void> future = promise.future();
 		try {
 
 			this.taskId = Validations.validateStringField(codePrefix, "taskId", 255, this.taskId);
-			this.typeId = Validations.validateStringField(codePrefix, "typeId", 255, this.typeId);
-			future = future.compose(Validations.validate(this.attributes, codePrefix + ".attributes", vertx));
+			this.label = Validations.validateStringField(codePrefix, "label", 255, this.label);
+			// TODO verify the attributes are valid for the task transaction type
 			promise.complete();
 
 		} catch (final ValidationErrorException validationError) {

@@ -26,10 +26,7 @@
 
 package eu.internetofus.common.services;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.common.Containers;
@@ -37,7 +34,6 @@ import eu.internetofus.common.WeNetModuleContext;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
 
 /**
  * Test the {@link ServiceApiSimulatorServiceImpl}
@@ -47,7 +43,7 @@ import io.vertx.junit5.VertxTestContext;
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(VertxExtension.class)
-public class ServiceApiSimulatorServiceImplTest {
+public class ServiceApiSimulatorServiceImplTest extends ServiceApiSimulatorServiceTestCase {
 
 	/**
 	 * Create the context to use.
@@ -63,37 +59,6 @@ public class ServiceApiSimulatorServiceImplTest {
 				new JsonObject().put("host", "localhost").put("port", serviceApiPort).put("apiPath", "")));
 		final WeNetModuleContext context = new WeNetModuleContext(vertx, configuration);
 		ServiceApiSimulatorService.register(context);
-	}
-
-	/**
-	 * Should create, retrieve and delete an application.
-	 *
-	 * @param vertx       that contains the event bus to use.
-	 * @param testContext context over the tests.
-	 */
-	@Test
-	public void shouldCreateRetrieveAndDeleteApp(Vertx vertx, VertxTestContext testContext) {
-
-		final ServiceApiSimulatorService service = ServiceApiSimulatorService.createProxy(vertx);
-		service.createApp(new JsonObject(), testContext.succeeding(create -> {
-
-			final String id = create.getString("appId");
-			service.retrieveApp(id, testContext.succeeding(retrieve -> testContext.verify(() -> {
-
-				assertThat(create).isEqualTo(retrieve);
-				service.deleteApp(id, testContext.succeeding(empty -> {
-
-					service.retrieveApp(id, testContext.failing(handler -> {
-						testContext.completeNow();
-
-					}));
-
-				}));
-
-			})));
-
-		}));
-
 	}
 
 }

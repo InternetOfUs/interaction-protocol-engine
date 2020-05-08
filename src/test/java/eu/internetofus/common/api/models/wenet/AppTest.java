@@ -29,6 +29,7 @@ package eu.internetofus.common.api.models.wenet;
 import java.util.ArrayList;
 
 import eu.internetofus.common.api.models.ModelTestCase;
+import io.vertx.core.json.JsonObject;
 
 /**
  * Test the {@link App}.
@@ -48,10 +49,10 @@ public class AppTest extends ModelTestCase<App> {
 		final App model = new App();
 		model.appId = "appId_" + index;
 		model.appToken = "token_" + index;
-		model.allowedPlatforms = new ArrayList<>();
-		model.allowedPlatforms.add("platform_" + index);
 		model.messageCallbackUrl = "https://app.endpoint.com/messages/" + index;
-		model.metadata = "metadata_" + index;
+		model.metadata = new JsonObject().put("index", index);
+		model.allowedPlatforms = new ArrayList<>();
+		model.allowedPlatforms.add(new JsonObject().put("platform", index));
 		return model;
 
 	}

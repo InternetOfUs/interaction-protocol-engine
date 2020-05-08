@@ -56,7 +56,7 @@ public class WeNetServiceApiServiceImpl extends Service implements WeNetServiceA
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void retrieveApp(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
+	public void retrieveJsonApp(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
 
 		this.get("/app/" + id, retrieveHandler);
 

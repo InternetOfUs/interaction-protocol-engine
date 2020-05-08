@@ -31,6 +31,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import eu.internetofus.common.api.models.wenet.CreateUpdateTsDetails;
+import eu.internetofus.common.api.models.wenet.WeNetUserProfile;
+import eu.internetofus.common.api.models.wenet.WeNetUserProfileTest;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.DecodeException;
@@ -125,4 +129,79 @@ public class ServiceTest {
 
 	}
 
+	/**
+	 * Verify that if the handler fail the model handler fails too.
+	 *
+	 * @param client      to use.
+	 * @param testContext context that manage the test.
+	 */
+	@Test
+	public void shoulHandlerForModelFail(WebClient client, VertxTestContext testContext) {
+
+		final Throwable cause = new Throwable("Cause");
+		Service.handlerForModel(CreateUpdateTsDetails.class, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).isSameAs(cause);
+			testContext.completeNow();
+
+		}))).handle(Future.failedFuture(cause));
+
+	}
+
+	/**
+	 * Verify that if no model is succeeding the handler do not receive a model.
+	 *
+	 * @param client      to use.
+	 * @param testContext context that manage the test.
+	 */
+	@Test
+	public void shoulHandlerForModelSuccessWithoutResult(WebClient client, VertxTestContext testContext) {
+
+		Service.handlerForModel(CreateUpdateTsDetails.class, testContext.succeeding(result -> testContext.verify(() -> {
+
+			assertThat(result).isNull();
+			testContext.completeNow();
+
+		}))).handle(Future.succeededFuture());
+
+	}
+
+	/**
+	 * Verify that the handler receive the model defined in the JSON.
+	 *
+	 * @param client      to use.
+	 * @param testContext context that manage the test.
+	 */
+	@Test
+	public void shoulHandlerForModelSuccessWithModel(WebClient client, VertxTestContext testContext) {
+
+		final WeNetUserProfile model = new WeNetUserProfileTest().createBasicExample(1);
+		Service.handlerForModel(WeNetUserProfile.class, testContext.succeeding(result -> testContext.verify(() -> {
+
+			assertThat(result).isEqualTo(model);
+			testContext.completeNow();
+
+		}))).handle(Future.succeededFuture(model.toJsonObject()));
+
+	}
+
+	/**
+	 * Verify that if the return JSON not match the type the handler receives an
+	 * error.
+	 *
+	 * @param client      to use.
+	 * @param testContext context that manage the test.
+	 */
+	@Test
+	public void shoulHandlerForModelFailBecauseJsonNotMatchType(WebClient client, VertxTestContext testContext) {
+
+		final JsonObject jsonModel = new JsonObject().put("id", new JsonObject().put("key", "value"));
+		Service.handlerForModel(WeNetUserProfile.class, testContext.failing(error -> testContext.verify(() -> {
+
+			assertThat(error).hasMessageContaining("WeNetUserProfile").hasMessageContaining(jsonModel.toString());
+			testContext.completeNow();
+
+		}))).handle(Future.succeededFuture(jsonModel));
+
+	}
 }

@@ -26,7 +26,10 @@
 
 package eu.internetofus.common.services;
 
+import javax.validation.constraints.NotNull;
+
 import eu.internetofus.common.ServiceApiSimulator;
+import eu.internetofus.common.api.models.wenet.App;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
@@ -37,7 +40,7 @@ import io.vertx.ext.web.client.WebClient;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class ServiceApiSimulatorServiceImpl extends WeNetServiceApiServiceImpl
+public class ServiceApiSimulatorServiceImpl extends Service
 		implements ServiceApiSimulatorService, WeNetServiceApiService {
 
 	/**
@@ -49,6 +52,16 @@ public class ServiceApiSimulatorServiceImpl extends WeNetServiceApiServiceImpl
 	public ServiceApiSimulatorServiceImpl(WebClient client, JsonObject conf) {
 
 		super(client, conf);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveApp(@NotNull String id, @NotNull Handler<AsyncResult<App>> retrieveHandler) {
+
+		this.retrieveJsonApp(id, Service.handlerForModel(App.class, retrieveHandler));
 
 	}
 
@@ -73,6 +86,46 @@ public class ServiceApiSimulatorServiceImpl extends WeNetServiceApiServiceImpl
 	public void deleteApp(String id, Handler<AsyncResult<JsonObject>> deleteHandler) {
 
 		this.delete("/app/" + id, deleteHandler);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveJsonApp(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
+
+		this.get("/app/" + id, retrieveHandler);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveJsonCallbacks(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
+
+		this.get("/callback/" + id, retrieveHandler);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void addJsonCallBack(String appId, JsonObject message, Handler<AsyncResult<JsonObject>> handler) {
+
+		this.post("/callback/" + appId, message, handler);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void deleteCallbacks(String appId, Handler<AsyncResult<JsonObject>> handler) {
+
+		this.delete("/callback/" + appId, handler);
 
 	}
 

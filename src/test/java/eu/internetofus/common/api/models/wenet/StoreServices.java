@@ -94,13 +94,11 @@ public interface StoreServices {
 	static void storeTaskType(TaskType taskType, Vertx vertx, VertxTestContext testContext,
 			Handler<AsyncResult<TaskType>> storeHandler) {
 
-		WeNetTaskManagerService.createProxy(vertx).createTaskType(taskType.toJsonObject(),
-				testContext.succeeding(created -> {
+		WeNetTaskManagerService.createProxy(vertx).createTaskType(taskType, testContext.succeeding(created -> {
 
-					final TaskType result = Model.fromJsonObject(created, TaskType.class);
-					storeHandler.handle(Future.succeededFuture(result));
+			storeHandler.handle(Future.succeededFuture(created));
 
-				}));
+		}));
 
 	}
 
@@ -130,10 +128,9 @@ public interface StoreServices {
 	 */
 	static void storeTask(Task task, Vertx vertx, VertxTestContext testContext, Handler<AsyncResult<Task>> storeHandler) {
 
-		WeNetTaskManagerService.createProxy(vertx).createTask(task.toJsonObject(), testContext.succeeding(created -> {
+		WeNetTaskManagerService.createProxy(vertx).createTask(task, testContext.succeeding(created -> {
 
-			final Task result = Model.fromJsonObject(created, Task.class);
-			storeHandler.handle(Future.succeededFuture(result));
+			storeHandler.handle(Future.succeededFuture(created));
 
 		}));
 

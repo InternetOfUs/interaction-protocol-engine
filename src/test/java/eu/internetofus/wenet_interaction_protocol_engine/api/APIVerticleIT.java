@@ -30,7 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.common.api.AbstractAPIVerticleIntegrationTestCase;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
-import eu.internetofus.wenet_interaction_protocol_engine.api.communities.Communities;
+import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -47,7 +47,7 @@ public class APIVerticleIT extends AbstractAPIVerticleIntegrationTestCase {
 	@Override
 	protected String getBadRequestPostPath() {
 
-		return Communities.PATH;
+		return Norms.PATH;
 	}
 
 	/**

@@ -199,4 +199,47 @@ public class Service {
 
 	}
 
+	/**
+	 * Create a handler to convert a {@link JsonObject} to a {@link Model}
+	 *
+	 * @param type            of model to handle.
+	 * @param retrieveHandler handler to inform of the model obtained by the
+	 *                        {@link JsonObject}.
+	 *
+	 * @return a handler to process the {@link JsonObject} and return the model
+	 */
+	public static <T extends Model> Handler<AsyncResult<JsonObject>> handlerForModel(Class<T> type,
+			Handler<AsyncResult<T>> retrieveHandler) {
+
+		return handler -> {
+
+			if (handler.failed()) {
+
+				retrieveHandler.handle(Future.failedFuture(handler.cause()));
+
+			} else {
+
+				final JsonObject result = handler.result();
+				if (result == null) {
+
+					retrieveHandler.handle(Future.succeededFuture());
+
+				} else {
+
+					final T model = Model.fromJsonObject(result, type);
+					if (model == null) {
+
+						retrieveHandler.handle(Future.failedFuture(result + " is not of the type '" + type + "'."));
+
+					} else {
+
+						retrieveHandler.handle(Future.succeededFuture(model));
+					}
+
+				}
+			}
+
+		};
+	}
+
 }

@@ -878,7 +878,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
 		target.norms = new ArrayList<>();
 		target.norms.add(new Norm());
 		target.norms.get(0).id = "1";
-		assertCannotMerge(target, source, "norms[2].id", vertx, testContext);
+		assertCannotMerge(target, source, "norms[2]", vertx, testContext);
 
 	}
 
@@ -978,7 +978,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
 		target.plannedActivities = new ArrayList<>();
 		target.plannedActivities.add(new PlannedActivity());
 		target.plannedActivities.get(0).id = "1";
-		assertCannotMerge(target, source, "plannedActivities[2].id", vertx, testContext);
+		assertCannotMerge(target, source, "plannedActivities[2]", vertx, testContext);
 
 	}
 
@@ -1078,7 +1078,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
 		target.relevantLocations = new ArrayList<>();
 		target.relevantLocations.add(new RelevantLocation());
 		target.relevantLocations.get(0).id = "1";
-		assertCannotMerge(target, source, "relevantLocations[2].id", vertx, testContext);
+		assertCannotMerge(target, source, "relevantLocations[2]", vertx, testContext);
 
 	}
 
@@ -1260,7 +1260,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
 		target.socialPractices = new ArrayList<>();
 		target.socialPractices.add(new SocialPractice());
 		target.socialPractices.get(0).id = "1";
-		assertCannotMerge(target, source, "socialPractices[2].id", vertx, testContext);
+		assertCannotMerge(target, source, "socialPractices[2]", vertx, testContext);
 
 	}
 
@@ -1360,7 +1360,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
 		target.personalBehaviors = new ArrayList<>();
 		target.personalBehaviors.add(new Routine());
 		target.personalBehaviors.get(0).id = "1";
-		assertCannotMerge(target, source, "personalBehaviors[2].id", vertx, testContext);
+		assertCannotMerge(target, source, "personalBehaviors[2]", vertx, testContext);
 
 	}
 
