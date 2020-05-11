@@ -28,6 +28,7 @@ package eu.internetofus.common.services;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 
@@ -59,6 +60,16 @@ public class WeNetServiceApiServiceImpl extends Service implements WeNetServiceA
 	public void retrieveJsonApp(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
 
 		this.get("/app/" + id, retrieveHandler);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveJsonArrayAppUserIds(String id, Handler<AsyncResult<JsonArray>> retrieveHandler) {
+
+		this.getArray("/app/" + id + "/users", retrieveHandler);
 
 	}
 

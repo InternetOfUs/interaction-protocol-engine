@@ -34,6 +34,7 @@ import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.serviceproxy.ServiceBinder;
@@ -97,5 +98,13 @@ public interface WeNetServiceApiService {
 		this.retrieveJsonApp(id, Service.handlerForModel(App.class, retrieveHandler));
 
 	}
+
+	/**
+	 * Return the identifiers of the users that are defined on an application.
+	 *
+	 * @param id              identifier of the app to get the users.
+	 * @param retrieveHandler handler to manage the retrieve process.
+	 */
+	void retrieveJsonArrayAppUserIds(@NotNull String id, @NotNull Handler<AsyncResult<JsonArray>> retrieveHandler);
 
 }

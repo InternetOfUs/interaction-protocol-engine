@@ -35,6 +35,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 
@@ -124,6 +125,9 @@ public class ServiceApiSimulator extends AbstractVerticle {
 			this.createHandlerForPostCallback(router);
 			this.createHandlerForGetCallbacks(router);
 			this.createHandlerForDeleteCallbacks(router);
+			this.createHandlerForPostUsers(router);
+			this.createHandlerForGetUsers(router);
+			this.createHandlerForDeleteUsers(router);
 
 			this.server.requestHandler(router).listen(this.port, start -> {
 
@@ -313,7 +317,7 @@ public class ServiceApiSimulator extends AbstractVerticle {
 	}
 
 	/**
-	 * Handle the petition to delete all the cllbacks over an application.
+	 * Handle the petition to delete all the callback messages over an application.
 	 *
 	 * @param router for the server.
 	 */
@@ -323,6 +327,105 @@ public class ServiceApiSimulator extends AbstractVerticle {
 
 			final String appId = routingContext.request().getParam("appId");
 			ServiceApiSimulatorService.createProxy(this.vertx).deleteCallbacks(appId, delete -> {
+
+				final HttpServerResponse response = routingContext.response();
+				if (delete.failed()) {
+
+					response.putHeader("content-type", "text/plain");
+					response.setStatusCode(400);
+					response.end(delete.cause().getMessage());
+
+				} else {
+
+					response.putHeader("content-type", "application/json");
+					response.setStatusCode(204);
+					response.end();
+				}
+
+			});
+		});
+
+	}
+
+	/**
+	 * Handle the petition to post users for an application.
+	 *
+	 * @param router for the server.
+	 */
+	protected void createHandlerForPostUsers(Router router) {
+
+		router.route(HttpMethod.POST, "/user/:appId/users").handler(routingContext -> {
+
+			final String appId = routingContext.request().getParam("appId");
+			routingContext.request().bodyHandler(body -> {
+
+				final JsonArray users = new JsonArray(body);
+				ServiceApiSimulatorService.createProxy(this.vertx).addUsers(appId, users, create -> {
+
+					final HttpServerResponse response = routingContext.response();
+					if (create.failed()) {
+
+						response.putHeader("content-type", "text/plain");
+						response.setStatusCode(400);
+						response.end(create.cause().getMessage());
+
+					} else {
+
+						response.putHeader("content-type", "application/json");
+						response.setStatusCode(200);
+						response.end(create.result().encode());
+					}
+
+				});
+
+			});
+		});
+
+	}
+
+	/**
+	 * Handle the petition to return the users for an application.
+	 *
+	 * @param router for the server.
+	 */
+	protected void createHandlerForGetUsers(Router router) {
+
+		router.route(HttpMethod.GET, "/app/:appId/users").handler(routingContext -> {
+
+			final String appId = routingContext.request().getParam("appId");
+			ServiceApiSimulatorService.createProxy(this.vertx).retrieveJsonArrayAppUserIds(appId, create -> {
+
+				final HttpServerResponse response = routingContext.response();
+				if (create.failed()) {
+
+					response.putHeader("content-type", "text/plain");
+					response.setStatusCode(400);
+					response.end(create.cause().getMessage());
+
+				} else {
+
+					response.putHeader("content-type", "application/json");
+					response.setStatusCode(200);
+					response.end(create.result().encode());
+				}
+
+			});
+
+		});
+
+	}
+
+	/**
+	 * Handle the petition to delete all the users over an application.
+	 *
+	 * @param router for the server.
+	 */
+	protected void createHandlerForDeleteUsers(Router router) {
+
+		router.route(HttpMethod.DELETE, "/user/:appId/users").handler(routingContext -> {
+
+			final String appId = routingContext.request().getParam("appId");
+			ServiceApiSimulatorService.createProxy(this.vertx).deleteUsers(appId, delete -> {
 
 				final HttpServerResponse response = routingContext.response();
 				if (delete.failed()) {

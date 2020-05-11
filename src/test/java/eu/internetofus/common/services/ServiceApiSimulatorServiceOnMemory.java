@@ -76,12 +76,18 @@ public class ServiceApiSimulatorServiceOnMemory implements ServiceApiSimulatorSe
 	private final Map<String, JsonArray> callbacks;
 
 	/**
+	 * The user of an application.
+	 */
+	private final Map<String, JsonArray> users;
+
+	/**
 	 * Create the service.
 	 */
 	public ServiceApiSimulatorServiceOnMemory() {
 
 		this.apps = new HashMap<>();
 		this.callbacks = new HashMap<>();
+		this.users = new HashMap<>();
 
 	}
 
@@ -228,6 +234,66 @@ public class ServiceApiSimulatorServiceOnMemory implements ServiceApiSimulatorSe
 		} else {
 
 			handler.handle(Future.succeededFuture(new JsonObject().put("messages", messages)));
+		}
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveJsonArrayAppUserIds(String id, Handler<AsyncResult<JsonArray>> handler) {
+
+		final JsonArray users = this.users.get(id);
+		if (users == null) {
+			// no users
+			handler.handle(Future.failedFuture("No users defined for the application"));
+
+		} else {
+
+			handler.handle(Future.succeededFuture(users));
+		}
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public synchronized void addUsers(String appId, JsonArray newUsers, Handler<AsyncResult<JsonArray>> handler) {
+
+		if (this.apps.containsKey(appId)) {
+
+			JsonArray users = this.users.get(appId);
+			if (users == null) {
+
+				users = new JsonArray();
+				this.users.put(appId, users);
+			}
+			users.addAll(newUsers);
+
+			handler.handle(Future.succeededFuture(users));
+
+		} else {
+
+			handler.handle(Future.failedFuture("No Application associated to the ID"));
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void deleteUsers(String appId, Handler<AsyncResult<JsonArray>> handler) {
+
+		final JsonArray users = this.users.remove(appId);
+		if (users == null) {
+			// no users
+			handler.handle(Future.failedFuture("No users defined for the application"));
+
+		} else {
+
+			handler.handle(Future.succeededFuture(users));
 		}
 
 	}

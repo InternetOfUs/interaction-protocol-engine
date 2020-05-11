@@ -97,9 +97,18 @@ public class MessagesResource implements Messages {
 
 				} else {
 
-					Logger.debug("Valid {}, so send it to the engine.", message);
-					this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
 					OperationReponseHandlers.responseOk(resultHandler, message);
+					try {
+
+						this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message.toJsonObject());
+						Logger.debug("Valid {}, so sent it to the engine.", message);
+
+					} catch (final Throwable throwable) {
+
+						Logger.error(throwable, "Can not send {} to the engine.", message);
+
+					}
+
 				}
 
 			});

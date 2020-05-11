@@ -32,6 +32,7 @@ import eu.internetofus.common.ServiceApiSimulator;
 import eu.internetofus.common.api.models.wenet.App;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 
@@ -126,6 +127,35 @@ public class ServiceApiSimulatorServiceImpl extends Service
 	public void deleteCallbacks(String appId, Handler<AsyncResult<JsonObject>> handler) {
 
 		this.delete("/callback/" + appId, handler);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveJsonArrayAppUserIds(String id, Handler<AsyncResult<JsonArray>> retrieveHandler) {
+
+		this.getArray("/app/" + id + "/users", retrieveHandler);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void addUsers(String appId, JsonArray users, Handler<AsyncResult<JsonArray>> handler) {
+
+		this.postArray("/app/" + appId + "/users", users, handler);
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void deleteUsers(String appId, Handler<AsyncResult<JsonArray>> handler) {
+
+		this.deleteArray("/app/" + appId + "/users", handler);
 
 	}
 

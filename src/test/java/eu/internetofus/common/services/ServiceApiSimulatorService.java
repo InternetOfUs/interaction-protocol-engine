@@ -35,6 +35,7 @@ import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.serviceproxy.ServiceBinder;
@@ -153,5 +154,30 @@ public interface ServiceApiSimulatorService {
 	 * @param handler to manage the delete.
 	 */
 	void deleteCallbacks(String appId, Handler<AsyncResult<JsonObject>> handler);
+
+	/**
+	 * Return all the users users received by an {@link App}.
+	 *
+	 * @param id              identifier of the app to get the user users.
+	 * @param retrieveHandler handler to manage the retrieve process.
+	 */
+	void retrieveJsonArrayAppUserIds(@NotNull String id, @NotNull Handler<AsyncResult<JsonArray>> retrieveHandler);
+
+	/**
+	 * Add users into an application.
+	 *
+	 * @param appId   identifier of the application to add the users.
+	 * @param users   to add.
+	 * @param handler to manage the adding.
+	 */
+	void addUsers(String appId, JsonArray users, Handler<AsyncResult<JsonArray>> handler);
+
+	/**
+	 * Delete all the users of an application.
+	 *
+	 * @param appId   identifier of the application to delete all the users.
+	 * @param handler to manage the delete.
+	 */
+	void deleteUsers(String appId, Handler<AsyncResult<JsonArray>> handler);
 
 }

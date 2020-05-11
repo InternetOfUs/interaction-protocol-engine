@@ -26,7 +26,11 @@
 
 package eu.internetofus.common.services;
 
+import java.util.function.Function;
+
 import javax.ws.rs.core.Response.Status;
+
+import org.tinylog.Logger;
 
 import eu.internetofus.common.api.models.ErrorException;
 import eu.internetofus.common.api.models.ErrorMessage;
@@ -35,6 +39,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
@@ -99,7 +104,23 @@ public class Service {
 
 		final String requestURI = this.apiPath + path;
 		this.client.post(this.port, this.host, requestURI).ssl(this.ssl).sendJson(content,
-				this.responseHandler(postHandler));
+				this.responseObjectHandler(postHandler));
+
+	}
+
+	/**
+	 * Post an array to a resource.
+	 *
+	 * @param path        to the resource to post.
+	 * @param content     resource to post.
+	 * @param postHandler the handler to manager the posted resource.
+	 *
+	 */
+	protected void postArray(String path, JsonArray content, Handler<AsyncResult<JsonArray>> postHandler) {
+
+		final String requestURI = this.apiPath + path;
+		this.client.post(this.port, this.host, requestURI).ssl(this.ssl).sendJson(content,
+				this.responseArrayHandler(postHandler));
 
 	}
 
@@ -108,13 +129,44 @@ public class Service {
 	 *
 	 * @param path       to the resource to put.
 	 * @param content    resource to put.
-	 * @param putHandler the handler to manager the puted resource.
+	 * @param putHandler the handler to manager the put resource.
 	 *
 	 */
 	protected void put(String path, JsonObject content, Handler<AsyncResult<JsonObject>> putHandler) {
 
 		final String requestURI = this.apiPath + path;
-		this.client.put(this.port, this.host, requestURI).ssl(this.ssl).sendJson(content, this.responseHandler(putHandler));
+		this.client.put(this.port, this.host, requestURI).ssl(this.ssl).sendJson(content,
+				this.responseObjectHandler(putHandler));
+
+	}
+
+	/**
+	 * Create a handler to manage the response of an HTTP request and obtain a
+	 * {@link JsonObject}.
+	 *
+	 * @param actionHandler handler to manage the action result.
+	 *
+	 * @return the handler to manage the answer got an HTTP action.
+	 */
+	protected Handler<AsyncResult<HttpResponse<Buffer>>> responseObjectHandler(
+			Handler<AsyncResult<JsonObject>> actionHandler) {
+
+		return this.responseHandler(actionHandler, result -> result.bodyAsJsonObject());
+
+	}
+
+	/**
+	 * Create a handler to manage the response of an HTTP request and obtain a
+	 * {@link JsonObject}.
+	 *
+	 * @param actionHandler handler to manage the action result.
+	 *
+	 * @return the handler to manage the answer got an HTTP action.
+	 */
+	protected Handler<AsyncResult<HttpResponse<Buffer>>> responseArrayHandler(
+			Handler<AsyncResult<JsonArray>> actionHandler) {
+
+		return this.responseHandler(actionHandler, result -> result.bodyAsJsonArray());
 
 	}
 
@@ -122,10 +174,13 @@ public class Service {
 	 * Create a handler to manage the response of an HTTP request.
 	 *
 	 * @param actionHandler handler to manage the action result.
+	 * @param processBody   function that extract the required value from the
+	 *                      response.
 	 *
 	 * @return the handler to manage the answer got an HTTP action.
 	 */
-	protected Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler(Handler<AsyncResult<JsonObject>> actionHandler) {
+	protected <T> Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler(Handler<AsyncResult<T>> actionHandler,
+			Function<HttpResponse<Buffer>, T> processBody) {
 
 		return action -> {
 
@@ -146,7 +201,7 @@ public class Service {
 
 						} else {
 
-							final JsonObject body = result.bodyAsJsonObject();
+							final T body = processBody.apply(result);
 							actionHandler.handle(Future.succeededFuture(body));
 						}
 
@@ -182,7 +237,20 @@ public class Service {
 	protected void get(String path, Handler<AsyncResult<JsonObject>> getHandler) {
 
 		final String requestURI = this.apiPath + path;
-		this.client.get(this.port, this.host, requestURI).ssl(this.ssl).send(this.responseHandler(getHandler));
+		this.client.get(this.port, this.host, requestURI).ssl(this.ssl).send(this.responseObjectHandler(getHandler));
+
+	}
+
+	/**
+	 * Get a resource.
+	 *
+	 * @param path       of the resource to get.
+	 * @param getHandler the handler to manage the receiver resource.
+	 */
+	protected void getArray(String path, Handler<AsyncResult<JsonArray>> getHandler) {
+
+		final String requestURI = this.apiPath + path;
+		this.client.get(this.port, this.host, requestURI).ssl(this.ssl).send(this.responseArrayHandler(getHandler));
 
 	}
 
@@ -195,7 +263,20 @@ public class Service {
 	protected void delete(String path, Handler<AsyncResult<JsonObject>> deleteHandler) {
 
 		final String requestURI = this.apiPath + path;
-		this.client.delete(this.port, this.host, requestURI).ssl(this.ssl).send(this.responseHandler(deleteHandler));
+		this.client.delete(this.port, this.host, requestURI).ssl(this.ssl).send(this.responseObjectHandler(deleteHandler));
+
+	}
+
+	/**
+	 * Delete a resource.
+	 *
+	 * @param path          of the resource to delete.
+	 * @param deleteHandler the handler to manage the receiver resource.
+	 */
+	protected void deleteArray(String path, Handler<AsyncResult<JsonArray>> deleteHandler) {
+
+		final String requestURI = this.apiPath + path;
+		this.client.delete(this.port, this.host, requestURI).ssl(this.ssl).send(this.responseArrayHandler(deleteHandler));
 
 	}
 
@@ -215,6 +296,7 @@ public class Service {
 
 			if (handler.failed()) {
 
+				Logger.debug(handler.cause(), "Failed HTTP request");
 				retrieveHandler.handle(Future.failedFuture(handler.cause()));
 
 			} else {
@@ -222,6 +304,7 @@ public class Service {
 				final JsonObject result = handler.result();
 				if (result == null) {
 
+					Logger.debug(handler.cause(), "Empty HTTP request");
 					retrieveHandler.handle(Future.succeededFuture());
 
 				} else {
@@ -229,10 +312,12 @@ public class Service {
 					final T model = Model.fromJsonObject(result, type);
 					if (model == null) {
 
+						Logger.debug(handler.cause(), "Unexpected content {} is not of the type {}", result, type);
 						retrieveHandler.handle(Future.failedFuture(result + " is not of the type '" + type + "'."));
 
 					} else {
 
+						Logger.debug("HTTP success {}", model);
 						retrieveHandler.handle(Future.succeededFuture(model));
 					}
 

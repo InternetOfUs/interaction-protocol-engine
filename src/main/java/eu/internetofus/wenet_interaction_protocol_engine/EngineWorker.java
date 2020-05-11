@@ -29,13 +29,16 @@ package eu.internetofus.wenet_interaction_protocol_engine;
 import org.tinylog.Logger;
 
 import eu.internetofus.common.Worker;
+import eu.internetofus.common.api.models.Model;
 import eu.internetofus.common.api.models.wenet.AppTextualMessage;
 import eu.internetofus.common.api.models.wenet.InteractionProtocolMessage;
-import eu.internetofus.common.api.models.wenet.SocialNetworkRelationship;
+import eu.internetofus.common.services.WeNetServiceApiService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.eventbus.MessageConsumer;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -47,7 +50,7 @@ import io.vertx.ext.web.client.WebClientOptions;
  * @author UDT-IA, IIIA-CSIC
  */
 @Worker
-public class EngineWorker extends AbstractVerticle implements Handler<Message<InteractionProtocolMessage>> {
+public class EngineWorker extends AbstractVerticle implements Handler<Message<JsonObject>> {
 
 	/**
 	 * The address used to send messages to the worker.
@@ -55,13 +58,29 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<In
 	public static final String ADDRESSS = "eu.internetofus.wenet_interaction_protocol_engine.worker";
 
 	/**
+	 * The component that will consume the messages.
+	 */
+	protected MessageConsumer<JsonObject> consumer;
+
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public void start(Promise<Void> startPromise) throws Exception {
 
-		this.vertx.eventBus().consumer(ADDRESSS, this);
-		startPromise.complete();
+		this.consumer = this.vertx.eventBus().consumer(ADDRESSS, this);
+		this.consumer.completionHandler(completion -> {
+
+			if (completion.failed()) {
+
+				startPromise.fail(completion.cause());
+
+			} else {
+
+				startPromise.complete();
+			}
+
+		});
 
 	}
 
@@ -69,57 +88,86 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<In
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void handle(Message<InteractionProtocolMessage> event) {
+	public void handle(Message<JsonObject> event) {
 
-		final InteractionProtocolMessage message = event.body();
+		try {
+
+			final JsonObject body = event.body();
+			final InteractionProtocolMessage message = Model.fromJsonObject(body, InteractionProtocolMessage.class);
+			if (message == null) {
+
+				Logger.error("Can not process the event {}, because does not contains a valid InteractionProtocolMessage.",
+						event);
+
+			} else {
+
+				this.handle(message);
+			}
+
+		} catch (final Throwable throwable) {
+
+			Logger.error(throwable, "Can not process the event {}", event);
+		}
+
+	}
+
+	/**
+	 * Called when have a message to process.
+	 *
+	 * @param message to process.
+	 */
+	protected void handle(InteractionProtocolMessage message) {
+
 		EngineEnvironment.create(this.vertx, message).onComplete(creation -> {
 
-			try {
+			WeNetServiceApiService.createProxy(this.vertx).retrieveJsonArrayAppUserIds(message.appId, retrieve -> {
 
-				final EngineEnvironment env = creation.result();
-				final WebClientOptions options = new WebClientOptions();
-				final WebClient client = WebClient.create(this.vertx, options);
-				final AppTextualMessage textualMessage = new AppTextualMessage();
-				textualMessage.title = "Dummy protocol";
-				textualMessage.text = String.valueOf(message.content);
-				if (env.task.requesterId != env.sender.id) {
+				if (retrieve.failed()) {
 
-					textualMessage.recipientId = env.task.requesterId;
-					final JsonObject body = textualMessage.toJsonObject();
-					client.postAbs(env.app.messageCallbackUrl).sendJsonObject(body, send -> {
-						if (send.failed()) {
-
-							Logger.error(send.cause(), "Can not notify the requester about {}.", message);
-
-						} else {
-
-							Logger.debug("Sent {} to {}", body, env.app.messageCallbackUrl);
-						}
-					});
+					Logger.debug("No found users from the APP");
 
 				} else {
-					for (final SocialNetworkRelationship relation : env.sender.relationships) {
 
-						textualMessage.recipientId = relation.userId;
-						final JsonObject body = textualMessage.toJsonObject();
-						client.postAbs(env.app.messageCallbackUrl).sendJsonObject(body, send -> {
-							if (send.failed()) {
+					try {
 
-								Logger.error(send.cause(), "Can not notify to {} about {}.", relation.userId, message);
+						final JsonArray users = retrieve.result();
+						final EngineEnvironment env = creation.result();
+						final WebClientOptions options = new WebClientOptions();
+						final WebClient client = WebClient.create(this.vertx, options);
+						final AppTextualMessage textualMessage = new AppTextualMessage();
+						textualMessage.title = "Dummy protocol";
+						textualMessage.text = String.valueOf(message.content);
+						for (int i = 0; i < users.size(); i++) {
 
-							} else {
+							final String userId = users.getString(i);
+							if (message.senderId == null || !message.senderId.equals(userId)) {
 
-								Logger.debug("Sent {} to {}", body, env.app.messageCallbackUrl);
+								textualMessage.recipientId = userId;
+								final JsonObject body = textualMessage.toJsonObject();
+								client.postAbs(env.app.messageCallbackUrl).sendJsonObject(body, send -> {
+
+									if (send.failed()) {
+
+										Logger.error(send.cause(), "Can not notify to {} about {}.", userId, message);
+
+									} else {
+
+										Logger.debug("Sent {} to {}", body, env.app.messageCallbackUrl);
+									}
+
+								});
 							}
-						});
 
+						}
+
+					} catch (final Throwable throwable) {
+
+						Logger.error(throwable, "Can not process {}", message);
 					}
+
 				}
 
-			} catch (final Throwable throwable) {
-
-				Logger.error(throwable, "Can not process {}", message);
-			}
+			});
 		});
 
 	}
