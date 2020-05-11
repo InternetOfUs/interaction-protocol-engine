@@ -97,8 +97,8 @@ public class MessagesResource implements Messages {
 
 				} else {
 
+					Logger.debug("Valid {}, so send it to the engine.", message);
 					this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
-					Logger.debug("Sent to the engine {}.", message);
 					OperationReponseHandlers.responseOk(resultHandler, message);
 				}
 
