@@ -36,6 +36,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 
@@ -84,10 +85,15 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<In
 				if (env.task.requesterId != env.sender.id) {
 
 					textualMessage.recipientId = env.task.requesterId;
-					client.postAbs(env.app.messageCallbackUrl).sendJsonObject(textualMessage.toJsonObject(), send -> {
+					final JsonObject body = textualMessage.toJsonObject();
+					client.postAbs(env.app.messageCallbackUrl).sendJsonObject(body, send -> {
 						if (send.failed()) {
 
 							Logger.error(send.cause(), "Can not notify the requester about {}.", message);
+
+						} else {
+
+							Logger.debug("Sent {} to {}", body, env.app.messageCallbackUrl);
 						}
 					});
 
@@ -95,10 +101,15 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<In
 					for (final SocialNetworkRelationship relation : env.sender.relationships) {
 
 						textualMessage.recipientId = relation.userId;
-						client.postAbs(env.app.messageCallbackUrl).sendJsonObject(textualMessage.toJsonObject(), send -> {
+						final JsonObject body = textualMessage.toJsonObject();
+						client.postAbs(env.app.messageCallbackUrl).sendJsonObject(body, send -> {
 							if (send.failed()) {
 
 								Logger.error(send.cause(), "Can not notify to {} about {}.", relation.userId, message);
+
+							} else {
+
+								Logger.debug("Sent {} to {}", body, env.app.messageCallbackUrl);
 							}
 						});
 
