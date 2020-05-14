@@ -24,7 +24,7 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.persistence;
+package eu.internetofus.common.persitences;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

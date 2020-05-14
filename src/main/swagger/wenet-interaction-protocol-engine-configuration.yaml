@@ -21,10 +21,8 @@ openAPI:
     version: '0.10.0'
     title: WeNet - Interaciton protocol engine API
     description:  >-
-      This API will be used to storing and maintaining the task description,
-      and the community description, along with their associated norms, to realize the user
-      interactions between them sending messages guaranteeing that they follow the norms,
-      and to form teams to realize a task.
+      This API will be used to the user interactions between them sending messages guaranteeing
+      that they follow the norms.
 
       The functionality of the API is organized around the following concepts:
 
@@ -35,12 +33,6 @@ openAPI:
        * **Task**: is an individual goal to be achieved by a team.
        * **Team**: is a group of individuals set to fulfil a task.
        * **Trust**: is the confidence that another user achieve a task.
-
-
-      ## Community
-
-      The functionality provided allows to managing members, norms and task types associated with a community.
-      At the moment does not exist any restriction to create communities.
 
       ## Message
 
@@ -91,5 +83,9 @@ openAPI:
       name: MIT
       url: https://opensource.org/licenses/MIT
   servers:
-    - url: http://ardid.iiia.csic.es/dev-wenet-task-manager/
-      description: Develop server
+    - url: https://wenet.u-hopper.com/interaction_protocol_engine
+      description: WeNet production server
+    - url: https://wenet.u-hopper.com/dev/interaction_protocol_engine
+      description: WeNet development server server
+    - url: http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.9.0/
+      description: IIIA development server
