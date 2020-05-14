@@ -18,7 +18,7 @@ openAPI:
       description: The functionality provided allows to automatically form teams that have diversity in gender, personality and intelligence. Also we provide the functions to evaluate the personality and intelligences of users and the result can be kept of the profile attributes.
   info:
     # The verion of the API has to be synchonized with the 'api-version' property of the 'pom.xml'
-    version: '0.10.0'
+    version: '0.9.0'
     title: WeNet - Interaciton protocol engine API
     description:  >-
       This API will be used to the user interactions between them sending messages guaranteeing
