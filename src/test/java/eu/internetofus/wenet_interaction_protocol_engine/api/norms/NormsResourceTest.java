@@ -30,7 +30,7 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.common.services.WeNetProfileManagerService;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import io.vertx.junit5.VertxExtension;
 

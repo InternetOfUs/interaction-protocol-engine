@@ -26,7 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.services;
 
-import eu.internetofus.common.services.AbstractServicesVerticleTestCase;
+import eu.internetofus.common.vertx.AbstractServicesVerticleTestCase;
 
 /**
  * Test the {@link ServicesVerticle}.

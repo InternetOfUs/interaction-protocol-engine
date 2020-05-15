@@ -49,7 +49,7 @@ You can use the next arguments:
  - **DEFAULT_DB_USER_NAME** to define the default mongo database user name. By default is **wenetTaskManager**.
  - **DEFAULT_DB_USER_PASSWORD** to define the default mongo database user password. By default is **password**.
  - **DEFAULT_WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **https://wenet.u-hopper.com/profile_manager**.
- - **DEFAULT_WENET_TASK_MANAGER_API** to define the path to the task manager component to use. By default is **https://wenet.u-hopper.com/interaction_protocol_engine**.
+ - **DEFAULT_WENET_TASK_MANAGER_API** to define the path to the task manager component to use. By default is **https://wenet.u-hopper.com/task_manager**.
  - **DEFAULT_WENET_SERVICE_API** to define the path to the service component to use. By default is **https://wenet.u-hopper.com/service**.
 
 This arguments are used to create a configurations files at **/usr/wenet/interaction-protocol-engine/etc**.
@@ -73,7 +73,7 @@ You can modify use the next environment properties to modify some parameters of 
  - **DB_USER_NAME** to define the mongo database user name. By default is **wenetTaskManager**.
  - **DB_USER_PASSWORD** to define the mongo database user password. By default is **password**.
  - **WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **https://wenet.u-hopper.com/profile_manager**.
- - **WENET_TASK_MANAGER_API** to define the path to the task manager component to use. By default is **https://wenet.u-hopper.com/interaction_protocol_engine**.
+ - **WENET_TASK_MANAGER_API** to define the path to the task manager component to use. By default is **https://wenet.u-hopper.com/task_manager**.
  - **WENET_SERVICE_API** to define the path to the service component to use. By default is **https://wenet.u-hopper.com/service**.
 
 Also you can define your own configuration that modify this properties and mount to  **/usr/wenet/interaction-protocol-engine/etc**.

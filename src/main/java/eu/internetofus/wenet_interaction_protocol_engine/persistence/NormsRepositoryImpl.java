@@ -27,7 +27,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
 import eu.internetofus.common.TimeManager;
-import eu.internetofus.common.persitences.Repository;
+import eu.internetofus.common.vertx.Repository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;

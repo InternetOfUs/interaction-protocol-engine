@@ -26,10 +26,10 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.services;
 
-import eu.internetofus.common.services.AbstractServicesVerticle;
-import eu.internetofus.common.services.WeNetProfileManagerService;
-import eu.internetofus.common.services.WeNetServiceApiService;
-import eu.internetofus.common.services.WeNetTaskManagerService;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManagerService;
+import eu.internetofus.common.components.service.WeNetServiceApiService;
+import eu.internetofus.common.components.task_manager.WeNetTaskManagerService;
+import eu.internetofus.common.vertx.AbstractServicesVerticle;
 import io.vertx.core.json.JsonObject;
 
 /**

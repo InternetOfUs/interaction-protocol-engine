@@ -30,9 +30,9 @@ import javax.ws.rs.core.Response.Status;
 
 import org.tinylog.Logger;
 
-import eu.internetofus.common.api.OperationReponseHandlers;
-import eu.internetofus.common.api.models.Model;
-import eu.internetofus.common.api.models.wenet.InteractionProtocolMessage;
+import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.interaction_protocol_engine.InteractionProtocolMessage;
+import eu.internetofus.common.vertx.OperationReponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;

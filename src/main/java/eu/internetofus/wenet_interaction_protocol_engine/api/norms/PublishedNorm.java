@@ -28,14 +28,14 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
 import java.util.List;
 
-import eu.internetofus.common.api.models.Mergeable;
-import eu.internetofus.common.api.models.Merges;
-import eu.internetofus.common.api.models.Validable;
-import eu.internetofus.common.api.models.ValidationErrorException;
-import eu.internetofus.common.api.models.Validations;
-import eu.internetofus.common.api.models.wenet.CreateUpdateTsDetails;
-import eu.internetofus.common.api.models.wenet.Norm;
-import eu.internetofus.common.services.WeNetProfileManagerService;
+import eu.internetofus.common.components.Mergeable;
+import eu.internetofus.common.components.Merges;
+import eu.internetofus.common.components.Validable;
+import eu.internetofus.common.components.ValidationErrorException;
+import eu.internetofus.common.components.Validations;
+import eu.internetofus.common.components.profile_manager.CreateUpdateTsDetails;
+import eu.internetofus.common.components.profile_manager.Norm;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;

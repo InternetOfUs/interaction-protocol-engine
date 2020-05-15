@@ -28,11 +28,11 @@ package eu.internetofus.wenet_interaction_protocol_engine;
 
 import org.tinylog.Logger;
 
-import eu.internetofus.common.Worker;
-import eu.internetofus.common.api.models.Model;
-import eu.internetofus.common.api.models.wenet.AppTextualMessage;
-import eu.internetofus.common.api.models.wenet.InteractionProtocolMessage;
-import eu.internetofus.common.services.WeNetServiceApiService;
+import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.interaction_protocol_engine.InteractionProtocolMessage;
+import eu.internetofus.common.components.service.TextualMessage;
+import eu.internetofus.common.components.service.WeNetServiceApiService;
+import eu.internetofus.common.vertx.Worker;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -134,7 +134,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 						final EngineEnvironment env = creation.result();
 						final WebClientOptions options = new WebClientOptions();
 						final WebClient client = WebClient.create(this.vertx, options);
-						final AppTextualMessage textualMessage = new AppTextualMessage();
+						final TextualMessage textualMessage = new TextualMessage();
 						textualMessage.title = "Dummy protocol";
 						textualMessage.text = String.valueOf(message.content);
 						for (int i = 0; i < users.size(); i++) {

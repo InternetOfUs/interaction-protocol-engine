@@ -28,8 +28,8 @@ package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
 import java.util.List;
 
-import eu.internetofus.common.api.models.Model;
-import eu.internetofus.common.persitences.QueryBuilder;
+import eu.internetofus.common.components.Model;
+import eu.internetofus.common.vertx.QueryBuilder;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNorm;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;

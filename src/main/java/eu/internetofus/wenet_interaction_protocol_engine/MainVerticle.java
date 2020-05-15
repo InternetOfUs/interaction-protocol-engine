@@ -26,7 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import eu.internetofus.common.AbstractMainVerticle;
+import eu.internetofus.common.vertx.AbstractMainVerticle;
 import eu.internetofus.wenet_interaction_protocol_engine.api.APIVerticle;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.PersistenceVerticle;
 import eu.internetofus.wenet_interaction_protocol_engine.services.ServicesVerticle;

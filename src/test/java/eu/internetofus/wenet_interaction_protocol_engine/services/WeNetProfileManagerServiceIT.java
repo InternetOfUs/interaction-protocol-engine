@@ -28,8 +28,8 @@ package eu.internetofus.wenet_interaction_protocol_engine.services;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.common.services.WeNetProfileManagerService;
-import eu.internetofus.common.services.WeNetProfileManagerServiceTestCase;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManagerService;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManagerServiceTestCase;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 
 /**

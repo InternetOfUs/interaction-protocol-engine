@@ -26,7 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.messages;
 
-import static eu.internetofus.common.api.HttpResponses.assertThatBodyIs;
+import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
 import static io.vertx.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,7 +35,7 @@ import javax.ws.rs.core.Response.Status;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.common.api.models.wenet.InteractionProtocolMessage;
+import eu.internetofus.common.components.interaction_protocol_engine.InteractionProtocolMessage;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;

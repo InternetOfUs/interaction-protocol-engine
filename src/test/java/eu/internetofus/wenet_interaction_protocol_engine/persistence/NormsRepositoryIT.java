@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.common.TimeManager;
-import eu.internetofus.common.api.models.Model;
+import eu.internetofus.common.components.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNorm;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNormTest;

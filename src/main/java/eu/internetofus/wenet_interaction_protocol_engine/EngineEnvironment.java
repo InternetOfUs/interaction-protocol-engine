@@ -32,14 +32,14 @@ import java.util.function.Function;
 
 import org.tinylog.Logger;
 
-import eu.internetofus.common.api.models.Model;
-import eu.internetofus.common.api.models.wenet.App;
-import eu.internetofus.common.api.models.wenet.InteractionProtocolMessage;
-import eu.internetofus.common.api.models.wenet.Task;
-import eu.internetofus.common.api.models.wenet.WeNetUserProfile;
-import eu.internetofus.common.services.WeNetProfileManagerService;
-import eu.internetofus.common.services.WeNetServiceApiService;
-import eu.internetofus.common.services.WeNetTaskManagerService;
+import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.interaction_protocol_engine.InteractionProtocolMessage;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManagerService;
+import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
+import eu.internetofus.common.components.service.App;
+import eu.internetofus.common.components.service.WeNetServiceApiService;
+import eu.internetofus.common.components.task_manager.Task;
+import eu.internetofus.common.components.task_manager.WeNetTaskManagerService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;

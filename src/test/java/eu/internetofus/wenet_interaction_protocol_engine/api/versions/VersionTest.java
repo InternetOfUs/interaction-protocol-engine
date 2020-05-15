@@ -26,7 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.versions;
 
-import eu.internetofus.common.api.models.ModelTestCase;
+import eu.internetofus.common.components.ModelTestCase;
 
 /**
  * Test the {@link Version}.

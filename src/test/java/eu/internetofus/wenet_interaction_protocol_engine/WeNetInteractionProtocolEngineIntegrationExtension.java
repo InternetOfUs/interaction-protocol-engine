@@ -29,11 +29,11 @@ package eu.internetofus.wenet_interaction_protocol_engine;
 import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.Network;
 
-import eu.internetofus.common.AbstractMain;
-import eu.internetofus.common.AbstractWeNetModuleIntegrationExtension;
 import eu.internetofus.common.Containers;
-import eu.internetofus.common.WeNetModuleContext;
-import eu.internetofus.common.services.ServiceApiSimulatorService;
+import eu.internetofus.common.components.service.ServiceApiSimulatorService;
+import eu.internetofus.common.vertx.AbstractMain;
+import eu.internetofus.common.vertx.AbstractWeNetModuleIntegrationExtension;
+import eu.internetofus.common.vertx.WeNetModuleContext;
 
 /**
  * Extension used to run integration tests over the WeNet interaction protocol

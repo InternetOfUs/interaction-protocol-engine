@@ -28,8 +28,8 @@ package eu.internetofus.wenet_interaction_protocol_engine;
 import org.tinylog.Level;
 import org.tinylog.provider.InternalLogger;
 
-import eu.internetofus.common.AbstractMain;
-import eu.internetofus.common.AbstractMainVerticle;
+import eu.internetofus.common.vertx.AbstractMain;
+import eu.internetofus.common.vertx.AbstractMainVerticle;
 
 /**
  * Start the WeNet interaction protocol engine.

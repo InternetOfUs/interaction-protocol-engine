@@ -32,8 +32,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import eu.internetofus.common.api.models.ErrorMessage;
-import eu.internetofus.common.api.models.wenet.InteractionProtocolMessage;
+import eu.internetofus.common.components.ErrorMessage;
+import eu.internetofus.common.components.interaction_protocol_engine.InteractionProtocolMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

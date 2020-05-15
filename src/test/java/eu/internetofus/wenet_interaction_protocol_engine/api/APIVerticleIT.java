@@ -28,7 +28,7 @@ package eu.internetofus.wenet_interaction_protocol_engine.api;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.common.api.AbstractAPIVerticleIntegrationTestCase;
+import eu.internetofus.common.vertx.AbstractAPIVerticleIntegrationTestCase;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
 import io.vertx.core.json.JsonObject;

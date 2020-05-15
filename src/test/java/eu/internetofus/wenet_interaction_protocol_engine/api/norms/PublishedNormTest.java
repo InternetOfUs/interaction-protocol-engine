@@ -30,9 +30,9 @@ import java.util.ArrayList;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.common.api.models.ModelTestCase;
-import eu.internetofus.common.api.models.wenet.NormTest;
-import eu.internetofus.common.services.WeNetProfileManagerService;
+import eu.internetofus.common.components.ModelTestCase;
+import eu.internetofus.common.components.profile_manager.NormTest;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManagerService;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;

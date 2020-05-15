@@ -26,7 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api;
 
-import eu.internetofus.common.api.AbstractAPIVerticleTestCase;
+import eu.internetofus.common.vertx.AbstractAPIVerticleTestCase;
 
 /**
  * Test the {@link APIVerticle}.

@@ -33,8 +33,8 @@ import org.itsallcode.junit.sysextensions.SystemOutGuard;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.common.AbstractMain;
-import eu.internetofus.common.AbstractMainTestCase;
+import eu.internetofus.common.vertx.AbstractMain;
+import eu.internetofus.common.vertx.AbstractMainTestCase;
 
 /**
  * Test the {@link Main}
