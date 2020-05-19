@@ -148,7 +148,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
 						final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId",
 								"0");
-						if (env.task.deadlineTs < TimeManager.now()) {
+						if (env.task.deadlineTs != null && env.task.deadlineTs < TimeManager.now()) {
 
 							final TaskVolunteerNotification notification = new TaskVolunteerNotification();
 							notification.recipientId = env.task.requesterId;

@@ -15,28 +15,13 @@
 		"username": "wenetInteractionProtocolEngine",
 		"password": "password"
 	},
+	"webClient": {
+		"defaultHost": "wenet.iiia.csic.es",
+		"defaultPort": 80
+	},
 	"wenetComponents": {
-		"webClient": {
-			"defaultHost": "wenet.iiia.csic.es",
-			"defaultPort": 80
-		},
-		"profileManager": {
-			"host": "wenet.u-hopper.com",
-			"port": 443,
-			"ssl":true,
-			"apiPath": "/profile_manager"
-		},
-		"taskManager": {
-			"host": "wenet.u-hopper.com",
-			"port": 443,
-			"ssl":true,
-			"apiPath": "/task_manager"
-		},
-		"service": {
-			"host": "wenet.u-hopper.com",
-			"port": 443,
-			"ssl":true,
-			"apiPath": "/service"
-		}
+		"profileManager": "https://wenet.u-hopper.com/profile_manager",
+		"taskManager": "https://wenet.u-hopper.com/task_manager",
+		"service": "https://wenet.u-hopper.com/service"
 	}
 }

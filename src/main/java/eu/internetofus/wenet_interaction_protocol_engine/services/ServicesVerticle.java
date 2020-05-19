@@ -47,16 +47,13 @@ public class ServicesVerticle extends AbstractServicesVerticle {
 	protected void registerServices(JsonObject serviceConf) throws Exception {
 
 		// register the service to interact with the profile manager
-		final JsonObject profileManagerConf = serviceConf.getJsonObject("profileManager", new JsonObject());
-		WeNetProfileManagerService.register(this.vertx, this.client, profileManagerConf);
+		WeNetProfileManagerService.register(this.vertx, this.client, serviceConf);
 
 		// register the service to interact with the task manager
-		final JsonObject taskManagerConf = serviceConf.getJsonObject("taskManager", new JsonObject());
-		WeNetTaskManagerService.register(this.vertx, this.client, taskManagerConf);
+		WeNetTaskManagerService.register(this.vertx, this.client, serviceConf);
 
 		// register the service to interact with the service API
-		final JsonObject serviceApiConf = serviceConf.getJsonObject("service", new JsonObject());
-		WeNetServiceApiService.register(this.vertx, this.client, serviceApiConf);
+		WeNetServiceApiService.register(this.vertx, this.client, serviceConf);
 
 	}
 
