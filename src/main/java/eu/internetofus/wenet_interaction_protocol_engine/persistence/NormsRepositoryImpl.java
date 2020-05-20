@@ -129,7 +129,7 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 		options.setSkip(offset);
 		options.setLimit(limit);
 
-		this.searchPageObject(PUBLISHED_NORMS_COLLECTION, query, options, "norms", searchHandler);
+		this.searchPageObject(PUBLISHED_NORMS_COLLECTION, query, options, "norms", null, searchHandler);
 
 	}
 
