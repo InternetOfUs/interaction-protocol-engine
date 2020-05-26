@@ -26,8 +26,10 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.services;
 
+import eu.internetofus.common.components.incentive_server.WeNetIncentiveServer;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManagerService;
 import eu.internetofus.common.components.service.WeNetServiceApiService;
+import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilder;
 import eu.internetofus.common.components.task_manager.WeNetTaskManagerService;
 import eu.internetofus.common.vertx.AbstractServicesVerticle;
 import io.vertx.core.json.JsonObject;
@@ -40,21 +42,27 @@ import io.vertx.core.json.JsonObject;
  */
 public class ServicesVerticle extends AbstractServicesVerticle {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void registerServices(JsonObject serviceConf) throws Exception {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void registerServices(final JsonObject serviceConf) throws Exception {
 
-		// register the service to interact with the profile manager
-		WeNetProfileManagerService.register(this.vertx, this.client, serviceConf);
+    // register the service to interact with the profile manager
+    WeNetProfileManagerService.register(this.vertx, this.client, serviceConf);
 
-		// register the service to interact with the task manager
-		WeNetTaskManagerService.register(this.vertx, this.client, serviceConf);
+    // register the service to interact with the task manager
+    WeNetTaskManagerService.register(this.vertx, this.client, serviceConf);
 
-		// register the service to interact with the service API
-		WeNetServiceApiService.register(this.vertx, this.client, serviceConf);
+    // register the service to interact with the service API
+    WeNetServiceApiService.register(this.vertx, this.client, serviceConf);
 
-	}
+    // register the service to interact with the incentive server
+    WeNetIncentiveServer.register(this.vertx, this.client, serviceConf);
+
+    // register the service to interact with the incentive server
+    WeNetSocialContextBuilder.register(this.vertx, this.client, serviceConf);
+
+  }
 
 }

@@ -24,52 +24,8 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.components.service;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
-import org.junit.jupiter.api.Test;
-
 /**
- * Test the {@link TaskSelectionNotification}
- *
- * @see TaskSelectionNotification
- *
  * @author UDT-IA, IIIA-CSIC
+ *
  */
-public class TaskSelectionNotificationTest extends TaskNotificationTestCase<TaskSelectionNotification> {
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see TaskSelectionNotification#TaskSelectionNotification()
-	 */
-	@Override
-	public TaskSelectionNotification createEmptyMessage() {
-
-		return new TaskSelectionNotification();
-	}
-
-	/**
-	 * Verify that the notification type is a task volunteer.
-	 */
-	@Test
-	public void shouldNotificationTypeByTaskVolunteer() {
-
-		final TaskSelectionNotification model = this.createEmptyMessage();
-		assertThat(model.notificationType).isEqualTo(TaskNotification.NotificationType.selectionVolunteer);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public TaskSelectionNotification createModelExample(int index) {
-
-		final TaskSelectionNotification model = super.createModelExample(index);
-		model.outcome = TaskSelectionNotification.Outcome.values()[index
-				% (TaskSelectionNotification.Outcome.values().length - 1)];
-		return model;
-	}
-
-}
+package eu.internetofus.common.components.incentive_server;

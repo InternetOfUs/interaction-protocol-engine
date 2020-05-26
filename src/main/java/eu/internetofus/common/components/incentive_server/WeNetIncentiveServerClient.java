@@ -24,52 +24,31 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.components.service;
+package eu.internetofus.common.components.incentive_server;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import org.junit.jupiter.api.Test;
+import eu.internetofus.common.vertx.ComponentClient;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 
 /**
- * Test the {@link TaskSelectionNotification}
+ * The client to interact with the {@link WeNetIncentiveServer}.
  *
- * @see TaskSelectionNotification
+ * @see WeNetIncentiveServer#register(io.vertx.core.Vertx, WebClient, io.vertx.core.json.JsonObject)
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class TaskSelectionNotificationTest extends TaskNotificationTestCase<TaskSelectionNotification> {
+public class WeNetIncentiveServerClient extends ComponentClient implements WeNetIncentiveServer {
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see TaskSelectionNotification#TaskSelectionNotification()
-	 */
-	@Override
-	public TaskSelectionNotification createEmptyMessage() {
+  /**
+   * Create a new service.
+   *
+   * @param client to interact with the other modules.
+   * @param conf   configuration of the component.
+   */
+  public WeNetIncentiveServerClient(final WebClient client, final JsonObject conf) {
 
-		return new TaskSelectionNotification();
-	}
+    super(client, conf.getString("incentiveServerr", "https://wenet.u-hopper.com/incentive_server"));
 
-	/**
-	 * Verify that the notification type is a task volunteer.
-	 */
-	@Test
-	public void shouldNotificationTypeByTaskVolunteer() {
-
-		final TaskSelectionNotification model = this.createEmptyMessage();
-		assertThat(model.notificationType).isEqualTo(TaskNotification.NotificationType.selectionVolunteer);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public TaskSelectionNotification createModelExample(int index) {
-
-		final TaskSelectionNotification model = super.createModelExample(index);
-		model.outcome = TaskSelectionNotification.Outcome.values()[index
-				% (TaskSelectionNotification.Outcome.values().length - 1)];
-		return model;
-	}
+  }
 
 }

@@ -144,6 +144,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             notification.title = "Can you help?";
             this.sendToAllAppUsers(env.app, client, notification, env.task.requesterId);
 
+
+
           } else if ("volunteerForTask".equalsIgnoreCase(action)) {
 
             final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId",

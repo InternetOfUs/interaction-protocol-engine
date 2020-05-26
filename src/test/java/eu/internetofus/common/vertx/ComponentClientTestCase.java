@@ -62,11 +62,12 @@ public abstract class ComponentClientTestCase<T extends ComponentClient> {
 
   }
 
-
   /**
    * Create client to test.
    *
    * @param client web client to use.
+   *
+   * @return a new instance of the client to test.
    */
   protected abstract T createClient(WebClient client);
 

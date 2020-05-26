@@ -21,6 +21,8 @@ ARG DEFAULT_DB_USER_PASSWORD=password
 ARG DEFAULT_WENET_PROFILE_MANAGER_API="https://wenet.u-hopper.com/profile_manager"
 ARG DEFAULT_WENET_TASK_MANAGER_API="https://wenet.u-hopper.com/task_manager"
 ARG DEFAULT_WENET_SERVICE_API="https://wenet.u-hopper.com/service"
+ARG DEFAULT_WENET_INCENTIVE_SERVER_API="https://wenet.u-hopper.com/incentive_server"
+ARG DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API="https://wenet.u-hopper.com/social_context_builder"
 ENV API_HOST=${DEFAULT_API_HOST}
 ENV API_PORT=${DEFAULT_API_PORT}
 ENV DB_HOST=${DEFAULT_DB_HOST}
@@ -31,6 +33,8 @@ ENV DB_USER_PASSWORD=${DEFAULT_DB_USER_PASSWORD}
 ENV WENET_PROFILE_MANAGER_API=${DEFAULT_WENET_PROFILE_MANAGER_API}
 ENV WENET_TASK_MANAGER_API=${DEFAULT_WENET_TASK_MANAGER_API}
 ENV WENET_SERVICE_API=${DEFAULT_WENET_SERVICE_API}
+ENV WENET_INCENTIVE_SERVER_API=${DEFAULT_WENET_INCENTIVE_SERVER_API}
+ENV WENET_SOCIAL_CONTEXT_BUILDER_API=${DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API}
 ENV RUN_ARGS=""
 
 # Create running dierectories
@@ -53,6 +57,11 @@ RUN echo "{\"wenetComponents\":{\"taskManager\":\"${DEFAULT_WENET_TASK_MANAGER_A
 # Create configuration for service component
 RUN echo "{\"wenetComponents\":{\"service\":\"${DEFAULT_WENET_SERVICE_API}\"}}" > /usr/wenet/interaction-protocol-engine/etc/service.json
 
+# Create configuration for incentive component
+RUN echo "{\"wenetComponents\":{\"incentiveServer\":\"${DEFAULT_WENET_INCENTIVE_SERVER_API}\"}}" > /usr/wenet/interaction-protocol-engine/etc/incentiveServer.json
+
+# Create configuration for social context builderr component
+RUN echo "{\"wenetComponents\":{\"socialContextBuilder\":\"${DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API}\"}}" > /usr/wenet/interaction-protocol-engine/etc/socialContextBuilder.json
 
 WORKDIR /usr/wenet/interaction-protocol-engine
 COPY --from=build /build/target/wenet-interaction-protocol-engine.jar /usr/wenet/interaction-protocol-engine/wenet-interaction-protocol-engine.jar
@@ -70,4 +79,6 @@ CMD /wait && java -jar wenet-interaction-protocol-engine.jar -c etc \
   -pwenetComponents.profileManager=${WENET_PROFILE_MANAGER_API}\
   -pwenetComponents.taskManager=${WENET_TASK_MANAGER_API}\
   -pwenetComponents.service=${WENET_SERVICE_API}\
+  -pwenetComponents.incentiveServer=${WENET_INCENTIVE_SERVER_API}\
+  -pwenetComponents.socialContextBuilder=${WENET_SOCIAL_CONTEXT_BUILDER_API}\
   ${RUN_ARGS}
