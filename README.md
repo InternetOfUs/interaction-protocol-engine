@@ -3,7 +3,9 @@
 ## Introduction
 
 The interaction protocol engine component is the one responsible for guaranteeing that interactions
-between WeNet users follow the norms. The interaction between users is modeled as an exchange of messages.
+between WeNet users follow the norms.
+
+The interaction between users is modeled as an exchange of messages.
 When a user sends a message through the API, the message is sent to the norm interpreter of the user.
 This interpreter needs to first verify that the message does not violate any of the norms,
 this includes the community norms, the task norms, the sender’s individual norms, as well as the context-dependent
@@ -20,7 +22,7 @@ then the norm interpreter needs to decide what to do next, which is usually tran
 to other peers and/or sending messages to its user. This decision takes into consideration the community norms,
 the context-dependent norms that are attached to the message, the individual private norms of the human whose interpreter
 has received this message, as well as their local profile (both private and public). This ensures that the interpreter
-abides with it is human’s private norms without leaking any of their private norms and profile.
+abides by human’s private norms without leaking any of their private norms and profile.
 
 There are norms on the individual (user level), the task level, and the community level.
 An individual’s norm might be “Suppress incoming messages at night” (and this will
@@ -61,7 +63,7 @@ To use this feature you must to install the next software.
 If you want to create an image execute the next command.
 
 ```
-docker build -f src/main/docker/Dockerfile -t wenet/interaction-protocol-engine .
+docker build -f src/main/docker/Dockerfile -t wenet/interaction-protocol-engine:latest .
 ```
 
 You can use the next arguments:
@@ -73,9 +75,11 @@ You can use the next arguments:
  - **DEFAULT_DB_NAME** to define the default mongo database name. By default is **wenetTaskManagerDB**.
  - **DEFAULT_DB_USER_NAME** to define the default mongo database user name. By default is **wenetTaskManager**.
  - **DEFAULT_DB_USER_PASSWORD** to define the default mongo database user password. By default is **password**.
- - **DEFAULT_WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **https://wenet.u-hopper.com/profile_manager**.
- - **DEFAULT_WENET_TASK_MANAGER_API** to define the path to the task manager component to use. By default is **https://wenet.u-hopper.com/task_manager**.
- - **DEFAULT_WENET_SERVICE_API** to define the path to the service component to use. By default is **https://wenet.u-hopper.com/service**.
+ - **DEFAULT_WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **https://wenet.u-hopper.com/prod/profile_manager**.
+ - **DEFAULT_WENET_TASK_MANAGER_API** to define the path to the task manager component to use. By default is **https://wenet.u-hopper.com/prod/task_manager**.
+ - **DEFAULT_WENET_SERVICE_API** to define the path to the service component to use. By default is **https://wenet.u-hopper.com/prod/service**.
+ - **DEFAULT_WENET_INCENTIVE_SERVER_APII** to define the path to the service component to use. By default is **https://wenet.u-hopper.com/prod/incentive_server**.
+ - **DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the service component to use. By default is **https://wenet.u-hopper.com/prod/social_context_builder**.
 
 This arguments are used to create a configurations files at **/usr/wenet/interaction-protocol-engine/etc**.
 So you can mount a volume to this if you want to modify any configuration property at runtime.
@@ -97,9 +101,10 @@ You can modify use the next environment properties to modify some parameters of 
  - **DB_NAME** to define the mongo database name. By default is **wenetTaskManagerDB**.
  - **DB_USER_NAME** to define the mongo database user name. By default is **wenetTaskManager**.
  - **DB_USER_PASSWORD** to define the mongo database user password. By default is **password**.
- - **WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **https://wenet.u-hopper.com/profile_manager**.
- - **WENET_TASK_MANAGER_API** to define the path to the task manager component to use. By default is **https://wenet.u-hopper.com/task_manager**.
+ - **WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **https://wenet.u-hopper.com/prod/profile_manager**.
  - **WENET_SERVICE_API** to define the path to the service component to use. By default is **https://wenet.u-hopper.com/service**.
+ - **WENET_INCENTIVE_SERVER_API** to define the path to the incentive serverr component to use. By default is **https://wenet.u-hopper.com/prod/incentive_server**.
+ - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the social context builder component to use. By default is **https://wenet.u-hopper.com/prod/social_context_builder**.
 
 Also you can define your own configuration that modify this properties and mount to  **/usr/wenet/interaction-protocol-engine/etc**.
 

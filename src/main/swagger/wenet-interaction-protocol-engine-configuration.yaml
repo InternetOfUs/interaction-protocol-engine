@@ -6,38 +6,20 @@ openAPI:
   tags:
     - name: Other
       description: Other services provided by the API.
-    - name: Communities
-      description: The functionality provided allows to manage members, norms and task types associated to a community.
     - name: Messages
       description: The functionality provided allows to send messages.
     - name: Norms
       description: The functionality provided allows to publish norms, and manage the user and community norms.
-    - name: Tasks
-      description: The functionality provided allows to publish task types, create and manage task instances.
-    - name: Teams
-      description: The functionality provided allows to automatically form teams that have diversity in gender, personality and intelligence. Also we provide the functions to evaluate the personality and intelligences of users and the result can be kept of the profile attributes.
   info:
     # The verion of the API has to be synchonized with the 'api-version' property of the 'pom.xml'
     version: '0.9.0'
     title: WeNet - Interaciton protocol engine API
     description:  >-
-      This API will be used to the user interactions between them sending messages guaranteeing
-      that they follow the norms.
-
-      The functionality of the API is organized around the following concepts:
-
-       * **Community**: is a group of users with a common goal.
-       * **Message**: is the atomic communication between users.
-       * **Norm**: is a rule that restricts or prescribes the behaviour of users.
-       * **Profile**: is a fixed set of user attributes.
-       * **Task**: is an individual goal to be achieved by a team.
-       * **Team**: is a group of individuals set to fulfil a task.
-       * **Trust**: is the confidence that another user achieve a task.
+      The interaction protocol engine component is the one responsible for guaranteeing that interactions between WeNet users follow the norms.
 
       ## Message
 
-      The functionality provided allows for sending messages.
-
+      The interaction between users is modeled as an exchange of messages.
       When a user sends a message through the API, the message is sent to the norm interpreter of the user.
       This interpreter needs to first verify that the message does not violate any of the norms,
       this includes the community norms, the task norms, the sender’s individual norms, as well as the context-dependent
@@ -54,7 +36,7 @@ openAPI:
       to other peers and/or sending messages to its user. This decision takes into consideration the community norms,
       the context-dependent norms that are attached to the message, the individual private norms of the human whose interpreter
       has received this message, as well as their local profile (both private and public). This ensures that the interpreter
-      abides with it is human’s private norms without leaking any of their private norms and profile.
+      abides by human’s private norms without leaking any of their private norms and profile.
 
 
       ## Norm
@@ -68,22 +50,14 @@ openAPI:
       “If you don’t volunteer, you cannot ask for help” and it would be enforced on everyone.
       Given the above, this means that norms will be attached to users, tasks and communities.
 
-
-      ## Team
-
-      The functionality provided allows to automatically form teams that have diversity in gender,
-      personality and intelligence.
-      Also, we provide the functions to evaluate the personality and intelligences of users and
-      the result can be kept of the profile attributes.
-
     contact:
       name: Bruno Rosell i Gui (UDT-IA, IIIA-CSIC)
-      email: rosell (at) iiia.csic.es
+      email: rosell@iiia.csic.es
     license:
       name: MIT
       url: https://opensource.org/licenses/MIT
   servers:
-    - url: https://wenet.u-hopper.com/interaction_protocol_engine
+    - url: https://wenet.u-hopper.com/prod/interaction_protocol_engine
       description: WeNet production server
     - url: https://wenet.u-hopper.com/dev/interaction_protocol_engine
       description: WeNet development server server
