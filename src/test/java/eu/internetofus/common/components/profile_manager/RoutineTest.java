@@ -32,15 +32,19 @@ import static eu.internetofus.common.components.ValidationsTest.assertIsNotValid
 import static eu.internetofus.common.components.ValidationsTest.assertIsValid;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import eu.internetofus.common.components.ModelTestCase;
+import eu.internetofus.common.components.StoreServices;
 import eu.internetofus.common.components.ValidationsTest;
-import eu.internetofus.common.components.profile_manager.Routine;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
@@ -54,357 +58,532 @@ import io.vertx.junit5.VertxTestContext;
 @ExtendWith(VertxExtension.class)
 public class RoutineTest extends ModelTestCase<Routine> {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Routine createModelExample(int index) {
+  /**
+   * Register the necessary services before to test.
+   *
+   * @param vertx event bus to register the necessary services.
+   */
+  @BeforeEach
+  public void registerServices(final Vertx vertx) {
 
-		final Routine routine = new Routine();
-		routine.id = null;
-		routine.label = "label_" + index;
-		routine.proximity = "proximity_" + index;
-		routine.from_time = "18:00:0" + index % 10;
-		routine.to_time = "22:00:0" + index % 10;
-		return routine;
-	}
+    WeNetProfileManagerServiceOnMemory.register(vertx);
 
-	/**
-	 * Check that the {@link #createModelExample(int)} is valid.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#validate(String, io.vertx.core.Vertx)
-	 */
-	@Test
-	public void shouldExampleBeValid(Vertx vertx, VertxTestContext testContext) {
+  }
 
-		final Routine model = this.createModelExample(1);
-		assertIsValid(model, vertx, testContext);
-	}
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Routine createModelExample(final int index) {
 
-	/**
-	 * Check that a model with all the values is valid.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#validate(String, io.vertx.core.Vertx)
-	 */
-	@Test
-	public void shouldFullModelBeValid(Vertx vertx, VertxTestContext testContext) {
+    final Routine model = new Routine();
+    model.user_id = "user_id_" + index;
+    model.weekday = "weekday_" + index;
+    model.label_distribution = new JsonObject();
+    model.label_distribution.put("additional_" + index, new JsonArray().add(new ScoredLabelTest().createModelExample(index).toJsonObject()).add(new ScoredLabelTest().createModelExample(index + 1).toJsonObject()));
+    model.label_distribution.put("additional_" + (index + 1), new JsonArray());
+    model.label_distribution.put("additional_" + (index + 2),
+        new JsonArray().add(new ScoredLabelTest().createModelExample(index - 1).toJsonObject()).add(new ScoredLabelTest().createModelExample(index).toJsonObject()).add(new ScoredLabelTest().createModelExample(index + 1).toJsonObject()));
+    model.confidence = 1.0 / Math.max(1.0, index + 1);
+    return model;
+  }
 
-		final Routine model = new Routine();
-		model.id = "      ";
-		model.label = "    label    ";
-		model.proximity = "    proximity   ";
-		model.from_time = "   18:19    ";
-		model.to_time = "  22:21:20   ";
-		assertIsValid(model, vertx, testContext, () -> {
+  /**
+   * Check that the {@link #createModelExample(int)} is valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see Routine#validate(String, io.vertx.core.Vertx)
+   */
+  @Test
+  public void shouldExampleNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-			final Routine expected = new Routine();
-			expected.id = model.id;
-			expected.label = "label";
-			expected.proximity = "proximity";
-			expected.from_time = "18:19:00";
-			expected.to_time = "22:21:20";
-			assertThat(model).isEqualTo(expected);
+    final Routine model = this.createModelExample(1);
+    assertIsNotValid(model, "user_id", vertx, testContext);
+  }
 
-		});
-	}
+  /**
+   * Create a valid model example.
+   *
+   * @param index       of the example to create.
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   * @param handler     to inform about the created routine.
+   */
+  public void createModelExample(final int index, final Vertx vertx, final VertxTestContext testContext, final Handler<AsyncResult<Routine>> handler) {
 
-	/**
-	 * Check that the model with id is not valid.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#validate(String, io.vertx.core.Vertx)
-	 */
-	@Test
-	public void shouldNotBeValidWithAnId(Vertx vertx, VertxTestContext testContext) {
+    StoreServices.storeProfileExample(index, vertx, testContext, testContext.succeeding(profile -> {
 
-		final Routine model = new Routine();
-		model.id = "has_id";
-		assertIsNotValid(model, "id", vertx, testContext);
+      final Routine model = this.createModelExample(index);
+      model.user_id = profile.id;
+      handler.handle(Future.succeededFuture(model));
+    }));
 
-	}
+  }
 
-	/**
-	 * Check that not accept routines with bad label.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#validate(String, io.vertx.core.Vertx)
-	 */
-	@Test
-	public void shouldNotBeValidWithABadLabel(Vertx vertx, VertxTestContext testContext) {
+  /**
+   * Check that the {@link #createModelExample(int, Vertx, VertxTestContext, Handler)} is valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see Routine#validate(String, io.vertx.core.Vertx)
+   */
+  @Test
+  public void shouldComplexExampleBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-		final Routine model = new Routine();
-		model.label = ValidationsTest.STRING_256;
-		assertIsNotValid(model, "label", vertx, testContext);
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(routine -> {
 
-	}
+      assertIsValid(routine, vertx, testContext);
+    }));
 
-	/**
-	 * Check that not accept routines with bad proximity.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#validate(String, io.vertx.core.Vertx)
-	 */
-	@Test
-	public void shouldNotBeValidWithABadProximity(Vertx vertx, VertxTestContext testContext) {
+  }
 
-		final Routine model = new Routine();
-		model.proximity = ValidationsTest.STRING_256;
-		assertIsNotValid(model, "proximity", vertx, testContext);
+  /**
+   * Check that a {@link Routine} without a user id is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#validate(String, Vertx)
+   */
+  @Test
+  public void shouldRoutineWithoutUserIdNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-	}
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> testContext.verify(() -> {
 
-	/**
-	 * Check that not accept routines with bad from_time.
-	 *
-	 * @param badTime     a bad time value.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#validate(String, io.vertx.core.Vertx)
-	 */
-	@ParameterizedTest(name = "Should not be valid with from_time = {0}")
-	@ValueSource(strings = { "0", "tomorrow", "2019-23-10", "10:0", "2019-02-02T00:00:00Z" })
-	public void shouldNotBeValidWithABadFrom_time(String badTime, Vertx vertx, VertxTestContext testContext) {
+      model.user_id = null;
+      assertIsNotValid(model, "user_id", vertx, testContext);
 
-		final Routine model = new Routine();
-		model.from_time = badTime;
-		assertIsNotValid(model, "from_time", vertx, testContext);
+    })));
 
-	}
+  }
 
-	/**
-	 * Check that not accept routines with bad to_time.
-	 *
-	 * @param badTime     a bad time value.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#validate(String, io.vertx.core.Vertx)
-	 */
-	@ParameterizedTest(name = "Should not be valid with to_time = {0}")
-	@ValueSource(strings = { "0", "tomorrow", "2019-23-10", "10:0", "2019-02-02T00:00:00Z" })
-	public void shouldNotBeValidWithABadTo_time(String badTime, Vertx vertx, VertxTestContext testContext) {
+  /**
+   * Check that a {@link Routine} without an undefined user id is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#validate(String, Vertx)
+   */
+  @Test
+  public void shouldRoutineWithUndefinedUserIdNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-		final Routine model = new Routine();
-		model.to_time = badTime;
-		assertIsNotValid(model, "to_time", vertx, testContext);
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> testContext.verify(() -> {
 
-	}
+      model.user_id = "Undefined user id";
+      assertIsNotValid(model, "user_id", vertx, testContext);
 
-	/**
-	 * Check that not merge routines with bad label.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#merge(Routine, String, Vertx)
-	 */
-	@Test
-	public void shouldNotMergeWithABadLabel(Vertx vertx, VertxTestContext testContext) {
+    })));
 
-		final Routine target = this.createModelExample(1);
-		final Routine source = new Routine();
-		source.label = ValidationsTest.STRING_256;
-		assertCannotMerge(target, source, "label", vertx, testContext);
+  }
 
-	}
+  /**
+   * Check that a {@link Routine} without a weekday is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#validate(String, Vertx)
+   */
+  @Test
+  public void shouldRoutineWithoutWeekdaydNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-	/**
-	 * Check that not merge routines with bad proximity.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#merge(Routine, String, Vertx)
-	 */
-	@Test
-	public void shouldNotMergeWithABadProximity(Vertx vertx, VertxTestContext testContext) {
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> testContext.verify(() -> {
 
-		final Routine target = this.createModelExample(1);
-		final Routine source = new Routine();
-		source.proximity = ValidationsTest.STRING_256;
-		assertCannotMerge(target, source, "proximity", vertx, testContext);
+      model.weekday = null;
+      assertIsNotValid(model, "weekday", vertx, testContext);
 
-	}
+    })));
 
-	/**
-	 * Check that not merge routines with bad from_time.
-	 *
-	 * @param badTime     a bad time value.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#merge(Routine, String, Vertx)
-	 */
-	@ParameterizedTest(name = "Should not be valid with from_time = {0}")
-	@ValueSource(strings = { "0", "tomorrow", "2019-23-10", "10:0", "2019-02-02T00:00:00Z" })
-	public void shouldNotMergeWithABadFrom_time(String badTime, Vertx vertx, VertxTestContext testContext) {
+  }
 
-		final Routine target = this.createModelExample(1);
-		final Routine source = new Routine();
-		source.from_time = badTime;
-		assertCannotMerge(target, source, "from_time", vertx, testContext);
+  /**
+   * Check that a {@link Routine} with a large weekday is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#validate(String, Vertx)
+   */
+  @Test
+  public void shouldRoutineWithTooLargeWeekdaydNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-	}
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> testContext.verify(() -> {
 
-	/**
-	 * Check that not merge routines with bad to_time.
-	 *
-	 * @param badTime     a bad time value.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#merge(Routine, String, Vertx)
-	 */
-	@ParameterizedTest(name = "Should not be valid with to_time = {0}")
-	@ValueSource(strings = { "0", "tomorrow", "2019-23-10", "10:0", "2019-02-02T00:00:00Z" })
-	public void shouldNotMergeWithABadTo_time(String badTime, Vertx vertx, VertxTestContext testContext) {
+      model.weekday = ValidationsTest.STRING_256;
+      assertIsNotValid(model, "weekday", vertx, testContext);
 
-		final Routine target = this.createModelExample(1);
-		final Routine source = new Routine();
-		source.to_time = badTime;
-		assertCannotMerge(target, source, "to_time", vertx, testContext);
+    })));
 
-	}
+  }
 
-	/**
-	 * Check that merge.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#merge(Routine, String, Vertx)
-	 */
-	@Test
-	public void shouldMerge(Vertx vertx, VertxTestContext testContext) {
+  /**
+   * Check that a {@link Routine} without a confidence is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#validate(String, Vertx)
+   */
+  @Test
+  public void shouldRoutineWithoutConfidencedNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-		final Routine target = this.createModelExample(1);
-		target.id = "1";
-		final Routine source = this.createModelExample(2);
-		assertCanMerge(target, source, vertx, testContext, merged -> {
-			assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
-			source.id = "1";
-			assertThat(merged).isEqualTo(source);
-		});
-	}
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> testContext.verify(() -> {
 
-	/**
-	 * Check that merge with {@code null}.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#merge(Routine, String, Vertx)
-	 */
-	@Test
-	public void shouldMergeWithNull(Vertx vertx, VertxTestContext testContext) {
+      model.confidence = null;
+      assertIsNotValid(model, "confidence", vertx, testContext);
 
-		final Routine target = this.createModelExample(1);
-		assertCanMerge(target, null, vertx, testContext, merged -> assertThat(merged).isSameAs(target));
-	}
+    })));
 
-	/**
-	 * Check that merge only label.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#merge(Routine, String, Vertx)
-	 */
-	@Test
-	public void shouldMergeOnlyLabel(Vertx vertx, VertxTestContext testContext) {
+  }
 
-		final Routine target = this.createModelExample(1);
-		target.id = "1";
-		final Routine source = new Routine();
-		source.label = "NEW LABEL";
-		assertCanMerge(target, source, vertx, testContext, merged -> {
-			assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
-			target.label = "NEW LABEL";
-			assertThat(merged).isEqualTo(target);
-		});
-	}
+  /**
+   * Check that a {@link Routine} without a label_distribution is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#validate(String, Vertx)
+   */
+  @Test
+  public void shouldRoutineWithoutLabel_distributiondNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-	/**
-	 * Check that merge only proximity.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#merge(Routine, String, Vertx)
-	 */
-	@Test
-	public void shouldMergeOnlyProximity(Vertx vertx, VertxTestContext testContext) {
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> testContext.verify(() -> {
 
-		final Routine target = this.createModelExample(1);
-		target.id = "1";
-		final Routine source = new Routine();
-		source.proximity = "NEW PROXIMITY";
-		assertCanMerge(target, source, vertx, testContext, merged -> {
-			assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
-			target.proximity = "NEW PROXIMITY";
-			assertThat(merged).isEqualTo(target);
-		});
-	}
+      model.label_distribution = null;
+      assertIsNotValid(model, "label_distribution", vertx, testContext);
 
-	/**
-	 * Check that merge only from_time.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#merge(Routine, String, Vertx)
-	 */
-	@Test
-	public void shouldMergeOnlyFrom_time(Vertx vertx, VertxTestContext testContext) {
+    })));
 
-		final Routine target = this.createModelExample(1);
-		target.id = "1";
-		final Routine source = new Routine();
-		source.from_time = "00:00";
-		assertCanMerge(target, source, vertx, testContext, merged -> {
-			assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
-			target.from_time = "00:00:00";
-			assertThat(merged).isEqualTo(target);
-		});
-	}
+  }
 
-	/**
-	 * Check that merge only to_time.
-	 *
-	 * @param vertx       event bus to use.
-	 * @param testContext test context to use.
-	 *
-	 * @see Routine#merge(Routine, String, Vertx)
-	 */
-	@Test
-	public void shouldMergeOnlyTo_time(Vertx vertx, VertxTestContext testContext) {
+  /**
+   * Check that a {@link Routine} with a non array in the label_distribution is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#validate(String, Vertx)
+   */
+  @Test
+  public void shouldRoutineWithANotArrayInLabel_distributiondNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-		final Routine target = this.createModelExample(1);
-		target.id = "1";
-		final Routine source = new Routine();
-		source.to_time = "00:00";
-		assertCanMerge(target, source, vertx, testContext, merged -> {
-			assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
-			target.to_time = "00:00:00";
-			assertThat(merged).isEqualTo(target);
-		});
-	}
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> testContext.verify(() -> {
+
+      model.label_distribution.put("bad_distribution", new JsonObject());
+      assertIsNotValid(model, "label_distribution.bad_distribution", vertx, testContext);
+
+    })));
+
+  }
+
+  /**
+   * Check that a {@link Routine} with a non scored label in the label_distribution is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#validate(String, Vertx)
+   */
+  @Test
+  public void shouldRoutineWithANotScoredLabelArrayInLabel_distributiondNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> testContext.verify(() -> {
+
+      model.label_distribution.put("bad_value", new JsonArray().add(new JsonArray()));
+      assertIsNotValid(model, "label_distribution.bad_value", vertx, testContext);
+
+    })));
+
+  }
+
+  /**
+   * Check that a {@link Routine} with a bad scored label in the label_distribution is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#validate(String, Vertx)
+   */
+  @Test
+  public void shouldRoutineWithABadScoredLabelArrayInLabel_distributiondNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> testContext.verify(() -> {
+
+      model.label_distribution.put("bad_score_label", new JsonArray().add(new ScoredLabelTest().createModelExample(1).toJsonObject()).add(new JsonObject()));
+      assertIsNotValid(model, "label_distribution.bad_score_label[1].label", vertx, testContext);
+
+    })));
+
+  }
+
+  /**
+   * Check that merge with {@code null}.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#merge(RelevantLocation, String, Vertx)
+   */
+  @Test
+  public void shouldMergeWithNull(final Vertx vertx, final VertxTestContext testContext) {
+
+    final Routine target = this.createModelExample(1);
+    assertCanMerge(target, null, vertx, testContext, merged -> assertThat(merged).isSameAs(target));
+  }
+
+  /**
+   * Check that merge two examples.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#merge(RelevantLocation, String, Vertx)
+   */
+  @Test
+  public void shouldMergeTwoExamples(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> this.createModelExample(1, vertx, testContext,
+        testContext.succeeding(source -> assertCanMerge(target, source, vertx, testContext, merged -> assertThat(merged).isEqualTo(source).isNotEqualTo(target).isNotSameAs(target).isNotSameAs(source))))));
+  }
+
+  /**
+   * Check that merge only the user identifier.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#merge(RelevantLocation, String, Vertx)
+   */
+  @Test
+  public void shouldMergeOnlyUserId(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      StoreServices.storeProfileExample(43, vertx, testContext, testContext.succeeding(profile -> {
+
+        final Routine source = new Routine();
+        source.user_id = profile.id;
+        assertCanMerge(target, source, vertx, testContext, merged -> {
+
+          assertThat(merged).isNotEqualTo(source).isNotEqualTo(target).isNotSameAs(target).isNotSameAs(source);
+          target.user_id = source.user_id;
+          assertThat(merged).isEqualTo(target);
+
+        });
+
+      }));
+
+    }));
+  }
+
+  /**
+   * Check that can not merge with a bad user identifier.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#merge(RelevantLocation, String, Vertx)
+   */
+  @Test
+  public void shouldNotMergeWithBadUserId(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final Routine source = new Routine();
+      source.user_id = "undefined user indentifier";
+      assertCannotMerge(target, source, "user_id", vertx, testContext);
+
+    }));
+  }
+
+  /**
+   * Check that merge only the weekday.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#merge(RelevantLocation, String, Vertx)
+   */
+  @Test
+  public void shouldMergeOnlyWeekday(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final Routine source = new Routine();
+      source.weekday = "DV";
+      assertCanMerge(target, source, vertx, testContext, merged -> {
+
+        assertThat(merged).isNotEqualTo(source).isNotEqualTo(target).isNotSameAs(target).isNotSameAs(source);
+        target.weekday = source.weekday;
+        assertThat(merged).isEqualTo(target);
+
+      });
+
+    }));
+  }
+
+  /**
+   * Check that can not merge with a bad weekday.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#merge(RelevantLocation, String, Vertx)
+   */
+  @Test
+  public void shouldNotMergeWithBadWeekday(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final Routine source = new Routine();
+      source.weekday = ValidationsTest.STRING_256;
+      assertCannotMerge(target, source, "weekday", vertx, testContext);
+
+    }));
+  }
+
+  /**
+   * Check that merge only the confidence.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#merge(RelevantLocation, String, Vertx)
+   */
+  @Test
+  public void shouldMergeOnlyConfidence(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final Routine source = new Routine();
+      source.confidence = 43d;
+      assertCanMerge(target, source, vertx, testContext, merged -> {
+
+        assertThat(merged).isNotEqualTo(source).isNotEqualTo(target).isNotSameAs(target).isNotSameAs(source);
+        target.confidence = source.confidence;
+        assertThat(merged).isEqualTo(target);
+
+      });
+
+    }));
+  }
+
+  /**
+   * Check that merge only the label distribution.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#merge(RelevantLocation, String, Vertx)
+   */
+  @Test
+  public void shouldMergeOnlyLabelDistribution(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final Routine source = new Routine();
+      source.label_distribution = new JsonObject();
+      assertCanMerge(target, source, vertx, testContext, merged -> {
+
+        assertThat(merged).isNotEqualTo(source).isNotEqualTo(target).isNotSameAs(target).isNotSameAs(source);
+        target.label_distribution = source.label_distribution;
+        assertThat(merged).isEqualTo(target);
+
+      });
+
+    }));
+  }
+
+  /**
+   * Check that can not merge with a bad label distribution field.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#merge(RelevantLocation, String, Vertx)
+   */
+  @Test
+  public void shouldNotMergeWithBadLabelDistibutionField(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final Routine source = new Routine();
+      source.label_distribution = new JsonObject().put("bad_field", new JsonObject());
+      assertCannotMerge(target, source, "label_distribution.bad_field", vertx, testContext);
+
+    }));
+  }
+
+  /**
+   * Check that can not merge with a bad label distribution array.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#merge(RelevantLocation, String, Vertx)
+   */
+  @Test
+  public void shouldNotMergeWithBadLabelDistibutionArray(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final Routine source = new Routine();
+      source.label_distribution = new JsonObject().put("bad_array", new JsonArray().add(new JsonArray()));
+      assertCannotMerge(target, source, "label_distribution.bad_array", vertx, testContext);
+
+    }));
+  }
+
+  /**
+   * Check that can not merge with a bad label distribution scored label.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#merge(RelevantLocation, String, Vertx)
+   */
+  @Test
+  public void shouldNotMergeWithBadLabelDistibutionScoredLabel(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final Routine source = new Routine();
+      source.label_distribution = new JsonObject().put("bad_scored_label", new JsonArray().add(new JsonObject()));
+      assertCannotMerge(target, source, "label_distribution.bad_scored_label[0].label", vertx, testContext);
+
+    }));
+  }
+
+  /**
+   * Check that merge only a scored label in the label distribution.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see RelevantLocation#merge(RelevantLocation, String, Vertx)
+   */
+  @Test
+  public void shouldMergeOnlyScoredLAbelInLabelDistribution(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final Routine source = new Routine();
+      source.label_distribution = new JsonObject(target.label_distribution.toBuffer());
+      source.label_distribution.getJsonArray("additional_1").getJsonObject(0).clear().put("label", new JsonObject().put("name", "name_1").put("latitude", -43d)).put("score", 43d);
+      assertCanMerge(target, source, vertx, testContext, merged -> {
+
+        assertThat(merged).isNotEqualTo(source).isNotEqualTo(target).isNotSameAs(target).isNotSameAs(source);
+        target.label_distribution.getJsonArray("additional_1").getJsonObject(0).getJsonObject("label").put("latitude", -43d);
+        target.label_distribution.getJsonArray("additional_1").getJsonObject(0).put("score", 43d);
+        assertThat(merged).isEqualTo(target);
+
+      });
+
+    }));
+  }
 
 }

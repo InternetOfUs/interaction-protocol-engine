@@ -56,283 +56,292 @@ import io.vertx.core.json.JsonObject;
 @Schema(hidden = true, name = "Task", description = "A WeNet task.")
 public class Task extends CreateUpdateTsDetails implements Validable, Mergeable<Task> {
 
-	/**
-	 * The identifier of the profile.
-	 */
-	@Schema(description = "The unique identifier of the task.", example = "b129e5509c9bb79")
-	public String id;
-
-	/**
-	 * The identifier of the task type associated to the task.
-	 */
-	@Schema(description = "The identifier of the task type associated to the task.", example = "b129e5509c9bb79")
-	public String taskTypeId;
-
-	/**
-	 * The identifier of the WeNet user who created the task.
-	 */
-	@Schema(
-			description = "The identifier of the WeNet user who created the task.",
-			example = "15837028-645a-4a55-9aaf-ceb846439eba")
-	public String requesterId;
-
-	/**
-	 * The identifier of the application the task is associated to.
-	 */
-	@Schema(description = "The identifier of the application the task is associated to.", example = "yub129e5509bb79")
-	public String appId;
-
-	/**
-	 * The explanation of the task objective..
-	 */
-	@Schema(description = "The explanation of the task objective.")
-	public TaskGoal goal;
-
-	/**
-	 * The difference, measured in seconds, between the time when the task should be
-	 * started and midnight, January 1, 1970 UTC.
-	 */
-	@Schema(
-			description = "The UTC epoch timestamp representing the time the task should be started.",
-			example = "1563900000")
-	public Long startTs;
-
-	/**
-	 * The difference, measured in seconds, between the time when the task should be
-	 * completed by and midnight, January 1, 1970 UTC.
-	 */
-	@Schema(
-			description = "The UTC epoch timestamp representing the time the task should be completed by.",
-			example = "1563930000")
-	public Long endTs;
-
-	/**
-	 * The difference, measured in seconds, between the time when the task accept
-	 * new volunteers and midnight, January 1, 1970 UTC.
-	 */
-	@Schema(
-			description = "The UTC epoch timestamp representing the deadline time for offering help.",
-			example = "1563930000")
-	public Long deadlineTs;
-
-	/**
-	 * The set of norms that define the interaction of the user when do the task.
-	 */
-	@ArraySchema(
-			schema = @Schema(implementation = Norm.class),
-			arraySchema = @Schema(description = "The set of norms that define the interaction of the user when do the task."))
-	public List<Norm> norms;
-
-	/**
-	 * The set of norms that define the interaction of the user when do the task.
-	 */
-	@Schema(type = "object", description = "The set of norms that define the interaction of the user when do the task.")
-	@JsonDeserialize(using = JsonObjectDeserializer.class)
-	public JsonObject attributes;
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Future<Void> validate(String codePrefix, Vertx vertx) {
-
-		final Promise<Void> promise = Promise.promise();
-		Future<Void> future = promise.future();
-		try {
-
-			this.id = Validations.validateNullableStringField(codePrefix, "id", 255, this.id);
-			if (this.id != null) {
-
-				future = future.compose(mapper -> {
-
-					final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
-					WeNetTaskManagerService.createProxy(vertx).retrieveTask(this.id, task -> {
-
-						if (task.failed()) {
-
-							verifyNotRepeatedIdPromise.complete();
-
-						} else {
-
-							verifyNotRepeatedIdPromise.fail(
-									new ValidationErrorException(codePrefix + ".id", "The user '" + this.id + "' has already a task."));
-						}
-					});
-					return verifyNotRepeatedIdPromise.future();
-				});
-			}
-			this.taskTypeId = Validations.validateStringField(codePrefix, "taskTypeId", 255, this.taskTypeId);
-			future = future.compose(mapper -> {
+  /**
+   * The identifier of the profile.
+   */
+  @Schema(description = "The unique identifier of the task.", example = "b129e5509c9bb79")
+  public String id;
+
+  /**
+   * The identifier of the task type associated to the task.
+   */
+  @Schema(description = "The identifier of the task type associated to the task.", example = "b129e5509c9bb79")
+  public String taskTypeId;
+
+  /**
+   * The identifier of the WeNet user who created the task.
+   */
+  @Schema(description = "The identifier of the WeNet user who created the task.", example = "15837028-645a-4a55-9aaf-ceb846439eba")
+  public String requesterId;
+
+  /**
+   * The identifier of the application the task is associated to.
+   */
+  @Schema(description = "The identifier of the application the task is associated to.", example = "yub129e5509bb79")
+  public String appId;
+
+  /**
+   * The explanation of the task objective..
+   */
+  @Schema(description = "The explanation of the task objective.")
+  public TaskGoal goal;
+
+  /**
+   * The difference, measured in seconds, between the time when the task should be started and midnight, January 1, 1970
+   * UTC.
+   */
+  @Schema(description = "The UTC epoch timestamp representing the time the task should be started.", example = "1563900000")
+  public Long startTs;
+
+  /**
+   * The difference, measured in seconds, between the time when the task should be completed by and midnight, January 1,
+   * 1970 UTC.
+   */
+  @Schema(description = "The UTC epoch timestamp representing the time the task should be completed by.", example = "1563930000")
+  public Long endTs;
+
+  /**
+   * The difference, measured in seconds, between the time when the task accept new volunteers and midnight, January 1,
+   * 1970 UTC.
+   */
+  @Schema(description = "The UTC epoch timestamp representing the deadline time for offering help.", example = "1563930000")
+  public Long deadlineTs;
+
+  /**
+   * The difference, measured in seconds, between the time when the task is closed by and midnight, January 1,
+   * 1970 UTC.
+   */
+  @Schema(description = "The UTC epoch timestamp representing the time the task is closed. It its not defined the task still open.", example = "1563930000",nullable = true)
+  public Long closeTs;
+
+  /**
+   * The set of norms that define the interaction of the user when do the task.
+   */
+  @ArraySchema(schema = @Schema(implementation = Norm.class), arraySchema = @Schema(description = "The set of norms that define the interaction of the user when do the task."))
+  public List<Norm> norms;
+
+  /**
+   * The set of norms that define the interaction of the user when do the task.
+   */
+  @Schema(type = "object", description = "The set of norms that define the interaction of the user when do the task.")
+  @JsonDeserialize(using = JsonObjectDeserializer.class)
+  public JsonObject attributes;
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Future<Void> validate(final String codePrefix, final Vertx vertx) {
 
-				final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
-				WeNetTaskManagerService.createProxy(vertx).retrieveTaskType(this.taskTypeId, taskType -> {
+    final Promise<Void> promise = Promise.promise();
+    Future<Void> future = promise.future();
+    try {
 
-					if (!taskType.failed()) {
+      this.id = Validations.validateNullableStringField(codePrefix, "id", 255, this.id);
+      if (this.id != null) {
 
-						verifyNotRepeatedIdPromise.complete();
+        future = future.compose(mapper -> {
 
-					} else {
+          final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
+          WeNetTaskManagerService.createProxy(vertx).retrieveTask(this.id, task -> {
 
-						verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".taskTypeId",
-								"The '" + this.taskTypeId + "' is not defined."));
-					}
-				});
-				return verifyNotRepeatedIdPromise.future();
-			});
-			this.requesterId = Validations.validateStringField(codePrefix, "requesterId", 255, this.requesterId);
-			future = future.compose(mapper -> {
+            if (task.failed()) {
 
-				final Promise<Void> verifyRequesterIdExistPromise = Promise.promise();
-				WeNetProfileManagerService.createProxy(vertx).retrieveProfile(this.requesterId, search -> {
+              verifyNotRepeatedIdPromise.complete();
 
-					if (!search.failed()) {
+            } else {
 
-						verifyRequesterIdExistPromise.complete();
+              verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".id", "The user '" + this.id + "' has already a task."));
+            }
+          });
+          return verifyNotRepeatedIdPromise.future();
+        });
+      }
+      this.taskTypeId = Validations.validateStringField(codePrefix, "taskTypeId", 255, this.taskTypeId);
+      future = future.compose(mapper -> {
 
-					} else {
+        final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
+        WeNetTaskManagerService.createProxy(vertx).retrieveTaskType(this.taskTypeId, taskType -> {
 
-						verifyRequesterIdExistPromise.fail(new ValidationErrorException(codePrefix + ".requesterId",
-								"The '" + this.requesterId + "' is not defined.", search.cause()));
-					}
-				});
-				return verifyRequesterIdExistPromise.future();
-			});
-			this.appId = Validations.validateStringField(codePrefix, "appId", 255, this.appId);
-			future = future.compose(mapper -> {
+          if (!taskType.failed()) {
 
-				final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
-				WeNetServiceApiService.createProxy(vertx).retrieveApp(this.appId, app -> {
+            verifyNotRepeatedIdPromise.complete();
 
-					if (!app.failed()) {
+          } else {
 
-						verifyNotRepeatedIdPromise.complete();
+            verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".taskTypeId", "The '" + this.taskTypeId + "' is not defined."));
+          }
+        });
+        return verifyNotRepeatedIdPromise.future();
+      });
+      this.requesterId = Validations.validateStringField(codePrefix, "requesterId", 255, this.requesterId);
+      future = future.compose(mapper -> {
 
-					} else {
+        final Promise<Void> verifyRequesterIdExistPromise = Promise.promise();
+        WeNetProfileManagerService.createProxy(vertx).retrieveProfile(this.requesterId, search -> {
 
-						verifyNotRepeatedIdPromise
-								.fail(new ValidationErrorException(codePrefix + ".appId", "The '" + this.appId + "' is not defined."));
-					}
-				});
-				return verifyNotRepeatedIdPromise.future();
-			});
+          if (!search.failed()) {
 
-			this.deadlineTs = Validations.validateTimeStamp(codePrefix, "deadlineTs", this.deadlineTs, false);
-			if (this.deadlineTs < TimeManager.now()) {
+            verifyRequesterIdExistPromise.complete();
 
-				promise.fail(
-						new ValidationErrorException(codePrefix + ".deadlineTs", "The 'deadlineTs' has to be greater than Now."));
+          } else {
 
-			} else {
+            verifyRequesterIdExistPromise.fail(new ValidationErrorException(codePrefix + ".requesterId", "The '" + this.requesterId + "' is not defined.", search.cause()));
+          }
+        });
+        return verifyRequesterIdExistPromise.future();
+      });
+      this.appId = Validations.validateStringField(codePrefix, "appId", 255, this.appId);
+      future = future.compose(mapper -> {
 
-				this.startTs = Validations.validateTimeStamp(codePrefix, "startTs", this.startTs, false);
-				if (this.startTs < this.deadlineTs) {
+        final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
+        WeNetServiceApiService.createProxy(vertx).retrieveApp(this.appId, app -> {
 
-					promise.fail(
-							new ValidationErrorException(codePrefix + ".startTs", "The 'startTs' has to be after the 'deadlineTs'."));
+          if (!app.failed()) {
 
-				} else {
+            verifyNotRepeatedIdPromise.complete();
 
-					this.endTs = Validations.validateTimeStamp(codePrefix, "endTs", this.endTs, false);
-					if (this.endTs < this.startTs) {
+          } else {
 
-						promise.fail(
-								new ValidationErrorException(codePrefix + ".endTs", "The 'endTs' has to be after the 'startTs'."));
+            verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".appId", "The '" + this.appId + "' is not defined."));
+          }
+        });
+        return verifyNotRepeatedIdPromise.future();
+      });
 
-					} else {
+      if (this.goal == null) {
 
-						future = future
-								.compose(Validations.validate(this.norms, (a, b) -> a.equals(b), codePrefix + ".norms", vertx));
+        promise.fail(new ValidationErrorException(codePrefix + ".goal", "You must to define the 'goal' of the task."));
 
-						// TODO check the attributes fetch the attributes on the type
+      } else {
 
-						promise.complete();
+        future = future.compose(mapper -> this.goal.validate(codePrefix + ".goal", vertx));
+        this.deadlineTs = Validations.validateTimeStamp(codePrefix, "deadlineTs", this.deadlineTs, false);
+        if (this.deadlineTs < TimeManager.now()) {
 
-					}
-				}
-			}
+          promise.fail(new ValidationErrorException(codePrefix + ".deadlineTs", "The 'deadlineTs' has to be greater than Now."));
 
-		} catch (final ValidationErrorException validationError) {
+        } else {
 
-			promise.fail(validationError);
-		}
+          this.startTs = Validations.validateTimeStamp(codePrefix, "startTs", this.startTs, false);
+          if (this.startTs < this.deadlineTs) {
 
-		return future;
-	}
+            promise.fail(new ValidationErrorException(codePrefix + ".startTs", "The 'startTs' has to be after the 'deadlineTs'."));
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Future<Task> merge(Task source, String codePrefix, Vertx vertx) {
+          } else {
 
-		final Promise<Task> promise = Promise.promise();
-		Future<Task> future = promise.future();
+            this.endTs = Validations.validateTimeStamp(codePrefix, "endTs", this.endTs, false);
+            if (this.endTs < this.startTs) {
 
-		final Task merged = new Task();
-		merged.taskTypeId = source.taskTypeId;
-		if (merged.taskTypeId == null) {
+              promise.fail(new ValidationErrorException(codePrefix + ".endTs", "The 'endTs' has to be after the 'startTs'."));
 
-			merged.taskTypeId = this.taskTypeId;
-		}
+            } else {
 
-		merged.requesterId = source.requesterId;
-		if (merged.requesterId == null) {
+              this.closeTs = Validations.validateTimeStamp(codePrefix, "closeTs", this.closeTs, true);
+              if (this.closeTs != null && this.closeTs < this._creationTs) {
 
-			merged.requesterId = this.requesterId;
-		}
+                promise.fail(new ValidationErrorException(codePrefix + ".closeTs", "The 'closeTs' has to be after the '_creationTs'."));
 
-		merged.appId = source.appId;
-		if (merged.appId == null) {
+              } else {
 
-			merged.appId = this.appId;
-		}
+                future = future.compose(Validations.validate(this.norms, (a, b) -> a.equals(b), codePrefix + ".norms", vertx));
 
-		merged.startTs = source.startTs;
-		if (merged.startTs == null) {
+                // TODO check the attributes fetch the attributes on the type
 
-			merged.startTs = this.startTs;
-		}
+                promise.complete();
 
-		merged.endTs = source.endTs;
-		if (merged.endTs == null) {
+              }
+            }
+          }
+        }
+      }
 
-			merged.endTs = this.endTs;
-		}
+    } catch (final ValidationErrorException validationError) {
 
-		merged.deadlineTs = source.deadlineTs;
-		if (merged.deadlineTs == null) {
+      promise.fail(validationError);
+    }
 
-			merged.deadlineTs = this.deadlineTs;
-		}
+    return future;
+  }
 
-		merged.attributes = source.attributes;
-		if (merged.attributes == null) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Future<Task> merge(final Task source, final String codePrefix, final Vertx vertx) {
 
-			merged.attributes = this.attributes;
-		}
+    final Promise<Task> promise = Promise.promise();
+    Future<Task> future = promise.future();
 
-		future = future.compose(Merges.validateMerged(codePrefix, vertx));
+    final Task merged = new Task();
+    merged.taskTypeId = source.taskTypeId;
+    if (merged.taskTypeId == null) {
 
-		future = future.compose(Merges.mergeField(this.goal, source.goal, codePrefix + ".goal", vertx,
-				(model, mergedGoal) -> model.goal = mergedGoal));
+      merged.taskTypeId = this.taskTypeId;
+    }
 
-		future = future
-				.compose(Merges.mergeNorms(this.norms, source.norms, codePrefix + ".norms", vertx, (model, mergedNorms) -> {
-					model.norms = mergedNorms;
-				}));
+    merged.requesterId = source.requesterId;
+    if (merged.requesterId == null) {
 
-		promise.complete(merged);
+      merged.requesterId = this.requesterId;
+    }
 
-		// When merged set the fixed field values
-		future = future.map(mergedValidatedModel -> {
+    merged.appId = source.appId;
+    if (merged.appId == null) {
 
-			mergedValidatedModel.id = this.id;
-			mergedValidatedModel._creationTs = this._creationTs;
-			mergedValidatedModel._lastUpdateTs = this._lastUpdateTs;
-			return mergedValidatedModel;
-		});
+      merged.appId = this.appId;
+    }
 
-		return future;
-	}
+    merged.startTs = source.startTs;
+    if (merged.startTs == null) {
+
+      merged.startTs = this.startTs;
+    }
+
+    merged.endTs = source.endTs;
+    if (merged.endTs == null) {
+
+      merged.endTs = this.endTs;
+    }
+
+    merged.deadlineTs = source.deadlineTs;
+    if (merged.deadlineTs == null) {
+
+      merged.deadlineTs = this.deadlineTs;
+    }
+
+    merged.closeTs = source.closeTs;
+    if (merged.closeTs == null) {
+
+      merged.closeTs = this.closeTs;
+    }
+
+    merged.attributes = source.attributes;
+    if (merged.attributes == null) {
+
+      merged.attributes = this.attributes;
+    }
+
+    future = future.compose(Merges.mergeField(this.goal, source.goal, codePrefix + ".goal", vertx, (model, mergedGoal) -> model.goal = mergedGoal));
+
+    future = future.compose(Merges.mergeNorms(this.norms, source.norms, codePrefix + ".norms", vertx, (model, mergedNorms) -> {
+      model.norms = mergedNorms;
+    }));
+
+    future = future.compose(Merges.validateMerged(codePrefix, vertx));
+
+    promise.complete(merged);
+
+    // When merged set the fixed field values
+    future = future.map(mergedValidatedModel -> {
+
+      mergedValidatedModel.id = this.id;
+      mergedValidatedModel._creationTs = this._creationTs;
+      mergedValidatedModel._lastUpdateTs = this._lastUpdateTs;
+      return mergedValidatedModel;
+    });
+
+    return future;
+  }
 
 }
