@@ -38,6 +38,8 @@ import eu.internetofus.common.components.service.TaskProposalNotification;
 import eu.internetofus.common.components.service.TaskSelectionNotification;
 import eu.internetofus.common.components.service.TaskVolunteerNotification;
 import eu.internetofus.common.components.service.WeNetServiceApiService;
+import eu.internetofus.common.components.task_manager.Task;
+import eu.internetofus.common.components.task_manager.WeNetTaskManagerService;
 import eu.internetofus.common.vertx.Worker;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
@@ -202,7 +204,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
           } else if ("taskCompleted".equalsIgnoreCase(action)) {
 
-            final String outcome = content.getJsonObject("attributes", new JsonObject()).getString("outcome",
+            final JsonObject attributes = content.getJsonObject("attributes", new JsonObject());
+            final String outcome = attributes.getString("outcome",
                 "cancelled");
             final TaskConcludedNotification notification = new TaskConcludedNotification();
             notification.taskId = env.task.id;
@@ -210,6 +213,21 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             notification.text = "Your help is not necessary to do the task.";
             notification.outcome = TaskConcludedNotification.Outcome.valueOf(outcome);
             this.sendToAllAppUsers(env.app, client, notification, env.task.requesterId);
+
+            final Task closedTask = new Task();
+            closedTask.closeTs = TimeManager.now();
+            closedTask.attributes = attributes;
+            WeNetTaskManagerService.createProxy(this.vertx).updateTask(env.task.id, closedTask, update->{
+
+              if( update.failed() ) {
+
+                Logger.error("Can not mark the task {} as closed", ()->env.task.id);
+
+              }else {
+
+                Logger.error("Closed {} task", ()->env.task.id);
+              }
+            });
 
           } else {
 
