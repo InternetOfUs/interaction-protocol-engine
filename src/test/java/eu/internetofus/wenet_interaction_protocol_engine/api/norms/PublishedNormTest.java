@@ -32,7 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.common.components.ModelTestCase;
 import eu.internetofus.common.components.profile_manager.NormTest;
-import eu.internetofus.common.components.profile_manager.WeNetProfileManagerService;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -77,7 +77,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	 * @param profileManager service to manage the profiles.
 	 * @param createHandler  component that manage the creation result.
 	 */
-	public static void createValidPublishedNormExample(int index, WeNetProfileManagerService profileManager,
+	public static void createValidPublishedNormExample(int index, WeNetProfileManager profileManager,
 			Handler<AsyncResult<PublishedNorm>> createHandler) {
 
 		profileManager.createProfile(new JsonObject(), create -> {
@@ -104,7 +104,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// * @param testContext context for the test.
 	// */
 	// @Test
-	// public void shouldRightPublishedNormBeValid(WeNetProfileManagerService
+	// public void shouldRightPublishedNormBeValid(WeNetProfileManager
 	// profileManager, VertxTestContext testContext) {
 	//
 	// createValidPublishedNormExample(43, profileManager,
@@ -124,7 +124,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// * @param testContext context for the test.
 	// */
 	// @Test
-	// public void shouldEmptyPublishedNormNotBeValid(WeNetProfileManagerService
+	// public void shouldEmptyPublishedNormNotBeValid(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -169,7 +169,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// */
 	// @Test
 	// public void
-	// shouldPublishedNormWithOnlyAnormBeValid(WeNetProfileManagerService
+	// shouldPublishedNormWithOnlyAnormBeValid(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -189,7 +189,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// * @param testContext context for the test.
 	// */
 	// @Test
-	// public void shouldPublishedNormWithIdNotBeValid(WeNetProfileManagerService
+	// public void shouldPublishedNormWithIdNotBeValid(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -217,7 +217,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// */
 	// @Test
 	// public void
-	// shouldPublishedNormWithLargeNameNotBeValid(WeNetProfileManagerService
+	// shouldPublishedNormWithLargeNameNotBeValid(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -245,7 +245,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// */
 	// @Test
 	// public void
-	// shouldPublishedNormWithLargeDescriptionNotBeValid(WeNetProfileManagerService
+	// shouldPublishedNormWithLargeDescriptionNotBeValid(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -273,7 +273,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// */
 	// @Test
 	// public void
-	// shouldPublishedNormWithLargeKeywordNotBeValid(WeNetProfileManagerService
+	// shouldPublishedNormWithLargeKeywordNotBeValid(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -304,7 +304,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// */
 	// @Test
 	// public void
-	// shouldPublishedNormWithLargeNormAttributeNotBeValid(WeNetProfileManagerService
+	// shouldPublishedNormWithLargeNormAttributeNotBeValid(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -333,7 +333,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// */
 	// @Test
 	// public void
-	// shouldPublishedNormWithAnUndefinedPublishedIdNotBeValid(WeNetProfileManagerService
+	// shouldPublishedNormWithAnUndefinedPublishedIdNotBeValid(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -360,7 +360,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// * @param testContext context for the test.
 	// */
 	// @Test
-	// public void shouldMergePublishedNormWithNullSource(WeNetProfileManagerService
+	// public void shouldMergePublishedNormWithNullSource(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -384,7 +384,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// * @param testContext context for the test.
 	// */
 	// @Test
-	// public void shouldMergePublishedNormWithEmptyModel(WeNetProfileManagerService
+	// public void shouldMergePublishedNormWithEmptyModel(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -411,7 +411,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// * @param testContext context for the test.
 	// */
 	// @Test
-	// public void shouldMergePublishedNormName(WeNetProfileManagerService
+	// public void shouldMergePublishedNormName(WeNetProfileManager
 	// profileManager, VertxTestContext testContext) {
 	//
 	// final PublishedNorm source = new PublishedNorm();
@@ -439,7 +439,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// * @param testContext context for the test.
 	// */
 	// @Test
-	// public void shouldNotMergePublishedNormWithBadName(WeNetProfileManagerService
+	// public void shouldNotMergePublishedNormWithBadName(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -468,7 +468,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// * @param testContext context for the test.
 	// */
 	// @Test
-	// public void shouldMergePublishedNormDescription(WeNetProfileManagerService
+	// public void shouldMergePublishedNormDescription(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -498,7 +498,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// */
 	// @Test
 	// public void
-	// shouldNotMergePublishedNormWithBadDescription(WeNetProfileManagerService
+	// shouldNotMergePublishedNormWithBadDescription(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -527,7 +527,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// * @param testContext context for the test.
 	// */
 	// @Test
-	// public void shouldMergePublishedNormKeywords(WeNetProfileManagerService
+	// public void shouldMergePublishedNormKeywords(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -560,7 +560,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// */
 	// @Test
 	// public void
-	// shouldNotMergePublishedNormWithBadKeyword(WeNetProfileManagerService
+	// shouldNotMergePublishedNormWithBadKeyword(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -592,7 +592,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// * @param testContext context for the test.
 	// */
 	// @Test
-	// public void shouldMergePublishedNormPublisherId(WeNetProfileManagerService
+	// public void shouldMergePublishedNormPublisherId(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -627,7 +627,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// */
 	// @Test
 	// public void
-	// shouldNotMergePublishedNormWithBadPublisherId(WeNetProfileManagerService
+	// shouldNotMergePublishedNormWithBadPublisherId(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -656,7 +656,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// * @param testContext context for the test.
 	// */
 	// @Test
-	// public void shouldMergeNormOnPublishedNorm(WeNetProfileManagerService
+	// public void shouldMergeNormOnPublishedNorm(WeNetProfileManager
 	// profileManager, VertxTestContext testContext) {
 	//
 	// final PublishedNorm source = new PublishedNorm();
@@ -687,7 +687,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// */
 	// @Test
 	// public void
-	// shouldMergeNormOnPublishedNormWithoutNorm(WeNetProfileManagerService
+	// shouldMergeNormOnPublishedNormWithoutNorm(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -716,7 +716,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// * @param testContext context for the test.
 	// */
 	// @Test
-	// public void shouldNotMergePublishedNormWithBadNorm(WeNetProfileManagerService
+	// public void shouldNotMergePublishedNormWithBadNorm(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//
@@ -747,7 +747,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 	// */
 	// @Test
 	// public void
-	// shouldNotMergeBadNormOnPublishedNormWithoutNorm(WeNetProfileManagerService
+	// shouldNotMergeBadNormOnPublishedNormWithoutNorm(WeNetProfileManager
 	// profileManager,
 	// VertxTestContext testContext) {
 	//

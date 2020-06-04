@@ -24,45 +24,55 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.components.interaction_protocol_engine;
+package eu.internetofus.common.components.profile_manager;
 
-import eu.internetofus.common.vertx.ComponentClient;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.junit5.VertxExtension;
 
 /**
- * The implementation of the {@link WeNetInteractionProtocolEngineService}.
+ * Test the {@link WeNetProfileManager}.
  *
- * @see WeNetInteractionProtocolEngineService
+ * @see WeNetProfileManager
+ * @see WeNetProfileManagerClient
+ * @see WeNetProfileManagerMocker
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class WeNetInteractionProtocolEngineServiceImpl extends ComponentClient
-		implements WeNetInteractionProtocolEngineService {
+@ExtendWith(VertxExtension.class)
+public class WeNetProfileManagerTest extends WeNetProfileManagerTestCase {
 
-	/**
-	 * Create a new service to interact with the WeNet interaction protocol engine.
-	 *
-	 * @param client to interact with the other modules.
-	 * @param conf   configuration.
-	 */
-	public WeNetInteractionProtocolEngineServiceImpl(WebClient client, JsonObject conf) {
+  /**
+   * The profile manager mocked server.
+   */
+  protected static WeNetProfileManagerMocker mocker;
 
-		super(client,
-				conf.getString("interactionProtocolEngine", "https://wenet.u-hopper.com/prod/interaction_protocol_engine"));
 
-	}
+  /**
+   * Start the mocker server.
+   */
+  @BeforeAll
+  public static void startMocker() {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void sendMessage(JsonObject message, Handler<AsyncResult<JsonObject>> sendHandler) {
+    mocker = WeNetProfileManagerMocker.start();
+  }
 
-		this.post(message, sendHandler, "/messages");
+  /**
+   * Register the client.
+   *
+   * @param vertx event bus to use.
+   */
+  @BeforeEach
+  public void registerClient(final Vertx vertx) {
 
-	}
+    final WebClient client = WebClient.create(vertx);
+    final JsonObject conf = mocker.getComponentConfiguration();
+    WeNetProfileManager.register(vertx, client, conf);
+  }
 
 }

@@ -75,11 +75,11 @@ You can use the next arguments:
  - **DEFAULT_DB_NAME** to define the default mongo database name. By default is **wenetTaskManagerDB**.
  - **DEFAULT_DB_USER_NAME** to define the default mongo database user name. By default is **wenetTaskManager**.
  - **DEFAULT_DB_USER_PASSWORD** to define the default mongo database user password. By default is **password**.
- - **DEFAULT_WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **https://wenet.u-hopper.com/prod/profile_manager**.
- - **DEFAULT_WENET_TASK_MANAGER_API** to define the path to the task manager component to use. By default is **https://wenet.u-hopper.com/prod/task_manager**.
- - **DEFAULT_WENET_SERVICE_API** to define the path to the service component to use. By default is **https://wenet.u-hopper.com/prod/service**.
- - **DEFAULT_WENET_INCENTIVE_SERVER_APII** to define the path to the service component to use. By default is **https://wenet.u-hopper.com/prod/incentive_server**.
- - **DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the service component to use. By default is **https://wenet.u-hopper.com/prod/social_context_builder**.
+ - **DEFAULT_WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **"https://wenet.u-hopper.com/prod/profile_manager**.
+ - **DEFAULT_WENET_TASK_MANAGER_API** to define the path to the task manager component to use. By default is **"https://wenet.u-hopper.com/prod/task_manager**.
+ - **DEFAULT_WENET_SERVICE_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/service**.
+ - **DEFAULT_WENET_INCENTIVE_SERVER_APII** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
+ - **DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
 
 This arguments are used to create a configurations files at **/usr/wenet/interaction-protocol-engine/etc**.
 So you can mount a volume to this if you want to modify any configuration property at runtime.
@@ -101,10 +101,10 @@ You can modify use the next environment properties to modify some parameters of 
  - **DB_NAME** to define the mongo database name. By default is **wenetTaskManagerDB**.
  - **DB_USER_NAME** to define the mongo database user name. By default is **wenetTaskManager**.
  - **DB_USER_PASSWORD** to define the mongo database user password. By default is **password**.
- - **WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **https://wenet.u-hopper.com/prod/profile_manager**.
- - **WENET_SERVICE_API** to define the path to the service component to use. By default is **https://wenet.u-hopper.com/service**.
- - **WENET_INCENTIVE_SERVER_API** to define the path to the incentive serverr component to use. By default is **https://wenet.u-hopper.com/prod/incentive_server**.
- - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the social context builder component to use. By default is **https://wenet.u-hopper.com/prod/social_context_builder**.
+ - **WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **"https://wenet.u-hopper.com/prod/profile_manager**.
+ - **WENET_SERVICE_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/service**.
+ - **WENET_INCENTIVE_SERVER_API** to define the path to the incentive serverr component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
+ - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the social context builder component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
 
 Also you can define your own configuration that modify this properties and mount to  **/usr/wenet/interaction-protocol-engine/etc**.
 
@@ -158,10 +158,10 @@ The latest APIs documentation is available [here](http://swagger.u-hopper.com/?u
 
 The interaction protocol engine has the next available instances:
 
- - WeNet production interaction protocol engine API is available at [https://wenet.u-hopper.com/interaction_protocol_engine](https://wenet.u-hopper.com/interaction_protocol_engine).
- - WeNet development interaction protocol engine API is available at [https://wenet.u-hopper.com/dev/interaction_protocol_engine](https://wenet.u-hopper.com/dev/interaction_protocol_engine).
- - The IIIA stable interaction protocol engine API is available at [https://wenet.u-hopper.com/dev/interaction_protocol_engine](https://wenet.u-hopper.com/dev/interaction_protocol_engine).
- - The IIIA development interaction protocol engine API is available at [https://wenet.u-hopper.com/dev/interaction_protocol_engine](https://wenet.u-hopper.com/dev/interaction_protocol_engine).
+ - WeNet production interaction protocol engine API is available at ["https://wenet.u-hopper.com/prod/interaction_protocol_engine]("https://wenet.u-hopper.com/prod/interaction_protocol_engine).
+ - WeNet development interaction protocol engine API is available at ["https://wenet.u-hopper.com/dev/interaction_protocol_engine]("https://wenet.u-hopper.com/dev/interaction_protocol_engine).
+ - The IIIA stable interaction protocol engine API is available at ["https://wenet.u-hopper.com/dev/interaction_protocol_engine]("https://wenet.u-hopper.com/dev/interaction_protocol_engine).
+ - The IIIA development interaction protocol engine API is available at ["https://wenet.u-hopper.com/dev/interaction_protocol_engine]("https://wenet.u-hopper.com/dev/interaction_protocol_engine).
  - The interaction protocol engine API 0.9.0 is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.9.0/](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.9.0/).
  - The interaction protocol engine API 0.8.0 (Dummy version) is available at [http://ardid.iiia.csic.es/dev-wenet-interaction-protocol-engine/](http://ardid.iiia.csic.es/dev-wenet-interaction-protocol-engine/](http://ardid.iiia.csic.es/dev-wenet-interaction-protocol-engine/](http://ardid.iiia.csic.es/dev-wenet-interaction-protocol-engine/).
 

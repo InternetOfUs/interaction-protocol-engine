@@ -24,34 +24,55 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.components.task_manager;
+package eu.internetofus.common.components.service;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.common.components.profile_manager.WeNetProfileManagerServiceOnMemory;
-import eu.internetofus.common.components.profile_manager.WeNetProfileManagerServiceTestCase;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 
 /**
- * Test the {@link WeNetProfileManagerServiceOnMemory}.
+ * Test the {@link WeNetService}.
+ *
+ * @see WeNetServiceSimulator
+ * @see WeNetServiceSimulatorClient
+ * @see WeNetServiceMocker
  *
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(VertxExtension.class)
-public class WeNetTaskManagerServiceOnMemoryTest extends WeNetProfileManagerServiceTestCase {
+public class WeNetServiceSimulatorTest extends WeNetServiceSimulatorTestCase {
 
-	/**
-	 * Register the necessary services before to test.
-	 *
-	 * @param vertx event bus to register the necessary services.
-	 */
-	@BeforeEach
-	public void registerServices(Vertx vertx) {
+  /**
+   * The service mocked server.
+   */
+  protected static WeNetServiceMocker serviceMocker;
 
-		WeNetProfileManagerServiceOnMemory.register(vertx);
+  /**
+   * Start the mocker servers.
+   */
+  @BeforeAll
+  public static void startMockers() {
 
-	}
+    serviceMocker = WeNetServiceMocker.start();
+  }
 
+  /**
+   * Register the client.
+   *
+   * @param vertx event bus to use.
+   */
+  @BeforeEach
+  public void registerClient(final Vertx vertx) {
+
+    final WebClient client = WebClient.create(vertx);
+    final JsonObject conf = serviceMocker.getComponentConfiguration();
+    WeNetService.register(vertx, client, conf);
+    WeNetServiceSimulator.register(vertx, client, conf);
+
+  }
 }

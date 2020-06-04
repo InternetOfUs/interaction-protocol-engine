@@ -28,6 +28,8 @@ package eu.internetofus.common.vertx;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.concurrent.Semaphore;
+
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
@@ -38,15 +40,12 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import org.mockserver.client.MockServerClient;
-import org.mockserver.integration.ClientAndServer;
 import org.tinylog.Level;
 import org.tinylog.provider.InternalLogger;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
-import io.vertx.ext.sync.Sync;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxExtension;
@@ -56,17 +55,12 @@ import io.vertx.junit5.VertxExtension;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class AbstractWeNetModuleIntegrationExtension implements ParameterResolver, BeforeTestExecutionCallback, AfterTestExecutionCallback, BeforeEachCallback, AfterEachCallback, BeforeAllCallback, AfterAllCallback {
+public abstract class AbstractWeNetComponentIntegrationExtension implements ParameterResolver, BeforeTestExecutionCallback, AfterTestExecutionCallback, BeforeEachCallback, AfterEachCallback, BeforeAllCallback, AfterAllCallback {
 
   /**
    * The started WeNet interaction protocol engine for do the integration tests.
    */
   private volatile static WeNetModuleContext context;
-
-  /**
-   * The mocked server for the interaction with other components.
-   */
-  private volatile static ClientAndServer mockServer;
 
   /**
    * Return the defined vertx.
@@ -79,32 +73,34 @@ public abstract class AbstractWeNetModuleIntegrationExtension implements Paramet
 
       try {
 
-        mockServer = ClientAndServer.startClientAndServer(0);
+        final Semaphore semaphore = new Semaphore(0);
         final AbstractMain main = this.createMain();
         final String[] startArguments = this.createMainStartArguments();
-        context = Sync.awaitResult(h -> main.startWith(startArguments).onComplete(h));
+        main.startWith(startArguments).onComplete(start -> {
 
+          if (start.failed()) {
+
+            InternalLogger.log(Level.ERROR, start.cause(), "Cannot start the WeNet component");
+
+          } else {
+
+            context = start.result();
+          }
+          semaphore.release();
+        });
+
+        semaphore.acquire();
         this.afterStarted(context);
 
       } catch (final Throwable throwable) {
 
-        InternalLogger.log(Level.ERROR, throwable, "Cannot create the Main class to  start the WeNet module to run the integration tests");
+        InternalLogger.log(Level.ERROR, throwable, "Cannot create the Main class to start the WeNet component to run the integration tests");
       }
 
     }
 
     return context;
 
-  }
-
-  /**
-   * Return the instance of the mocked server.
-   *
-   * @return the instance of the mocked server.
-   */
-  protected ClientAndServer getMoclkedServer() {
-
-    return mockServer;
   }
 
   /**
@@ -223,7 +219,7 @@ public abstract class AbstractWeNetModuleIntegrationExtension implements Paramet
   public boolean supportsParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext) throws ParameterResolutionException {
 
     final Class<?> type = parameterContext.getParameter().getType();
-    return type == WebClient.class || type == WeNetModuleContext.class || type == MongoClient.class || this.vertxExtension.supportsParameter(parameterContext, extensionContext) || type == MockServerClient.class;
+    return type == WebClient.class || type == WeNetModuleContext.class || type == MongoClient.class || this.vertxExtension.supportsParameter(parameterContext, extensionContext);
 
   }
 
@@ -258,10 +254,6 @@ public abstract class AbstractWeNetModuleIntegrationExtension implements Paramet
         return MongoClient.create(context.vertx, persitenceConf);
       }, MongoClient.class);
       return pool;
-
-    } else if (type == MockServerClient.class) {
-
-      return mockServer;
 
     } else if (type == WeNetModuleContext.class) {
 

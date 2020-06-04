@@ -172,7 +172,7 @@ public class NormsIT {
 	// */
 	// @Test
 	// public void shouldStorePublishedNorm(Vertx vertx,
-	// WeNetProfileManagerService profileManager,
+	// WeNetProfileManager profileManager,
 	// WebClient client, VertxTestContext testContext) {
 	//
 	// PublishedNormTest.createValidPublishedNormExample(23, profileManager,
@@ -311,7 +311,7 @@ public class NormsIT {
 	// */
 	// @Test
 	// public void
-	// shouldNotUpdatePublishedNormBecauseNotChangesHasDone(WeNetProfileManagerService
+	// shouldNotUpdatePublishedNormBecauseNotChangesHasDone(WeNetProfileManager
 	// profileManager,
 	// Vertx vertx, WebClient client, VertxTestContext testContext) {
 	//
@@ -382,7 +382,7 @@ public class NormsIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldUpdatePublishedNorm(WeNetProfileManagerService
+	// public void shouldUpdatePublishedNorm(WeNetProfileManager
 	// profileManager, Vertx vertx,
 	// WebClient client, VertxTestContext testContext) {
 	//
@@ -479,7 +479,7 @@ public class NormsIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldUpdatePublishedNormName(WeNetProfileManagerService
+	// public void shouldUpdatePublishedNormName(WeNetProfileManager
 	// profileManager, Vertx vertx,
 	// WebClient client, VertxTestContext testContext) {
 	//
@@ -519,7 +519,7 @@ public class NormsIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldUpdatePublishedNormDescription(WeNetProfileManagerService
+	// public void shouldUpdatePublishedNormDescription(WeNetProfileManager
 	// profileManager,
 	// Vertx vertx, WebClient client, VertxTestContext testContext) {
 	//
@@ -559,7 +559,7 @@ public class NormsIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldUpdatePublishedNormKeyword(WeNetProfileManagerService
+	// public void shouldUpdatePublishedNormKeyword(WeNetProfileManager
 	// profileManager, Vertx vertx,
 	// WebClient client, VertxTestContext testContext) {
 	//
@@ -602,7 +602,7 @@ public class NormsIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldUpdatePublishedNormPublisherId(WeNetProfileManagerService
+	// public void shouldUpdatePublishedNormPublisherId(WeNetProfileManager
 	// profileManager,
 	// Vertx vertx, WebClient client, VertxTestContext testContext) {
 	//
@@ -709,7 +709,7 @@ public class NormsIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldUpdateNormOnPublishedNorm(WeNetProfileManagerService
+	// public void shouldUpdateNormOnPublishedNorm(WeNetProfileManager
 	// profileManager, Vertx vertx,
 	// WebClient client, VertxTestContext testContext) {
 	//
@@ -749,7 +749,7 @@ public class NormsIT {
 	// * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
 	// */
 	// @Test
-	// public void shouldNotUpdateNormOnPublishedNorm(WeNetProfileManagerService
+	// public void shouldNotUpdateNormOnPublishedNorm(WeNetProfileManager
 	// profileManager, Vertx vertx,
 	// WebClient client, VertxTestContext testContext) {
 	//

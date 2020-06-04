@@ -33,7 +33,7 @@ import javax.ws.rs.core.Response.Status;
 import org.tinylog.Logger;
 
 import eu.internetofus.common.components.Model;
-import eu.internetofus.common.components.profile_manager.WeNetProfileManagerService;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.vertx.OperationReponseHandlers;
 import eu.internetofus.common.vertx.OperationRequests;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
@@ -64,7 +64,7 @@ public class NormsResource implements Norms {
 	/**
 	 * The manager to manage the users profile.
 	 */
-	protected WeNetProfileManagerService profileManager;
+	protected WeNetProfileManager profileManager;
 
 	/**
 	 * Create an empty resource. This is only used for unit tests.
@@ -82,7 +82,7 @@ public class NormsResource implements Norms {
 
 		this.vertx = vertx;
 		this.repository = NormsRepository.createProxy(vertx);
-		this.profileManager = WeNetProfileManagerService.createProxy(vertx);
+		this.profileManager = WeNetProfileManager.createProxy(vertx);
 	}
 
 	/**

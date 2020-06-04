@@ -37,9 +37,9 @@ import eu.internetofus.common.components.service.TaskConcludedNotification;
 import eu.internetofus.common.components.service.TaskProposalNotification;
 import eu.internetofus.common.components.service.TaskSelectionNotification;
 import eu.internetofus.common.components.service.TaskVolunteerNotification;
-import eu.internetofus.common.components.service.WeNetServiceApiService;
+import eu.internetofus.common.components.service.WeNetService;
 import eu.internetofus.common.components.task_manager.Task;
-import eu.internetofus.common.components.task_manager.WeNetTaskManagerService;
+import eu.internetofus.common.components.task_manager.WeNetTaskManager;
 import eu.internetofus.common.vertx.Worker;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
@@ -217,7 +217,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             final Task closedTask = new Task();
             closedTask.closeTs = TimeManager.now();
             closedTask.attributes = attributes;
-            WeNetTaskManagerService.createProxy(this.vertx).updateTask(env.task.id, closedTask, update->{
+            WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, closedTask, update->{
 
               if( update.failed() ) {
 
@@ -259,7 +259,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
   private void sendToAllAppUsers(final App app, final WebClient client,
       final eu.internetofus.common.components.service.Message notification, final String senderId) {
 
-    WeNetServiceApiService.createProxy(this.vertx).retrieveJsonArrayAppUserIds(app.appId, retrieve -> {
+    WeNetService.createProxy(this.vertx).retrieveJsonArrayAppUserIds(app.appId, retrieve -> {
 
       if (retrieve.failed()) {
 

@@ -24,32 +24,20 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.components.service;
+package eu.internetofus.wenet_interaction_protocol_engine.services;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import io.vertx.core.Vertx;
-import io.vertx.junit5.VertxExtension;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManagerTestCase;
+import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 
 /**
- * Test the {@link ServiceApiSimulatorServiceOnMemory}.
+ * Test the {@link WeNetProfileManager}.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@ExtendWith(VertxExtension.class)
-public class ServiceApiSimulatorServiceOnMemoryTest extends ServiceApiSimulatorServiceTestCase {
-
-	/**
-	 * Register the necessary services before to test.
-	 *
-	 * @param vertx event bus to register the necessary services.
-	 */
-	@BeforeEach
-	public void registerServices(Vertx vertx) {
-
-		ServiceApiSimulatorServiceOnMemory.register(vertx);
-
-	}
+@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
+public class WeNetProfileManagerIT extends WeNetProfileManagerTestCase {
 
 }

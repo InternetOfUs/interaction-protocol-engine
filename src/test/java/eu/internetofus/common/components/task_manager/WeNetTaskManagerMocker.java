@@ -24,20 +24,53 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.services;
+package eu.internetofus.common.components.task_manager;
 
-import org.junit.jupiter.api.extension.ExtendWith;
-
-import eu.internetofus.common.components.profile_manager.WeNetProfileManagerService;
-import eu.internetofus.common.components.profile_manager.WeNetProfileManagerServiceTestCase;
-import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
+import eu.internetofus.common.components.AbstractComponentMocker;
 
 /**
- * Test the {@link WeNetProfileManagerService}.
+ * The mocked server for the {@link WeNetTaskManager}.
+ *
+ * @see WeNetTaskManager
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class WeNetProfileManagerServiceIT extends WeNetProfileManagerServiceTestCase {
+public class WeNetTaskManagerMocker extends AbstractComponentMocker {
+
+  /**
+   * Start a mocker builder into a random port.
+   *
+   * @return the started mocker.
+   */
+  public static WeNetTaskManagerMocker start() {
+
+    return start(0);
+
+  }
+
+  /**
+   * Start a mocker builder into a port.
+   *
+   * @param port to bind the server.
+   *
+   * @return the started mocker.
+   */
+  public static WeNetTaskManagerMocker start(final int port) {
+
+    final WeNetTaskManagerMocker mocker = new WeNetTaskManagerMocker();
+    mocker.start(port, null);
+    return mocker;
+  }
+
+  /**
+   * {@inheridDoc}
+   *
+   * @see WeNetTaskManagerClient#TASK_MANAGER_CONF_KEY
+   */
+  @Override
+  protected String getComponentConfigurationName() {
+
+    return WeNetTaskManagerClient.TASK_MANAGER_CONF_KEY;
+  }
 
 }

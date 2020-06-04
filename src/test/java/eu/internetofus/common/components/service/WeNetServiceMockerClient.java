@@ -26,52 +26,26 @@
 
 package eu.internetofus.common.components.service;
 
-import eu.internetofus.common.vertx.ComponentClient;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 
 /**
- * The implementation of the {@link WeNetServiceApiService}.
- *
- * @see WeNetServiceApiService
+ * Add extra
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class WeNetServiceApiServiceImpl extends ComponentClient implements WeNetServiceApiService {
+public class WeNetServiceMockerClient extends WeNetServiceClient {
 
-	/**
-	 * Create a new service to interact with the WeNet interaction protocol engine.
-	 *
-	 * @param client to interact with the other modules.
-	 * @param conf   configuration.
-	 */
-	public WeNetServiceApiServiceImpl(WebClient client, JsonObject conf) {
+  /**
+   * Create a new service to interact with the WeNet service mocker.
+   *
+   * @param client to interact with the other modules.
+   * @param conf   configuration.
+   */
+  public WeNetServiceMockerClient(final WebClient client, final JsonObject conf) {
 
-		super(client, conf.getString("service", "https://wenet.u-hopper.com/service"));
+    super(client, conf);
 
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void retrieveJsonApp(String id, Handler<AsyncResult<JsonObject>> retrieveHandler) {
-
-		this.getJsonObject(retrieveHandler, "/app", id);
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void retrieveJsonArrayAppUserIds(String id, Handler<AsyncResult<JsonArray>> retrieveHandler) {
-
-		this.getJsonArray(retrieveHandler, "/app", id, "/users");
-
-	}
+  }
 
 }

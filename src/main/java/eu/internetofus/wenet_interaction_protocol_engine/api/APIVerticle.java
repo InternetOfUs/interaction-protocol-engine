@@ -27,7 +27,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api;
 
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngineService;
-import eu.internetofus.common.components.profile_manager.WeNetProfileManagerService;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.vertx.AbstractAPIVerticle;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.Messages;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.MessagesResource;
@@ -81,7 +81,7 @@ public class APIVerticle extends AbstractAPIVerticle {
 	 *
 	 * {@inheritDoc}
 	 *
-	 * @see WeNetProfileManagerService
+	 * @see WeNetProfileManager
 	 */
 	@Override
 	protected void startedServerAt(String host, int port) {

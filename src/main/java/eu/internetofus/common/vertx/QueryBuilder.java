@@ -158,6 +158,57 @@ public class QueryBuilder {
   }
 
   /**
+   * Add a the restrictions to mark the filed to be equals to the specified field.
+   *
+   * @param fieldName name of the field.
+   * @param value     for the field.
+   *
+   * @return the factory that is using.
+   */
+  public QueryBuilder with(final String fieldName, final Object value) {
+
+    if (value != null) {
+
+      this.query.put(fieldName, value);
+
+    } else {
+
+      this.query.putNull(fieldName);
+    }
+
+    return this;
+  }
+
+  /**
+   * Add a the restrictions to mark the field with an specific value or a regular expression. It it is a regular
+   * expression it has to be between {@code /}.
+   *
+   * @param fieldName name of the field.
+   * @param value     or regular expression for the field. If it is {@code null} the field is ignored.
+   *
+   * @return the factory that is using.
+   */
+  public QueryBuilder withEqOrRegex(final String fieldName, final String value) {
+
+    if (value != null) {
+
+      if (value.length() > 1 && value.startsWith("/") && value.endsWith("/")) {
+
+        final String pattern = value.substring(1, value.length() - 2);
+        return this.withRegex(fieldName, pattern);
+
+      } else {
+
+        this.query.put(fieldName, value);
+      }
+
+    }
+
+    return this;
+
+  }
+
+  /**
    * Return the created query.
    *
    * @return the created query.

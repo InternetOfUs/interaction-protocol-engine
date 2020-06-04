@@ -26,34 +26,51 @@
 
 package eu.internetofus.common.components.service;
 
-import org.junit.jupiter.api.Test;
-
-import io.vertx.core.Vertx;
-import io.vertx.junit5.VertxTestContext;
+import eu.internetofus.common.components.AbstractComponentMocker;
 
 /**
- * Test the {@link WeNetServiceApiService}.
+ * The mocked server for the {@link WeNetService}.
  *
- * @see WeNetServiceApiService
+ * @see WeNetService
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class WeNetServiceApiServiceTestCase {
+public class WeNetServiceMocker extends AbstractComponentMocker {
 
-	/**
-	 * Should not retrieve undefined app.
-	 *
-	 * @param vertx       that contains the event bus to use.
-	 * @param testContext context over the tests.
-	 */
-	@Test
-	public void shouldNotRretrieveUndefinedApp(Vertx vertx, VertxTestContext testContext) {
+  /**
+   * Start a mocker builder into a random port.
+   *
+   * @return the started mocker.
+   */
+  public static WeNetServiceMocker start() {
 
-		WeNetServiceApiService.createProxy(vertx).retrieveApp("undefined-app-identifier", testContext.failing(handler -> {
-			testContext.completeNow();
+    return start(0);
 
-		}));
+  }
 
-	}
+  /**
+   * Start a mocker builder into a port.
+   *
+   * @param port to bind the server.
+   *
+   * @return the started mocker.
+   */
+  public static WeNetServiceMocker start(final int port) {
+
+    final WeNetServiceMocker mocker = new WeNetServiceMocker();
+    mocker.start(port, null);
+    return mocker;
+  }
+
+  /**
+   * {@inheridDoc}
+   *
+   * @see WeNetServiceClient#SERVICE_CONF_KEY
+   */
+  @Override
+  protected String getComponentConfigurationName() {
+
+    return WeNetServiceClient.SERVICE_CONF_KEY;
+  }
 
 }

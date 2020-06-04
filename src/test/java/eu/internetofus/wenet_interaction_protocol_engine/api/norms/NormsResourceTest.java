@@ -30,7 +30,7 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.common.components.profile_manager.WeNetProfileManagerService;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import io.vertx.junit5.VertxExtension;
 
@@ -53,7 +53,7 @@ public class NormsResourceTest {
 
 		final NormsResource resource = new NormsResource();
 		resource.repository = mock(NormsRepository.class);
-		resource.profileManager = mock(WeNetProfileManagerService.class);
+		resource.profileManager = mock(WeNetProfileManager.class);
 		return resource;
 
 	}

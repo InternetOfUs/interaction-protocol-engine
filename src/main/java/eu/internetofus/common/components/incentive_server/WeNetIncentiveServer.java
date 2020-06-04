@@ -43,7 +43,7 @@ public interface WeNetIncentiveServer {
   /**
    * The address of this service.
    */
-  String ADDRESS = "wenet_common.service.IncentiveServer";
+  String ADDRESS = "wenet_component.IncentiveServer";
 
   /**
    * Create a proxy of the {@link WeNetIncentiveServer}.

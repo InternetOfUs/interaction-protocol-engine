@@ -24,9 +24,7 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.components.social_context_builder;
-
-import java.util.List;
+package eu.internetofus.common.components.service;
 
 import javax.validation.constraints.NotNull;
 
@@ -36,34 +34,34 @@ import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.serviceproxy.ServiceBinder;
 
 /**
- * The class used to interact with the WeNet social context builder.
+ * The class used to interact with the WeNet interaction protocol engine.
  *
  * @author UDT-IA, IIIA-CSIC
  */
 @ProxyGen
-public interface WeNetSocialContextBuilder {
+public interface WeNetService {
 
   /**
    * The address of this service.
    */
-  String ADDRESS = "wenet_component.SocialContextBuilder";
+  String ADDRESS = "wenet_component.Service";
 
   /**
-   * Create a proxy of the {@link WeNetSocialContextBuilder}.
+   * Create a proxy of the {@link WeNetService}.
    *
    * @param vertx where the service has to be used.
    *
    * @return the task.
    */
-  static WeNetSocialContextBuilder createProxy(Vertx vertx) {
+  static WeNetService createProxy(final Vertx vertx) {
 
-    return new WeNetSocialContextBuilderVertxEBProxy(vertx, WeNetSocialContextBuilder.ADDRESS);
+    return new WeNetServiceVertxEBProxy(vertx, WeNetService.ADDRESS);
   }
 
   /**
@@ -73,30 +71,39 @@ public interface WeNetSocialContextBuilder {
    * @param client to do HTTP requests to other services.
    * @param conf   configuration to use.
    */
-  static void register(Vertx vertx, WebClient client, JsonObject conf) {
+  static void register(final Vertx vertx, final WebClient client, final JsonObject conf) {
 
-    new ServiceBinder(vertx).setAddress(WeNetSocialContextBuilder.ADDRESS).register(WeNetSocialContextBuilder.class, new WeNetSocialContextBuilderClient(client, conf));
+    new ServiceBinder(vertx).setAddress(WeNetService.ADDRESS).register(WeNetService.class, new WeNetServiceClient(client, conf));
 
   }
 
   /**
-   * Return the relations of an user.
+   * Return an {@link App} in JSON format.
    *
-   * @param userId          identifier of the user.
-   * @param retrieveHandler handler to inform of the found relations.
+   * @param id              identifier of the app to get.
+   * @param retrieveHandler handler to manage the retrieve process.
    */
-  void retrieveJsonArraySocialRelations(@NotNull String userId, @NotNull Handler<AsyncResult<JsonArray>> retrieveHandler);
+  void retrieveJsonApp(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> retrieveHandler);
 
   /**
-   * Return the relations of an user.
+   * Return an application.
    *
-   * @param userId          identifier of the user.
-   * @param retrieveHandler handler to inform of the found relations.
+   * @param id              identifier of the app to get.
+   * @param retrieveHandler handler to manage the retrieve process.
    */
   @GenIgnore
-  default void retrieveSocialRelations(@NotNull String userId, @NotNull Handler<AsyncResult<List<UserRelation>>> retrieveHandler) {
+  default void retrieveApp(@NotNull final String id, @NotNull final Handler<AsyncResult<App>> retrieveHandler) {
 
-    this.retrieveJsonArraySocialRelations(userId, ComponentClient.handlerForListModel(UserRelation.class, retrieveHandler));
+    this.retrieveJsonApp(id, ComponentClient.handlerForModel(App.class, retrieveHandler));
+
   }
+
+  /**
+   * Return the identifiers of the users that are defined on an application.
+   *
+   * @param id              identifier of the app to get the users.
+   * @param retrieveHandler handler to manage the retrieve process.
+   */
+  void retrieveJsonArrayAppUserIds(@NotNull String id, @NotNull Handler<AsyncResult<JsonArray>> retrieveHandler);
 
 }

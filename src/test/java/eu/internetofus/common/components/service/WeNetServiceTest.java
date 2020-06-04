@@ -26,6 +26,7 @@
 
 package eu.internetofus.common.components.service;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -35,30 +36,42 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 
 /**
- * Test the {@link WeNetServiceApiServiceImpl}.
+ * Test the {@link WeNetService}.
  *
- * @see WeNetServiceApiServiceImpl
+ * @see WeNetService
+ * @see WeNetServiceClient
+ * @see WeNetServiceMocker
  *
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(VertxExtension.class)
-public class WeNetServiceApiServiceImplTest extends WeNetServiceApiServiceTestCase {
+public class WeNetServiceTest extends WeNetServiceTestCase {
 
-	/**
-	 * Register the service.
-	 *
-	 * @param vertx event bus to use.
-	 */
-	@BeforeEach
-	public void registerService(Vertx vertx) {
+  /**
+   * The service mocked server.
+   */
+  protected static WeNetServiceMocker serviceMocker;
 
-		final JsonObject conf = new JsonObject();
-		conf.put("port", 443);
-		conf.put("host", "wenet.u-hopper.com");
-		conf.put("apiPath", "/service");
-		final WebClient client = WebClient.create(vertx);
-		WeNetServiceApiService.register(vertx, client, conf);
+  /**
+   * Start the mocker servers.
+   */
+  @BeforeAll
+  public static void startMockers() {
 
-	}
+    serviceMocker = WeNetServiceMocker.start();
+  }
 
+  /**
+   * Register the client.
+   *
+   * @param vertx event bus to use.
+   */
+  @BeforeEach
+  public void registerClient(final Vertx vertx) {
+
+    final WebClient client = WebClient.create(vertx);
+    final JsonObject conf = serviceMocker.getComponentConfiguration();
+    WeNetService.register(vertx, client, conf);
+
+  }
 }

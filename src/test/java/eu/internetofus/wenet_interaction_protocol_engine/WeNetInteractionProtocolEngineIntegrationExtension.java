@@ -30,10 +30,14 @@ import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.Network;
 
 import eu.internetofus.common.Containers;
-import eu.internetofus.common.components.service.ServiceApiSimulatorService;
+import eu.internetofus.common.components.service.WeNetServiceMocker;
+import eu.internetofus.common.components.service.WeNetServiceSimulator;
 import eu.internetofus.common.vertx.AbstractMain;
-import eu.internetofus.common.vertx.AbstractWeNetModuleIntegrationExtension;
+import eu.internetofus.common.vertx.AbstractWeNetComponentIntegrationExtension;
 import eu.internetofus.common.vertx.WeNetModuleContext;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 
 /**
  * Extension used to run integration tests over the WeNet interaction protocol
@@ -41,51 +45,55 @@ import eu.internetofus.common.vertx.WeNetModuleContext;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class WeNetInteractionProtocolEngineIntegrationExtension extends AbstractWeNetModuleIntegrationExtension {
+public class WeNetInteractionProtocolEngineIntegrationExtension extends AbstractWeNetComponentIntegrationExtension {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void afterStarted(WeNetModuleContext context) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void afterStarted(final WeNetModuleContext context) {
 
-		ServiceApiSimulatorService.register(context);
-	}
+    final Vertx vertx = context.vertx;
+    final WebClient client = WebClient.create(vertx);
+    final JsonObject conf = context.configuration.getJsonObject("wenetComponents", new JsonObject());
+    WeNetServiceSimulator.register(vertx, client, conf);
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected String[] createMainStartArguments() {
+  }
 
-		final Network network = Network.newNetwork();
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected String[] createMainStartArguments() {
 
-		final int profileManagerApiPort = Containers.nextFreePort();
-		final int taskManagerApiPort = Containers.nextFreePort();
-		final int interactionProtocolEngineApiPort = Containers.nextFreePort();
-		final int serviceApiPort = Containers.nextFreePort();
-		Testcontainers.exposeHostPorts(profileManagerApiPort, taskManagerApiPort, interactionProtocolEngineApiPort,
-				serviceApiPort);
+    final Network network = Network.newNetwork();
 
-		Containers.createAndStartContainersForProfileManager(profileManagerApiPort, taskManagerApiPort,
-				interactionProtocolEngineApiPort, network);
-		Containers.createAndStartContainersForTaskManager(taskManagerApiPort, profileManagerApiPort,
-				interactionProtocolEngineApiPort, serviceApiPort, network);
-		Containers.createAndStartServiceApiSimulator(serviceApiPort);
+    final int profileManagerApiPort = Containers.nextFreePort();
+    final int taskManagerApiPort = Containers.nextFreePort();
+    final int interactionProtocolEngineApiPort = Containers.nextFreePort();
+    final int serviceApiPort = Containers.nextFreePort();
+    Testcontainers.exposeHostPorts(profileManagerApiPort, taskManagerApiPort, interactionProtocolEngineApiPort,
+        serviceApiPort);
 
-		return Containers.createInteractionProtocolEngineContainersToStartWith(interactionProtocolEngineApiPort,
-				profileManagerApiPort, taskManagerApiPort, serviceApiPort, network);
-	}
+    Containers.createAndStartContainersForProfileManager(profileManagerApiPort, taskManagerApiPort,
+        interactionProtocolEngineApiPort, network);
+    Containers.createAndStartContainersForTaskManager(taskManagerApiPort, profileManagerApiPort,
+        interactionProtocolEngineApiPort, serviceApiPort, network);
+    WeNetServiceMocker.start(serviceApiPort);
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see Main
-	 */
-	@Override
-	protected AbstractMain createMain() {
+    return Containers.createInteractionProtocolEngineContainersToStartWith(interactionProtocolEngineApiPort,
+        profileManagerApiPort, taskManagerApiPort, serviceApiPort, network);
+  }
 
-		return new Main();
-	}
+  /**
+   * {@inheritDoc}
+   *
+   * @see Main
+   */
+  @Override
+  protected AbstractMain createMain() {
+
+    return new Main();
+  }
 
 }

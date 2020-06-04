@@ -20,8 +20,8 @@
 		"defaultPort": 80
 	},
 	"wenetComponents": {
-		"profileManager": "https://wenet.u-hopper.com/profile_manager",
-		"taskManager": "https://wenet.u-hopper.com/task_manager",
-		"service": "https://wenet.u-hopper.com/service"
+		"profileManager": "https://wenet.u-hopper.com/prod/profile_manager",
+		"taskManager": "https://wenet.u-hopper.com/prod/task_manager",
+		"service": "https://wenet.u-hopper.com/prod/service"
 	}
 }

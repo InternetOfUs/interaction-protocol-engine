@@ -24,7 +24,7 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.components.service;
+package eu.internetofus.common.components.profile_manager;
 
 import javax.validation.constraints.NotNull;
 
@@ -34,34 +34,33 @@ import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.serviceproxy.ServiceBinder;
 
 /**
- * The class used to interact with the WeNet interaction protocol engine.
+ * The class used to interact with the WeNet profile manager.
  *
  * @author UDT-IA, IIIA-CSIC
  */
 @ProxyGen
-public interface WeNetServiceApiService {
+public interface WeNetProfileManager {
 
 	/**
 	 * The address of this service.
 	 */
-	String ADDRESS = "wenet_common.service.ServiceApi";
+	String ADDRESS = "wenet_component.profileManager";
 
 	/**
-	 * Create a proxy of the {@link WeNetServiceApiService}.
+	 * Create a proxy of the {@link WeNetProfileManager}.
 	 *
 	 * @param vertx where the service has to be used.
 	 *
 	 * @return the task.
 	 */
-	static WeNetServiceApiService createProxy(Vertx vertx) {
+	static WeNetProfileManager createProxy(Vertx vertx) {
 
-		return new WeNetServiceApiServiceVertxEBProxy(vertx, WeNetServiceApiService.ADDRESS);
+		return new WeNetProfileManagerVertxEBProxy(vertx, WeNetProfileManager.ADDRESS);
 	}
 
 	/**
@@ -73,38 +72,60 @@ public interface WeNetServiceApiService {
 	 */
 	static void register(Vertx vertx, WebClient client, JsonObject conf) {
 
-		new ServiceBinder(vertx).setAddress(WeNetServiceApiService.ADDRESS).register(WeNetServiceApiService.class,
-				new WeNetServiceApiServiceImpl(client, conf));
+		new ServiceBinder(vertx).setAddress(WeNetProfileManager.ADDRESS).register(WeNetProfileManager.class,
+				new WeNetProfileManagerClient(client, conf));
 
 	}
 
 	/**
-	 * Return an {@link App} in JSON format.
+	 * Create a {@link WeNetUserProfile} in Json format.
 	 *
-	 * @param id              identifier of the app to get.
-	 * @param retrieveHandler handler to manage the retrieve process.
+	 * @param profile       to create.
+	 * @param createHandler handler to manage the creation process.
 	 */
-	void retrieveJsonApp(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> retrieveHandler);
+	void createProfile(@NotNull JsonObject profile, @NotNull Handler<AsyncResult<JsonObject>> createHandler);
 
 	/**
-	 * Return an application.
+	 * Create a profile.
 	 *
-	 * @param id              identifier of the app to get.
+	 * @param profile       to create.
+	 * @param createHandler handler to manage the creation process.
+	 */
+	@GenIgnore
+	default void createProfile(@NotNull WeNetUserProfile profile,
+			@NotNull Handler<AsyncResult<WeNetUserProfile>> createHandler) {
+
+		this.createProfile(profile.toJsonObject(), ComponentClient.handlerForModel(WeNetUserProfile.class, createHandler));
+
+	}
+
+	/**
+	 * Return a {@link WeNetUserProfile} in Json format.
+	 *
+	 * @param id              identifier of the profile to get.
+	 * @param retrieveHandler handler to manage the retrieve process.
+	 */
+	void retrieveJsonProfile(@NotNull String id, @NotNull Handler<AsyncResult<JsonObject>> retrieveHandler);
+
+	/**
+	 * Return a profile.
+	 *
+	 * @param id              identifier of the profile to get.
 	 * @param retrieveHandler handler to manage the retrieve process.
 	 */
 	@GenIgnore
-	default void retrieveApp(@NotNull String id, @NotNull Handler<AsyncResult<App>> retrieveHandler) {
+	default void retrieveProfile(@NotNull String id, @NotNull Handler<AsyncResult<WeNetUserProfile>> retrieveHandler) {
 
-		this.retrieveJsonApp(id, ComponentClient.handlerForModel(App.class, retrieveHandler));
+		this.retrieveJsonProfile(id, ComponentClient.handlerForModel(WeNetUserProfile.class, retrieveHandler));
 
 	}
 
 	/**
-	 * Return the identifiers of the users that are defined on an application.
+	 * Delete a profile.
 	 *
-	 * @param id              identifier of the app to get the users.
-	 * @param retrieveHandler handler to manage the retrieve process.
+	 * @param id            identifier of the profile to get.
+	 * @param deleteHandler handler to manage the delete process.
 	 */
-	void retrieveJsonArrayAppUserIds(@NotNull String id, @NotNull Handler<AsyncResult<JsonArray>> retrieveHandler);
+	void deleteProfile(@NotNull String id, @NotNull Handler<AsyncResult<Void>> deleteHandler);
 
 }
