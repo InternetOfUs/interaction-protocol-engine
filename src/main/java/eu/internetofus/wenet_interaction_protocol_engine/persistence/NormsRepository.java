@@ -49,225 +49,225 @@ import io.vertx.serviceproxy.ServiceBinder;
 @ProxyGen
 public interface NormsRepository {
 
-	/**
-	 * The address of this service.
-	 */
-	String ADDRESS = "wenet_interaction_protocol_engine.persistence.norms";
+  /**
+   * The address of this service.
+   */
+  String ADDRESS = "wenet_interaction_protocol_engine.persistence.norms";
 
-	/**
-	 * Register this service.
-	 *
-	 * @param vertx that contains the event bus to use.
-	 * @param pool  to create the database connections.
-	 */
-	static void register(Vertx vertx, MongoClient pool) {
+  /**
+   * Register this service.
+   *
+   * @param vertx that contains the event bus to use.
+   * @param pool  to create the database connections.
+   */
+  static void register(final Vertx vertx, final MongoClient pool) {
 
-		new ServiceBinder(vertx).setAddress(NormsRepository.ADDRESS).register(NormsRepository.class,
-				new NormsRepositoryImpl(pool));
+    new ServiceBinder(vertx).setAddress(NormsRepository.ADDRESS).register(NormsRepository.class,
+        new NormsRepositoryImpl(pool));
 
-	}
+  }
 
-	/**
-	 * Create a proxy of the {@link NormsRepository}.
-	 *
-	 * @param vertx where the service has to be used.
-	 *
-	 * @return the norm.
-	 */
-	static NormsRepository createProxy(Vertx vertx) {
+  /**
+   * Create a proxy of the {@link NormsRepository}.
+   *
+   * @param vertx where the service has to be used.
+   *
+   * @return the norm.
+   */
+  static NormsRepository createProxy(final Vertx vertx) {
 
-		return new NormsRepositoryVertxEBProxy(vertx, NormsRepository.ADDRESS);
-	}
+    return new NormsRepositoryVertxEBProxy(vertx, NormsRepository.ADDRESS);
+  }
 
-	/**
-	 * Search for the published norm with the specified identifier.
-	 *
-	 * @param id            identifier of the norm to search.
-	 * @param searchHandler handler to manage the search.
-	 */
-	@GenIgnore
-	default void searchPublishedNorm(String id, Handler<AsyncResult<PublishedNorm>> searchHandler) {
+  /**
+   * Search for the published norm with the specified identifier.
+   *
+   * @param id            identifier of the norm to search.
+   * @param searchHandler handler to manage the search.
+   */
+  @GenIgnore
+  default void searchPublishedNorm(final String id, final Handler<AsyncResult<PublishedNorm>> searchHandler) {
 
-		this.searchPublishedNormObject(id, search -> {
+    this.searchPublishedNormObject(id, search -> {
 
-			if (search.failed()) {
+      if (search.failed()) {
 
-				searchHandler.handle(Future.failedFuture(search.cause()));
+        searchHandler.handle(Future.failedFuture(search.cause()));
 
-			} else {
+      } else {
 
-				final JsonObject value = search.result();
-				final PublishedNorm norm = Model.fromJsonObject(value, PublishedNorm.class);
-				if (norm == null) {
+        final JsonObject value = search.result();
+        final PublishedNorm norm = Model.fromJsonObject(value, PublishedNorm.class);
+        if (norm == null) {
 
-					searchHandler.handle(Future.failedFuture("The stored published norm is not valid."));
+          searchHandler.handle(Future.failedFuture("The stored published norm is not valid."));
 
-				} else {
+        } else {
 
-					searchHandler.handle(Future.succeededFuture(norm));
-				}
-			}
-		});
-	}
+          searchHandler.handle(Future.succeededFuture(norm));
+        }
+      }
+    });
+  }
 
-	/**
-	 * Search for the published norm with the specified identifier.
-	 *
-	 * @param id            identifier of the norm to search.
-	 * @param searchHandler handler to manage the search.
-	 */
-	void searchPublishedNormObject(String id, Handler<AsyncResult<JsonObject>> searchHandler);
+  /**
+   * Search for the published norm with the specified identifier.
+   *
+   * @param id            identifier of the norm to search.
+   * @param searchHandler handler to manage the search.
+   */
+  void searchPublishedNormObject(String id, Handler<AsyncResult<JsonObject>> searchHandler);
 
-	/**
-	 * Store a published norm.
-	 *
-	 * @param norm         to store.
-	 * @param storeHandler handler to manage the store.
-	 */
-	@GenIgnore
-	default void storePublishedNorm(PublishedNorm norm, Handler<AsyncResult<PublishedNorm>> storeHandler) {
+  /**
+   * Store a published norm.
+   *
+   * @param norm         to store.
+   * @param storeHandler handler to manage the store.
+   */
+  @GenIgnore
+  default void storePublishedNorm(final PublishedNorm norm, final Handler<AsyncResult<PublishedNorm>> storeHandler) {
 
-		final JsonObject object = norm.toJsonObject();
-		if (object == null) {
+    final JsonObject object = norm.toJsonObject();
+    if (object == null) {
 
-			storeHandler.handle(Future.failedFuture("The published norm can not converted to JSON."));
+      storeHandler.handle(Future.failedFuture("The published norm can not converted to JSON."));
 
-		} else {
+    } else {
 
-			this.storePublishedNorm(object, this.createHandlerMapJsonObjectToPublichedNorm(storeHandler));
+      this.storePublishedNorm(object, this.createHandlerMapJsonObjectToPublichedNorm(storeHandler));
 
-		}
-	}
+    }
+  }
 
-	/**
-	 * Create a map to convert a {@link JsonObject} that responds an action to the
-	 * respective norm.
-	 *
-	 * @param handler that will receive the result of the action.
-	 *
-	 * @return the handler that convert the {@link JsonObject} result
-	 *
-	 */
-	private Handler<AsyncResult<JsonObject>> createHandlerMapJsonObjectToPublichedNorm(
-			Handler<AsyncResult<PublishedNorm>> handler) {
+  /**
+   * Create a map to convert a {@link JsonObject} that responds an action to the
+   * respective norm.
+   *
+   * @param handler that will receive the result of the action.
+   *
+   * @return the handler that convert the {@link JsonObject} result
+   *
+   */
+  private Handler<AsyncResult<JsonObject>> createHandlerMapJsonObjectToPublichedNorm(
+      final Handler<AsyncResult<PublishedNorm>> handler) {
 
-		return action -> {
+    return action -> {
 
-			if (action.failed()) {
+      if (action.failed()) {
 
-				handler.handle(Future.failedFuture(action.cause()));
+        handler.handle(Future.failedFuture(action.cause()));
 
-			} else {
+      } else {
 
-				final JsonObject value = action.result();
-				final PublishedNorm storedNorm = Model.fromJsonObject(value, PublishedNorm.class);
-				if (storedNorm == null) {
+        final JsonObject value = action.result();
+        final PublishedNorm storedNorm = Model.fromJsonObject(value, PublishedNorm.class);
+        if (storedNorm == null) {
 
-					handler.handle(Future.failedFuture("The stored published norm is not valid."));
+          handler.handle(Future.failedFuture("The stored published norm is not valid."));
 
-				} else {
+        } else {
 
-					handler.handle(Future.succeededFuture(storedNorm));
-				}
+          handler.handle(Future.succeededFuture(storedNorm));
+        }
 
-			}
+      }
 
-		};
-	}
+    };
+  }
 
-	/**
-	 * Store a published norm.
-	 *
-	 * @param norm         to store.
-	 * @param storeHandler handler to manage the search.
-	 */
-	void storePublishedNorm(JsonObject norm, Handler<AsyncResult<JsonObject>> storeHandler);
+  /**
+   * Store a published norm.
+   *
+   * @param norm         to store.
+   * @param storeHandler handler to manage the search.
+   */
+  void storePublishedNorm(JsonObject norm, Handler<AsyncResult<JsonObject>> storeHandler);
 
-	/**
-	 * Update a published norm.
-	 *
-	 * @param norm          to update.
-	 * @param updateHandler handler to manage the update.
-	 */
-	@GenIgnore
-	default void updatePublishedNorm(PublishedNorm norm, Handler<AsyncResult<Void>> updateHandler) {
+  /**
+   * Update a published norm.
+   *
+   * @param norm          to update.
+   * @param updateHandler handler to manage the update.
+   */
+  @GenIgnore
+  default void updatePublishedNorm(final PublishedNorm norm, final Handler<AsyncResult<Void>> updateHandler) {
 
-		final JsonObject object = norm.toJsonObject();
-		if (object == null) {
+    final JsonObject object = norm.toJsonObject();
+    if (object == null) {
 
-			updateHandler.handle(Future.failedFuture("The published norm can not converted to JSON."));
+      updateHandler.handle(Future.failedFuture("The published norm can not converted to JSON."));
 
-		} else {
+    } else {
 
-			this.updatePublishedNorm(object, updateHandler);
+      this.updatePublishedNorm(object, updateHandler);
 
-		}
-	}
+    }
+  }
 
-	/**
-	 * Update a published norm.
-	 *
-	 * @param norm          to update.
-	 * @param updateHandler handler to manage the update result.
-	 */
-	void updatePublishedNorm(JsonObject norm, Handler<AsyncResult<Void>> updateHandler);
+  /**
+   * Update a published norm.
+   *
+   * @param norm          to update.
+   * @param updateHandler handler to manage the update result.
+   */
+  void updatePublishedNorm(JsonObject norm, Handler<AsyncResult<Void>> updateHandler);
 
-	/**
-	 * Delete a published norm.
-	 *
-	 * @param id            identifier of the norm to delete.
-	 * @param deleteHandler handler to manage the delete result.
-	 */
-	void deletePublishedNorm(String id, Handler<AsyncResult<Void>> deleteHandler);
+  /**
+   * Delete a published norm.
+   *
+   * @param id            identifier of the norm to delete.
+   * @param deleteHandler handler to manage the delete result.
+   */
+  void deletePublishedNorm(String id, Handler<AsyncResult<Void>> deleteHandler);
 
-	/**
-	 * Search for the published norms that satisfy the query.
-	 *
-	 * @param name          of the published norms to return or a Perl compatible
-	 *                      regular expressions (PCRE) that has to match the name of
-	 *                      the published norms to return.
-	 * @param description   of the published norms to return or a Perl compatible
-	 *                      regular expressions (PCRE) that has to match the
-	 *                      description of the published norms to return.
-	 * @param keywords      of the published norms to return or a Perl compatible
-	 *                      regular expressions (PCRE) that has to match the keyword
-	 *                      of the norms to return.
-	 * @param publisherId   of the published norms to return or a Perl compatible
-	 *                      regular expressions (PCRE) that has to match the
-	 *                      publisher identifier.
-	 * @param publishFrom   time stamp inclusive that mark the older limit in witch
-	 *                      the norm has been published. It is the difference,
-	 *                      measured in seconds, between the time when the norm was
-	 *                      published and midnight, January 1, 1970 UTC.
-	 * @param publishTo     time stamp inclusive that mark the newest limit in witch
-	 *                      the norm has been published. It is the difference,
-	 *                      measured in seconds, between the time when the norm was
-	 *                      published and midnight, January 1, 1970 UTC.
-	 * @param offset        index of the first norm to return.
-	 * @param limit         number maximum of norms to return.
-	 * @param searchHandler handler to manage the search.
-	 */
-	@GenIgnore
-	default void searchPublishedNormsPageObject(String name, String description, List<String> keywords,
-			String publisherId, Long publishFrom, Long publishTo, int offset, int limit,
-			Handler<AsyncResult<JsonObject>> searchHandler) {
+  /**
+   * Search for the published norms that satisfy the query.
+   *
+   * @param name          of the published norms to return or a Perl compatible
+   *                      regular expressions (PCRE) that has to match the name of
+   *                      the published norms to return.
+   * @param description   of the published norms to return or a Perl compatible
+   *                      regular expressions (PCRE) that has to match the
+   *                      description of the published norms to return.
+   * @param keywords      of the published norms to return or a Perl compatible
+   *                      regular expressions (PCRE) that has to match the keyword
+   *                      of the norms to return.
+   * @param publisherId   of the published norms to return or a Perl compatible
+   *                      regular expressions (PCRE) that has to match the
+   *                      publisher identifier.
+   * @param publishFrom   time stamp inclusive that mark the older limit in witch
+   *                      the norm has been published. It is the difference,
+   *                      measured in seconds, between the time when the norm was
+   *                      published and midnight, January 1, 1970 UTC.
+   * @param publishTo     time stamp inclusive that mark the newest limit in witch
+   *                      the norm has been published. It is the difference,
+   *                      measured in seconds, between the time when the norm was
+   *                      published and midnight, January 1, 1970 UTC.
+   * @param offset        index of the first norm to return.
+   * @param limit         number maximum of norms to return.
+   * @param searchHandler handler to manage the search.
+   */
+  @GenIgnore
+  default void searchPublishedNormsPageObject(final String name, final String description, final List<String> keywords,
+      final String publisherId, final Long publishFrom, final Long publishTo, final int offset, final int limit,
+      final Handler<AsyncResult<JsonObject>> searchHandler) {
 
-		final JsonObject query = new QueryBuilder().withRegex("name", name).withRegex("description", description)
-				.withRegex("keywords", keywords).withRegex("publisherId", publisherId)
-				.withRange("publishTime", publishFrom, publishTo).build();
-		this.searchPublishedNormsPageObject(query, offset, limit, searchHandler);
+    final JsonObject query = new QueryBuilder().withEqOrRegex("name", name).withEqOrRegex("description", description)
+        .withRegex("keywords", keywords).withRegex("publisherId", publisherId)
+        .withRange("publishTime", publishFrom, publishTo).build();
+    this.searchPublishedNormsPageObject(query, offset, limit, searchHandler);
 
-	}
+  }
 
-	/**
-	 * Search for the published norms that satisfy the query.
-	 *
-	 * @param query         that has to match the published norms to search.
-	 * @param offset        index of the first norm to return.
-	 * @param limit         number maximum of norms to return.
-	 * @param searchHandler handler to manage the search.
-	 */
-	void searchPublishedNormsPageObject(JsonObject query, int offset, int limit,
-			Handler<AsyncResult<JsonObject>> searchHandler);
+  /**
+   * Search for the published norms that satisfy the query.
+   *
+   * @param query         that has to match the published norms to search.
+   * @param offset        index of the first norm to return.
+   * @param limit         number maximum of norms to return.
+   * @param searchHandler handler to manage the search.
+   */
+  void searchPublishedNormsPageObject(JsonObject query, int offset, int limit,
+      Handler<AsyncResult<JsonObject>> searchHandler);
 
 }
