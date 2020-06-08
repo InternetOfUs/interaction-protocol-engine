@@ -342,7 +342,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    */
   private void handleVolunteerForTask(final String volunteerId, final EngineEnvironment env, final WebClient client) {
 
-    if (env.task.closeTs != null && env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
+    if (env.task.closeTs == null && env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
 
       final Task taskWhithNewVolunteer = new Task();
       taskWhithNewVolunteer.attributes = env.task.attributes;
@@ -443,7 +443,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    */
   private void handleRefuseTask(final String volunteerId, final EngineEnvironment env, final WebClient client) {
 
-    if (env.task.closeTs != null && env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
+    if (env.task.closeTs == null && env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
       final Task taskWhereDeclined = new Task();
       taskWhereDeclined.attributes = env.task.attributes;
       final JsonArray unanswered = env.task.attributes.getJsonArray("unanswered");
@@ -499,7 +499,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    */
   private void handleAcceptVolunteer(final String volunteerId, final EngineEnvironment env, final WebClient client) {
 
-    if (env.task.closeTs != null && env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
+    if (env.task.closeTs == null && env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
 
       final JsonArray volunteers = env.task.attributes.getJsonArray("volunteers");
       if (!volunteers.remove(volunteerId)) {
@@ -564,7 +564,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    */
   private void handleRefuseVolunteer(final String volunteerId, final EngineEnvironment env, final WebClient client) {
 
-    if (env.task.closeTs != null && env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
+    if (env.task.closeTs == null && env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
 
       final JsonArray volunteers = env.task.attributes.getJsonArray("volunteers");
       if (!volunteers.remove(volunteerId)) {
@@ -629,7 +629,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    */
   private void handleTaskCompleted(final String outcome, final EngineEnvironment env, final WebClient client) {
 
-    if (env.task.closeTs != null) {
+    if (env.task.closeTs == null) {
 
       final Task closedTask = new Task();
       closedTask.closeTs = TimeManager.now();
