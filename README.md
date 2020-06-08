@@ -196,6 +196,11 @@ This software is under the [MIT license](LICENSE)
  - Inform every time a new user accept to provide help. (POST {{social_context_builder_api}}/social/preferences/{{userId}}/{{taskId}})
 
 
+### Incentive server
+
+ - Inform every time a task transaction success and change the state. (POST {{incentive_server_api}}/Tasks/TaskStatus/})
+
+
 ## Contact
 
 ### Researcher

@@ -30,6 +30,8 @@ import org.tinylog.Logger;
 
 import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.incentive_server.TaskStatus;
+import eu.internetofus.common.components.incentive_server.WeNetIncentiveServer;
 import eu.internetofus.common.components.interaction_protocol_engine.InteractionProtocolMessage;
 import eu.internetofus.common.components.service.App;
 import eu.internetofus.common.components.service.TaskConcludedNotification;
@@ -296,25 +298,33 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
       } else {
 
-        final TaskProposalNotification notification = new TaskProposalNotification();
-        notification.taskId = env.task.id;
-        notification.title = "Can you help?";
-        notification.text = env.task.goal.name;
-        notification.title = "Can you help?";
-        this.sendTo(retrieve.result(), env.app, client, notification);
+        final JsonArray appUsers = retrieve.result();
+        final Task taskWithUnanswered = new Task();
+        taskWithUnanswered.attributes.put("unanswered", appUsers);
+        WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWithUnanswered, update -> {
 
-        // final JsonArray users = retrieve.result();
-        // for (int i = 0; i < users.size(); i++) {
-        //
-        // final String userId = users.getString(i);
-        // if (!senderId.equals(userId)) {
-        //
-        // notification.recipientId = userId;
-        // this.sendTo(app, client, notification);
-        // }
-        //
-        // }
+          if (update.failed()) {
 
+            Logger.trace(update.cause(), "Cannot update the task {} with the unanswered users", () -> env.task.id);
+
+          } else {
+
+            final TaskProposalNotification notification = new TaskProposalNotification();
+            notification.taskId = env.task.id;
+            notification.title = "Can you help?";
+            notification.text = env.task.goal.name;
+            notification.title = "Can you help?";
+            this.sendTo(appUsers, env.app, client, notification);
+
+            final TaskStatus status = new TaskStatus();
+            status.user_id = env.task.requesterId;
+            status.task_id = env.task.id;
+            status.Action = "taskCreated";
+            status.Message_content = "A task is created";
+            this.notifyIncentiveServerTaskStatusChanged(status);
+          }
+
+        });
       }
     });
 
@@ -375,6 +385,13 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
             });
 
+            final TaskStatus status = new TaskStatus();
+            status.user_id = volunteerId;
+            status.task_id = env.task.id;
+            status.Action = "volunteerForTask";
+            status.Message_content = "An user has offered to be a volunteer for a task.";
+            this.notifyIncentiveServerTaskStatusChanged(status);
+
           }
         });
 
@@ -389,6 +406,28 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       this.sendTo(env.app, client, msg);
 
     }
+
+  }
+
+  /**
+   * Called when want to notify to the incentive server that the task status has changed.
+   *
+   * @param status to notify to the incentive server.
+   */
+  private void notifyIncentiveServerTaskStatusChanged(final TaskStatus status) {
+
+    WeNetIncentiveServer.createProxy(this.vertx).updateTaskStatus(status, update -> {
+
+      if (update.failed()) {
+
+        Logger.trace(update.cause(), "Cannot notify incentive server about  {}.", status);
+
+      } else {
+
+        Logger.trace("Incentive server notified of {}", status);
+      }
+
+    });
 
   }
 
@@ -426,6 +465,13 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
           } else {
 
             Logger.trace("Added declined users {} into task {}", () -> volunteerId, () -> env.task.id);
+            final TaskStatus status = new TaskStatus();
+            status.user_id = volunteerId;
+            status.task_id = env.task.id;
+            status.Action = "refuseTask";
+            status.Message_content = "An user has declined to be a volunteer for a task.";
+            this.notifyIncentiveServerTaskStatusChanged(status);
+
           }
         });
       }
@@ -483,6 +529,13 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             notification.text = "You has been selected to provide help.";
             notification.outcome = TaskSelectionNotification.Outcome.accepted;
             this.sendTo(env.app, client, notification);
+
+            final TaskStatus status = new TaskStatus();
+            status.user_id = volunteerId;
+            status.task_id = env.task.id;
+            status.Action = "acceptVolunteer";
+            status.Message_content = "An user is selected to provide help.";
+            this.notifyIncentiveServerTaskStatusChanged(status);
 
           }
         });
@@ -542,6 +595,13 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             notification.outcome = TaskSelectionNotification.Outcome.refused;
             this.sendTo(env.app, client, notification);
 
+            final TaskStatus status = new TaskStatus();
+            status.user_id = volunteerId;
+            status.task_id = env.task.id;
+            status.Action = "refuseVolunteer";
+            status.Message_content = "An user is refused as volunteer.";
+            this.notifyIncentiveServerTaskStatusChanged(status);
+
           }
         });
 
@@ -596,6 +656,13 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
           notification.text = "Your help is not necessary because teh task is concluded.";
           final JsonArray accepted = env.task.attributes.getJsonArray("accepted");
           this.sendTo(accepted, env.app, client, notification);
+
+          final TaskStatus status = new TaskStatus();
+          status.user_id = env.task.requesterId;
+          status.task_id = env.task.id;
+          status.Action = "taskCompleted";
+          status.Message_content = "A task is completed with the outcome:" + outcome;
+          this.notifyIncentiveServerTaskStatusChanged(status);
 
         }
       });
