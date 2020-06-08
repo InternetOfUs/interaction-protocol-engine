@@ -299,6 +299,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       } else {
 
         final JsonArray appUsers = retrieve.result();
+        appUsers.remove(env.task.requesterId);
+        // TO DO RANKING users before ask them
         final Task taskWithUnanswered = new Task();
         taskWithUnanswered.attributes.put("unanswered", appUsers);
         WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWithUnanswered, update -> {
