@@ -32,12 +32,13 @@ import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.interaction_protocol_engine.InteractionProtocolMessage;
 import eu.internetofus.common.components.service.App;
-import eu.internetofus.common.components.service.MessageFromUserNotification;
 import eu.internetofus.common.components.service.TaskConcludedNotification;
 import eu.internetofus.common.components.service.TaskProposalNotification;
 import eu.internetofus.common.components.service.TaskSelectionNotification;
 import eu.internetofus.common.components.service.TaskVolunteerNotification;
+import eu.internetofus.common.components.service.TextualMessage;
 import eu.internetofus.common.components.service.WeNetService;
+import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilder;
 import eu.internetofus.common.components.task_manager.Task;
 import eu.internetofus.common.components.task_manager.WeNetTaskManager;
 import eu.internetofus.common.vertx.Worker;
@@ -52,8 +53,7 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 
 /**
- * The worker verticle that is used to process the messages for an interaction
- * protocol.
+ * The worker verticle that is used to process the messages for an interaction protocol.
  *
  * @author UDT-IA, IIIA-CSIC
  */
@@ -104,8 +104,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       final InteractionProtocolMessage message = Model.fromJsonObject(body, InteractionProtocolMessage.class);
       if (message == null) {
 
-        Logger.error("Can not process the event {}, because does not contains a valid InteractionProtocolMessage.",
-            event);
+        Logger.trace("Can not process the event {}, because does not contains a valid InteractionProtocolMessage.", event);
 
       } else {
 
@@ -114,7 +113,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
     } catch (final Throwable throwable) {
 
-      Logger.error(throwable, "Can not process the event {}", event);
+      Logger.trace(throwable, "Can not process the event {}", event);
     }
 
   }
@@ -126,6 +125,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    */
   protected void handle(final InteractionProtocolMessage message) {
 
+    Logger.trace("Received message to process {}", message);
     EngineEnvironment.create(this.vertx, message).onComplete(creation -> {
 
       try {
@@ -137,111 +137,49 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
           final String action = content.getString("action");
           final WebClientOptions options = new WebClientOptions();
           final WebClient client = WebClient.create(this.vertx, options);
+          this.fixTaskAttributes(env, message);
           if ("TaskCreation".equalsIgnoreCase(action)) {
 
-            final TaskProposalNotification notification = new TaskProposalNotification();
-            notification.taskId = env.task.id;
-            notification.title = "Can you help?";
-            notification.text = env.task.goal.name;
-            notification.title = "Can you help?";
-            this.sendToAllAppUsers(env.app, client, notification, env.task.requesterId);
-
-
+            this.handleTaskCreated(env, client);
 
           } else if ("volunteerForTask".equalsIgnoreCase(action)) {
 
-            final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId",
-                "0");
-            if (env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
-
-              final TaskVolunteerNotification notification = new TaskVolunteerNotification();
-              notification.recipientId = env.task.requesterId;
-              notification.taskId = env.task.id;
-              notification.title = "Found volunteer";
-              notification.text = "An user want to help you.";
-              notification.volunteerId = volunteerId;
-              this.sendTo(env.app, client, notification);
-
-            } else {
-              // too late
-              final MessageFromUserNotification notification = new MessageFromUserNotification();
-              notification.recipientId = volunteerId;
-              notification.taskId = env.task.id;
-              notification.title = "Deadline reached";
-              notification.text = "It's too late to volunteer.";
-              notification.senderId = env.task.requesterId;
-              this.sendTo(env.app, client, notification);
-
-            }
+            final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
+            this.handleVolunteerForTask(volunteerId, env, client);
 
           } else if ("refuseTask".equalsIgnoreCase(action)) {
             // nothing to do
-            Logger.debug("Ignored {}, because any action is necessary", message);
+            final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
+            this.handleRefuseTask(volunteerId, env, client);
 
           } else if ("acceptVolunteer".equalsIgnoreCase(action)) {
 
-            final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId",
-                "0");
-            final TaskSelectionNotification notification = new TaskSelectionNotification();
-            notification.recipientId = volunteerId;
-            notification.taskId = env.task.id;
-            notification.title = "Help not needed";
-            notification.text = "You has been selected to do r help is not necessary to do the task.";
-            notification.outcome = TaskSelectionNotification.Outcome.accepted;
-            this.sendTo(env.app, client, notification);
+            final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
+            this.handleAcceptVolunteer(volunteerId, env, client);
 
           } else if ("refuseVolunteer".equalsIgnoreCase(action)) {
 
-            final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId",
-                "0");
-            final TaskSelectionNotification notification = new TaskSelectionNotification();
-            notification.recipientId = volunteerId;
-            notification.taskId = env.task.id;
-            notification.title = "Help not needed";
-            notification.text = "Your help is not necessary to do the task.";
-            notification.outcome = TaskSelectionNotification.Outcome.refused;
-            this.sendTo(env.app, client, notification);
+            final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
+            this.handleRefuseVolunteer(volunteerId, env, client);
 
           } else if ("taskCompleted".equalsIgnoreCase(action)) {
 
-            final JsonObject attributes = content.getJsonObject("attributes", new JsonObject());
-            final String outcome = attributes.getString("outcome",
-                "cancelled");
-            final TaskConcludedNotification notification = new TaskConcludedNotification();
-            notification.taskId = env.task.id;
-            notification.title = "Help not needed";
-            notification.text = "Your help is not necessary to do the task.";
-            notification.outcome = TaskConcludedNotification.Outcome.valueOf(outcome);
-            this.sendToAllAppUsers(env.app, client, notification, env.task.requesterId);
-
-            final Task closedTask = new Task();
-            closedTask.closeTs = TimeManager.now();
-            closedTask.attributes = attributes;
-            WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, closedTask, update->{
-
-              if( update.failed() ) {
-
-                Logger.error("Can not mark the task {} as closed", ()->env.task.id);
-
-              }else {
-
-                Logger.error("Closed {} task", ()->env.task.id);
-              }
-            });
+            final String outcome = content.getJsonObject("attributes", new JsonObject()).getString("outcome", "cancelled");
+            this.handleTaskCompleted(outcome, env, client);
 
           } else {
 
-            Logger.error("Unexpected action {}", message);
+            Logger.trace("Unexpected action {}", message);
           }
 
         } else {
 
-          Logger.error("Unexpected {}", message);
+          Logger.trace("Unexpected {}", message);
         }
 
       } catch (final Throwable throwable) {
 
-        Logger.error(throwable, "Can not process {}", message);
+        Logger.trace(throwable, "Can not process {}", message);
       }
 
     });
@@ -249,43 +187,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
   }
 
   /**
-   * Called when want to notify all users about a notification.
-   *
-   * @param app          application to notify all the users.
-   * @param client       to use.
-   * @param notification to send to the users.
-   * @param senderId     identifier of the user that send the notification.
-   */
-  private void sendToAllAppUsers(final App app, final WebClient client,
-      final eu.internetofus.common.components.service.Message notification, final String senderId) {
-
-    WeNetService.createProxy(this.vertx).retrieveJsonArrayAppUserIds(app.appId, retrieve -> {
-
-      if (retrieve.failed()) {
-
-        Logger.debug("No found users from the APP to send {}", notification);
-
-      } else {
-
-        final JsonArray users = retrieve.result();
-        for (int i = 0; i < users.size(); i++) {
-
-          final String userId = users.getString(i);
-          if (!senderId.equals(userId)) {
-
-            notification.recipientId = userId;
-            this.sendTo(app, client, notification);
-          }
-
-        }
-
-      }
-    });
-
-  }
-
-  /**
-   * Called when want to send a notification to an application.
+   * Called when want to send some messages into an application.
    *
    * @param app          application to notify.
    * @param client       to use.
@@ -298,15 +200,415 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
       if (send.failed()) {
 
-        Logger.error(send.cause(), "Can not notify about  {} to {}.", body, app);
+        Logger.trace(send.cause(), "Can not notify about  {} to {}.", body, app);
 
       } else {
 
-        Logger.debug("Sent {}  to {}", body, app);
+        Logger.trace("Sent {}  to {}", body, app);
       }
 
     });
 
+  }
+
+  /**
+   * Called when want to send a notification to multiple users of an application.
+   *
+   * @param users        to send the message.
+   * @param app          application to notify.
+   * @param client       to use.
+   * @param notification to send to the application.
+   */
+  private void sendTo(final JsonArray users, final App app, final WebClient client, final eu.internetofus.common.components.service.Message notification) {
+
+    for (int i = 0; i < users.size(); i++) {
+
+      notification.recipientId = users.getString(i);
+      this.sendTo(app, client, notification);
+    }
+
+  }
+
+  /**
+   * Fix task attributes.
+   *
+   * @param env
+   *
+   * @param task    to fix the task attributes.
+   * @param message received about the task.
+   *
+   */
+  private void fixTaskAttributes(final EngineEnvironment env, final InteractionProtocolMessage message) {
+
+    if (env.task == null) {
+
+      env.task = new Task();
+      env.task.id = message.taskId;
+
+    }
+
+    if (env.task.attributes == null) {
+
+      env.task.attributes = new JsonObject();
+    }
+
+    final JsonArray unanswered = env.task.attributes.getJsonArray("unanswered", null);
+    if (unanswered == null) {
+
+      env.task.attributes.put("unanswered", new JsonArray());
+    }
+    final JsonArray volunteers = env.task.attributes.getJsonArray("volunteers", null);
+    if (volunteers == null) {
+
+      env.task.attributes.put("volunteers", new JsonArray());
+    }
+    final JsonArray declined = env.task.attributes.getJsonArray("declined", null);
+    if (declined == null) {
+
+      env.task.attributes.put("declined", new JsonArray());
+    }
+    final JsonArray accepted = env.task.attributes.getJsonArray("accepted", null);
+    if (accepted == null) {
+
+      env.task.attributes.put("accepted", new JsonArray());
+    }
+    final JsonArray refused = env.task.attributes.getJsonArray("refused", null);
+    if (refused == null) {
+
+      env.task.attributes.put("refused", new JsonArray());
+    }
+
+  }
+
+  /**
+   * Handle the message that inform that a task has been created.
+   *
+   * @param env    to get the data.
+   * @param client to use.
+   */
+  private void handleTaskCreated(final EngineEnvironment env, final WebClient client) {
+
+    WeNetService.createProxy(this.vertx).retrieveJsonArrayAppUserIds(env.app.appId, retrieve -> {
+
+      if (retrieve.failed()) {
+
+        Logger.trace(retrieve.cause(), "No found users from {} to inform of the created task {}", () -> env.app.appId, () -> env.task.id);
+
+      } else {
+
+        final TaskProposalNotification notification = new TaskProposalNotification();
+        notification.taskId = env.task.id;
+        notification.title = "Can you help?";
+        notification.text = env.task.goal.name;
+        notification.title = "Can you help?";
+        this.sendTo(retrieve.result(), env.app, client, notification);
+
+        // final JsonArray users = retrieve.result();
+        // for (int i = 0; i < users.size(); i++) {
+        //
+        // final String userId = users.getString(i);
+        // if (!senderId.equals(userId)) {
+        //
+        // notification.recipientId = userId;
+        // this.sendTo(app, client, notification);
+        // }
+        //
+        // }
+
+      }
+    });
+
+  }
+
+  /**
+   * Called when an user has offered as volunteer.
+   *
+   * @param volunteerId identifier of the user that has offer its help.
+   * @param env         to get the data.
+   * @param client      to use.
+   */
+  private void handleVolunteerForTask(final String volunteerId, final EngineEnvironment env, final WebClient client) {
+
+    if (env.task.closeTs != null && env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
+
+      final Task taskWhithNewVolunteer = new Task();
+      taskWhithNewVolunteer.attributes = env.task.attributes;
+      final JsonArray unanswered = env.task.attributes.getJsonArray("unanswered");
+      if (!unanswered.remove(volunteerId)) {
+
+        final TextualMessage msg = new TextualMessage();
+        msg.recipientId = volunteerId;
+        msg.title = "Accept not allowed";
+        msg.text = "You cannot be a volunteer, because you already are or you are not a person that can provide help.";
+        this.sendTo(env.app, client, msg);
+
+      } else {
+
+        final JsonArray volunteers = env.task.attributes.getJsonArray("volunteers");
+        volunteers.add(volunteerId);
+        WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWhithNewVolunteer, update -> {
+
+          if (update.failed()) {
+
+            Logger.trace(update.cause(), "Cannot update the task {} with the volunteer {}", () -> env.task.id, () -> volunteerId);
+
+          } else {
+
+            Logger.trace("Added volunteer {} into task {}", () -> volunteerId, () -> env.task.id);
+            final TaskVolunteerNotification notification = new TaskVolunteerNotification();
+            notification.recipientId = env.task.requesterId;
+            notification.taskId = env.task.id;
+            notification.title = "Found volunteer";
+            notification.text = "An user want to help you.";
+            notification.volunteerId = volunteerId;
+            this.sendTo(env.app, client, notification);
+            WeNetSocialContextBuilder.createProxy(this.vertx).updatePreferencesForUserOnTask(volunteerId, env.task.id, volunteers, updated -> {
+
+              if (updated.failed()) {
+
+                Logger.trace(updated.cause(), "Cannot update the preferences for user {} on task {}", () -> volunteerId, () -> env.task.id);
+
+              } else {
+
+                Logger.trace("Updated preferences for user {} on task {}", () -> volunteerId, () -> env.task.id);
+              }
+
+            });
+
+          }
+        });
+
+      }
+
+    } else {
+      // too late
+      final TextualMessage msg = new TextualMessage();
+      msg.recipientId = volunteerId;
+      msg.title = "Deadline reached";
+      msg.text = "It's too late to be a volunteer.";
+      this.sendTo(env.app, client, msg);
+
+    }
+
+  }
+
+  /**
+   * Called when an user refuse to help.
+   *
+   * @param volunteerId identifier of the volunteer to refuse to help.
+   * @param env         to get the data.
+   * @param client      to use.
+   */
+  private void handleRefuseTask(final String volunteerId, final EngineEnvironment env, final WebClient client) {
+
+    if (env.task.closeTs != null && env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
+      final Task taskWhereDeclined = new Task();
+      taskWhereDeclined.attributes = env.task.attributes;
+      final JsonArray unanswered = env.task.attributes.getJsonArray("unanswered");
+      if (!unanswered.remove(volunteerId)) {
+
+        final TextualMessage msg = new TextualMessage();
+        msg.recipientId = volunteerId;
+        msg.title = "Refuse not allowed";
+        msg.text = "You cannot refuse to be a volunteer, because you already refused or you are not a person that can provide help.";
+        this.sendTo(env.app, client, msg);
+
+      } else {
+
+        final JsonArray declined = env.task.attributes.getJsonArray("declined");
+        declined.add(volunteerId);
+        WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWhereDeclined, update -> {
+
+          if (update.failed()) {
+
+            Logger.trace(update.cause(), "Cannot update the task {} with the declined user {}", () -> env.task.id, () -> volunteerId);
+
+          } else {
+
+            Logger.trace("Added declined users {} into task {}", () -> volunteerId, () -> env.task.id);
+          }
+        });
+      }
+
+    } else {
+      // error used already refused
+      final TextualMessage msg = new TextualMessage();
+      msg.recipientId = volunteerId;
+      msg.title = "Deadline reached";
+      msg.text = "It's too late to refuse to be a volunteer.";
+      this.sendTo(env.app, client, msg);
+    }
+
+  }
+
+  /**
+   * Called when an user is accepted to provide help.
+   *
+   * @param volunteerId identifier of the volunteer that is accepted to provide help.
+   * @param env         to get the data.
+   * @param client      to use.
+   */
+  private void handleAcceptVolunteer(final String volunteerId, final EngineEnvironment env, final WebClient client) {
+
+    if (env.task.closeTs != null && env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
+
+      final JsonArray volunteers = env.task.attributes.getJsonArray("volunteers");
+      if (!volunteers.remove(volunteerId)) {
+
+        final TextualMessage msg = new TextualMessage();
+        msg.recipientId = env.task.requesterId;
+        msg.title = "Unexpected volunteer to accept";
+        msg.text = "The user '" + volunteerId + "' is not a volunteer of the task, so you can not accept it.";
+        this.sendTo(env.app, client, msg);
+
+      } else {
+
+        final JsonArray accepted = env.task.attributes.getJsonArray("accepted");
+        accepted.add(volunteerId);
+        final Task taskWhereAccepted = new Task();
+        taskWhereAccepted.attributes = env.task.attributes;
+        WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWhereAccepted, update -> {
+
+          if (update.failed()) {
+
+            Logger.trace(update.cause(), "Cannot update the task {} with the accepted user {}", () -> env.task.id, () -> volunteerId);
+
+          } else {
+
+            Logger.trace("Added accepted users {} into task {}", () -> volunteerId, () -> env.task.id);
+            final TaskSelectionNotification notification = new TaskSelectionNotification();
+            notification.recipientId = volunteerId;
+            notification.taskId = env.task.id;
+            notification.title = "Help accepted";
+            notification.text = "You has been selected to provide help.";
+            notification.outcome = TaskSelectionNotification.Outcome.accepted;
+            this.sendTo(env.app, client, notification);
+
+          }
+        });
+
+      }
+
+    } else {
+      // too late
+      final TextualMessage msg = new TextualMessage();
+      msg.recipientId = volunteerId;
+      msg.title = "Deadline reached";
+      msg.text = "It's too late to accept a volunteer.";
+      this.sendTo(env.app, client, msg);
+    }
+  }
+
+  /**
+   * Called when an user is refused to provide help.
+   *
+   * @param volunteerId identifier of the volunteer that is refused to provide help.
+   * @param env         to get the data.
+   * @param client      to use.
+   */
+  private void handleRefuseVolunteer(final String volunteerId, final EngineEnvironment env, final WebClient client) {
+
+    if (env.task.closeTs != null && env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
+
+      final JsonArray volunteers = env.task.attributes.getJsonArray("volunteers");
+      if (!volunteers.remove(volunteerId)) {
+
+        final TextualMessage msg = new TextualMessage();
+        msg.recipientId = env.task.requesterId;
+        msg.title = "Unexpected volunteer to refuse";
+        msg.text = "The user '" + volunteerId + "' is not a volunteer of the task, so you can not refuse it.";
+        this.sendTo(env.app, client, msg);
+
+      } else {
+
+        final JsonArray refused = env.task.attributes.getJsonArray("refused");
+        refused.add(volunteerId);
+        final Task taskWhereRefused = new Task();
+        taskWhereRefused.attributes = env.task.attributes;
+        WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWhereRefused, update -> {
+
+          if (update.failed()) {
+
+            Logger.trace(update.cause(), "Cannot update the task {} with the refused user {}", () -> env.task.id, () -> volunteerId);
+
+          } else {
+
+            Logger.trace("Added refused users {} into task {}", () -> volunteerId, () -> env.task.id);
+            final TaskSelectionNotification notification = new TaskSelectionNotification();
+            notification.recipientId = volunteerId;
+            notification.taskId = env.task.id;
+            notification.title = "Help not needed";
+            notification.text = "Your help is not necessary to do the task.";
+            notification.outcome = TaskSelectionNotification.Outcome.refused;
+            this.sendTo(env.app, client, notification);
+
+          }
+        });
+
+      }
+
+    } else {
+      // too late
+      final TextualMessage msg = new TextualMessage();
+      msg.recipientId = volunteerId;
+      msg.title = "Deadline reached";
+      msg.text = "It's too late to refuse a volunteer.";
+      this.sendTo(env.app, client, msg);
+    }
+  }
+
+  /**
+   * Called when an user mark a task as completed.
+   *
+   * @param outcome state of the completed task.
+   * @param env     to get the data.
+   * @param client  to use.
+   */
+  private void handleTaskCompleted(final String outcome, final EngineEnvironment env, final WebClient client) {
+
+    if (env.task.closeTs != null) {
+
+      final Task closedTask = new Task();
+      closedTask.closeTs = TimeManager.now();
+      closedTask.attributes = env.task.attributes;
+      closedTask.attributes.put("outcome", outcome);
+      WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, closedTask, update -> {
+
+        if (update.failed()) {
+
+          Logger.trace("Cannot mark the task {} as closed", () -> env.task.id);
+
+        } else {
+
+          Logger.trace("Closed {} task", () -> env.task.id);
+
+          final TaskConcludedNotification notification = new TaskConcludedNotification();
+          notification.taskId = env.task.id;
+          notification.title = "Help not needed";
+          notification.text = "Your help is not necessary to do the task.";
+          notification.outcome = TaskConcludedNotification.Outcome.valueOf(outcome);
+          final JsonArray unanswered = env.task.attributes.getJsonArray("unanswered");
+          this.sendTo(unanswered, env.app, client, notification);
+          final JsonArray volunteers = env.task.attributes.getJsonArray("volunteers");
+          this.sendTo(volunteers, env.app, client, notification);
+
+          notification.title = "Task concluded";
+          notification.text = "Your help is not necessary because teh task is concluded.";
+          final JsonArray accepted = env.task.attributes.getJsonArray("accepted");
+          this.sendTo(accepted, env.app, client, notification);
+
+        }
+      });
+
+    } else {
+      // too late
+      final TextualMessage msg = new TextualMessage();
+      msg.recipientId = env.task.requesterId;
+      msg.title = "Task already closed";
+      msg.text = "It's too late the task is already completed.";
+      this.sendTo(env.app, client, msg);
+
+    }
   }
 
 }

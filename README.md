@@ -171,6 +171,31 @@ The interaction protocol engine has the next available instances:
 This software is under the [MIT license](LICENSE)
 
 
+## Interaction with other WeNet components
+
+
+### Task manager
+
+ - Get task status associated to the message to process (GET {{task_manager_api}}/tasks/{{taskId}})
+ - Update the task every time a transaction message is process (PUT {{task_manager_api}}/tasks/{{taskId}})
+
+
+### Service
+
+ - Get all the users of an application to rank them and ask for help when a task is created (GET {{service_api}}/app/{{appId}}/users)
+ - Get application information associated to the message to process (GET {{service_api}}/app/{{appId}})
+
+
+### WeNet application
+
+ - Inform about the result of any task transaction message (POST {{messageCallbackUrl}}/)
+
+
+### Social context builder
+
+ - Inform every time a new user accept to provide help. (POST {{social_context_builder_api}}/social/preferences/{{userId}}/{{taskId}})
+
+
 ## Contact
 
 ### Researcher
