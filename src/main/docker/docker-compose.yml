@@ -21,7 +21,7 @@ services:
     environment:
       DB_HOST: wenet_interaction_protocol_engine_database
       WENET_PROFILE_MANAGER_API: ${WENET_PROFILE_MANAGER_API:-"https://wenet.u-hopper.com/prod/profile_manager"}
-      WENET_INTERACTION_PROTOCOL_ENGINE_API: ${WENET_INTERACTION_PROTOCOL_ENGINE_API:-"https://wenet.u-hopper.com/prod/interaction_protocol_engine"}
+      WENET_TASK_MANAGER_API: ${WENET_TASK_MANAGER_API:-"https://wenet.u-hopper.com/prod/task_manager"}
       WENET_SERVICE_API: ${WENET_SERVICE_API:-"https://wenet.u-hopper.com/prod/service"}
       WENET_INCENTIVE_SERVER_API: ${WENET_ICENTIVE_SERVER_API:-"https://wenet.u-hopper.com/prod/incentive_server"}
       WENET_SOCIAL_CONTEXT_BUILDER_API: ${WENET_SOCIAL_CONTEXT_BUILDER_API:-"https://wenet.u-hopper.com/prod/social_context_builder"}
