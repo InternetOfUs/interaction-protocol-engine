@@ -26,7 +26,8 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api;
 
-import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngineService;
+import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
+import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngineClient;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.vertx.AbstractAPIVerticle;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.Messages;
@@ -41,56 +42,53 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.serviceproxy.ServiceBinder;
 
 /**
- * The verticle that provide the manage the WeNet interaction protocol engine
- * API.
+ * The verticle that provide the manage the WeNet interaction protocol engine API.
  *
  * @author UDT-IA, IIIA-CSIC
  */
 public class APIVerticle extends AbstractAPIVerticle {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected String getOpenAPIResourcePath() {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected String getOpenAPIResourcePath() {
 
-		return "wenet-interaction_protocol_engine-openapi.yaml";
-	}
+    return "wenet-interaction_protocol_engine-openapi.yaml";
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void mountServiceInterfaces(OpenAPI3RouterFactory routerFactory) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void mountServiceInterfaces(final OpenAPI3RouterFactory routerFactory) {
 
-		routerFactory.mountServiceInterface(Versions.class, Versions.ADDRESS);
-		new ServiceBinder(this.vertx).setAddress(Versions.ADDRESS).register(Versions.class,
-				new VersionsResource(this.config()));
+    routerFactory.mountServiceInterface(Versions.class, Versions.ADDRESS);
+    new ServiceBinder(this.vertx).setAddress(Versions.ADDRESS).register(Versions.class, new VersionsResource(this.config()));
 
-		routerFactory.mountServiceInterface(Norms.class, Norms.ADDRESS);
-		new ServiceBinder(this.vertx).setAddress(Norms.ADDRESS).register(Norms.class, new NormsResource(this.vertx));
+    routerFactory.mountServiceInterface(Norms.class, Norms.ADDRESS);
+    new ServiceBinder(this.vertx).setAddress(Norms.ADDRESS).register(Norms.class, new NormsResource(this.vertx));
 
-		routerFactory.mountServiceInterface(Messages.class, Messages.ADDRESS);
-		new ServiceBinder(this.vertx).setAddress(Messages.ADDRESS).register(Messages.class,
-				new MessagesResource(this.vertx));
+    routerFactory.mountServiceInterface(Messages.class, Messages.ADDRESS);
+    new ServiceBinder(this.vertx).setAddress(Messages.ADDRESS).register(Messages.class, new MessagesResource(this.vertx));
 
-	}
+  }
 
-	/**
-	 * Register the services provided by the API.
-	 *
-	 * {@inheritDoc}
-	 *
-	 * @see WeNetProfileManager
-	 */
-	@Override
-	protected void startedServerAt(String host, int port) {
+  /**
+   * Register the services provided by the API.
+   *
+   * {@inheritDoc}
+   *
+   * @see WeNetProfileManager
+   */
+  @Override
+  protected void startedServerAt(final String host, final int port) {
 
-		final JsonObject conf = new JsonObject();
-		conf.put("interactionProtocolEngine", "http://" + host + ":" + port);
-		final WebClient client = WebClient.create(this.vertx);
-		WeNetInteractionProtocolEngineService.register(this.vertx, client, conf);
+    final JsonObject conf = new JsonObject();
+    conf.put(WeNetInteractionProtocolEngineClient.INTERACTION_PROTOCOL_ENGINE_CONF_KEY, "http://" + host + ":" + port);
+    final WebClient client = WebClient.create(this.vertx);
+    WeNetInteractionProtocolEngine.register(this.vertx, client, conf);
 
-	}
+  }
 
 }

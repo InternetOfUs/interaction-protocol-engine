@@ -323,7 +323,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             status.user_id = env.task.requesterId;
             status.task_id = env.task.id;
             status.Action = "taskCreated";
-            status.Message_content = "A task is created";
+            status.Message = "A task is created";
             this.notifyIncentiveServerTaskStatusChanged(status);
           }
 
@@ -392,7 +392,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             status.user_id = volunteerId;
             status.task_id = env.task.id;
             status.Action = "volunteerForTask";
-            status.Message_content = "An user has offered to be a volunteer for a task.";
+            status.Message = "An user has offered to be a volunteer for a task.";
             this.notifyIncentiveServerTaskStatusChanged(status);
 
           }
@@ -472,7 +472,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             status.user_id = volunteerId;
             status.task_id = env.task.id;
             status.Action = "refuseTask";
-            status.Message_content = "An user has declined to be a volunteer for a task.";
+            status.Message = "An user has declined to be a volunteer for a task.";
             this.notifyIncentiveServerTaskStatusChanged(status);
 
           }
@@ -537,7 +537,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             status.user_id = volunteerId;
             status.task_id = env.task.id;
             status.Action = "acceptVolunteer";
-            status.Message_content = "An user is selected to provide help.";
+            status.Message = "An user is selected to provide help.";
             this.notifyIncentiveServerTaskStatusChanged(status);
 
           }
@@ -602,7 +602,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             status.user_id = volunteerId;
             status.task_id = env.task.id;
             status.Action = "refuseVolunteer";
-            status.Message_content = "An user is refused as volunteer.";
+            status.Message = "An user is refused as volunteer.";
             this.notifyIncentiveServerTaskStatusChanged(status);
 
           }
@@ -664,7 +664,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
           status.user_id = env.task.requesterId;
           status.task_id = env.task.id;
           status.Action = "taskCompleted";
-          status.Message_content = "A task is completed with the outcome:" + outcome;
+          status.Message = "A task is completed with the outcome:" + outcome;
           this.notifyIncentiveServerTaskStatusChanged(status);
 
         }
