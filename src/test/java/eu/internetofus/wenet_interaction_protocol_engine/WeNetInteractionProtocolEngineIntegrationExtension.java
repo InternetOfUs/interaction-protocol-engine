@@ -87,7 +87,7 @@ public class WeNetInteractionProtocolEngineIntegrationExtension extends Abstract
     final GenericContainer<?> persistenceContainer = Containers.createMongoContainerFor(Containers.WENET_INTERACTION_PROTOCOL_ENGINE_DB_NAME, network);
     persistenceContainer.start();
 
-    return new String[] { "-papi.port=" + profileManagerApiPort, "-ppersistence.host=localhost", "-ppersistence.port=" + persistenceContainer.getMappedPort(Containers.EXPORT_MONGODB_PORT),
+    return new String[] { "-papi.port=" + interactionProtocolEngineApiPort, "-ppersistence.host=localhost", "-ppersistence.port=" + persistenceContainer.getMappedPort(Containers.EXPORT_MONGODB_PORT),
         "-pwenetComponents.profileManager=\"http://localhost:" + profileManagerApiPort + "\"", "-pwenetComponents.taskManager=\"http://localhost:" + taskManagerApiPort + "\"",
         "-pwenetComponents.service=\"http://localhost:" + serviceApiPort + "\"", "-pwenetComponents.socialContextBuilder=\"http://localhost:" + socialContextBuilderApiPort + "\"",
         "-pwenetComponents.incentiveServer=\"http://localhost:" + incentiveServerApiPort + "\"" };

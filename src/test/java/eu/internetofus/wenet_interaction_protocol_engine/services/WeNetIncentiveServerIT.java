@@ -26,43 +26,18 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.services;
 
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import eu.internetofus.common.components.incentive_server.WeNetIncentiveServer;
-import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
-import eu.internetofus.common.components.service.WeNetService;
-import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilder;
-import eu.internetofus.common.components.task_manager.WeNetTaskManager;
-import eu.internetofus.common.vertx.AbstractServicesVerticle;
-import io.vertx.core.json.JsonObject;
+import eu.internetofus.common.components.incentive_server.WeNetIncentiveServerTestCase;
+import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 
 /**
- * The verticle that provide the services to interact with the other WeNet
- * modules.
+ * Test the {@link WeNetIncentiveServer}.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class ServicesVerticle extends AbstractServicesVerticle {
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected void registerServices(final JsonObject serviceConf) throws Exception {
-
-    // register the service to interact with the profile manager
-    WeNetProfileManager.register(this.vertx, this.client, serviceConf);
-
-    // register the service to interact with the task manager
-    WeNetTaskManager.register(this.vertx, this.client, serviceConf);
-
-    // register the service to interact with the service API
-    WeNetService.register(this.vertx, this.client, serviceConf);
-
-    // register the service to interact with the incentive server
-    WeNetSocialContextBuilder.register(this.vertx, this.client, serviceConf);
-
-    // register the service to interact with the incentive server
-    WeNetIncentiveServer.register(this.vertx, this.client, serviceConf);
-
-  }
+@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
+public class WeNetIncentiveServerIT extends WeNetIncentiveServerTestCase {
 
 }
