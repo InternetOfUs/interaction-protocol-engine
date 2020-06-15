@@ -12,7 +12,7 @@ openAPI:
       description: The functionality provided allows to publish norms, and manage the user and community norms.
   info:
     # The verion of the API has to be synchonized with the 'api-version' property of the 'pom.xml'
-    version: '0.9.0'
+    version: '0.10.0'
     title: WeNet - Interaciton protocol engine API
     description:  >-
       The interaction protocol engine component is the one responsible for guaranteeing that interactions between WeNet users follow the norms.
@@ -61,5 +61,5 @@ openAPI:
       description: WeNet production server
     - url: https://wenet.u-hopper.com/dev/interaction_protocol_engine
       description: WeNet development server server
-    - url: http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.9.0/
+    - url: http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.10/
       description: IIIA development server
