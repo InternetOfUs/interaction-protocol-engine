@@ -103,7 +103,7 @@ You can modify use the next environment properties to modify some parameters of 
  - **DB_USER_PASSWORD** to define the mongo database user password. By default is **password**.
  - **WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **"https://wenet.u-hopper.com/prod/profile_manager**.
  - **WENET_SERVICE_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/service**.
- - **WENET_INCENTIVE_SERVER_API** to define the path to the incentive serverr component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
+ - **WENET_INCENTIVE_SERVER_API** to define the path to the incentive server component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
  - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the social context builder component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
 
 Also you can define your own configuration that modify this properties and mount to  **/usr/wenet/interaction-protocol-engine/etc**.
