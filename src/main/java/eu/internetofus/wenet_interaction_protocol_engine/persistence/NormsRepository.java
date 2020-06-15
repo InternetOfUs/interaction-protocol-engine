@@ -29,8 +29,11 @@ package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 import java.util.List;
 
 import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.vertx.QueryBuilder;
+import eu.internetofus.common.vertx.Repository;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNorm;
+import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNormsPage;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
@@ -62,8 +65,7 @@ public interface NormsRepository {
    */
   static void register(final Vertx vertx, final MongoClient pool) {
 
-    new ServiceBinder(vertx).setAddress(NormsRepository.ADDRESS).register(NormsRepository.class,
-        new NormsRepositoryImpl(pool));
+    new ServiceBinder(vertx).setAddress(NormsRepository.ADDRESS).register(NormsRepository.class, new NormsRepositoryImpl(pool));
 
   }
 
@@ -140,16 +142,14 @@ public interface NormsRepository {
   }
 
   /**
-   * Create a map to convert a {@link JsonObject} that responds an action to the
-   * respective norm.
+   * Create a map to convert a {@link JsonObject} that responds an action to the respective norm.
    *
    * @param handler that will receive the result of the action.
    *
    * @return the handler that convert the {@link JsonObject} result
    *
    */
-  private Handler<AsyncResult<JsonObject>> createHandlerMapJsonObjectToPublichedNorm(
-      final Handler<AsyncResult<PublishedNorm>> handler) {
+  private Handler<AsyncResult<JsonObject>> createHandlerMapJsonObjectToPublichedNorm(final Handler<AsyncResult<PublishedNorm>> handler) {
 
     return action -> {
 
@@ -223,51 +223,94 @@ public interface NormsRepository {
   /**
    * Search for the published norms that satisfy the query.
    *
-   * @param name          of the published norms to return or a Perl compatible
-   *                      regular expressions (PCRE) that has to match the name of
-   *                      the published norms to return.
-   * @param description   of the published norms to return or a Perl compatible
-   *                      regular expressions (PCRE) that has to match the
-   *                      description of the published norms to return.
-   * @param keywords      of the published norms to return or a Perl compatible
-   *                      regular expressions (PCRE) that has to match the keyword
-   *                      of the norms to return.
-   * @param publisherId   of the published norms to return or a Perl compatible
-   *                      regular expressions (PCRE) that has to match the
-   *                      publisher identifier.
-   * @param publishFrom   time stamp inclusive that mark the older limit in witch
-   *                      the norm has been published. It is the difference,
-   *                      measured in seconds, between the time when the norm was
-   *                      published and midnight, January 1, 1970 UTC.
-   * @param publishTo     time stamp inclusive that mark the newest limit in witch
-   *                      the norm has been published. It is the difference,
-   *                      measured in seconds, between the time when the norm was
-   *                      published and midnight, January 1, 1970 UTC.
+   * @param query         that has to match the published norms to search.
+   * @param sort          order to sort the norms.
    * @param offset        index of the first norm to return.
    * @param limit         number maximum of norms to return.
    * @param searchHandler handler to manage the search.
    */
-  @GenIgnore
-  default void searchPublishedNormsPageObject(final String name, final String description, final List<String> keywords,
-      final String publisherId, final Long publishFrom, final Long publishTo, final int offset, final int limit,
-      final Handler<AsyncResult<JsonObject>> searchHandler) {
+  void retrievePublishedNormsPageObject(JsonObject query, JsonObject sort, int offset, int limit, Handler<AsyncResult<JsonObject>> searchHandler);
 
-    final JsonObject query = new QueryBuilder().withEqOrRegex("name", name).withEqOrRegex("description", description)
-        .withRegex("keywords", keywords).withRegex("publisherId", publisherId)
-        .withRange("publishTime", publishFrom, publishTo).build();
-    this.searchPublishedNormsPageObject(query, offset, limit, searchHandler);
+  /**
+   * Create a query to obtain the norms that has the specified parameters.
+   *
+   * @param name        of the norms to return.
+   * @param description of the norms to return.
+   * @param keywords    of the norms to return.
+   * @param publisherId identifier of the user that has published the norm.
+   * @param publishFrom minimal deadline time stamp of the tasks to return.
+   * @param publishTo   maximal deadline time stamp of the tasks to return.
+   *
+   * @return the query that will return the required norms.
+   */
+  static JsonObject createPublishedNormsPageQuery(final String name, final String description, final List<String> keywords, final String publisherId, final Long publishFrom, final Long publishTo) {
 
+    return new QueryBuilder().withEqOrRegex("name", name).withEqOrRegex("description", description).withEqOrRegex("keywords", keywords).withEqOrRegex("publisherId", publisherId).withRange("_lastUpdateTs", publishFrom, publishTo).build();
   }
 
   /**
-   * Search for the published norms that satisfy the query.
+   * Create the components used to sort.
    *
-   * @param query         that has to match the published norms to search.
-   * @param offset        index of the first norm to return.
-   * @param limit         number maximum of norms to return.
+   * @param order to use.
+   *
+   * @return the component that has to be used to sort the norms.
+   *
+   * @throws ValidationErrorException if the sort parameter is not valid.
+   */
+  static JsonObject createPublishedNormsPageSort(final List<String> order) throws ValidationErrorException {
+
+    final JsonObject sort = Repository.queryParamToSort(order, "bad_order", (value) -> {
+
+      switch (value) {
+      case "name":
+      case "description":
+      case "keywords":
+      case "publisherId":
+        return value;
+      case "publish":
+      case "publishTime":
+      case "publishedTime":
+        return "_lastUpdateTs";
+      default:
+        return null;
+      }
+
+    });
+    return sort;
+  }
+
+  /**
+   * Obtain the tasks that satisfies a query.
+   *
+   * @param query         that define the tasks to add into the page.
+   * @param order         in witch has to return the tasks.
+   * @param offset        index of the first task to return.
+   * @param limit         number maximum of tasks to return.
    * @param searchHandler handler to manage the search.
    */
-  void searchPublishedNormsPageObject(JsonObject query, int offset, int limit,
-      Handler<AsyncResult<JsonObject>> searchHandler);
+  @GenIgnore
+  default void retrievePublishedNormsPage(final JsonObject query, final JsonObject order, final int offset, final int limit, final Handler<AsyncResult<PublishedNormsPage>> searchHandler) {
+
+    this.retrievePublishedNormsPageObject(query, order, offset, limit, search -> {
+
+      if (search.failed()) {
+
+        searchHandler.handle(Future.failedFuture(search.cause()));
+
+      } else {
+
+        final JsonObject value = search.result();
+        final PublishedNormsPage page = Model.fromJsonObject(value, PublishedNormsPage.class);
+        if (page == null) {
+
+          searchHandler.handle(Future.failedFuture("The stored published norms page is not valid."));
+
+        } else {
+
+          searchHandler.handle(Future.succeededFuture(page));
+        }
+      }
+    });
+  }
 
 }

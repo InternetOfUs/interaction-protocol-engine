@@ -33,9 +33,9 @@ import javax.ws.rs.core.Response.Status;
 import org.tinylog.Logger;
 
 import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.vertx.OperationReponseHandlers;
-import eu.internetofus.common.vertx.OperationRequests;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -51,239 +51,230 @@ import io.vertx.ext.web.api.OperationResponse;
  */
 public class NormsResource implements Norms {
 
-	/**
-	 * The event bus that is using.
-	 */
-	protected Vertx vertx;
+  /**
+   * The event bus that is using.
+   */
+  protected Vertx vertx;
 
-	/**
-	 * The repository to manage the norms.
-	 */
-	protected NormsRepository repository;
+  /**
+   * The repository to manage the norms.
+   */
+  protected NormsRepository repository;
 
-	/**
-	 * The manager to manage the users profile.
-	 */
-	protected WeNetProfileManager profileManager;
+  /**
+   * The manager to manage the users profile.
+   */
+  protected WeNetProfileManager profileManager;
 
-	/**
-	 * Create an empty resource. This is only used for unit tests.
-	 */
-	protected NormsResource() {
-
-	}
-
-	/**
-	 * Create a new instance to provide the services of the {@link Norms}.
-	 *
-	 * @param vertx where resource is defined.
-	 */
-	public NormsResource(Vertx vertx) {
+  /**
+   * Create an empty resource. This is only used for unit tests.
+   */
+  protected NormsResource() {
 
-		this.vertx = vertx;
-		this.repository = NormsRepository.createProxy(vertx);
-		this.profileManager = WeNetProfileManager.createProxy(vertx);
-	}
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void publishNorm(JsonObject body, OperationRequest context,
-			Handler<AsyncResult<OperationResponse>> resultHandler) {
+  /**
+   * Create a new instance to provide the services of the {@link Norms}.
+   *
+   * @param vertx where resource is defined.
+   */
+  public NormsResource(final Vertx vertx) {
 
-		final PublishedNorm publishedNorm = Model.fromJsonObject(body, PublishedNorm.class);
-		if (publishedNorm == null) {
+    this.vertx = vertx;
+    this.repository = NormsRepository.createProxy(vertx);
+    this.profileManager = WeNetProfileManager.createProxy(vertx);
+  }
 
-			Logger.debug("The {} is not a valid norm to publish.", body);
-			OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "bad_publishedNorm",
-					"The norm to publish is not not right.");
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void publishNorm(final JsonObject body, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-		} else {
+    final PublishedNorm publishedNorm = Model.fromJsonObject(body, PublishedNorm.class);
+    if (publishedNorm == null) {
 
-			publishedNorm.validate("bad_publishedNorm", this.vertx).onComplete(validation -> {
+      Logger.debug("The {} is not a valid norm to publish.", body);
+      OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "bad_publishedNorm", "The norm to publish is not not right.");
 
-				if (validation.failed()) {
+    } else {
 
-					final Throwable cause = validation.cause();
-					Logger.debug(cause, "The {} is not valid.", publishedNorm);
-					OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+      publishedNorm.validate("bad_publishedNorm", this.vertx).onComplete(validation -> {
 
-				} else {
+        if (validation.failed()) {
 
-					this.repository.storePublishedNorm(publishedNorm, stored -> {
-						if (stored.failed()) {
+          final Throwable cause = validation.cause();
+          Logger.debug(cause, "The {} is not valid.", publishedNorm);
+          OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
-							final Throwable cause = stored.cause();
-							Logger.debug(cause, "Cannot store  {}.", publishedNorm);
-							OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+        } else {
 
-						} else {
+          this.repository.storePublishedNorm(publishedNorm, stored -> {
+            if (stored.failed()) {
 
-							OperationReponseHandlers.responseOk(resultHandler, stored.result());
-						}
+              final Throwable cause = stored.cause();
+              Logger.debug(cause, "Cannot store  {}.", publishedNorm);
+              OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
-					});
-				}
+            } else {
 
-			});
-		}
+              OperationReponseHandlers.responseOk(resultHandler, stored.result());
+            }
 
-	}
+          });
+        }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void retrievePublishedNormsPage(OperationRequest context,
-			Handler<AsyncResult<OperationResponse>> resultHandler) {
+      });
+    }
 
-		final JsonObject params = OperationRequests.getQueryParamters(context);
-		final int offset = params.getInteger("offset", 0);
-		final int limit = params.getInteger("limit", 10);
-		final String name = params.getString("name", null);
-		final String description = params.getString("description", null);
-		final List<String> keywords = OperationRequests.toListString(params.getJsonArray("keyword", null));
-		final String publisherId = params.getString("publisherId", null);
-		final Long publishFrom = params.getLong("publishFrom", null);
-		final Long publishTo = params.getLong("publishTo", null);
+  }
 
-		this.repository.searchPublishedNormsPageObject(name, description, keywords, publisherId, publishFrom, publishTo,
-				offset, limit, search -> {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void retrievePublishedNormsPage(final String name, final String description, final List<String> keywords, final String publisherId, final Long publishFrom, final Long publishTo, final List<String> order, final int offset,
+      final int limit, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-					if (search.failed()) {
+    final JsonObject query = NormsRepository.createPublishedNormsPageQuery(name, description, keywords, publisherId, publishFrom, publishTo);
 
-						final Throwable cause = search.cause();
-						Logger.debug(cause, "Cannot found published norms.");
-						OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+    try {
 
-					} else {
+      final JsonObject sort = NormsRepository.createPublishedNormsPageSort(order);
+      this.repository.retrievePublishedNormsPageObject(query, sort, offset, limit, search -> {
 
-						final JsonObject page = search.result();
-						OperationReponseHandlers.responseOk(resultHandler, page);
-					}
-				});
-	}
+        if (search.failed()) {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void retrievePublishedNorm(String publishedNormId, OperationRequest context,
-			Handler<AsyncResult<OperationResponse>> resultHandler) {
+          final Throwable cause = search.cause();
+          Logger.debug(cause, "Cannot found published norms.");
+          OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
-		this.repository.searchPublishedNormObject(publishedNormId, search -> {
+        } else {
 
-			final JsonObject publishedNorm = search.result();
-			if (publishedNorm == null) {
+          final JsonObject page = search.result();
+          OperationReponseHandlers.responseOk(resultHandler, page);
+        }
+      });
 
-				Logger.debug(search.cause(), "Not found published norm for {}", publishedNormId);
-				OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND, "not_found_published_norm",
-						"Does not exist a published norm associated to '" + publishedNormId + "'.");
+    } catch (final ValidationErrorException error) {
 
-			} else {
+      Logger.debug(error, "GET /Norms with {} order by {}=> Retrieve error", query, order);
+      OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, error);
 
-				OperationReponseHandlers.responseOk(resultHandler, publishedNorm);
+    }
+  }
 
-			}
-		});
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void retrievePublishedNorm(final String publishedNormId, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-	}
+    this.repository.searchPublishedNormObject(publishedNormId, search -> {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void updatePublishedNorm(String publishedNormId, JsonObject body, OperationRequest context,
-			Handler<AsyncResult<OperationResponse>> resultHandler) {
+      final JsonObject publishedNorm = search.result();
+      if (publishedNorm == null) {
 
-		final PublishedNorm source = Model.fromJsonObject(body, PublishedNorm.class);
-		if (source == null) {
+        Logger.debug(search.cause(), "Not found published norm for {}", publishedNormId);
+        OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND, "not_found_published_norm", "Does not exist a published norm associated to '" + publishedNormId + "'.");
 
-			Logger.debug("The {} is not a valid published norm to update.", body);
-			OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST,
-					"bad_published_norm_to_update", "The published norm to update is not right.");
+      } else {
 
-		} else {
+        OperationReponseHandlers.responseOk(resultHandler, publishedNorm);
 
-			this.repository.searchPublishedNorm(publishedNormId, search -> {
+      }
+    });
 
-				final PublishedNorm target = search.result();
-				if (target == null) {
+  }
 
-					Logger.debug(search.cause(), "Not found published norm {} to update", publishedNormId);
-					OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND,
-							"not_found_published_norm_to_update",
-							"You can not update the published norm '" + publishedNormId + "', because it does not exist.");
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updatePublishedNorm(final String publishedNormId, final JsonObject body, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-				} else {
+    final PublishedNorm source = Model.fromJsonObject(body, PublishedNorm.class);
+    if (source == null) {
 
-					target.merge(source, "bad_publishedNorm", this.vertx).onComplete(merge -> {
+      Logger.debug("The {} is not a valid published norm to update.", body);
+      OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "bad_published_norm_to_update", "The published norm to update is not right.");
 
-						if (merge.failed()) {
+    } else {
 
-							final Throwable cause = merge.cause();
-							Logger.debug(cause, "Cannot update  {} with {}.", target, source);
-							OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+      this.repository.searchPublishedNorm(publishedNormId, search -> {
 
-						} else {
+        final PublishedNorm target = search.result();
+        if (target == null) {
 
-							final PublishedNorm merged = merge.result();
-							if (merged.equals(target)) {
+          Logger.debug(search.cause(), "Not found published norm {} to update", publishedNormId);
+          OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND, "not_found_published_norm_to_update", "You can not update the published norm '" + publishedNormId + "', because it does not exist.");
 
-								OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST,
-										"published_norm_to_update_equal_to_original", "You can not update the published norm '"
-												+ publishedNormId + "', because the new values is equals to the current one.");
+        } else {
 
-							} else {
+          target.merge(source, "bad_publishedNorm", this.vertx).onComplete(merge -> {
 
-								this.repository.updatePublishedNorm(merged, update -> {
+            if (merge.failed()) {
 
-									if (update.failed()) {
+              final Throwable cause = merge.cause();
+              Logger.debug(cause, "Cannot update  {} with {}.", target, source);
+              OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
-										final Throwable cause = update.cause();
-										Logger.debug(cause, "Cannot update  {}.", target);
-										OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+            } else {
 
-									} else {
+              final PublishedNorm merged = merge.result();
+              if (merged.equals(target)) {
 
-										OperationReponseHandlers.responseOk(resultHandler, merged);
+                OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "published_norm_to_update_equal_to_original",
+                    "You can not update the published norm '" + publishedNormId + "', because the new values is equals to the current one.");
 
-									}
+              } else {
 
-								});
-							}
-						}
-					});
+                this.repository.updatePublishedNorm(merged, update -> {
 
-				}
-			});
-		}
+                  if (update.failed()) {
 
-	}
+                    final Throwable cause = update.cause();
+                    Logger.debug(cause, "Cannot update  {}.", target);
+                    OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void deletePublishedNorm(String publishedNormId, OperationRequest context,
-			Handler<AsyncResult<OperationResponse>> resultHandler) {
+                  } else {
 
-		this.repository.deletePublishedNorm(publishedNormId, delete -> {
+                    OperationReponseHandlers.responseOk(resultHandler, merged);
 
-			if (delete.failed()) {
+                  }
 
-				final Throwable cause = delete.cause();
-				Logger.debug(cause, "Cannot delete the published norm  {}.", publishedNormId);
-				OperationReponseHandlers.responseFailedWith(resultHandler, Status.NOT_FOUND, cause);
+                });
+              }
+            }
+          });
 
-			} else {
+        }
+      });
+    }
 
-				OperationReponseHandlers.responseOk(resultHandler);
-			}
+  }
 
-		});
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void deletePublishedNorm(final String publishedNormId, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-	}
+    this.repository.deletePublishedNorm(publishedNormId, delete -> {
+
+      if (delete.failed()) {
+
+        final Throwable cause = delete.cause();
+        Logger.debug(cause, "Cannot delete the published norm  {}.", publishedNormId);
+        OperationReponseHandlers.responseFailedWith(resultHandler, Status.NOT_FOUND, cause);
+
+      } else {
+
+        OperationReponseHandlers.responseOk(resultHandler);
+      }
+
+    });
+
+  }
 
 }

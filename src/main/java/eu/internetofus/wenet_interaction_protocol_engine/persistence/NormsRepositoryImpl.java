@@ -41,96 +41,95 @@ import io.vertx.ext.mongo.MongoClient;
  */
 public class NormsRepositoryImpl extends Repository implements NormsRepository {
 
-	/**
-	 * The name of the collection that contains the published norms.
-	 */
-	public static final String PUBLISHED_NORMS_COLLECTION = "publishedNorms";
+  /**
+   * The name of the collection that contains the published norms.
+   */
+  public static final String PUBLISHED_NORMS_COLLECTION = "publishedNorms";
 
-	/**
-	 * Create a new service.
-	 *
-	 * @param pool to create the connections.
-	 */
-	public NormsRepositoryImpl(MongoClient pool) {
+  /**
+   * Create a new service.
+   *
+   * @param pool to create the connections.
+   */
+  public NormsRepositoryImpl(final MongoClient pool) {
 
-		super(pool);
+    super(pool);
 
-	}
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void searchPublishedNormObject(String id, Handler<AsyncResult<JsonObject>> searchHandler) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void searchPublishedNormObject(final String id, final Handler<AsyncResult<JsonObject>> searchHandler) {
 
-		final JsonObject query = new JsonObject().put("_id", id);
-		this.findOneDocument(PUBLISHED_NORMS_COLLECTION, query, null, found -> {
-			final String _id = (String) found.remove("_id");
-			return found.put("id", _id);
-		}, searchHandler);
+    final JsonObject query = new JsonObject().put("_id", id);
+    this.findOneDocument(PUBLISHED_NORMS_COLLECTION, query, null, found -> {
+      final String _id = (String) found.remove("_id");
+      return found.put("id", _id);
+    }, searchHandler);
 
-	}
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void storePublishedNorm(JsonObject norm, Handler<AsyncResult<JsonObject>> storeHandler) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void storePublishedNorm(final JsonObject norm, final Handler<AsyncResult<JsonObject>> storeHandler) {
 
-		final String id = (String) norm.remove("id");
-		if (id != null) {
+    final String id = (String) norm.remove("id");
+    if (id != null) {
 
-			norm.put("_id", id);
-		}
-		final long now = TimeManager.now();
-		norm.put("_creationTs", now);
-		norm.put("_lastUpdateTs", now);
-		this.storeOneDocument(PUBLISHED_NORMS_COLLECTION, norm, stored -> {
+      norm.put("_id", id);
+    }
+    final long now = TimeManager.now();
+    norm.put("_creationTs", now);
+    norm.put("_lastUpdateTs", now);
+    this.storeOneDocument(PUBLISHED_NORMS_COLLECTION, norm, stored -> {
 
-			final String _id = (String) stored.remove("_id");
-			return stored.put("id", _id);
+      final String _id = (String) stored.remove("_id");
+      return stored.put("id", _id);
 
-		}, storeHandler);
-	}
+    }, storeHandler);
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void updatePublishedNorm(JsonObject norm, Handler<AsyncResult<Void>> updateHandler) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updatePublishedNorm(final JsonObject norm, final Handler<AsyncResult<Void>> updateHandler) {
 
-		final Object id = norm.remove("id");
-		norm.remove("_creationTs");
-		final JsonObject query = new JsonObject().put("_id", id);
-		final long now = TimeManager.now();
-		norm.put("_lastUpdateTs", now);
-		this.updateOneDocument(PUBLISHED_NORMS_COLLECTION, query, norm, updateHandler);
-	}
+    final Object id = norm.remove("id");
+    norm.remove("_creationTs");
+    final JsonObject query = new JsonObject().put("_id", id);
+    final long now = TimeManager.now();
+    norm.put("_lastUpdateTs", now);
+    this.updateOneDocument(PUBLISHED_NORMS_COLLECTION, query, norm, updateHandler);
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void deletePublishedNorm(String id, Handler<AsyncResult<Void>> deleteHandler) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void deletePublishedNorm(final String id, final Handler<AsyncResult<Void>> deleteHandler) {
 
-		final JsonObject query = new JsonObject().put("_id", id);
-		this.deleteOneDocument(PUBLISHED_NORMS_COLLECTION, query, deleteHandler);
+    final JsonObject query = new JsonObject().put("_id", id);
+    this.deleteOneDocument(PUBLISHED_NORMS_COLLECTION, query, deleteHandler);
 
-	}
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void searchPublishedNormsPageObject(JsonObject query, int offset, int limit,
-			Handler<AsyncResult<JsonObject>> searchHandler) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void retrievePublishedNormsPageObject(final JsonObject query, final JsonObject sort, final int offset, final int limit, final Handler<AsyncResult<JsonObject>> searchHandler) {
 
-		final FindOptions options = new FindOptions();
-		options.setSkip(offset);
-		options.setLimit(limit);
+    final FindOptions options = new FindOptions();
+    options.setSort(sort);
+    options.setSkip(offset);
+    options.setLimit(limit);
+    this.searchPageObject(PUBLISHED_NORMS_COLLECTION, query, options, "norms", norm -> norm.put("id", norm.remove("_id")), searchHandler);
 
-		this.searchPageObject(PUBLISHED_NORMS_COLLECTION, query, options, "norms", null, searchHandler);
-
-	}
+  }
 
 }
