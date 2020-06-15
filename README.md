@@ -194,6 +194,7 @@ This software is under the [MIT license](LICENSE)
 ### Social context builder
 
  - Inform every time a new user accept to provide help. (POST {{social_context_builder_api}}/social/preferences/{{userId}}/{{taskId}})
+ - When an user offer as volunteer add to the text of the notification the explanation why the user is selected. (GET {{social_context_builder_api}}/social/explanations/{{userID}}/{{taskID}})
 
 
 ### Incentive server

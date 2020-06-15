@@ -40,6 +40,7 @@ import eu.internetofus.common.components.service.TaskSelectionNotification;
 import eu.internetofus.common.components.service.TaskVolunteerNotification;
 import eu.internetofus.common.components.service.TextualMessage;
 import eu.internetofus.common.components.service.WeNetService;
+import eu.internetofus.common.components.social_context_builder.SocialExplanation;
 import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilder;
 import eu.internetofus.common.components.task_manager.Task;
 import eu.internetofus.common.components.task_manager.WeNetTaskManager;
@@ -368,14 +369,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
           } else {
 
             Logger.trace("Added volunteer {} into task {}", () -> volunteerId, () -> env.task.id);
-            final TaskVolunteerNotification notification = new TaskVolunteerNotification();
-            notification.recipientId = env.task.requesterId;
-            notification.taskId = env.task.id;
-            notification.title = "Found volunteer";
-            notification.text = "An user want to help you.";
-            notification.volunteerId = volunteerId;
-            this.sendTo(env.app, client, notification);
-            WeNetSocialContextBuilder.createProxy(this.vertx).updatePreferencesForUserOnTask(volunteerId, env.task.id, volunteers, updated -> {
+            final WeNetSocialContextBuilder socialContextBuilder = WeNetSocialContextBuilder.createProxy(this.vertx);
+            socialContextBuilder.updatePreferencesForUserOnTask(volunteerId, env.task.id, volunteers, updated -> {
 
               if (updated.failed()) {
 
@@ -388,12 +383,39 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
             });
 
-            final TaskStatus status = new TaskStatus();
-            status.user_id = volunteerId;
-            status.task_id = env.task.id;
-            status.Action = "volunteerForTask";
-            status.Message = "An user has offered to be a volunteer for a task.";
-            this.notifyIncentiveServerTaskStatusChanged(status);
+            socialContextBuilder.retrieveSocialExplanation(volunteerId, env.task.id, retrieve -> {
+
+              final TaskVolunteerNotification notification = new TaskVolunteerNotification();
+              notification.recipientId = env.task.requesterId;
+              notification.taskId = env.task.id;
+              notification.title = "Found volunteer";
+              notification.text = "An user want to help you.";
+              notification.volunteerId = volunteerId;
+
+              if (retrieve.failed()) {
+
+                Logger.trace(retrieve.cause(), "Cannot obtain the social explanation for user {} on task {}", () -> volunteerId, () -> env.task.id);
+
+              } else {
+
+                final SocialExplanation explanation = retrieve.result();
+                Logger.trace("Obtain the explanation {} for user {} on task {}", () -> explanation, () -> volunteerId, () -> env.task.id);
+                if (explanation != null && explanation.description != null && explanation.description.length() > 0) {
+
+                  notification.text = explanation.description;
+
+                }
+              }
+
+              this.sendTo(env.app, client, notification);
+              final TaskStatus status = new TaskStatus();
+              status.user_id = volunteerId;
+              status.task_id = env.task.id;
+              status.Action = "volunteerForTask";
+              status.Message = "An user has offered to be a volunteer for a task.";
+              this.notifyIncentiveServerTaskStatusChanged(status);
+
+            });
 
           }
         });
