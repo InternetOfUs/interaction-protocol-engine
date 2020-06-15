@@ -3,9 +3,11 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
-## Version 0.9.0 (2020-02-21)
+## Version 0.9.0 (2020-06-15)
 
  * Migrate to use Vert.x
+ * Add hardcoded basic protocol
+ * Integrate with social context buider and incentive server.
 
 
 ## Version 0.8.0 (2019-10-30)
