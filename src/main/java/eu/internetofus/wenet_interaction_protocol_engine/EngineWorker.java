@@ -441,7 +441,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    */
   private void notifyIncentiveServerTaskStatusChanged(final TaskStatus status) {
 
-    WeNetIncentiveServer.createProxy(this.vertx).updateTaskStatus(status, update -> {
+    WeNetIncentiveServer.createProxy(this.vertx).updateJsonTaskStatus(status.toJsonObject(), update -> {
 
       if (update.failed()) {
 
@@ -449,7 +449,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
       } else {
 
-        Logger.trace("Incentive server notified of {}", status);
+        Logger.trace("Incentive server notified of {} returnning", () -> status, () -> update.result());
       }
 
     });
