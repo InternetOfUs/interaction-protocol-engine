@@ -30,9 +30,10 @@ import org.tinylog.Logger;
 
 import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.incentive_server.Incentive;
 import eu.internetofus.common.components.incentive_server.TaskStatus;
 import eu.internetofus.common.components.incentive_server.WeNetIncentiveServer;
-import eu.internetofus.common.components.interaction_protocol_engine.InteractionProtocolMessage;
+import eu.internetofus.common.components.interaction_protocol_engine.Message;
 import eu.internetofus.common.components.service.App;
 import eu.internetofus.common.components.service.TaskConcludedNotification;
 import eu.internetofus.common.components.service.TaskProposalNotification;
@@ -43,12 +44,12 @@ import eu.internetofus.common.components.service.WeNetService;
 import eu.internetofus.common.components.social_context_builder.SocialExplanation;
 import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilder;
 import eu.internetofus.common.components.task_manager.Task;
+import eu.internetofus.common.components.task_manager.TaskTransaction;
 import eu.internetofus.common.components.task_manager.WeNetTaskManager;
 import eu.internetofus.common.vertx.Worker;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -61,7 +62,7 @@ import io.vertx.ext.web.client.WebClientOptions;
  * @author UDT-IA, IIIA-CSIC
  */
 @Worker
-public class EngineWorker extends AbstractVerticle implements Handler<Message<JsonObject>> {
+public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.core.eventbus.Message<JsonObject>> {
 
   /**
    * The address used to send messages to the worker.
@@ -99,15 +100,15 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    * {@inheritDoc}
    */
   @Override
-  public void handle(final Message<JsonObject> event) {
+  public void handle(final io.vertx.core.eventbus.Message<JsonObject> event) {
 
     try {
 
       final JsonObject body = event.body();
-      final InteractionProtocolMessage message = Model.fromJsonObject(body, InteractionProtocolMessage.class);
+      final Message message = Model.fromJsonObject(body, Message.class);
       if (message == null) {
 
-        Logger.trace("Can not process the event {}, because does not contains a valid InteractionProtocolMessage.", event);
+        Logger.trace("Can not process the event {}, because does not contains a valid Message.", event);
 
       } else {
 
@@ -126,7 +127,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    *
    * @param message to process.
    */
-  protected void handle(final InteractionProtocolMessage message) {
+  protected void handle(final Message message) {
 
     Logger.trace("Received message to process {}", message);
     EngineEnvironment.create(this.vertx, message).onComplete(creation -> {
@@ -134,48 +135,17 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       try {
 
         final EngineEnvironment env = creation.result();
-        if (message.content instanceof JsonObject) {
+        switch (message.type) {
+        case TASK_TRANSACTION:
 
-          final JsonObject content = (JsonObject) message.content;
-          final String action = content.getString("action");
-          final WebClientOptions options = new WebClientOptions();
-          final WebClient client = WebClient.create(this.vertx, options);
-          this.fixTaskAttributes(env, message);
-          if ("TaskCreation".equalsIgnoreCase(action)) {
+          this.handleTaskTransaction(env, message);
+          break;
+        case INCENTIVE:
 
-            this.handleTaskCreated(env, client);
+          this.handleIncentive(env, message);
+          break;
 
-          } else if ("volunteerForTask".equalsIgnoreCase(action)) {
-
-            final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
-            this.handleVolunteerForTask(volunteerId, env, client);
-
-          } else if ("refuseTask".equalsIgnoreCase(action)) {
-            // nothing to do
-            final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
-            this.handleRefuseTask(volunteerId, env, client);
-
-          } else if ("acceptVolunteer".equalsIgnoreCase(action)) {
-
-            final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
-            this.handleAcceptVolunteer(volunteerId, env, client);
-
-          } else if ("refuseVolunteer".equalsIgnoreCase(action)) {
-
-            final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
-            this.handleRefuseVolunteer(volunteerId, env, client);
-
-          } else if ("taskCompleted".equalsIgnoreCase(action)) {
-
-            final String outcome = content.getJsonObject("attributes", new JsonObject()).getString("outcome", "cancelled");
-            this.handleTaskCompleted(outcome, env, client);
-
-          } else {
-
-            Logger.trace("Unexpected action {}", message);
-          }
-
-        } else {
+        default:
 
           Logger.trace("Unexpected {}", message);
         }
@@ -190,13 +160,62 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
   }
 
   /**
+   * Handle a task transaction.
+   *
+   * @param env     environment to use for the message.
+   * @param message that contains the task transaction.
+   */
+  protected void handleTaskTransaction(final EngineEnvironment env, final Message message) {
+
+    final JsonObject content = (JsonObject) message.content;
+    final TaskTransaction transaction = Model.fromJsonObject(content, TaskTransaction.class);
+    final WebClientOptions options = new WebClientOptions();
+    final WebClient client = WebClient.create(this.vertx, options);
+    this.fixTaskAttributes(env, message);
+    if ("TaskCreation".equalsIgnoreCase(transaction.label)) {
+
+      this.handleTaskCreated(env, client);
+
+    } else if ("volunteerForTask".equalsIgnoreCase(transaction.label)) {
+
+      final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
+      this.handleVolunteerForTask(volunteerId, env, client);
+
+    } else if ("refuseTask".equalsIgnoreCase(transaction.label)) {
+      // nothing to do
+      final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
+      this.handleRefuseTask(volunteerId, env, client);
+
+    } else if ("acceptVolunteer".equalsIgnoreCase(transaction.label)) {
+
+      final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
+      this.handleAcceptVolunteer(volunteerId, env, client);
+
+    } else if ("refuseVolunteer".equalsIgnoreCase(transaction.label)) {
+
+      final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
+      this.handleRefuseVolunteer(volunteerId, env, client);
+
+    } else if ("taskCompleted".equalsIgnoreCase(transaction.label)) {
+
+      final String outcome = content.getJsonObject("attributes", new JsonObject()).getString("outcome", "cancelled");
+      this.handleTaskCompleted(outcome, env, client);
+
+    } else {
+
+      Logger.trace("Unexpected action {}", message);
+    }
+
+  }
+
+  /**
    * Called when want to send some messages into an application.
    *
    * @param app          application to notify.
    * @param client       to use.
    * @param notification to send to the application.
    */
-  private void sendTo(final App app, final WebClient client, final eu.internetofus.common.components.service.Message notification) {
+  protected void sendTo(final App app, final WebClient client, final eu.internetofus.common.components.service.Message notification) {
 
     final JsonObject body = notification.toJsonObject();
     client.postAbs(app.messageCallbackUrl).sendJsonObject(body, send -> {
@@ -222,7 +241,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    * @param client       to use.
    * @param notification to send to the application.
    */
-  private void sendTo(final JsonArray users, final App app, final WebClient client, final eu.internetofus.common.components.service.Message notification) {
+  protected void sendTo(final JsonArray users, final App app, final WebClient client, final eu.internetofus.common.components.service.Message notification) {
 
     for (int i = 0; i < users.size(); i++) {
 
@@ -241,7 +260,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    * @param message received about the task.
    *
    */
-  private void fixTaskAttributes(final EngineEnvironment env, final InteractionProtocolMessage message) {
+  private void fixTaskAttributes(final EngineEnvironment env, final Message message) {
 
     if (env.task == null) {
 
@@ -703,4 +722,31 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     }
   }
 
+  /**
+   * Handle an incentive.
+   *
+   * @param env     environment to use for the message.
+   * @param message that contains the task transaction.
+   */
+  protected void handleIncentive(final EngineEnvironment env, final Message message) {
+
+    final JsonObject content = (JsonObject) message.content;
+    final Incentive incentive = Model.fromJsonObject(content, Incentive.class);
+    final WebClientOptions options = new WebClientOptions();
+    final WebClient client = WebClient.create(this.vertx, options);
+
+    final TextualMessage notification = new TextualMessage();
+    notification.recipientId = incentive.UserId;
+    if (incentive.Message != null) {
+
+      notification.text = incentive.Message.content;
+
+    } else {
+
+      notification.text = incentive.Badge.Message;
+
+    }
+    this.sendTo(env.app, client, notification);
+
+  }
 }

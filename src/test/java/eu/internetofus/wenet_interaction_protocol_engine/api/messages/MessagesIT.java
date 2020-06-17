@@ -35,7 +35,7 @@ import javax.ws.rs.core.Response.Status;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.common.components.interaction_protocol_engine.InteractionProtocolMessage;
+import eu.internetofus.common.components.interaction_protocol_engine.Message;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -64,12 +64,12 @@ public class MessagesIT {
 	@Test
 	public void shouldSendMessage(WebClient client, VertxTestContext testContext) {
 
-		final InteractionProtocolMessage message = new InteractionProtocolMessage();
+		final Message message = new Message();
 		message.content = new JsonObject().put("message", "value");
 		testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {
 
 			assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-			final InteractionProtocolMessage sent = assertThatBodyIs(InteractionProtocolMessage.class, res);
+			final Message sent = assertThatBodyIs(Message.class, res);
 			assertThat(sent).isEqualTo(message);
 			testContext.completeNow();
 

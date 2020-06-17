@@ -33,7 +33,7 @@ import java.util.function.Function;
 import org.tinylog.Logger;
 
 import eu.internetofus.common.components.Model;
-import eu.internetofus.common.components.interaction_protocol_engine.InteractionProtocolMessage;
+import eu.internetofus.common.components.interaction_protocol_engine.Message;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.components.service.App;
@@ -109,7 +109,7 @@ public class EngineEnvironment {
    *
    * @return the loaded environment.
    */
-  public static Future<EngineEnvironment> create(final Vertx vertx, final InteractionProtocolMessage message) {
+  public static Future<EngineEnvironment> create(final Vertx vertx, final Message message) {
 
     final Promise<EngineEnvironment> promise = Promise.promise();
     Future<EngineEnvironment> future = promise.future();

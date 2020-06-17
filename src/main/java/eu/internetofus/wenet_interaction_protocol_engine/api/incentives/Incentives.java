@@ -24,7 +24,7 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.messages;
+package eu.internetofus.wenet_interaction_protocol_engine.api.incentives;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -33,7 +33,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import eu.internetofus.common.components.ErrorMessage;
-import eu.internetofus.common.components.interaction_protocol_engine.Message;
+import eu.internetofus.common.components.incentive_server.Incentive;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -49,40 +49,40 @@ import io.vertx.ext.web.api.OperationResponse;
 import io.vertx.ext.web.api.generator.WebApiServiceGen;
 
 /**
- * The definition of the web services for manage the messages.
+ * The definition of the web services for manage the incentives.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@Path(Messages.PATH)
-@Tag(name = "Messages")
+@Path(Incentives.PATH)
+@Tag(name = "Incentives")
 @WebApiServiceGen
-public interface Messages {
+public interface Incentives {
 
   /**
    * The path to the service.
    */
-  String PATH = "/messages";
+  String PATH = "/incentives";
 
   /**
    * The address of this service.
    */
-  String ADDRESS = "wenet_interaction_protocol_engine.api.messages";
+  String ADDRESS = "wenet_interaction_protocol_engine.api.incentives";
 
   /**
-   * Called when want to send a message in an interaction protocol.
+   * Called when want to send a incentive to an user that participate on an interaction protocol.
    *
-   * @param body          the message to publish on the protocol.
+   * @param body          the incentive to send to the user that plays on the protocol.
    * @param context       of the request.
    * @param resultHandler to inform of the response.
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(summary = "Send a message in an interaction protocol", description = "Publish a message in an interaction protocol that has to be validated by this engine.")
-  @RequestBody(description = "The message to publish", required = true, content = @Content(schema = @Schema(implementation = Message.class)))
-  @ApiResponse(responseCode = "202", description = "If the message is accepted to be processed", content = @Content(schema = @Schema(implementation = Message.class)))
-  @ApiResponse(responseCode = "400", description = "Bad message", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-  void sendMessage(@Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) OperationRequest context,
+  @Operation(summary = "Send a incentive to an user that is involved in a protocol.", description = "Publish a incentive to encourage an user to participate on a protocol.")
+  @RequestBody(description = "The incentive to send to the user", required = true, content = @Content(schema = @Schema(implementation = Incentive.class)))
+  @ApiResponse(responseCode = "202", description = "If the accepted to be processed")
+  @ApiResponse(responseCode = "400", description = "Bad incentive", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+  void sendIncentive(@Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) OperationRequest context,
       @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
 
 }

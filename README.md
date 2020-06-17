@@ -189,6 +189,7 @@ This software is under the [MIT license](LICENSE)
 ### WeNet application
 
  - Inform about the result of any task transaction message (POST {{messageCallbackUrl}}/)
+ - Inform about an incentive (POST {{messageCallbackUrl}}/)
 
 
 ### Social context builder

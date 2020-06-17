@@ -24,51 +24,9 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.components.service;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
-import org.junit.jupiter.api.Test;
-
 /**
- * Test the {@link TaskSelectionNotification}
- *
- * @see TaskSelectionNotification
+ * The web services used to manage the incentives to send to the user.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class TaskSelectionNotificationTest extends TaskNotificationTestCase<TaskSelectionNotification> {
-
-  /**
-   * {@inheritDoc}
-   *
-   * @see TaskSelectionNotification#TaskSelectionNotification()
-   */
-  @Override
-  public TaskSelectionNotification createEmptyMessage() {
-
-    return new TaskSelectionNotification();
-  }
-
-  /**
-   * Verify that the notification type is a task volunteer.
-   */
-  @Test
-  public void shouldNotificationTypeByTaskVolunteer() {
-
-    final TaskSelectionNotification model = this.createEmptyMessage();
-    assertThat(model.notificationType).isEqualTo(TaskNotification.NotificationType.selectionVolunteer);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public TaskSelectionNotification createModelExample(final int index) {
-
-    final TaskSelectionNotification model = super.createModelExample(index);
-    model.outcome = TaskSelectionNotification.Outcome.values()[index % TaskSelectionNotification.Outcome.values().length];
-    return model;
-  }
-
-}
+package eu.internetofus.wenet_interaction_protocol_engine.api.incentives;

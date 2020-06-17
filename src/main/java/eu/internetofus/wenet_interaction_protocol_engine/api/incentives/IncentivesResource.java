@@ -24,16 +24,18 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.messages;
+package eu.internetofus.wenet_interaction_protocol_engine.api.incentives;
 
 import javax.ws.rs.core.Response.Status;
 
 import org.tinylog.Logger;
 
 import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.incentive_server.Incentive;
 import eu.internetofus.common.components.interaction_protocol_engine.Message;
+import eu.internetofus.common.components.interaction_protocol_engine.Message.Type;
+import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
 import eu.internetofus.common.vertx.OperationReponseHandlers;
-import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -42,11 +44,11 @@ import io.vertx.ext.web.api.OperationRequest;
 import io.vertx.ext.web.api.OperationResponse;
 
 /**
- * Implementation of the {@link Messages} services.
+ * Implementation of the {@link Incentives} services.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class MessagesResource implements Messages {
+public class IncentivesResource implements Incentives {
 
   /**
    * The event bus that is using.
@@ -56,16 +58,16 @@ public class MessagesResource implements Messages {
   /**
    * Create an empty resource. This is only used for unit tests.
    */
-  protected MessagesResource() {
+  protected IncentivesResource() {
 
   }
 
   /**
-   * Create a new instance to provide the services of the {@link Messages}.
+   * Create a new instance to provide the services of the {@link Incentives}.
    *
    * @param vertx with the event bus to use.
    */
-  public MessagesResource(final Vertx vertx) {
+  public IncentivesResource(final Vertx vertx) {
 
     this.vertx = vertx;
 
@@ -75,42 +77,48 @@ public class MessagesResource implements Messages {
    * {@inheritDoc}
    */
   @Override
-  public void sendMessage(final JsonObject body, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void sendIncentive(final JsonObject body, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-    final Message message = Model.fromJsonObject(body, Message.class);
-    if (message == null) {
+    final Incentive incentive = Model.fromJsonObject(body, Incentive.class);
+    if (incentive == null) {
 
-      Logger.trace("Fail sendMessage: {} is not a valid JSON.", body);
-      OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "bad_message", "The message is not right.");
+      Logger.trace("Fail sendIncentive: {} is not a valid incentive to send", body);
+      OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "bad_incentive", "Unexpected incentive model.");
 
     } else {
 
-      message.validate("bad_message", this.vertx).onComplete(validation -> {
+      incentive.validate("bad_incentive", this.vertx).onComplete(validate -> {
 
-        if (validation.failed()) {
+        if (validate.failed()) {
 
-          final Throwable cause = validation.cause();
-          Logger.trace(cause, "Fail sendMessage: {} is not valid.", message);
+          final Throwable cause = validate.cause();
+          Logger.trace(cause, "Fail sendIncentive: {} does not contains a valid incentive", body);
           OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
         } else {
 
-          try {
+          final Message message = new Message();
+          message.appId = incentive.AppID;
+          message.type = Type.INCENTIVE;
+          message.content = incentive.toJsonObject();
+          WeNetInteractionProtocolEngine.createProxy(this.vertx).sendMessage(message, send -> {
 
-            this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message.toJsonObject());
-            Logger.trace("Accepted sendMessage {}", message);
-            OperationReponseHandlers.responseOk(resultHandler, message);
+            if (send.failed()) {
 
-          } catch (final Throwable cause) {
+              final Throwable cause = validate.cause();
+              Logger.trace(cause, "Fail sendIncentive: {} of {} is not accepted", message, body);
+              OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
-            Logger.trace(cause, "Fail sendMessage: {} is not sent to the engine worker", message);
-            OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.INTERNAL_SERVER_ERROR, "engine_worker", "Can not send message to the engine worker");
-          }
+            } else {
 
+              Logger.trace("Accepted sendIncentive {} ", body);
+              OperationReponseHandlers.responseWith(resultHandler, Status.ACCEPTED, incentive);
+            }
+
+          });
         }
 
       });
-
     }
   }
 
