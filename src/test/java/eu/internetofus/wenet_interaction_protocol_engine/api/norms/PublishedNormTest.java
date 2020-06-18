@@ -26,18 +26,32 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
-import java.util.ArrayList;
+import static eu.internetofus.common.components.MergesTest.assertCanMerge;
+import static eu.internetofus.common.components.MergesTest.assertCannotMerge;
+import static eu.internetofus.common.components.ValidationsTest.assertIsNotValid;
+import static eu.internetofus.common.components.ValidationsTest.assertIsValid;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
+import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import eu.internetofus.common.components.ModelTestCase;
+import eu.internetofus.common.components.StoreServices;
+import eu.internetofus.common.components.ValidationsTest;
 import eu.internetofus.common.components.profile_manager.NormTest;
-import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
+import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
+import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonObject;
+import io.vertx.core.Vertx;
+import io.vertx.junit5.VertxTestContext;
 
 /**
  * Test the {@link PublishedNorm}
@@ -50,724 +64,353 @@ import io.vertx.core.json.JsonObject;
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
 public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public PublishedNorm createModelExample(int index) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public PublishedNorm createModelExample(final int index) {
 
-		final PublishedNorm model = new PublishedNorm();
-		model.name = "Published norm " + index;
-		model.description = "Description of published norm " + index;
-		model.keywords = new ArrayList<>();
-		for (int i = index - 2; i < index + 2; i++) {
+    final PublishedNorm model = new PublishedNorm();
+    model.name = "Published norm " + index;
+    model.description = "Description of published norm " + index;
+    model.keywords = new ArrayList<>();
+    for (int i = index - 2; i < index + 2; i++) {
 
-			model.keywords.add("keyword " + i);
-		}
-		model.publisherId = "Published identifier " + index;
-		model.norm = new NormTest().createModelExample(index);
+      model.keywords.add("keyword " + i);
+    }
+    model.publisherId = "Published identifier " + index;
+    model.norm = new NormTest().createModelExample(index);
 
-		return model;
-	}
+    return model;
+  }
 
-	/**
-	 * Create a valid published norm.
-	 *
-	 * @param index          of the example to create.
-	 * @param profileManager service to manage the profiles.
-	 * @param createHandler  component that manage the creation result.
-	 */
-	public static void createValidPublishedNormExample(int index, WeNetProfileManager profileManager,
-			Handler<AsyncResult<PublishedNorm>> createHandler) {
+  /**
+   * Create an example model that has the specified index.
+   *
+   * @param index         to use in the example.
+   * @param vertx         event bus to use.
+   * @param testContext   test context to use.
+   * @param createHandler the component that will manage the created model.
+   */
+  public void createModelExample(final int index, final Vertx vertx, final VertxTestContext testContext, final Handler<AsyncResult<PublishedNorm>> createHandler) {
 
-		profileManager.createProfile(new JsonObject(), create -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext, testContext.succeeding(stored -> {
 
-			if (create.failed()) {
+      final PublishedNorm model = this.createModelExample(index);
+      model.publisherId = stored.id;
+      createHandler.handle(Future.succeededFuture(model));
 
-				createHandler.handle(Future.failedFuture(create.cause()));
+    }));
 
-			} else {
+  }
 
-				final PublishedNorm result = new PublishedNormTest().createModelExample(index);
-				result.publisherId = create.result().getString("id");
-				createHandler.handle(Future.succeededFuture(result));
-			}
+  /**
+   * Check that the {@link #createModelExample(int)} is valid.
+   *
+   * @param index       to verify
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see WeNetUserProfile#validate(String, Vertx)
+   */
+  @ParameterizedTest(name = "The model example {0} has to be valid")
+  @ValueSource(ints = { 0, 1, 2, 3, 4, 5 })
+  public void shouldExampleNotBeValid(final int index, final Vertx vertx, final VertxTestContext testContext) {
 
-		});
+    final PublishedNorm model = this.createModelExample(index);
+    assertIsNotValid(model, "publisherId", vertx, testContext);
 
-	}
+  }
 
-	// /**
-	// * Check that an right published norm is valid.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void shouldRightPublishedNormBeValid(WeNetProfileManager
-	// profileManager, VertxTestContext testContext) {
-	//
-	// createValidPublishedNormExample(43, profileManager,
-	// testContext.succeeding(model -> {
-	// model.validate("codePrefix", profileManager, testContext.succeeding(ignored
-	// -> {
-	// testContext.completeNow();
-	//
-	// }));
-	// }));
-	// }
-	//
-	// /**
-	// * Check that an empty published norm is not valid.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void shouldEmptyPublishedNormNotBeValid(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm model = new PublishedNorm();
-	// model.validate("codePrefix", profileManager, testContext.failing(error ->
-	// testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix.norm");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Create a minimum published norm that will be valid.
-	// *
-	// * @return the created published norm.
-	// */
-	// public static PublishedNorm createMinimumValidPublishedNormExample() {
-	//
-	// final PublishedNorm model = new PublishedNorm();
-	// model.norm = new Norm();
-	// return model;
-	//
-	// }
-	//
-	// /**
-	// * Create the norm with the minimum fields to be valid.
-	// *
-	// * @return the created minimum
-	// */
-	//
-	// /**
-	// * Check that a published norm with only a norm is valid.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void
-	// shouldPublishedNormWithOnlyAnormBeValid(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm model = createMinimumValidPublishedNormExample();
-	// model.validate("codePrefix", profileManager, testContext.succeeding(ignored
-	// -> {
-	// testContext.completeNow();
-	//
-	// }));
-	//
-	// }
-	//
-	// /**
-	// * Check that a published norm with an identifier is not valid.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void shouldPublishedNormWithIdNotBeValid(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm model = new PublishedNorm();
-	// model.norm = new NormTest().createModelExample(1);
-	// model._id = "Defined identifier";
-	// model.validate("codePrefix", profileManager, testContext.failing(error ->
-	// testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix._id");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that a published norm with a large name is not valid.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void
-	// shouldPublishedNormWithLargeNameNotBeValid(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm model = new PublishedNorm();
-	// model.norm = new NormTest().createModelExample(1);
-	// model.name = ValidationsTest.STRING_256;
-	// model.validate("codePrefix", profileManager, testContext.failing(error ->
-	// testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix.name");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that a published norm with a large description is not valid.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void
-	// shouldPublishedNormWithLargeDescriptionNotBeValid(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm model = new PublishedNorm();
-	// model.norm = new NormTest().createModelExample(1);
-	// model.description = ValidationsTest.STRING_256;
-	// model.validate("codePrefix", profileManager, testContext.failing(error ->
-	// testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix.description");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that a published norm with a large keyword is not valid.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void
-	// shouldPublishedNormWithLargeKeywordNotBeValid(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm model = new PublishedNorm();
-	// model.norm = new NormTest().createModelExample(1);
-	// model.keywords = new ArrayList<>();
-	// model.keywords.add(" ");
-	// model.keywords.add(null);
-	// model.keywords.add(ValidationsTest.STRING_256);
-	// model.validate("codePrefix", profileManager, testContext.failing(error ->
-	// testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix.keywords[2]");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that a published norm with a large norm attribute is not valid.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void
-	// shouldPublishedNormWithLargeNormAttributeNotBeValid(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm model = new PublishedNorm();
-	// model.norm = new NormTest().createModelExample(1);
-	// model.norm.attribute = ValidationsTest.STRING_256;
-	// model.validate("codePrefix", profileManager, testContext.failing(error ->
-	// testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix.norm.attribute");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that a published norm with a publishedId that is not defined is not
-	// * valid.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void
-	// shouldPublishedNormWithAnUndefinedPublishedIdNotBeValid(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm model = new PublishedNorm();
-	// model.norm = new NormTest().createModelExample(1);
-	// model.publisherId = "Undefined published identifier";
-	// model.validate("codePrefix", profileManager, testContext.failing(error ->
-	// testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix.publisherId");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can merge with a {@code null} source.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void shouldMergePublishedNormWithNullSource(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm target = createMinimumValidPublishedNormExample();
-	// target._id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.merge("codePrefix", null, profileManager,
-	// testContext.succeeding(merged -> testContext.verify(() -> {
-	//
-	// assertThat(merged).isSameAs(target);
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can merge with an empty source.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void shouldMergePublishedNormWithEmptyModel(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source._id = UUID.randomUUID().toString();
-	// source.publishTime = 12345;
-	// final PublishedNorm target = createMinimumValidPublishedNormExample();
-	// target._id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.merge("codePrefix", source, profileManager,
-	// testContext.succeeding(merged -> testContext.verify(() -> {
-	//
-	// assertThat(merged).isNotSameAs(target).isEqualTo(target);
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can merge the name.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void shouldMergePublishedNormName(WeNetProfileManager
-	// profileManager, VertxTestContext testContext) {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source.name = "Source Name";
-	// final PublishedNorm target = createMinimumValidPublishedNormExample();
-	// target._id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.name = "Target Name";
-	// target.merge("codePrefix", source, profileManager,
-	// testContext.succeeding(merged -> testContext.verify(() -> {
-	//
-	// assertThat(merged).isNotSameAs(target).isNotEqualTo(target);
-	// target.name = "Source Name";
-	// assertThat(merged).isEqualTo(target);
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can not merge with a bad name
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void shouldNotMergePublishedNormWithBadName(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source.name = ValidationsTest.STRING_256;
-	// final PublishedNorm target = createMinimumValidPublishedNormExample();
-	// target._id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.merge("codePrefix", source, profileManager, testContext.failing(error
-	// -> testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix.name");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can merge the description.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void shouldMergePublishedNormDescription(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source.description = "Source Description";
-	// final PublishedNorm target = createMinimumValidPublishedNormExample();
-	// target._id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.description = "Target Description";
-	// target.merge("codePrefix", source, profileManager,
-	// testContext.succeeding(merged -> testContext.verify(() -> {
-	//
-	// assertThat(merged).isNotSameAs(target).isNotEqualTo(target);
-	// target.description = "Source Description";
-	// assertThat(merged).isEqualTo(target);
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can not merge with a bad description
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void
-	// shouldNotMergePublishedNormWithBadDescription(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source.description = ValidationsTest.STRING_256;
-	// final PublishedNorm target = createMinimumValidPublishedNormExample();
-	// target.id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.merge("codePrefix", source, profileManager, testContext.failing(error
-	// -> testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix.description");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can merge the keywords.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void shouldMergePublishedNormKeywords(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source.keywords = new ArrayList<>();
-	// source.keywords.add("Source Keyword");
-	// final PublishedNorm target = createMinimumValidPublishedNormExample();
-	// target.id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.keywords = new ArrayList<>();
-	// target.keywords.add("Target Keyword");
-	// target.merge("codePrefix", source, profileManager,
-	// testContext.succeeding(merged -> testContext.verify(() -> {
-	//
-	// assertThat(merged).isNotSameAs(target).isNotEqualTo(target);
-	// target.keywords = new ArrayList<>();
-	// target.keywords.add("Source Keyword");
-	// assertThat(merged).isEqualTo(target);
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can not merge with a bad keyword
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void
-	// shouldNotMergePublishedNormWithBadKeyword(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source.keywords = new ArrayList<>();
-	// source.keywords.add(" ");
-	// source.keywords.add(null);
-	// source.keywords.add(ValidationsTest.STRING_256);
-	// final PublishedNorm target = createMinimumValidPublishedNormExample();
-	// target._id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.merge("codePrefix", source, profileManager, testContext.failing(error
-	// -> testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix.keywords[2]");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can merge the publisher identifier.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void shouldMergePublishedNormPublisherId(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// profileManager.createProfile(new JsonObject(), testContext.succeeding(profile
-	// -> {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source.publisherId = profile.getString("id");
-	// final PublishedNorm target = createMinimumValidPublishedNormExample();
-	// target._id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.publisherId = "Target PublisherId";
-	// target.merge("codePrefix", source, profileManager,
-	// testContext.succeeding(merged -> testContext.verify(() -> {
-	//
-	// assertThat(merged).isNotSameAs(target).isNotEqualTo(target);
-	// target.publisherId = profile.getString("id");
-	// assertThat(merged).isEqualTo(target);
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }));
-	//
-	// }
-	//
-	// /**
-	// * Check that can not merge with a bad publisher identifier.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void
-	// shouldNotMergePublishedNormWithBadPublisherId(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source.publisherId = "undefined";
-	// final PublishedNorm target = createMinimumValidPublishedNormExample();
-	// target._id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.merge("codePrefix", source, profileManager, testContext.failing(error
-	// -> testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix.publisherId");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can merge the norm.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void shouldMergeNormOnPublishedNorm(WeNetProfileManager
-	// profileManager, VertxTestContext testContext) {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source.norm = new NormTest().createModelExample(3);
-	// final PublishedNorm target = createMinimumValidPublishedNormExample();
-	// target._id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.norm = new NormTest().createModelExample(43);
-	// target.norm.id = "1";
-	// target.merge("codePrefix", source, profileManager,
-	// testContext.succeeding(merged -> testContext.verify(() -> {
-	//
-	// assertThat(merged).isNotSameAs(target).isNotEqualTo(target);
-	// target.norm = new NormTest().createModelExample(3);
-	// target.norm.id = "1";
-	// assertThat(merged).isEqualTo(target);
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can merge the norm.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void
-	// shouldMergeNormOnPublishedNormWithoutNorm(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source.norm = new NormTest().createModelExample(3);
-	// final PublishedNorm target = new PublishedNorm();
-	// target._id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.merge("codePrefix", source, profileManager,
-	// testContext.succeeding(merged -> testContext.verify(() -> {
-	//
-	// assertThat(merged).isNotSameAs(target).isNotEqualTo(target);
-	// target.norm = new NormTest().createModelExample(3);
-	// target.norm.id = merged.norm.id;
-	// assertThat(merged).isEqualTo(target);
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can not merge with a bad norm
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void shouldNotMergePublishedNormWithBadNorm(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source.norm = new Norm();
-	// source.norm.attribute = ValidationsTest.STRING_256;
-	// final PublishedNorm target = createMinimumValidPublishedNormExample();
-	// target._id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.merge("codePrefix", source, profileManager, testContext.failing(error
-	// -> testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix.norm.attribute");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
-	//
-	// /**
-	// * Check that can not merge a bad norm.
-	// *
-	// * @param profileManager service to manage the user profiles.
-	// * @param testContext context for the test.
-	// */
-	// @Test
-	// public void
-	// shouldNotMergeBadNormOnPublishedNormWithoutNorm(WeNetProfileManager
-	// profileManager,
-	// VertxTestContext testContext) {
-	//
-	// final PublishedNorm source = new PublishedNorm();
-	// source.norm = new Norm();
-	// source.norm.attribute = ValidationsTest.STRING_256;
-	// final PublishedNorm target = new PublishedNorm();
-	// target._id = UUID.randomUUID().toString();
-	// target.publishTime = TimeManager.now();
-	// target.merge("codePrefix", source, profileManager, testContext.failing(error
-	// -> testContext.verify(() -> {
-	//
-	// assertThat(error).isInstanceOf(ValidationErrorException.class);
-	// final ValidationErrorException validationError = (ValidationErrorException)
-	// error;
-	// assertThat(validationError.getCode()).isEqualTo("codePrefix.norm.attribute");
-	// testContext.completeNow();
-	//
-	// })));
-	//
-	// }
+  /**
+   * Check that the {@link #createModelExample(int, Vertx, VertxTestContext, Handler)} is valid.
+   *
+   * @param index       to verify
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see WeNetUserProfile#validate(String, Vertx)
+   */
+  @ParameterizedTest(name = "The model example {0} has to be valid")
+  @ValueSource(ints = { 0, 1, 2, 3, 4, 5 })
+  public void shouldExampleBeValid(final int index, final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(index, vertx, testContext, testContext.succeeding(model -> assertIsValid(model, vertx, testContext)));
+
+  }
+
+  /**
+   * Check a model with an identifier is valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see WeNetUserProfile#validate(String, Vertx)
+   */
+  @Test
+  public void shouldBeValidWithId(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+      model.id = UUID.randomUUID().toString();
+      assertIsValid(model, vertx, testContext);
+
+    }));
+
+  }
+
+  /**
+   * Check a model with a duplicated identifier is noit valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see WeNetUserProfile#validate(String, Vertx)
+   */
+  @Test
+  public void shouldMotBeValidWithDuplicatedId(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+      NormsRepository.createProxy(vertx).storePublishedNorm(model, testContext.succeeding(stored -> {
+
+        model.id = stored.id;
+        assertIsNotValid(model, "id", vertx, testContext);
+
+      }));
+
+    }));
+
+  }
+
+  /**
+   * Check that a model with a large name is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see WeNetUserProfile#validate(String, Vertx)
+   */
+  @Test
+  public void shouldModelWithLargeNameNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+      model.name = ValidationsTest.STRING_256;
+      assertIsNotValid(model, "name", vertx, testContext);
+    }));
+
+  }
+
+  /**
+   * Check that a model with a large description is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see WeNetUserProfile#validate(String, Vertx)
+   */
+  @Test
+  public void shouldModelWithLargeDescriptionNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+      model.description = ValidationsTest.STRING_1024;
+      assertIsNotValid(model, "description", vertx, testContext);
+    }));
+
+  }
+
+  /**
+   * Check that a model with a large keyword is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see WeNetUserProfile#validate(String, Vertx)
+   */
+  @Test
+  public void shouldModelWithLargeKeywordNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+      model.keywords.add(3, ValidationsTest.STRING_256);
+      assertIsNotValid(model, "keywords[3]", vertx, testContext);
+    }));
+
+  }
+
+  /**
+   * Check that a model without a norm is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see WeNetUserProfile#validate(String, Vertx)
+   */
+  @Test
+  public void shouldModelWithLargeNormNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+      model.norm = null;
+      assertIsNotValid(model, "norm", vertx, testContext);
+    }));
+
+  }
+
+  /**
+   * Check that a model with an undefined published is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see WeNetUserProfile#validate(String, Vertx)
+   */
+  @Test
+  public void shouldModelWithUndefinedPublishedNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+      model.publisherId = "undefined";
+      assertIsNotValid(model, "publisherId", vertx, testContext);
+    }));
+
+  }
+
+  /**
+   * Check that merge {@code null} value.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see PublishedNorm#merge(PublishedNorm, String, Vertx)
+   */
+  @Test
+  public void shouldMergeNullValue(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      assertCanMerge(target, null, vertx, testContext, merged -> testContext.verify(() -> {
+
+        assertThat(merged).isSameAs(target);
+
+      }));
+    }));
+
+  }
+
+  /**
+   * Check that merge examples.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see PublishedNorm#merge(PublishedNorm, String, Vertx)
+   */
+  @Test
+  public void shouldMergeExamples(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      this.createModelExample(2, vertx, testContext, testContext.succeeding(source -> {
+
+        assertCanMerge(target, source, vertx, testContext, merged -> testContext.verify(() -> {
+
+          assertThat(merged).isNotEqualTo(target);
+          source._creationTs = merged._creationTs;
+          source._lastUpdateTs = merged._lastUpdateTs;
+          source.norm.id = merged.norm.id;
+          assertThat(merged).isEqualTo(source);
+
+        }));
+      }));
+    }));
+
+  }
+
+  /**
+   * Check not merge with invalid name.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see PublishedNorm#merge(PublishedNorm, String, Vertx)
+   */
+  @Test
+  public void shouldNotMergeWithABadName(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final PublishedNorm source = new PublishedNorm();
+      source.name = ValidationsTest.STRING_256;
+      assertCannotMerge(target, source, "name", vertx, testContext);
+    }));
+
+  }
+
+  /**
+   * Check not merge with invalid description.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see PublishedNorm#merge(PublishedNorm, String, Vertx)
+   */
+  @Test
+  public void shouldNotMergeWithABadDescription(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final PublishedNorm source = new PublishedNorm();
+      source.description = ValidationsTest.STRING_1024;
+      assertCannotMerge(target, source, "description", vertx, testContext);
+    }));
+
+  }
+
+  /**
+   * Check not merge with invalid keyword.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see PublishedNorm#merge(PublishedNorm, String, Vertx)
+   */
+  @Test
+  public void shouldNotMergeWithABadKeyword(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final PublishedNorm source = new PublishedNorm();
+      source.keywords = new ArrayList<>();
+      source.keywords.add(" key1 ");
+      source.keywords.add(null);
+      source.keywords.add("");
+      source.keywords.add(ValidationsTest.STRING_256);
+      assertCannotMerge(target, source, "keywords[3]", vertx, testContext);
+    }));
+
+  }
+
+  /**
+   * Check not merge with undefined publisher.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see PublishedNorm#merge(PublishedNorm, String, Vertx)
+   */
+  @Test
+  public void shouldNotMergeWithAnUndefinedPublishedId(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final PublishedNorm source = new PublishedNorm();
+      source.publisherId = "undefined";
+      assertCannotMerge(target, source, "publisherId", vertx, testContext);
+    }));
+
+  }
 
 }

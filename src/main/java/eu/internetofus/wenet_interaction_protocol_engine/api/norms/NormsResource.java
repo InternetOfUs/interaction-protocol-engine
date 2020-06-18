@@ -32,6 +32,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.tinylog.Logger;
 
+import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
@@ -65,13 +66,6 @@ public class NormsResource implements Norms {
    * The manager to manage the users profile.
    */
   protected WeNetProfileManager profileManager;
-
-  /**
-   * Create an empty resource. This is only used for unit tests.
-   */
-  protected NormsResource() {
-
-  }
 
   /**
    * Create a new instance to provide the services of the {@link Norms}.
@@ -118,7 +112,7 @@ public class NormsResource implements Norms {
 
             } else {
 
-              OperationReponseHandlers.responseOk(resultHandler, stored.result());
+              OperationReponseHandlers.responseWith(resultHandler, Status.CREATED, stored.result());
             }
 
           });
@@ -211,43 +205,42 @@ public class NormsResource implements Norms {
 
         } else {
 
-          target.merge(source, "bad_publishedNorm", this.vertx).onComplete(merge -> {
+          source.id = null;
+          if (source.norm != null) {
 
-            if (merge.failed()) {
+            source.norm.id = null;
+          }
+          source.validate("bad_published_norm", this.vertx).onComplete(validate -> {
 
-              final Throwable cause = merge.cause();
+            if (validate.failed()) {
+
+              final Throwable cause = validate.cause();
               Logger.debug(cause, "Cannot update  {} with {}.", target, source);
               OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
             } else {
 
-              final PublishedNorm merged = merge.result();
-              if (merged.equals(target)) {
+              source.id = target.id;
+              source._creationTs = target._creationTs;
+              source._lastUpdateTs = TimeManager.now();
+              source.norm.id = target.norm.id;
+              this.repository.updatePublishedNorm(source, updated -> {
 
-                OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "published_norm_to_update_equal_to_original",
-                    "You can not update the published norm '" + publishedNormId + "', because the new values is equals to the current one.");
+                if (updated.failed()) {
 
-              } else {
+                  final Throwable cause = updated.cause();
+                  Logger.debug(cause, "Cannot update  {}.", target);
+                  OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
-                this.repository.updatePublishedNorm(merged, update -> {
+                } else {
 
-                  if (update.failed()) {
+                  OperationReponseHandlers.responseOk(resultHandler, source);
 
-                    final Throwable cause = update.cause();
-                    Logger.debug(cause, "Cannot update  {}.", target);
-                    OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+                }
 
-                  } else {
-
-                    OperationReponseHandlers.responseOk(resultHandler, merged);
-
-                  }
-
-                });
-              }
+              });
             }
           });
-
         }
       });
     }
@@ -274,6 +267,74 @@ public class NormsResource implements Norms {
       }
 
     });
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void mergePublishedNorm(final String publishedNormId, final JsonObject body, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
+
+    final PublishedNorm source = Model.fromJsonObject(body, PublishedNorm.class);
+    if (source == null) {
+
+      Logger.debug("The {} is not a valid published norm to merge.", body);
+      OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "bad_published_norm_to_merge", "The published norm to merge is not right.");
+
+    } else {
+
+      this.repository.searchPublishedNorm(publishedNormId, search -> {
+
+        final PublishedNorm target = search.result();
+        if (target == null) {
+
+          Logger.debug(search.cause(), "Not found published norm {} to merge", publishedNormId);
+          OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.NOT_FOUND, "not_found_published_norm_to_merge", "You can not merge the published norm '" + publishedNormId + "', because it does not exist.");
+
+        } else {
+
+          target.merge(source, "bad_publishedNorm", this.vertx).onComplete(merge -> {
+
+            if (merge.failed()) {
+
+              final Throwable cause = merge.cause();
+              Logger.debug(cause, "Cannot merge  {} with {}.", target, source);
+              OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+
+            } else {
+
+              final PublishedNorm merged = merge.result();
+              if (merged.equals(target)) {
+
+                OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "published_norm_to_merge_equal_to_original",
+                    "You can not merge the published norm '" + publishedNormId + "', because the new values is equals to the current one.");
+
+              } else {
+
+                merged._lastUpdateTs = TimeManager.now();
+                this.repository.updatePublishedNorm(merged, updated -> {
+
+                  if (updated.failed()) {
+
+                    final Throwable cause = updated.cause();
+                    Logger.debug(cause, "Cannot merge  {}.", target);
+                    OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+
+                  } else {
+
+                    OperationReponseHandlers.responseOk(resultHandler, merged);
+
+                  }
+
+                });
+              }
+            }
+          });
+
+        }
+      });
+    }
 
   }
 

@@ -38,6 +38,7 @@ import javax.ws.rs.core.Response.Status;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.ErrorMessage;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
@@ -128,648 +129,64 @@ public class NormsIT {
     }).sendJson(new JsonObject().put("udefinedKey", "value"), testContext);
   }
 
-  // /**
-  // * Verify that can not store a bad published norm.
-  // *
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#publishNorm(io.vertx.core.json.JsonObject,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldNotStoreBadPublishedNorm(WebClient client, VertxTestContext
-  // testContext) {
-  //
-  // final PublishedNorm publishedNorm = createMinimumValidPublishedNormExample();
-  // publishedNorm._id = UUID.randomUUID().toString();
-  // testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-  // final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
-  // assertThat(error.code).isNotEmpty().isEqualTo("bad_publishedNorm._id");
-  // assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-  // testContext.completeNow();
-  //
-  // }).sendJson(publishedNorm.toJsonObject(), testContext);
-  // }
-  //
-  // /**
-  // * Verify that store a published norm.
-  // *
-  // * @param repository that manage the norms.
-  // * @param profileManager service to create user profiles.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#publishNorm(io.vertx.core.json.JsonObject,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldStorePublishedNorm(Vertx vertx,
-  // WeNetProfileManager profileManager,
-  // WebClient client, VertxTestContext testContext) {
-  //
-  // PublishedNormTest.createValidPublishedNormExample(23, profileManager,
-  // testContext.succeeding(publishedNorm -> {
-  //
-  // testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-  // final PublishedNorm stored = assertThatBodyIs(PublishedNorm.class, res);
-  // assertThat(stored).isNotNull().isNotEqualTo(publishedNorm);
-  // publishedNorm._id = stored._id;
-  // publishedNorm.publishTime = stored.publishTime;
-  // publishedNorm.norm.id = stored.norm.id;
-  // assertThat(stored).isEqualTo(publishedNorm);
-  // repository.searchPublishedNorm(stored._id,
-  // testContext.succeeding(foundPublishedNorm -> testContext.verify(() -> {
-  //
-  // assertThat(foundPublishedNorm).isEqualTo(stored);
-  // testContext.completeNow();
-  //
-  // })));
-  //
-  // }).sendJson(publishedNorm.toJsonObject(), testContext);
-  //
-  // }));
-  //
-  // }
-  //
-  // /**
-  // * Verify that store an empty published norm.
-  // *
-  // * @param repository that manage the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#publishNorm(io.vertx.core.json.JsonObject,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldStoreMinimumValidPublishedNorm(Vertx vertx,
-  // WebClient client,
-  // VertxTestContext testContext) {
-  //
-  // final PublishedNorm publishedNorm = createMinimumValidPublishedNormExample();
-  // testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-  // final PublishedNorm stored = assertThatBodyIs(PublishedNorm.class, res);
-  // assertThat(stored).isNotNull().isNotEqualTo(publishedNorm);
-  // publishedNorm._id = stored._id;
-  // publishedNorm.publishTime = stored.publishTime;
-  // publishedNorm.norm.id = stored.norm.id;
-  // assertThat(stored).isEqualTo(publishedNorm);
-  // repository.searchPublishedNorm(stored._id,
-  // testContext.succeeding(foundPublishedNorm -> testContext.verify(() -> {
-  //
-  // assertThat(foundPublishedNorm).isEqualTo(stored);
-  // testContext.completeNow();
-  //
-  // })));
-  //
-  // }).sendJson(publishedNorm.toJsonObject(), testContext);
-  //
-  // }
-  //
-  // /**
-  // * Verify that return error when try to update an undefined publishedNorm.
-  // *
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#updatePublishedNorm(String, io.vertx.core.json.JsonObject,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldNotUpdatePublishedNormThatIsNotDefined(WebClient client,
-  // VertxTestContext testContext) {
-  //
-  // final PublishedNorm publishedNorm = new
-  // PublishedNormTest().createModelExample(1);
-  // testRequest(client, HttpMethod.PUT, Norms.PATH +
-  // "/undefined-publishedNorm-identifier").expect(res -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
-  // final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
-  // assertThat(error.code).isNotEmpty();
-  // assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-  // testContext.completeNow();
-  //
-  // }).sendJson(publishedNorm.toJsonObject(), testContext);
-  // }
-  //
-  // /**
-  // * Verify that return error when try to update with a model that is not a
-  // * publishedNorm.
-  // *
-  // * @param repository that manage the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#updatePublishedNorm(String, io.vertx.core.json.JsonObject,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void
-  // shouldNotUpdatePublishedNormWithANotPublishedNormObject(NormsRepository
-  // repository, WebClient client,
-  // VertxTestContext testContext) {
-  //
-  // repository.storePublishedNorm(new PublishedNormTest().createModelExample(1),
-  // testContext.succeeding(publishedNorm -> {
-  //
-  // testRequest(client, HttpMethod.PUT, Norms.PATH + "/" +
-  // publishedNorm._id).expect(res -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-  // final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
-  // assertThat(error.code).isNotEmpty();
-  // assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-  // testContext.completeNow();
-  //
-  // }).sendJson(new JsonObject().put("udefinedKey", "value"), testContext);
-  // }));
-  // }
-  //
-  // /**
-  // * Verify that not update a published norm if any change is done.
-  // *
-  // * @param profileManager service to manage the user profiles.
-  // * @param repository that manage the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#updatePublishedNorm(String, io.vertx.core.json.JsonObject,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void
-  // shouldNotUpdatePublishedNormBecauseNotChangesHasDone(WeNetProfileManager
-  // profileManager,
-  // Vertx vertx, WebClient client, VertxTestContext testContext) {
-  //
-  // PublishedNormTest.createValidPublishedNormExample(1, profileManager,
-  // testContext.succeeding(created -> {
-  //
-  // repository.storePublishedNorm(created, testContext.succeeding(publishedNorm
-  // -> {
-  //
-  // testRequest(client, HttpMethod.PUT, Norms.PATH + "/" +
-  // publishedNorm._id).expect(res -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-  // final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
-  // assertThat(error.code).isEqualTo("published_norm_to_update_equal_to_original");
-  // assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-  // testContext.completeNow();
-  //
-  // }).sendJson(new JsonObject().put("norm", new Norm().toJsonObject()),
-  // testContext);
-  // }));
-  //
-  // }));
-  //
-  // }
-  //
-  // /**
-  // * Verify that not update a published norm because the source is not valid.
-  // *
-  // * @param repository that manage the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#updatePublishedNorm(String, io.vertx.core.json.JsonObject,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldNotUpdatePublishedNormBecauseBadSource(NormsRepository
-  // repository, WebClient client,
-  // VertxTestContext testContext) {
-  //
-  // repository.storePublishedNorm(new PublishedNormTest().createModelExample(1),
-  // testContext.succeeding(publishedNorm -> {
-  //
-  // testRequest(client, HttpMethod.PUT, Norms.PATH + "/" +
-  // publishedNorm._id).expect(res -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-  // final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
-  // assertThat(error.code).isNotEmpty().endsWith(".publisherId");
-  // assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-  // testContext.completeNow();
-  //
-  // }).sendJson(new JsonObject().put("publisherId", "image.png"), testContext);
-  // }));
-  //
-  // }
-  //
-  // /**
-  // * Verify that can update a complex published norm with another.
-  // *
-  // * @param profileManager service to manage the profiles.
-  // * @param repository that manage the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#retrievePublishedNorm(String,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldUpdatePublishedNorm(WeNetProfileManager
-  // profileManager, Vertx vertx,
-  // WebClient client, VertxTestContext testContext) {
-  //
-  // PublishedNormTest.createValidPublishedNormExample(23, profileManager,
-  // testContext.succeeding(created -> {
-  //
-  // repository.storePublishedNorm(created,
-  // testContext.succeeding(storedPublishedNorm -> {
-  //
-  // final PublishedNorm newPublishedNorm = new PublishedNorm();
-  // newPublishedNorm.norm = new NormTest().createModelExample(45);
-  // testRequest(client, HttpMethod.PUT, Norms.PATH + "/" +
-  // storedPublishedNorm._id)
-  // .expect(res -> testContext.verify(() -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-  // final PublishedNorm updated = assertThatBodyIs(PublishedNorm.class, res);
-  // assertThat(updated).isNotEqualTo(storedPublishedNorm).isNotEqualTo(newPublishedNorm);
-  // storedPublishedNorm.norm = new NormTest().createModelExample(45);
-  // storedPublishedNorm.norm.id = updated.norm.id;
-  // assertThat(updated).isEqualTo(storedPublishedNorm);
-  // testContext.completeNow();
-  //
-  // })).sendJson(newPublishedNorm.toJsonObject(), testContext);
-  // }));
-  // }));
-  // }
-  //
-  // /**
-  // * Verify that return error when delete an undefined published norm.
-  // *
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#retrievePublishedNorm(String,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void
-  // shouldNotDeletePublishedNormWithAnUndefinedPublishedNormId(WebClient client,
-  // VertxTestContext testContext) {
-  //
-  // testRequest(client, HttpMethod.DELETE, Norms.PATH +
-  // "/undefined-publishedNorm-identifier").expect(res -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
-  // final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
-  // assertThat(error.code).isNotEmpty();
-  // assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-  // testContext.completeNow();
-  //
-  // }).send(testContext);
-  // }
-  //
-  // /**
-  // * Verify that can delete a published norm.
-  // *
-  // * @param repository to access the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#retrievePublishedNorm(String,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldDeletePublishedNorm(Vertx vertx, WebClient
-  // client, VertxTestContext testContext) {
-  //
-  // repository.storePublishedNorm(new PublishedNorm(),
-  // testContext.succeeding(storedPublishedNorm -> {
-  //
-  // testRequest(client, HttpMethod.DELETE, Norms.PATH + "/" +
-  // storedPublishedNorm._id)
-  // .expect(res -> testContext.verify(() -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.NO_CONTENT.getStatusCode());
-  // testContext.completeNow();
-  //
-  // })).send(testContext);
-  //
-  // }));
-  //
-  // }
-  //
-  // /**
-  // * Verify that can update only the published norm name.
-  // *
-  // * @param profileManager service to manage the profiles.
-  // * @param repository that manage the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#retrievePublishedNorm(String,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldUpdatePublishedNormName(WeNetProfileManager
-  // profileManager, Vertx vertx,
-  // WebClient client, VertxTestContext testContext) {
-  //
-  // PublishedNormTest.createValidPublishedNormExample(23, profileManager,
-  // testContext.succeeding(created -> {
-  // repository.storePublishedNorm(created,
-  // testContext.succeeding(storedPublishedNorm -> {
-  //
-  // final PublishedNorm newPublishedNorm = new PublishedNorm();
-  // newPublishedNorm._id = UUID.randomUUID().toString();
-  // newPublishedNorm.name = "New publishedNorm name";
-  // testRequest(client, HttpMethod.PUT, Norms.PATH + "/" +
-  // storedPublishedNorm._id)
-  // .expect(res -> testContext.verify(() -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-  // final PublishedNorm updated = assertThatBodyIs(PublishedNorm.class, res);
-  // assertThat(updated).isNotEqualTo(storedPublishedNorm).isNotEqualTo(newPublishedNorm);
-  // storedPublishedNorm.name = "New publishedNorm name";
-  // assertThat(updated).isEqualTo(storedPublishedNorm);
-  // testContext.completeNow();
-  //
-  // })).sendJson(newPublishedNorm.toJsonObject(), testContext);
-  // }));
-  // }));
-  // }
-  //
-  // /**
-  // * Verify that can update only the published norm description.
-  // *
-  // * @param profileManager service to manage the profiles.
-  // * @param repository that manage the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#retrievePublishedNorm(String,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldUpdatePublishedNormDescription(WeNetProfileManager
-  // profileManager,
-  // Vertx vertx, WebClient client, VertxTestContext testContext) {
-  //
-  // PublishedNormTest.createValidPublishedNormExample(23, profileManager,
-  // testContext.succeeding(created -> {
-  // repository.storePublishedNorm(created,
-  // testContext.succeeding(storedPublishedNorm -> {
-  //
-  // final PublishedNorm newPublishedNorm = new PublishedNorm();
-  // newPublishedNorm._id = UUID.randomUUID().toString();
-  // newPublishedNorm.description = "New publishedNorm description";
-  // testRequest(client, HttpMethod.PUT, Norms.PATH + "/" +
-  // storedPublishedNorm._id)
-  // .expect(res -> testContext.verify(() -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-  // final PublishedNorm updated = assertThatBodyIs(PublishedNorm.class, res);
-  // assertThat(updated).isNotEqualTo(storedPublishedNorm).isNotEqualTo(newPublishedNorm);
-  // storedPublishedNorm.description = "New publishedNorm description";
-  // assertThat(updated).isEqualTo(storedPublishedNorm);
-  // testContext.completeNow();
-  //
-  // })).sendJson(newPublishedNorm.toJsonObject(), testContext);
-  // }));
-  // }));
-  // }
-  //
-  // /**
-  // * Verify that can update the keywords of a published norm.
-  // *
-  // * @param profileManager service to manage the profiles.
-  // * @param repository to access the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#updatePublishedNorm(String, JsonObject,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldUpdatePublishedNormKeyword(WeNetProfileManager
-  // profileManager, Vertx vertx,
-  // WebClient client, VertxTestContext testContext) {
-  //
-  // PublishedNormTest.createValidPublishedNormExample(23, profileManager,
-  // testContext.succeeding(created -> {
-  // repository.storePublishedNorm(created,
-  // testContext.succeeding(storedPublishedNorm -> {
-  //
-  // final PublishedNorm newPublishedNorm = new PublishedNorm();
-  // newPublishedNorm.keywords = new ArrayList<>();
-  // newPublishedNorm.keywords.add(" ");
-  // newPublishedNorm.keywords.add(" New keyword ");
-  // testRequest(client, HttpMethod.PUT, Norms.PATH + "/" +
-  // storedPublishedNorm._id)
-  // .expect(res -> testContext.verify(() -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-  // final PublishedNorm updated = assertThatBodyIs(PublishedNorm.class, res);
-  // assertThat(updated).isNotEqualTo(storedPublishedNorm).isNotEqualTo(newPublishedNorm);
-  //
-  // storedPublishedNorm.keywords.clear();
-  // storedPublishedNorm.keywords.add("New keyword");
-  // assertThat(updated).isEqualTo(storedPublishedNorm);
-  //
-  // })).sendJson(newPublishedNorm.toJsonObject(), testContext);
-  // }));
-  // }));
-  //
-  // }
-  //
-  // /**
-  // * Verify that can update only the published norm publisherId.
-  // *
-  // * @param profileManager service to manage the profiles.
-  // * @param repository that manage the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#retrievePublishedNorm(String,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldUpdatePublishedNormPublisherId(WeNetProfileManager
-  // profileManager,
-  // Vertx vertx, WebClient client, VertxTestContext testContext) {
-  //
-  // profileManager.createProfile(new JsonObject(),
-  // testContext.succeeding(createdProfile -> {
-  // PublishedNormTest.createValidPublishedNormExample(23, profileManager,
-  // testContext.succeeding(created -> {
-  // repository.storePublishedNorm(created,
-  // testContext.succeeding(storedPublishedNorm -> {
-  //
-  // final PublishedNorm newPublishedNorm = new PublishedNorm();
-  // newPublishedNorm._id = UUID.randomUUID().toString();
-  // newPublishedNorm.publisherId = createdProfile.getString("id");
-  // testRequest(client, HttpMethod.PUT, Norms.PATH + "/" +
-  // storedPublishedNorm._id)
-  // .expect(res -> testContext.verify(() -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-  // final PublishedNorm updated = assertThatBodyIs(PublishedNorm.class, res);
-  // assertThat(updated).isNotEqualTo(storedPublishedNorm).isNotEqualTo(newPublishedNorm);
-  // storedPublishedNorm.publisherId = createdProfile.getString("id");
-  // assertThat(updated).isEqualTo(storedPublishedNorm);
-  // testContext.completeNow();
-  //
-  // })).sendJson(newPublishedNorm.toJsonObject(), testContext);
-  // }));
-  // }));
-  // }));
-  // }
-  //
-  // /**
-  // * Verify that not update a published norm publish time.
-  // *
-  // * @param repository that manage the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#updatePublishedNorm(String, io.vertx.core.json.JsonObject,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldNotUpdatePublishedNormPublishTime(NormsRepository
-  // repository, WebClient client,
-  // VertxTestContext testContext) {
-  //
-  // repository.storePublishedNorm(new PublishedNormTest().createModelExample(1),
-  // testContext.succeeding(publishedNorm -> {
-  //
-  // testRequest(client, HttpMethod.PUT, Norms.PATH + "/" +
-  // publishedNorm._id).expect(res -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-  // final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
-  // assertThat(error.code).isNotEmpty().doesNotContain(".publishTime");
-  // assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-  // testContext.completeNow();
-  //
-  // }).sendJson(new JsonObject().put("publishTime", 0l), testContext);
-  // }));
-  //
-  // }
-  //
-  // /**
-  // * Verify that not update a published norm publish time.
-  // *
-  // * @param repository that manage the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#updatePublishedNorm(String, io.vertx.core.json.JsonObject,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldNotUpdatePublishedNormId(Vertx vertx,
-  // WebClient client,
-  // VertxTestContext testContext) {
-  //
-  // repository.storePublishedNorm(new PublishedNormTest().createModelExample(1),
-  // testContext.succeeding(publishedNorm -> {
-  //
-  // testRequest(client, HttpMethod.PUT, Norms.PATH + "/" +
-  // publishedNorm._id).expect(res -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-  // final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
-  // assertThat(error.code).isNotEmpty().doesNotContain("._id");
-  // assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-  // testContext.completeNow();
-  //
-  // }).sendJson(new JsonObject().put("_id", "Identifier"), testContext);
-  // }));
-  //
-  // }
-  //
-  // /**
-  // * Verify that can update the norm in a published norm.
-  // *
-  // * @param profileManager service to manage the profiles.
-  // * @param repository that manage the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#retrievePublishedNorm(String,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldUpdateNormOnPublishedNorm(WeNetProfileManager
-  // profileManager, Vertx vertx,
-  // WebClient client, VertxTestContext testContext) {
-  //
-  // PublishedNormTest.createValidPublishedNormExample(23, profileManager,
-  // testContext.succeeding(created -> {
-  // repository.storePublishedNorm(created,
-  // testContext.succeeding(storedPublishedNorm -> {
-  //
-  // final PublishedNorm newPublishedNorm = new PublishedNorm();
-  // newPublishedNorm.norm = new NormTest().createModelExample(43);
-  // testRequest(client, HttpMethod.PUT, Norms.PATH + "/" +
-  // storedPublishedNorm._id)
-  // .expect(res -> testContext.verify(() -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-  // final PublishedNorm updated = assertThatBodyIs(PublishedNorm.class, res);
-  // assertThat(updated).isNotEqualTo(storedPublishedNorm).isNotEqualTo(newPublishedNorm);
-  // storedPublishedNorm.norm = new NormTest().createModelExample(43);
-  // storedPublishedNorm.norm.id = storedPublishedNorm.norm.id;
-  // assertThat(updated).isEqualTo(storedPublishedNorm);
-  // testContext.completeNow();
-  //
-  // })).sendJson(newPublishedNorm.toJsonObject(), testContext);
-  // }));
-  // }));
-  // }
-  //
-  // /**
-  // * Verify that can not update the norm in a published norm.
-  // *
-  // * @param profileManager service to manage the profiles.
-  // * @param repository that manage the norms.
-  // * @param client to connect to the server.
-  // * @param testContext context to test.
-  // *
-  // * @see Norms#retrievePublishedNorm(String,
-  // * io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
-  // */
-  // @Test
-  // public void shouldNotUpdateNormOnPublishedNorm(WeNetProfileManager
-  // profileManager, Vertx vertx,
-  // WebClient client, VertxTestContext testContext) {
-  //
-  // PublishedNormTest.createValidPublishedNormExample(23, profileManager,
-  // testContext.succeeding(created -> {
-  // repository.storePublishedNorm(created,
-  // testContext.succeeding(storedPublishedNorm -> {
-  //
-  // final PublishedNorm newPublishedNorm = new PublishedNorm();
-  // newPublishedNorm.norm = new Norm();
-  // newPublishedNorm.norm.attribute = ValidationsTest.STRING_256;
-  // testRequest(client, HttpMethod.PUT, Norms.PATH + "/" +
-  // storedPublishedNorm._id)
-  // .expect(res -> testContext.verify(() -> {
-  //
-  // assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-  // final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
-  // assertThat(error.code).isNotEmpty().endsWith(".norm.attribute");
-  // assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-  // testContext.completeNow();
-  //
-  // })).sendJson(newPublishedNorm.toJsonObject(), testContext);
-  // }));
-  // }));
-  // }
+  /**
+   * Verify that can not publish an invalid norm.
+   *
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#publishNorm(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldNotPublishInvalidNorm(final WebClient client, final VertxTestContext testContext) {
+
+    final PublishedNorm norm = new PublishedNormTest().createModelExample(1);
+    testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
+
+      assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+      final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+      assertThat(error.code).isNotEmpty().isEqualTo("bad_publishedNorm.publisherId");
+      assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+      testContext.completeNow();
+
+    }).sendJson(norm.toJsonObject(), testContext);
+  }
+
+  /**
+   * Verify that can publish a norm.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#publishNorm(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldPublishNorm(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    new PublishedNormTest().createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+      model._creationTs = 0;
+      model._lastUpdateTs = 1;
+      final long now = TimeManager.now();
+      testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
+
+        assertThat(res.statusCode()).isEqualTo(Status.CREATED.getStatusCode());
+        final PublishedNorm published = assertThatBodyIs(PublishedNorm.class, res);
+        assertThat(published).isNotNull();
+        assertThat(published._creationTs).isGreaterThanOrEqualTo(now);
+        assertThat(published._lastUpdateTs).isGreaterThanOrEqualTo(published._creationTs);
+        model._creationTs = published._creationTs;
+        model._lastUpdateTs = published._lastUpdateTs;
+        model.id = published.id;
+        model.norm.id = published.norm.id;
+        assertThat(published).isEqualTo(model);
+        testContext.completeNow();
+
+      }).sendJson(model.toJsonObject(), testContext);
+
+    }));
+  }
 
   /**
    * Verify that found some norms by its name.
@@ -1003,6 +420,352 @@ public class NormsIT {
       testContext.completeNow();
 
     }).send(testContext);
+  }
+
+  /**
+   * Verify that not delete an undefined norm.
+   *
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldNotDeleteUndefinedNorm(final WebClient client, final VertxTestContext testContext) {
+
+    testRequest(client, HttpMethod.DELETE, Norms.PATH + "/undefined").expect(res -> {
+
+      assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
+      final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+      assertThat(error.code).isNotEmpty();
+      assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+      testContext.completeNow();
+
+    }).send(testContext);
+  }
+
+  /**
+   * Verify that delete a norm.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldDeleteNorm(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    NormsRepository.createProxy(vertx).storePublishedNorm(new PublishedNorm(), testContext.succeeding(norm -> {
+
+      testRequest(client, HttpMethod.DELETE, Norms.PATH + "/" + norm.id).expect(res -> {
+
+        assertThat(res.statusCode()).isEqualTo(Status.NO_CONTENT.getStatusCode());
+        testContext.completeNow();
+
+      }).send(testContext);
+
+    }));
+  }
+
+  /**
+   * Verify that not update with a bad norm.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldNotUpdateWithBadNorm(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    NormsRepository.createProxy(vertx).storePublishedNorm(new PublishedNorm(), testContext.succeeding(norm -> {
+      testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + norm.id).expect(res -> {
+
+        assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+        final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+        assertThat(error.code).isNotEmpty();
+        assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+        testContext.completeNow();
+
+      }).sendJson(new JsonObject().put("key", "value"), testContext);
+
+    }));
+  }
+
+  /**
+   * Verify that not update with an invalid norm.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldNotUpdateWithInvalidNorm(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    NormsRepository.createProxy(vertx).storePublishedNorm(new PublishedNorm(), testContext.succeeding(norm -> {
+      testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + norm.id).expect(res -> {
+
+        assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+        final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+        assertThat(error.code).isNotEmpty();
+        assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+        testContext.completeNow();
+
+      }).sendJson(new PublishedNormTest().createModelExample(1).toJsonObject(), testContext);
+
+    }));
+  }
+
+  /**
+   * Verify that not update with an undefined norm.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldNotUpdateWithUndefinedNorm(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    NormsRepository.createProxy(vertx).storePublishedNorm(new PublishedNorm(), testContext.succeeding(norm -> {
+      testRequest(client, HttpMethod.PUT, Norms.PATH + "/undefined").expect(res -> {
+
+        assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
+        final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+        assertThat(error.code).isNotEmpty();
+        assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+        testContext.completeNow();
+
+      }).sendJson(new PublishedNormTest().createModelExample(1).toJsonObject(), testContext);
+
+    }));
+  }
+
+  /**
+   * Verify that not update if no changes are done.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldNotUpdateWithEmptyNorm(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    new PublishedNormTest().createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+
+      NormsRepository.createProxy(vertx).storePublishedNorm(created, testContext.succeeding(norm -> {
+        testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + norm.id).expect(res -> {
+
+          assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+          final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+          assertThat(error.code).isNotEmpty();
+          assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+          testContext.completeNow();
+
+        }).sendJson(new PublishedNorm().toJsonObject(), testContext);
+
+      }));
+    }));
+  }
+
+  /**
+   * Verify that update a norm.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldUpdateNorm(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    new PublishedNormTest().createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+
+      new PublishedNormTest().createModelExample(2, vertx, testContext, testContext.succeeding(source -> {
+        NormsRepository.createProxy(vertx).storePublishedNorm(created, testContext.succeeding(target -> {
+
+          final long now = TimeManager.now();
+          testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + target.id).expect(res -> {
+
+            assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+            final PublishedNorm updated = assertThatBodyIs(PublishedNorm.class, res);
+            assertThat(updated).isNotNull();
+            assertThat(updated._lastUpdateTs).isGreaterThanOrEqualTo(now);
+            source._creationTs = target._creationTs;
+            source._lastUpdateTs = updated._lastUpdateTs;
+            source.id = target.id;
+            source.norm.id = target.norm.id;
+            assertThat(updated).isEqualTo(source);
+            testContext.completeNow();
+
+          }).sendJson(source.toJsonObject(), testContext);
+
+        }));
+      }));
+    }));
+  }
+
+  /**
+   * Verify that not merge with a bad norm.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldNotMergeWithBadNorm(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    NormsRepository.createProxy(vertx).storePublishedNorm(new PublishedNorm(), testContext.succeeding(norm -> {
+      testRequest(client, HttpMethod.PATCH, Norms.PATH + "/" + norm.id).expect(res -> {
+
+        assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+        final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+        assertThat(error.code).isNotEmpty();
+        assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+        testContext.completeNow();
+
+      }).sendJson(new JsonObject().put("key", "value"), testContext);
+
+    }));
+  }
+
+  /**
+   * Verify that not merge with an invalid norm.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldNotMergeWithInvalidNorm(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    NormsRepository.createProxy(vertx).storePublishedNorm(new PublishedNorm(), testContext.succeeding(norm -> {
+      testRequest(client, HttpMethod.PATCH, Norms.PATH + "/" + norm.id).expect(res -> {
+
+        assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+        final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+        assertThat(error.code).isNotEmpty();
+        assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+        testContext.completeNow();
+
+      }).sendJson(new PublishedNormTest().createModelExample(1).toJsonObject(), testContext);
+
+    }));
+  }
+
+  /**
+   * Verify that not merge with an undefined norm.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldNotMergeWithUndefinedNorm(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    NormsRepository.createProxy(vertx).storePublishedNorm(new PublishedNorm(), testContext.succeeding(norm -> {
+      testRequest(client, HttpMethod.PATCH, Norms.PATH + "/undefined").expect(res -> {
+
+        assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
+        final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+        assertThat(error.code).isNotEmpty();
+        assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+        testContext.completeNow();
+
+      }).sendJson(new PublishedNormTest().createModelExample(1).toJsonObject(), testContext);
+
+    }));
+  }
+
+  /**
+   * Verify that not merge if no changes are done.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldNotMergeWithEmptyNorm(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    new PublishedNormTest().createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+
+      NormsRepository.createProxy(vertx).storePublishedNorm(created, testContext.succeeding(norm -> {
+        testRequest(client, HttpMethod.PATCH, Norms.PATH + "/" + norm.id).expect(res -> {
+
+          assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+          final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+          assertThat(error.code).isNotEmpty();
+          assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+          testContext.completeNow();
+
+        }).sendJson(new PublishedNorm().toJsonObject(), testContext);
+
+      }));
+    }));
+  }
+
+  /**
+   * Verify that merge a norm.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldMergeNorm(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    new PublishedNormTest().createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+
+      NormsRepository.createProxy(vertx).storePublishedNorm(created, testContext.succeeding(target -> {
+
+        final PublishedNorm source = new PublishedNorm();
+        source.name = "NEW NAME";
+        final long now = TimeManager.now();
+        testRequest(client, HttpMethod.PATCH, Norms.PATH + "/" + target.id).expect(res -> {
+
+          assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+          final PublishedNorm merged = assertThatBodyIs(PublishedNorm.class, res);
+          assertThat(merged).isNotNull();
+          assertThat(merged._lastUpdateTs).isGreaterThanOrEqualTo(now);
+          target._lastUpdateTs = merged._lastUpdateTs;
+          target.name = "NEW NAME";
+          assertThat(merged).isEqualTo(target);
+          testContext.completeNow();
+
+        }).sendJson(source.toJsonObject(), testContext);
+
+      }));
+    }));
   }
 
 }

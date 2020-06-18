@@ -51,183 +51,170 @@ import io.vertx.core.Vertx;
 @Schema(description = "A norm that is published to share with all the WeNet users.")
 public class PublishedNorm extends CreateUpdateTsDetails implements Validable, Mergeable<PublishedNorm> {
 
-	/**
-	 * The identifier of the published norm.
-	 */
-	@Schema(description = "The identifier of the published norm.", example = "bf274393-1e7b-4d40-a897-88cb96277edd")
-	public String id;
+  /**
+   * The identifier of the published norm.
+   */
+  @Schema(description = "The identifier of the published norm.", example = "bf274393-1e7b-4d40-a897-88cb96277edd")
+  public String id;
 
-	/**
-	 * The name of the published norm.
-	 */
-	@Schema(description = "The name of the published norm.", example = "WeNet")
-	public String name;
+  /**
+   * The name of the published norm.
+   */
+  @Schema(description = "The name of the published norm.", example = "WeNet")
+  public String name;
 
-	/**
-	 * The description of the published norm.
-	 */
-	@Schema(
-			description = "The description of the published norm.",
-			example = "A norm of users that provide or require help")
-	public String description;
+  /**
+   * The description of the published norm.
+   */
+  @Schema(description = "The description of the published norm.", example = "A norm of users that provide or require help")
+  public String description;
 
-	/**
-	 * The description of the published norm.
-	 */
-	@ArraySchema(
-			schema = @Schema(implementation = String.class),
-			arraySchema = @Schema(
-					description = "The keywords of the published  norm",
-					example = "[\"social interaction\",\"ethics\",\"diversity\"]"))
-	public List<String> keywords;
+  /**
+   * The description of the published norm.
+   */
+  @ArraySchema(schema = @Schema(implementation = String.class), arraySchema = @Schema(description = "The keywords of the published  norm", example = "[\"social interaction\",\"ethics\",\"diversity\"]"))
+  public List<String> keywords;
 
-	/**
-	 * The identifier of the user that has published the norm.
-	 */
-	@Schema(
-			description = "The identifier of the user that has published the norm.",
-			example = "bf274393-1e7b-4d40-a897-88cb96277edd")
-	public String publisherId;
+  /**
+   * The identifier of the user that has published the norm.
+   */
+  @Schema(description = "The identifier of the user that has published the norm.", example = "bf274393-1e7b-4d40-a897-88cb96277edd")
+  public String publisherId;
 
-	/**
-	 * The norm.
-	 */
-	@Schema(
-			description = "The published norm.",
-			ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/master/sources/wenet-models-openapi.yaml#/components/schemas/Norm")
-	public Norm norm;
+  /**
+   * The norm.
+   */
+  @Schema(description = "The published norm.", ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/master/sources/wenet-models-openapi.yaml#/components/schemas/Norm")
+  public Norm norm;
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Future<Void> validate(String codePrefix, Vertx vertx) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Future<Void> validate(final String codePrefix, final Vertx vertx) {
 
-		final Promise<Void> promise = Promise.promise();
-		Future<Void> future = promise.future();
-		try {
+    final Promise<Void> promise = Promise.promise();
+    Future<Void> future = promise.future();
+    try {
 
-			this.id = Validations.validateNullableStringField(codePrefix, "id", 255, this.id);
-			if (this.id != null) {
+      this.id = Validations.validateNullableStringField(codePrefix, "id", 255, this.id);
+      if (this.id != null) {
 
-				future = future.compose(mapper -> {
+        future = future.compose(mapper -> {
 
-					final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
-					NormsRepository.createProxy(vertx).searchPublishedNorm(this.id, search -> {
+          final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
+          NormsRepository.createProxy(vertx).searchPublishedNorm(this.id, search -> {
 
-						if (search.failed()) {
+            if (search.failed()) {
 
-							verifyNotRepeatedIdPromise.complete();
+              verifyNotRepeatedIdPromise.complete();
 
-						} else {
+            } else {
 
-							verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".id",
-									"The '" + this.id + "' is already used by a published norm."));
-						}
-					});
-					return verifyNotRepeatedIdPromise.future();
-				});
-			}
+              verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".id", "The '" + this.id + "' is already used by a published norm."));
+            }
+          });
+          return verifyNotRepeatedIdPromise.future();
+        });
+      }
 
-			this.name = Validations.validateNullableStringField(codePrefix, "name", 255, this.name);
-			this.description = Validations.validateNullableStringField(codePrefix, "description", 1023, this.description);
-			this.keywords = Validations.validateNullableListStringField(codePrefix, "keywords", 255, this.keywords);
-			this.publisherId = Validations.validateNullableStringField(codePrefix, "publisherId", 255, this.publisherId);
-			if (this.publisherId != null) {
+      this.name = Validations.validateNullableStringField(codePrefix, "name", 255, this.name);
+      this.description = Validations.validateNullableStringField(codePrefix, "description", 1023, this.description);
+      this.keywords = Validations.validateNullableListStringField(codePrefix, "keywords", 255, this.keywords);
+      this.publisherId = Validations.validateNullableStringField(codePrefix, "publisherId", 255, this.publisherId);
+      if (this.publisherId != null) {
 
-				future = future.compose(mapper -> {
+        future = future.compose(mapper -> {
 
-					final Promise<Void> verifyPublishedExistPromise = Promise.promise();
-					WeNetProfileManager.createProxy(vertx).retrieveProfile(this.publisherId, profile -> {
+          final Promise<Void> verifyPublishedExistPromise = Promise.promise();
+          WeNetProfileManager.createProxy(vertx).retrieveProfile(this.publisherId, profile -> {
 
-						if (!profile.failed()) {
+            if (profile.failed()) {
 
-							verifyPublishedExistPromise.fail(new ValidationErrorException(codePrefix + "publisherId",
-									"The '" + this.publisherId + "' is not defined as an user."));
+              verifyPublishedExistPromise.fail(new ValidationErrorException(codePrefix + ".publisherId", "The '" + this.publisherId + "' is not defined as an user."));
 
-						} else {
-							verifyPublishedExistPromise.complete();
-						}
-					});
-					return verifyPublishedExistPromise.future();
-				});
-			}
+            } else {
+              verifyPublishedExistPromise.complete();
+            }
+          });
+          return verifyPublishedExistPromise.future();
+        });
+      }
 
-			if (this.norm == null) {
+      if (this.norm == null) {
 
-				promise.fail(new ValidationErrorException(codePrefix + ".norm", "you must specify a norm."));
+        promise.fail(new ValidationErrorException(codePrefix + ".norm", "you must specify a norm."));
 
-			} else {
+      } else {
 
-				future = future.compose(map -> this.norm.validate(codePrefix + ".norm", vertx));
-				promise.complete();
-			}
+        future = future.compose(map -> this.norm.validate(codePrefix + ".norm", vertx));
+        promise.complete();
+      }
 
-		} catch (final ValidationErrorException validationError) {
+    } catch (final ValidationErrorException validationError) {
 
-			promise.fail(validationError);
-		}
+      promise.fail(validationError);
+    }
 
-		return future;
-	}
+    return future;
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Future<PublishedNorm> merge(PublishedNorm source, String codePrefix, Vertx vertx) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Future<PublishedNorm> merge(final PublishedNorm source, final String codePrefix, final Vertx vertx) {
 
-		final Promise<PublishedNorm> promise = Promise.promise();
-		Future<PublishedNorm> future = promise.future();
-		if (source != null) {
+    final Promise<PublishedNorm> promise = Promise.promise();
+    Future<PublishedNorm> future = promise.future();
+    if (source != null) {
 
-			final PublishedNorm merged = new PublishedNorm();
-			merged.name = source.name;
-			if (merged.name == null) {
+      final PublishedNorm merged = new PublishedNorm();
+      merged.name = source.name;
+      if (merged.name == null) {
 
-				merged.name = this.name;
-			}
-			merged.description = source.description;
-			if (merged.description == null) {
+        merged.name = this.name;
+      }
+      merged.description = source.description;
+      if (merged.description == null) {
 
-				merged.description = this.description;
-			}
+        merged.description = this.description;
+      }
 
-			merged.keywords = source.keywords;
-			if (merged.keywords == null) {
+      merged.keywords = source.keywords;
+      if (merged.keywords == null) {
 
-				merged.keywords = this.keywords;
-			}
-			merged.publisherId = source.publisherId;
-			if (merged.publisherId == null) {
+        merged.keywords = this.keywords;
+      }
+      merged.publisherId = source.publisherId;
+      if (merged.publisherId == null) {
 
-				merged.publisherId = this.publisherId;
-			}
+        merged.publisherId = this.publisherId;
+      }
 
-			merged.norm = source.norm;
-			if (merged.norm == null) {
+      merged.norm = source.norm;
+      if (merged.norm == null) {
 
-				merged.norm = new Norm();
-			}
+        merged.norm = new Norm();
+      }
 
-			future = future.compose(Merges.validateMerged(codePrefix, vertx));
-			future = future.compose(Merges.mergeField(this.norm, source.norm, codePrefix + ".norm", vertx,
-					(model, mergedNorm) -> model.norm = mergedNorm));
+      future = future.compose(Merges.validateMerged(codePrefix, vertx));
+      future = future.compose(Merges.mergeField(this.norm, source.norm, codePrefix + ".norm", vertx, (model, mergedNorm) -> model.norm = mergedNorm));
 
-			promise.complete(merged);
-			future = future.map(mergedValidatedModel -> {
+      promise.complete(merged);
+      future = future.map(mergedValidatedModel -> {
 
-				mergedValidatedModel.id = this.id;
-				mergedValidatedModel._creationTs = this._creationTs;
-				mergedValidatedModel._lastUpdateTs = this._lastUpdateTs;
-				return mergedValidatedModel;
-			});
+        mergedValidatedModel.id = this.id;
+        mergedValidatedModel._creationTs = this._creationTs;
+        mergedValidatedModel._lastUpdateTs = this._lastUpdateTs;
+        return mergedValidatedModel;
+      });
 
-		} else {
+    } else {
 
-			promise.complete(this);
-		}
-		return future;
-	}
+      promise.complete(this);
+    }
+    return future;
+  }
 
 }

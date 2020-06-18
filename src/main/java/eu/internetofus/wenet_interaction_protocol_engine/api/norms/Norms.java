@@ -32,6 +32,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -95,7 +96,7 @@ public interface Norms {
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Publish a norm", description = "Publish a norm to be accessible by the other users on WeNet")
   @RequestBody(description = "The norm to publish", required = true, content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
-  @ApiResponse(responseCode = "200", description = "The published norm", content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
+  @ApiResponse(responseCode = "201", description = "The published norm", content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
   @ApiResponse(responseCode = "400", description = "Bad norm to publish", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   void publishNorm(@Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) OperationRequest context,
       @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
@@ -150,7 +151,7 @@ public interface Norms {
       @Parameter(hidden = true, required = false) OperationRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
 
   /**
-   * Called when want to modify a published norm.
+   * Called when want to modify completly a published norm.
    *
    * @param publishedNormId identifier of the published norm to modify.
    * @param body            the new published norm attributes.
@@ -161,12 +162,32 @@ public interface Norms {
   @Path(PUBLISHED_NORM_ID_PATH)
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(summary = "Modify a publishedNorm", description = "Change the attributes of a published norm")
+  @Operation(summary = "Modify all the fields of a published norm", description = "Change all the attributes of a published norm")
   @RequestBody(description = "The new values for the published norm", required = true, content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
   @ApiResponse(responseCode = "200", description = "The updated published norm", content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
   @ApiResponse(responseCode = "400", description = "Bad published norm", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   @ApiResponse(responseCode = "404", description = "Not found published norm", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   void updatePublishedNorm(@PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to update", example = "15837028-645a-4a55-9aaf-ceb846439eba") String publishedNormId,
+      @Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) OperationRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+
+  /**
+   * Called when want to modify partially a published norm.
+   *
+   * @param publishedNormId identifier of the published norm to merge.
+   * @param body            the new attributes to merge.
+   * @param context         of the request.
+   * @param resultHandler   to inform of the response.
+   */
+  @PATCH
+  @Path(PUBLISHED_NORM_ID_PATH)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Modify partially a published norm", description = "Change some of the attributes of a published norm")
+  @RequestBody(description = "The new values for the published norm", required = true, content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
+  @ApiResponse(responseCode = "200", description = "The merged published norm", content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
+  @ApiResponse(responseCode = "400", description = "Bad published norm to merge", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+  @ApiResponse(responseCode = "404", description = "Not found published norm to merge", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+  void mergePublishedNorm(@PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to merge", example = "15837028-645a-4a55-9aaf-ceb846439eba") String publishedNormId,
       @Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) OperationRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
 
   /**
