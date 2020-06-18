@@ -56,13 +56,6 @@ public class IncentivesResource implements Incentives {
   protected Vertx vertx;
 
   /**
-   * Create an empty resource. This is only used for unit tests.
-   */
-  protected IncentivesResource() {
-
-  }
-
-  /**
    * Create a new instance to provide the services of the {@link Incentives}.
    *
    * @param vertx with the event bus to use.
@@ -105,7 +98,7 @@ public class IncentivesResource implements Incentives {
 
             if (send.failed()) {
 
-              final Throwable cause = validate.cause();
+              final Throwable cause = send.cause();
               Logger.trace(cause, "Fail sendIncentive: {} of {} is not accepted", message, body);
               OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 

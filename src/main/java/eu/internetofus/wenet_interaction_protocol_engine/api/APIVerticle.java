@@ -30,6 +30,8 @@ import eu.internetofus.common.components.interaction_protocol_engine.WeNetIntera
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngineClient;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.vertx.AbstractAPIVerticle;
+import eu.internetofus.wenet_interaction_protocol_engine.api.incentives.Incentives;
+import eu.internetofus.wenet_interaction_protocol_engine.api.incentives.IncentivesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.Messages;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.MessagesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
@@ -71,6 +73,9 @@ public class APIVerticle extends AbstractAPIVerticle {
 
     routerFactory.mountServiceInterface(Messages.class, Messages.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Messages.ADDRESS).register(Messages.class, new MessagesResource(this.vertx));
+
+    routerFactory.mountServiceInterface(Incentives.class, Incentives.ADDRESS);
+    new ServiceBinder(this.vertx).setAddress(Incentives.ADDRESS).register(Incentives.class, new IncentivesResource(this.vertx));
 
   }
 

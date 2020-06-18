@@ -24,7 +24,7 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.messages;
+package eu.internetofus.wenet_interaction_protocol_engine.api.incentives;
 
 import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
 import static io.vertx.junit5.web.TestRequest.testRequest;
@@ -36,8 +36,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.common.components.ErrorMessage;
-import eu.internetofus.common.components.interaction_protocol_engine.Message;
-import eu.internetofus.common.components.interaction_protocol_engine.MessageTest;
+import eu.internetofus.common.components.incentive_server.Incentive;
+import eu.internetofus.common.components.incentive_server.IncentiveTest;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -46,61 +46,60 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxTestContext;
 
 /**
- * The integration test over the {@link Messages}.
+ * The integration test over the {@link Incentives}.
  *
- * @see Messages
+ * @see Incentives
  *
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class MessagesIT {
+public class IncentivesIT {
 
   /**
-   * Verify that can send a message.
+   * Verify that can send a incentive.
    *
    * @param vertx       event bus to use.
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Messages#sendMessage(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
+   * @see Incentives#sendIncentive(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
    *      io.vertx.core.Handler)
    */
   @Test
-  public void shouldSendMessage(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+  public void shouldSendIncentive(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    new MessageTest().createModelExample(1, vertx, testContext, testContext.succeeding(message -> {
+    new IncentiveTest().createModelExample(1, vertx, testContext, testContext.succeeding(incentive -> {
 
-      message.norms = null;
-      testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {
+      testRequest(client, HttpMethod.POST, Incentives.PATH).expect(res -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.ACCEPTED.getStatusCode());
-        final Message sent = assertThatBodyIs(Message.class, res);
-        assertThat(sent).isEqualTo(message);
+        final Incentive sent = assertThatBodyIs(Incentive.class, res);
+        assertThat(sent).isEqualTo(incentive);
         testContext.completeNow();
 
-      }).sendJson(message.toJsonObject(), testContext);
+      }).sendJson(incentive.toJsonObject(), testContext);
 
     }));
   }
 
   /**
-   * Verify that can not send a bad message.
+   * Verify that can not send a bad incentive.
    *
    * @param vertx       event bus to use.
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Messages#sendMessage(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
+   * @see Incentives#sendIncentive(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
    *      io.vertx.core.Handler)
    */
   @Test
-  public void shouldNotSendBadMessage(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+  public void shouldNotSendBadIncentive(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {
+    testRequest(client, HttpMethod.POST, Incentives.PATH).expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
       final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
-      assertThat(error.code).isNotEmpty().isEqualTo("bad_message");
+      assertThat(error.code).isNotEmpty().isEqualTo("bad_incentive");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
       testContext.completeNow();
 
@@ -108,28 +107,28 @@ public class MessagesIT {
   }
 
   /**
-   * Verify that can not send an invalid message.
+   * Verify that can not send an invalid incentive.
    *
    * @param vertx       event bus to use.
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Messages#sendMessage(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
+   * @see Incentives#sendIncentive(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
    *      io.vertx.core.Handler)
    */
   @Test
-  public void shouldNotSendInvalidMessage(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+  public void shouldNotSendInvalidIncentive(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    final Message message = new MessageTest().createModelExample(1);
-    testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {
+    final Incentive incentive = new IncentiveTest().createModelExample(1);
+    testRequest(client, HttpMethod.POST, Incentives.PATH).expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
       final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
-      assertThat(error.code).isNotEmpty().isEqualTo("bad_message.content");
+      assertThat(error.code).isNotEmpty().isEqualTo("bad_incentive.AppID");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
       testContext.completeNow();
 
-    }).sendJson(message.toJsonObject(), testContext);
+    }).sendJson(incentive.toJsonObject(), testContext);
   }
 
 }

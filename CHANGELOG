@@ -2,16 +2,17 @@
 
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
-## Version 0.10.0 (2020-06-15)
+## Version 0.10.0 (2020-06-18)
 
  * Add point to receive incentives to notify to the user.
+ * Split update norm method to put for update all the norm and patch to update only some elements. 
 
 
 ## Version 0.9.0 (2020-06-15)
 
  * Migrate to use Vert.x
  * Add hardcoded basic protocol
- * Integrate with social context buider and incentive server.
+ * Integrate with social context builder and incentive server.
 
 
 ## Version 0.8.0 (2019-10-30)

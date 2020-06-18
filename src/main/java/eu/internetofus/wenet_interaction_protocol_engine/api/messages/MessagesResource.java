@@ -99,7 +99,7 @@ public class MessagesResource implements Messages {
 
             this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message.toJsonObject());
             Logger.trace("Accepted sendMessage {}", message);
-            OperationReponseHandlers.responseOk(resultHandler, message);
+            OperationReponseHandlers.responseWith(resultHandler, Status.ACCEPTED, message);
 
           } catch (final Throwable cause) {
 
