@@ -134,7 +134,21 @@ public class EngineEnvironment {
       future = future.compose(loadField(Task.class, loader -> {
         WeNetTaskManager.createProxy(vertx).retrieveTask(message.taskId, loader);
       }, "task", (env, profile) -> env.task = profile));
+      if (message.appId == null) {
 
+        future = future.compose(partialEnv -> {
+
+          final Promise<EngineEnvironment> loadAppPromise = Promise.promise();
+          Future<EngineEnvironment> loadAppFuture = loadAppPromise.future();
+          final String appId = partialEnv.task.appId;
+          loadAppFuture = loadAppFuture.compose(loadField(App.class, loader -> {
+            WeNetService.createProxy(vertx).retrieveApp(appId, loader);
+          }, "app", (env, profile) -> env.app = profile));
+          loadAppPromise.complete(partialEnv);
+          return loadAppFuture;
+
+        });
+      }
     }
 
     promise.complete(new EngineEnvironment());

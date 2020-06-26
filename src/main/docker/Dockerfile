@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:experimental
+
 # --- Build the code
 FROM maven:3.6.3-jdk-11-slim AS build
 LABEL stage=build
@@ -5,9 +7,9 @@ ENV MAVEN_OPTS="-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
 RUN mkdir -p /build
 WORKDIR /build
 COPY pom.xml .
-RUN mvn dependency:go-offline
+RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn dependency:go-offline
 COPY src/ /build/src/
-RUN mvn -DfinalName=wenet-interaction-protocol-engine -DskipTests install
+RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn -DfinalName=wenet-interaction-protocol-engine -DskipTests install
 
 # --- Run the code
 FROM openjdk:11.0.5-jre
