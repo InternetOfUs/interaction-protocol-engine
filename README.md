@@ -63,10 +63,10 @@ To use this feature you must to install the next software.
 If you want to create an image execute the next command.
 
 ```
-docker build -f src/main/docker/Dockerfile -t wenet/interaction-protocol-engine:latest .
+./buildDockerImage.sh
 ```
 
-You can use the next arguments:
+This create the generic docker image, but you can create a different wit the **docker build** command and using the next arguments:
 
  - **DEFAULT_API_HOST** to define the default host where API will be bind. By default is **0.0.0.0**.
  - **DEFAULT_API_PORT** to define the default port where API will be bind. By default is **8080**.
@@ -89,7 +89,7 @@ So you can mount a volume to this if you want to modify any configuration proper
 To run a the created docker image, run the next command:
 
 ```
-docker run -t -i -p 8080:8080 --name wenet_TASK_MANAGER_API wenet/interaction-protocol-engine
+docker run -t -i -p 8080:8080 --name wenet_interaction_protocol_engine_api wenet/interaction-protocol-engine
 ```
 
 You can modify use the next environment properties to modify some parameters of the server:
@@ -162,6 +162,7 @@ The interaction protocol engine has the next available instances:
  - WeNet development interaction protocol engine API is available at ["https://wenet.u-hopper.com/dev/interaction_protocol_engine]("https://wenet.u-hopper.com/dev/interaction_protocol_engine).
  - The IIIA stable interaction protocol engine API is available at ["https://wenet.u-hopper.com/dev/interaction_protocol_engine]("https://wenet.u-hopper.com/dev/interaction_protocol_engine).
  - The IIIA development interaction protocol engine API is available at ["https://wenet.u-hopper.com/dev/interaction_protocol_engine]("https://wenet.u-hopper.com/dev/interaction_protocol_engine).
+ - The interaction protocol engine API 0.10.X is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.10/](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.10/).
  - The interaction protocol engine API 0.9.0 is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.9.0/](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.9.0/).
  - The interaction protocol engine API 0.8.0 (Dummy version) is available at [http://ardid.iiia.csic.es/dev-wenet-interaction-protocol-engine/](http://ardid.iiia.csic.es/dev-wenet-interaction-protocol-engine/](http://ardid.iiia.csic.es/dev-wenet-interaction-protocol-engine/](http://ardid.iiia.csic.es/dev-wenet-interaction-protocol-engine/).
 
