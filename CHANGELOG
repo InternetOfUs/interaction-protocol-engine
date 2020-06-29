@@ -2,7 +2,7 @@
 
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
-## Version 0.10.0 (2020-06-18)
+## Version 0.10.0 (2020-06-29)
 
  * Add point to receive incentives to notify to the user.
  * Split update norm method to put for update all the norm and patch to update only some elements. 
