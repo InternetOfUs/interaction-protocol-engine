@@ -240,7 +240,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
       } else {
 
         final HttpResponse<Buffer> response = send.result();
-        Logger.trace("App[{}]: POST {} with {} responds with {}:{}", () -> app.appId, () -> app.messageCallbackUrl, () -> body, () -> response.statusCode(), () -> response.bodyAsString());
+        Logger.trace("App[{}]: POST {} with {} responds with code {} and body {}", () -> app.appId, () -> app.messageCallbackUrl, () -> body, () -> response.statusCode(), () -> response.bodyAsString());
       }
 
     });
