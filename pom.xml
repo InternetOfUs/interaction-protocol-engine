@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.internetofus</groupId>
 	<artifactId>wenet-interaction-protocol-engine</artifactId>
-	<version>0.10.0</version>
+	<version>0.10.1</version>
 	<description>This project will be used to provide the API to storing
 		and maintaining the WeNet user task.</description>
 	<organization>
