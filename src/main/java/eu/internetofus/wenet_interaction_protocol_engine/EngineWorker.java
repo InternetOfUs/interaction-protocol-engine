@@ -26,8 +26,6 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import javax.ws.rs.core.Response.Status;
-
 import org.tinylog.Logger;
 
 import eu.internetofus.common.TimeManager;
@@ -237,20 +235,12 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
       if (send.failed()) {
 
-        Logger.trace(send.cause(), "Can not notify about  {} to {}.", body, app);
+        Logger.trace(send.cause(), "App[{}]: POST {} with {} failed", () -> app.appId, () -> app.messageCallbackUrl, () -> body);
 
       } else {
 
         final HttpResponse<Buffer> response = send.result();
-        final int code = response.statusCode();
-        if (Status.fromStatusCode(code).getFamily() == Status.Family.SUCCESSFUL) {
-
-          Logger.trace("Successfully () sent {} to {}", code, body, app);
-
-        } else {
-
-          Logger.trace("Error {}: {}, when send {}  to {}", () -> code, () -> response.bodyAsString(), () -> body, () -> app);
-        }
+        Logger.trace("App[{}]: POST {} with {} responds with {}:{}", () -> app.appId, () -> app.messageCallbackUrl, () -> body, () -> response.statusCode(), () -> response.bodyAsString());
       }
 
     });
@@ -392,7 +382,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    */
   private void handleVolunteerForTask(final String volunteerId, final EngineEnvironment env, final WebClient client) {
 
-    if ( env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
+    if (env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
 
       final Task taskWhithNewVolunteer = new Task();
       taskWhithNewVolunteer.attributes = env.task.attributes;
