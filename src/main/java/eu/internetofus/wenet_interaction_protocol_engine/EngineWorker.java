@@ -734,7 +734,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
     final WebClient client = WebClient.create(this.vertx, options);
 
     final TextualMessage notification = new TextualMessage();
-    notification.title = "There is a system message for you";
+    notification.title = "";
     notification.recipientId = incentive.UserId;
     if (incentive.Message != null) {
 
