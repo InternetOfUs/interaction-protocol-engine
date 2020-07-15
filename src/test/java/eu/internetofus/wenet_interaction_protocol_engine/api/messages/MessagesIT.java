@@ -76,7 +76,6 @@ public class MessagesIT {
         assertThat(res.statusCode()).isEqualTo(Status.ACCEPTED.getStatusCode());
         final Message sent = assertThatBodyIs(Message.class, res);
         assertThat(sent).isEqualTo(message);
-        testContext.completeNow();
 
       }).sendJson(message.toJsonObject(), testContext);
 
@@ -102,9 +101,9 @@ public class MessagesIT {
       final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty().isEqualTo("bad_message");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-      testContext.completeNow();
 
     }).sendJson(new JsonObject().put("key", "value"), testContext);
+
   }
 
   /**
@@ -127,9 +126,9 @@ public class MessagesIT {
       final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty().isEqualTo("bad_message.content");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-      testContext.completeNow();
 
     }).sendJson(message.toJsonObject(), testContext);
+
   }
 
 }

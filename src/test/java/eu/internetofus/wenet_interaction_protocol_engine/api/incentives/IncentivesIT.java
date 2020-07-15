@@ -75,7 +75,6 @@ public class IncentivesIT {
         assertThat(res.statusCode()).isEqualTo(Status.ACCEPTED.getStatusCode());
         final Incentive sent = assertThatBodyIs(Incentive.class, res);
         assertThat(sent).isEqualTo(incentive);
-        testContext.completeNow();
 
       }).sendJson(incentive.toJsonObject(), testContext);
 
@@ -101,7 +100,6 @@ public class IncentivesIT {
       final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty().isEqualTo("bad_incentive");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-      testContext.completeNow();
 
     }).sendJson(new JsonObject().put("key", "value"), testContext);
   }
@@ -126,7 +124,6 @@ public class IncentivesIT {
       final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty().isEqualTo("bad_incentive.AppID");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-      testContext.completeNow();
 
     }).sendJson(incentive.toJsonObject(), testContext);
   }

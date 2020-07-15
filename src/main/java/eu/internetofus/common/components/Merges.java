@@ -39,7 +39,6 @@ import eu.internetofus.common.components.profile_manager.PlannedActivity;
 import eu.internetofus.common.components.profile_manager.RelevantLocation;
 import eu.internetofus.common.components.profile_manager.Routine;
 import eu.internetofus.common.components.profile_manager.SocialPractice;
-import eu.internetofus.common.components.task_manager.TaskAttribute;
 import eu.internetofus.common.components.task_manager.TaskAttributeType;
 import eu.internetofus.common.components.task_manager.TaskTransactionType;
 import io.vertx.core.Future;
@@ -69,23 +68,22 @@ public interface Merges {
    *
    * @return the future that will provide the merged lists.
    */
-  static <M, T extends Mergeable<T> & Validable> Function<M, Future<M>> mergeFieldList(final List<T> target, final List<T> source, final String codePrefix, final Vertx vertx, final Predicate<T> hasIdentifier, final BiPredicate<T, T> equalsIdentifier,
-      final BiConsumer<M, List<T>> setter) {
+  static <M, T extends Mergeable<T> & Validable> Function<M, Future<M>> mergeFieldList(final List<T> target, final List<T> source, final String codePrefix, final Vertx vertx, final Predicate<T> hasIdentifier,
+      final BiPredicate<T, T> equalsIdentifier, final BiConsumer<M, List<T>> setter) {
 
     return model -> {
       final Promise<List<T>> promise = Promise.promise();
       Future<List<T>> future = promise.future();
       if (source != null) {
 
-        final List<T> original = new ArrayList<>();
-        final List<T> originalMerged = new ArrayList<>();
+        final List<T> targetWithIds = new ArrayList<>();
         if (target != null) {
 
           for (final T element : target) {
 
             if (hasIdentifier.test(element)) {
 
-              original.add(element);
+              targetWithIds.add(element);
             }
           }
 
@@ -94,15 +92,23 @@ public interface Merges {
 
           final String codeElement = codePrefix + "[" + index + "]";
           final T sourceElement = source.get(index);
-          // search if it modify any original model
+          // Search if it modify any original model
           if (hasIdentifier.test(sourceElement)) {
 
-            for (int j = 0; j < original.size(); j++) {
+            for (int j = 0; j < index; j++) {
 
-              final T targetElement = original.get(j);
+              final T element = source.get(j);
+              if (hasIdentifier.test(element) && equalsIdentifier.test(element, sourceElement)) {
+
+                return Future.failedFuture(new ValidationErrorException(codeElement, "The identifier is already defined at " + j));
+              }
+            }
+            for (int j = 0; j < targetWithIds.size(); j++) {
+
+              final T targetElement = targetWithIds.get(j);
               if (equalsIdentifier.test(targetElement, sourceElement)) {
 
-                originalMerged.add(original.remove(j));
+                targetWithIds.remove(j);
                 future = future.compose(merged -> targetElement.merge(sourceElement, codeElement, vertx).map(mergedElement -> {
                   merged.add(mergedElement);
                   return merged;
@@ -111,18 +117,9 @@ public interface Merges {
               }
 
             }
-            for (final T element : originalMerged) {
-
-              if (equalsIdentifier.test(element, sourceElement)) {
-
-                future = Future.failedFuture(new ValidationErrorException(codeElement, "This model is already merged."));
-                break INDEX;
-              }
-
-            }
           }
 
-          // not found original model with the same id => check it as new
+          // Not found original model with the same id => check it as new
           future = future.compose(merged -> sourceElement.validate(codeElement, vertx).map(empty -> {
             merged.add(sourceElement);
             return merged;
@@ -197,7 +194,8 @@ public interface Merges {
    *
    * @return the future that will provide the merged list of planned activities.
    */
-  static <M> Function<M, Future<M>> mergePlannedActivities(final List<PlannedActivity> targetPlannedActivitys, final List<PlannedActivity> sourcePlannedActivitys, final String codePrefix, final Vertx vertx, final BiConsumer<M, List<PlannedActivity>> setter) {
+  static <M> Function<M, Future<M>> mergePlannedActivities(final List<PlannedActivity> targetPlannedActivitys, final List<PlannedActivity> sourcePlannedActivitys, final String codePrefix, final Vertx vertx,
+      final BiConsumer<M, List<PlannedActivity>> setter) {
 
     return Merges.mergeFieldList(targetPlannedActivitys, sourcePlannedActivitys, codePrefix, vertx, plannedactivity -> plannedactivity.id != null,
         (targetPlannedActivity, sourcePlannedActivity) -> targetPlannedActivity.id.equals(sourcePlannedActivity.id), setter);
@@ -217,7 +215,8 @@ public interface Merges {
    *
    * @return the future that will provide the merged list of relevant locations.
    */
-  static <M> Function<M, Future<M>> mergeRelevantLocations(final List<RelevantLocation> targetRelevantLocations, final List<RelevantLocation> sourceRelevantLocations, final String codePrefix, final Vertx vertx, final BiConsumer<M, List<RelevantLocation>> setter) {
+  static <M> Function<M, Future<M>> mergeRelevantLocations(final List<RelevantLocation> targetRelevantLocations, final List<RelevantLocation> sourceRelevantLocations, final String codePrefix, final Vertx vertx,
+      final BiConsumer<M, List<RelevantLocation>> setter) {
 
     return Merges.mergeFieldList(targetRelevantLocations, sourceRelevantLocations, codePrefix, vertx, relevantlocation -> relevantlocation.id != null,
         (targetRelevantLocation, sourceRelevantLocation) -> targetRelevantLocation.id.equals(sourceRelevantLocation.id), setter);
@@ -237,7 +236,8 @@ public interface Merges {
    *
    * @return the future that will provide the merged list of social practices.
    */
-  static <M> Function<M, Future<M>> mergeSocialPractices(final List<SocialPractice> targetSocialPractices, final List<SocialPractice> sourceSocialPractices, final String codePrefix, final Vertx vertx, final BiConsumer<M, List<SocialPractice>> setter) {
+  static <M> Function<M, Future<M>> mergeSocialPractices(final List<SocialPractice> targetSocialPractices, final List<SocialPractice> sourceSocialPractices, final String codePrefix, final Vertx vertx,
+      final BiConsumer<M, List<SocialPractice>> setter) {
 
     return Merges.mergeFieldList(targetSocialPractices, sourceSocialPractices, codePrefix, vertx, socialpractice -> socialpractice.id != null,
         (targetSocialPractice, sourceSocialPractice) -> targetSocialPractice.id.equals(sourceSocialPractice.id), setter);
@@ -260,26 +260,6 @@ public interface Merges {
   static <M> Function<M, Future<M>> mergeRoutines(final List<Routine> targetRoutines, final List<Routine> sourceRoutines, final String codePrefix, final Vertx vertx, final BiConsumer<M, List<Routine>> setter) {
 
     return Merges.mergeFieldList(targetRoutines, sourceRoutines, codePrefix, vertx, routine -> false, (targetRoutine, sourceRoutine) -> false, setter);
-
-  }
-
-  /**
-   * Merge two list of task attributes.
-   *
-   * @param targetTaskAttributes target task attributes to merge.
-   * @param sourceTaskAttributes source task attributes to merge.
-   * @param codePrefix           prefix for the error code.
-   * @param vertx                the event bus infrastructure to use.
-   * @param setter               function to set the merged field list into the merged model.
-   *
-   * @param <M>                  type of merging model.
-   *
-   * @return the future that will provide the merged list of task attributes.
-   */
-  static <M> Function<M, Future<M>> mergeTaskAttributes(final List<TaskAttribute> targetTaskAttributes, final List<TaskAttribute> sourceTaskAttributes, final String codePrefix, final Vertx vertx, final BiConsumer<M, List<TaskAttribute>> setter) {
-
-    return Merges.mergeFieldList(targetTaskAttributes, sourceTaskAttributes, codePrefix, vertx, taskAttribute -> taskAttribute.name != null,
-        (targetTaskAttribute, sourceTaskAttribute) -> targetTaskAttribute.name.equals(sourceTaskAttribute.name), setter);
 
   }
 
@@ -358,7 +338,8 @@ public interface Merges {
    *
    * @return the future that will provide the merged list of task attribute types.
    */
-  static <M> Function<M, Future<M>> mergeTaskAttributeTypes(final List<TaskAttributeType> targetTaskAttributeTypes, final List<TaskAttributeType> sourceTaskAttributeTypes, final String codePrefix, final Vertx vertx, final BiConsumer<M, List<TaskAttributeType>> setter) {
+  static <M> Function<M, Future<M>> mergeTaskAttributeTypes(final List<TaskAttributeType> targetTaskAttributeTypes, final List<TaskAttributeType> sourceTaskAttributeTypes, final String codePrefix, final Vertx vertx,
+      final BiConsumer<M, List<TaskAttributeType>> setter) {
 
     return Merges.mergeFieldList(targetTaskAttributeTypes, sourceTaskAttributeTypes, codePrefix, vertx, taskattributetype -> taskattributetype.name != null,
         (targetTaskAttributeType, sourceTaskAttributeType) -> targetTaskAttributeType.name.equals(sourceTaskAttributeType.name), setter);

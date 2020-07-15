@@ -75,7 +75,6 @@ public class NormsIT {
       final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty();
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-      testContext.completeNow();
 
     }).send(testContext);
   }
@@ -99,7 +98,6 @@ public class NormsIT {
         assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
         final PublishedNorm found = assertThatBodyIs(PublishedNorm.class, res);
         assertThat(found).isEqualTo(stored);
-        testContext.completeNow();
 
       })).send(testContext);
 
@@ -124,9 +122,9 @@ public class NormsIT {
       final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty().isEqualTo("bad_publishedNorm");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-      testContext.completeNow();
 
     }).sendJson(new JsonObject().put("udefinedKey", "value"), testContext);
+
   }
 
   /**
@@ -147,9 +145,9 @@ public class NormsIT {
       final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty().isEqualTo("bad_publishedNorm.publisherId");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-      testContext.completeNow();
 
     }).sendJson(norm.toJsonObject(), testContext);
+
   }
 
   /**
@@ -181,7 +179,6 @@ public class NormsIT {
         model.id = published.id;
         model.norm.id = published.norm.id;
         assertThat(published).isEqualTo(model);
-        testContext.completeNow();
 
       }).sendJson(model.toJsonObject(), testContext);
 
@@ -217,7 +214,6 @@ public class NormsIT {
           assertThat(page.offset).isEqualTo(0);
           assertThat(page.total).isEqualTo(2);
           assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
-          testContext.completeNow();
 
         }).send(testContext);
       }));
@@ -253,7 +249,6 @@ public class NormsIT {
           assertThat(page.offset).isEqualTo(1);
           assertThat(page.total).isEqualTo(2);
           assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm2);
-          testContext.completeNow();
 
         }).send(testContext);
       }));
@@ -289,7 +284,6 @@ public class NormsIT {
           assertThat(page.offset).isEqualTo(0);
           assertThat(page.total).isEqualTo(2);
           assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1);
-          testContext.completeNow();
 
         }).send(testContext);
       }));
@@ -330,7 +324,6 @@ public class NormsIT {
             assertThat(page.offset).isEqualTo(0);
             assertThat(page.total).isEqualTo(2);
             assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
-            testContext.completeNow();
 
           }).send(testContext);
         }));
@@ -368,7 +361,6 @@ public class NormsIT {
           assertThat(page.offset).isEqualTo(0);
           assertThat(page.total).isEqualTo(2);
           assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
-          testContext.completeNow();
 
         }).send(testContext);
       }));
@@ -393,7 +385,6 @@ public class NormsIT {
       final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty();
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-      testContext.completeNow();
 
     }).send(testContext);
   }
@@ -417,7 +408,6 @@ public class NormsIT {
       assertThat(page.offset).isEqualTo(0);
       assertThat(page.total).isEqualTo(0);
       assertThat(page.norms).isNull();
-      testContext.completeNow();
 
     }).send(testContext);
   }
@@ -440,7 +430,6 @@ public class NormsIT {
       final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty();
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-      testContext.completeNow();
 
     }).send(testContext);
   }
@@ -463,7 +452,6 @@ public class NormsIT {
       testRequest(client, HttpMethod.DELETE, Norms.PATH + "/" + norm.id).expect(res -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.NO_CONTENT.getStatusCode());
-        testContext.completeNow();
 
       }).send(testContext);
 
@@ -490,7 +478,6 @@ public class NormsIT {
         final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
         assertThat(error.code).isNotEmpty();
         assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-        testContext.completeNow();
 
       }).sendJson(new JsonObject().put("key", "value"), testContext);
 
@@ -517,7 +504,6 @@ public class NormsIT {
         final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
         assertThat(error.code).isNotEmpty();
         assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-        testContext.completeNow();
 
       }).sendJson(new PublishedNormTest().createModelExample(1).toJsonObject(), testContext);
 
@@ -544,7 +530,6 @@ public class NormsIT {
         final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
         assertThat(error.code).isNotEmpty();
         assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-        testContext.completeNow();
 
       }).sendJson(new PublishedNormTest().createModelExample(1).toJsonObject(), testContext);
 
@@ -573,7 +558,6 @@ public class NormsIT {
           final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
           assertThat(error.code).isNotEmpty();
           assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-          testContext.completeNow();
 
         }).sendJson(new PublishedNorm().toJsonObject(), testContext);
 
@@ -611,7 +595,6 @@ public class NormsIT {
             source.id = target.id;
             source.norm.id = target.norm.id;
             assertThat(updated).isEqualTo(source);
-            testContext.completeNow();
 
           }).sendJson(source.toJsonObject(), testContext);
 
@@ -640,7 +623,6 @@ public class NormsIT {
         final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
         assertThat(error.code).isNotEmpty();
         assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-        testContext.completeNow();
 
       }).sendJson(new JsonObject().put("key", "value"), testContext);
 
@@ -667,7 +649,6 @@ public class NormsIT {
         final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
         assertThat(error.code).isNotEmpty();
         assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-        testContext.completeNow();
 
       }).sendJson(new PublishedNormTest().createModelExample(1).toJsonObject(), testContext);
 
@@ -694,7 +675,6 @@ public class NormsIT {
         final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
         assertThat(error.code).isNotEmpty();
         assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-        testContext.completeNow();
 
       }).sendJson(new PublishedNormTest().createModelExample(1).toJsonObject(), testContext);
 
@@ -723,7 +703,6 @@ public class NormsIT {
           final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
           assertThat(error.code).isNotEmpty();
           assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
-          testContext.completeNow();
 
         }).sendJson(new PublishedNorm().toJsonObject(), testContext);
 
@@ -760,7 +739,6 @@ public class NormsIT {
           target._lastUpdateTs = merged._lastUpdateTs;
           target.name = "NEW NAME";
           assertThat(merged).isEqualTo(target);
-          testContext.completeNow();
 
         }).sendJson(source.toJsonObject(), testContext);
 
