@@ -30,14 +30,14 @@ import eu.internetofus.common.components.interaction_protocol_engine.WeNetIntera
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngineClient;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.vertx.AbstractAPIVerticle;
+import eu.internetofus.wenet_interaction_protocol_engine.api.help.Help;
+import eu.internetofus.wenet_interaction_protocol_engine.api.help.HelpResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.incentives.Incentives;
 import eu.internetofus.wenet_interaction_protocol_engine.api.incentives.IncentivesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.Messages;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.MessagesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.NormsResource;
-import eu.internetofus.wenet_interaction_protocol_engine.api.versions.Versions;
-import eu.internetofus.wenet_interaction_protocol_engine.api.versions.VersionsResource;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
 import io.vertx.ext.web.client.WebClient;
@@ -65,8 +65,8 @@ public class APIVerticle extends AbstractAPIVerticle {
   @Override
   protected void mountServiceInterfaces(final OpenAPI3RouterFactory routerFactory) {
 
-    routerFactory.mountServiceInterface(Versions.class, Versions.ADDRESS);
-    new ServiceBinder(this.vertx).setAddress(Versions.ADDRESS).register(Versions.class, new VersionsResource(this.config()));
+    routerFactory.mountServiceInterface(Help.class, Help.ADDRESS);
+    new ServiceBinder(this.vertx).setAddress(Help.ADDRESS).register(Help.class, new HelpResource(this));
 
     routerFactory.mountServiceInterface(Norms.class, Norms.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Norms.ADDRESS).register(Norms.class, new NormsResource(this.vertx));

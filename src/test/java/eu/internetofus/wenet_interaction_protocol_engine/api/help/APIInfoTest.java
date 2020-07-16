@@ -24,9 +24,32 @@
  * -----------------------------------------------------------------------------
  */
 
+package eu.internetofus.wenet_interaction_protocol_engine.api.help;
+
+import eu.internetofus.common.components.ModelTestCase;
+
 /**
- * The components to provide the version of the API.
+ * Test the {@link APIInfo}.
+ *
+ * @see APIInfo
  *
  * @author UDT-IA, IIIA-CSIC
  */
-package eu.internetofus.wenet_interaction_protocol_engine.api.versions;
+public class APIInfoTest extends ModelTestCase<APIInfo> {
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public APIInfo createModelExample(final int index) {
+
+    final APIInfo version = new APIInfo();
+    version.name = "name" + index;
+    version.apiVersion = "0.0." + index;
+    version.softwareVersion = "0." + index + ".0";
+    version.vendor = "vendor" + index;
+    version.license = "license" + index;
+    return version;
+  }
+
+}

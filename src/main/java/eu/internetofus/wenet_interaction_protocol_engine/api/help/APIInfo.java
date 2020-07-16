@@ -23,31 +23,53 @@
  *
  * -----------------------------------------------------------------------------
  */
+package eu.internetofus.wenet_interaction_protocol_engine.api.help;
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.versions;
-
-import eu.internetofus.common.components.ModelTestCase;
+import eu.internetofus.common.components.Model;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * Test the {@link Version}.
- *
- * @see Version
+ * A model with information about the API.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class VersionTest extends ModelTestCase<Version> {
+@Schema(name = "Info", description = "Provide the version information of the API")
+public class APIInfo extends Model {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Version createModelExample(int index) {
+  /**
+   * The current version of the API.
+   */
+  @Schema(description = "Contain the name of the API", example = "wenet/interaction-protocol-engine")
+  public String name;
 
-		final Version version = new Version();
-		version.api = "0.0." + index;
-		version.software = "0." + index + ".0";
-		version.vendor = "UDT-IA, IIIA-CSIC";
-		return version;
-	}
+  /**
+   * The current version of the API.
+   */
+  @Schema(description = "Contain the implementation version number of the API", example = "1.0.0")
+  public String apiVersion;
 
+  /**
+   * The current version of the software.
+   */
+  @Schema(description = "Contain the implementation version number of the software", example = "1.0.0")
+  public String softwareVersion;
+
+  /**
+   * The current vendor of the API.
+   */
+  @Schema(description = "Contain information of the organization that has implemented the API", example = "UDT-IA, IIIA-CSIC")
+  public String vendor;
+
+  /**
+   * The current vendor of the API.
+   */
+  @Schema(description = "Contain information of the license of the API", example = "MIT")
+  public String license;
+
+  /**
+   * Create a new version.
+   */
+  public APIInfo() {
+
+  }
 }

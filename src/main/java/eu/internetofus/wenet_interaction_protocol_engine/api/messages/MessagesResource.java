@@ -54,13 +54,6 @@ public class MessagesResource implements Messages {
   protected Vertx vertx;
 
   /**
-   * Create an empty resource. This is only used for unit tests.
-   */
-  protected MessagesResource() {
-
-  }
-
-  /**
    * Create a new instance to provide the services of the {@link Messages}.
    *
    * @param vertx with the event bus to use.

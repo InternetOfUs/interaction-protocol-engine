@@ -24,7 +24,7 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.versions;
+package eu.internetofus.wenet_interaction_protocol_engine.api.help;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -44,41 +44,60 @@ import io.vertx.ext.web.api.OperationResponse;
 import io.vertx.ext.web.api.generator.WebApiServiceGen;
 
 /**
- * Resource to provide the version of the API.
+ * Resource to provide help about the api.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@Path(Versions.PATH)
+@Path(Help.PATH)
 @Tag(name = "Other")
 @WebApiServiceGen
-public interface Versions {
+public interface Help {
 
-	/**
-	 * The path to the version resource.
-	 */
-	String PATH = "/versions";
+  /**
+   * The path to the help resources.
+   */
+  String PATH = "/help";
 
-	/**
-	 * The address of this service.
-	 */
-	String ADDRESS = "wenet_task_manager.api.versions";
+  /**
+   * The address of this service.
+   */
+  String ADDRESS = "wenet_interaction_protocol_engine.api.help";
 
-	/**
-	 * The handler for the get version.
-	 *
-	 * @param context       of the request.
-	 * @param resultHandler to inform of the response.
-	 */
-	@GET
-	@Operation(
-			operationId = "getVersion",
-			summary = "Get the version of the API",
-			description = "Return the current API version")
-	@ApiResponse(
-			responseCode = "200",
-			description = "The API version",
-			content = @Content(schema = @Schema(implementation = Version.class)))
-	@Produces(MediaType.APPLICATION_JSON)
-	void getVersion(@Parameter(hidden = true, required = false) OperationRequest context,
-			@Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+  /**
+   * The path to the information of the API.
+   */
+  String INFO_PATH = "/info";
+
+  /**
+   * The path to the Open API description.
+   */
+  String OPENAPI_YAML_PATH = "/openapi.yaml";
+
+  /**
+   * The handler for the get information about the API.
+   *
+   * @param context       of the request.
+   * @param resultHandler to inform of the response.
+   */
+  @GET
+  @Path(INFO_PATH)
+  @Operation(summary = "Get the information about the API", description = "Return the relevant information of the API implementation")
+  @ApiResponse(responseCode = "200", description = "The API information", content = @Content(schema = @Schema(implementation = APIInfo.class)))
+  @Produces(MediaType.APPLICATION_JSON)
+  void getInfo(@Parameter(hidden = true, required = false) OperationRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+
+  /**
+   * The handler for the get open API description.
+   *
+   * @param context       of the request.
+   * @param resultHandler to inform of the response.
+   */
+  @GET
+  @Path(OPENAPI_YAML_PATH)
+  @Operation(summary = "Get the Open API description", description = "Return the Open API description of this API")
+  @ApiResponse(responseCode = "200", description = "The API description")
+  @Produces("application/yaml")
+  void getOpenApi(@Parameter(hidden = true, required = false) OperationRequest context,
+      @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+
 }

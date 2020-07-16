@@ -23,43 +23,10 @@
  *
  * -----------------------------------------------------------------------------
  */
-package eu.internetofus.wenet_interaction_protocol_engine.api.versions;
-
-import eu.internetofus.common.components.Model;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * A model with the status report information.
+ * The components to provide help about the API.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@Schema(name = "version", description = "Provide the version information of the API")
-public class Version extends Model {
-
-	/**
-	 * The current version of the API.
-	 */
-	@Schema(description = "Contain the implementation version number of the API", example = "1.0.0")
-	public String api;
-
-	/**
-	 * The current version of the software.
-	 */
-	@Schema(description = "Contain the implementation version number of the software", example = "1.0.0")
-	public String software;
-
-	/**
-	 * The current vendor of the API.
-	 */
-	@Schema(
-			description = "Contain information of the organization that has implemented the API",
-			example = "UDT-IA, IIIA-CSIC")
-	public String vendor;
-
-	/**
-	 * Create a new version.
-	 */
-	public Version() {
-
-	}
-}
+package eu.internetofus.wenet_interaction_protocol_engine.api.help;
