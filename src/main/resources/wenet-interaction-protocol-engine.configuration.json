@@ -1,8 +1,12 @@
 {
-	"version": {
-		"api": "${api-version}",
-		"vendor": "UDT-IA, IIIA-CSIC",
-		"software": "${project.version} (${maven.build.timestamp})"
+	"help": {
+		"info": {
+			"name": "wenet/interaction-protocol-engine",
+			"apiVersion": "${api-version}",
+			"softwareVersion": "${project.version} (${maven.build.timestamp})",
+			"vendor": "UDT-IA, IIIA-CSIC",
+			"license": "MIT"
+		}
 	},
 	"api": {
 		"host": "localhost",
