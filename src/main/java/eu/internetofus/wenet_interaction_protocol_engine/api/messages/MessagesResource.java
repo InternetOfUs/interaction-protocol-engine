@@ -88,17 +88,9 @@ public class MessagesResource implements Messages {
 
         } else {
 
-          try {
-
-            this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message.toJsonObject());
-            Logger.trace("Accepted sendMessage {}", message);
-            OperationReponseHandlers.responseWith(resultHandler, Status.ACCEPTED, message);
-
-          } catch (final Throwable cause) {
-
-            Logger.trace(cause, "Fail sendMessage: {} is not sent to the engine worker", message);
-            OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.INTERNAL_SERVER_ERROR, "engine_worker", "Can not send message to the engine worker");
-          }
+          this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message.toJsonObject());
+          Logger.trace("Accepted sendMessage {}", message);
+          OperationReponseHandlers.responseWith(resultHandler, Status.ACCEPTED, message);
 
         }
 

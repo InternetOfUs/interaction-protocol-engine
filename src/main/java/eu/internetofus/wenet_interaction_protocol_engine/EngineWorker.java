@@ -268,13 +268,10 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
   /**
    * Fix task attributes.
    *
-   * @param env
-   *
-   * @param task    to fix the task attributes.
+   * @param env     environment where the message is processed.
    * @param message received about the task.
-   *
    */
-  private void fixTaskAttributes(final EngineEnvironment env, final Message message) {
+  protected void fixTaskAttributes(final EngineEnvironment env, final Message message) {
 
     if (env.task == null) {
 
@@ -488,7 +485,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
       } else {
 
-        Logger.trace("Incentive server notified of {} returnning", () -> status, () -> update.result());
+        Logger.trace("Incentive server notified of {} returning", () -> status, () -> update.result());
       }
 
     });

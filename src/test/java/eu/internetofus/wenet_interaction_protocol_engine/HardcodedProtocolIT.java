@@ -26,14 +26,16 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
+import static eu.internetofus.common.components.profile_manager.WeNetProfileManagers.createUsers;
+import static eu.internetofus.common.components.service.WeNetServiceSimulators.createApp;
+import static eu.internetofus.common.components.service.WeNetServiceSimulators.waitUntilCallbacks;
+import static eu.internetofus.common.components.task_manager.WeNetTaskManagers.waitUntilTask;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
@@ -105,121 +107,6 @@ public class HardcodedProtocolIT {
   protected static Task task;
 
   /**
-   * Create user for the test.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext context to do the test.
-   *
-   * @return the future that will return the created users.
-   */
-  protected Future<List<WeNetUserProfile>> createUsers(final Vertx vertx, final VertxTestContext testContext) {
-
-    final Promise<List<WeNetUserProfile>> promise = Promise.promise();
-    Future<List<WeNetUserProfile>> future = promise.future();
-    for (int i = 0; i < MAX_USERS; i++) {
-
-      future = future.compose(users -> {
-
-        final Promise<List<WeNetUserProfile>> profilePromise = Promise.promise();
-        StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext, testContext.succeeding(profile -> {
-          users.add(profile);
-          profilePromise.complete(users);
-        }));
-        return profilePromise.future();
-
-      });
-
-    }
-
-    promise.complete(new ArrayList<>());
-
-    return future;
-  }
-
-  /**
-   * Create the APP for the test.
-   *
-   * @param users       to be defined on the App.
-   * @param vertx       event bus to use.
-   * @param testContext context to do the test.
-   *
-   * @return the future that will return the created users.
-   */
-  protected Future<App> createApp(final List<WeNetUserProfile> users, final Vertx vertx, final VertxTestContext testContext) {
-
-    final Promise<App> promise = Promise.promise();
-    StoreServices.storeApp(new App(), vertx, testContext, testContext.succeeding(app -> {
-
-      final JsonArray appUsers = new JsonArray();
-      for (final WeNetUserProfile profile : users) {
-
-        appUsers.add(profile.id);
-      }
-      WeNetServiceSimulator.createProxy(vertx).addUsers(app.appId, appUsers, testContext.succeeding(added -> promise.complete(app)));
-    }));
-
-    return promise.future();
-  }
-
-  /**
-   * Wait the App has received the specified call backs.
-   *
-   * @param appId          identifier of the application to get the call backs.
-   * @param checkCallbacks the function that has to be true to finish the get the callbacks.
-   * @param vertx          event bus to use.
-   * @param testContext    context to do the test.
-   *
-   * @return the future that will return the callbacks that satisfy the predicate.
-   */
-  protected Future<JsonArray> waitUntilCallbacks(final String appId, final Predicate<JsonArray> checkCallbacks, final Vertx vertx, final VertxTestContext testContext) {
-
-    final Promise<JsonArray> promise = Promise.promise();
-    WeNetServiceSimulator.createProxy(vertx).retrieveJsonCallbacks(appId, testContext.succeeding(callbacks -> {
-
-      if (checkCallbacks.test(callbacks)) {
-
-        promise.complete(callbacks);
-
-      } else {
-
-        this.waitUntilCallbacks(appId, checkCallbacks, vertx, testContext).onComplete(testContext.succeeding(result -> promise.complete(result)));
-      }
-
-    }));
-
-    return promise.future();
-  }
-
-  /**
-   * Wait until the task satisfy a predicate.
-   *
-   * @param taskId      identifier of the task to get the information.
-   * @param checkTask   the function that has to be true to the task is on the state that is waiting.
-   * @param vertx       event bus to use.
-   * @param testContext context to do the test.
-   *
-   * @return the future that will return the task that satisfy the predicate.
-   */
-  protected Future<Task> waitUntilTask(final String taskId, final Predicate<Task> checkTask, final Vertx vertx, final VertxTestContext testContext) {
-
-    final Promise<Task> promise = Promise.promise();
-    WeNetTaskManager.createProxy(vertx).retrieveTask(taskId, testContext.succeeding(task -> {
-
-      if (checkTask.test(task)) {
-
-        promise.complete(task);
-
-      } else {
-
-        this.waitUntilTask(taskId, checkTask, vertx, testContext).onComplete(testContext.succeeding(result -> promise.complete(result)));
-      }
-
-    }));
-
-    return promise.future();
-  }
-
-  /**
    * Create the users that will be used on the tests.
    *
    * @param vertx       event bus to use.
@@ -229,7 +116,7 @@ public class HardcodedProtocolIT {
   @Order(1)
   public void shouldCreateUsers(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createUsers(vertx, testContext).onComplete(testContext.succeeding(users -> {
+    createUsers(MAX_USERS, vertx, testContext).onComplete(testContext.succeeding(users -> {
       HardcodedProtocolIT.users = users;
       testContext.completeNow();
     }));
@@ -246,7 +133,7 @@ public class HardcodedProtocolIT {
   public void shouldCreateApp(final Vertx vertx, final VertxTestContext testContext) {
 
     assert HardcodedProtocolIT.users != null;
-    this.createApp(HardcodedProtocolIT.users, vertx, testContext).onComplete(testContext.succeeding(app -> {
+    createApp(HardcodedProtocolIT.users, vertx, testContext).onComplete(testContext.succeeding(app -> {
       HardcodedProtocolIT.app = app;
       testContext.completeNow();
     }));
@@ -280,7 +167,7 @@ public class HardcodedProtocolIT {
       WeNetTaskManager.createProxy(vertx).createTask(task, testContext.succeeding(createdTask -> {
 
         HardcodedProtocolIT.task = createdTask;
-        this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+        waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
           final Set<String> ids = new HashSet<>();
           for (final WeNetUserProfile profile : HardcodedProtocolIT.users) {
@@ -347,7 +234,7 @@ public class HardcodedProtocolIT {
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
 
-      this.waitUntilTask(HardcodedProtocolIT.task.id, task -> {
+      waitUntilTask(HardcodedProtocolIT.task.id, task -> {
 
         return task.attributes instanceof JsonObject && task.attributes.getJsonArray("declined", new JsonArray()).contains(volunteerId);
 
@@ -388,7 +275,7 @@ public class HardcodedProtocolIT {
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
 
-      this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
         for (int i = 0; i < callbacks.size(); i++) {
 
@@ -471,7 +358,7 @@ public class HardcodedProtocolIT {
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
 
-      this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
         for (int i = 0; i < callbacks.size(); i++) {
 
@@ -528,7 +415,7 @@ public class HardcodedProtocolIT {
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
 
-      this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
         for (int i = 0; i < callbacks.size(); i++) {
 
@@ -583,7 +470,7 @@ public class HardcodedProtocolIT {
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
 
-      this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
         for (int i = 0; i < callbacks.size(); i++) {
 
@@ -638,7 +525,7 @@ public class HardcodedProtocolIT {
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
 
-      this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
         for (int i = 0; i < callbacks.size(); i++) {
 
@@ -693,7 +580,7 @@ public class HardcodedProtocolIT {
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
 
-      this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
         for (int i = 0; i < callbacks.size(); i++) {
 
@@ -748,7 +635,7 @@ public class HardcodedProtocolIT {
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
 
-      this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
         for (int i = 0; i < callbacks.size(); i++) {
 
@@ -803,7 +690,7 @@ public class HardcodedProtocolIT {
     taskTransaction.attributes = new JsonObject().put("outcome", outcome);
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
 
-      this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
         final Set<String> ids = new HashSet<>();
         ids.add(HardcodedProtocolIT.users.get(2).id);
@@ -870,7 +757,7 @@ public class HardcodedProtocolIT {
     taskTransaction.attributes = new JsonObject().put("outcome", outcome);
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
 
-      this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
         for (int i = 0; i < callbacks.size(); i++) {
 
@@ -933,7 +820,7 @@ public class HardcodedProtocolIT {
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
 
-      this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
         for (int i = 0; i < callbacks.size(); i++) {
 
@@ -1001,7 +888,7 @@ public class HardcodedProtocolIT {
       WeNetTaskManager.createProxy(vertx).createTask(task, testContext.succeeding(createdTask -> {
 
         HardcodedProtocolIT.task = createdTask;
-        this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+        waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
           final Set<String> ids = new HashSet<>();
           for (final WeNetUserProfile profile : HardcodedProtocolIT.users) {
@@ -1063,7 +950,7 @@ public class HardcodedProtocolIT {
     assert HardcodedProtocolIT.users != null;
     assert HardcodedProtocolIT.task != null;
 
-    while (TimeManager.now() <= HardcodedProtocolIT.task.deadlineTs ) {
+    while (TimeManager.now() <= HardcodedProtocolIT.task.deadlineTs) {
       // Wait until deadline is reached
     }
 
@@ -1074,7 +961,7 @@ public class HardcodedProtocolIT {
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
 
-      this.waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
         for (int i = 0; i < callbacks.size(); i++) {
 

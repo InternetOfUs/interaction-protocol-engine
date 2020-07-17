@@ -108,12 +108,15 @@ You can modify use the next environment properties to modify some parameters of 
 
 Also you can define your own configuration that modify this properties and mount to  **/usr/wenet/interaction-protocol-engine/etc**.
 
-If you want to start also a database and link both you can use the docker compose (`docker-compose -f src/main/docker/docker-compose.yml up -d`):
+If you want to start also a database and link both you can use the docker compose (`docker-compose -f src/main/docker/docker-compose.yml up -d`). To modify the component to links or the port to deploy use the next variables:
 
-After that you can interact with the API at **http://localhost:80**. You can modify the listening port
-with the next environment properties:
-
- - **API_PORT** to define the port where the API has to bind to the localhost. By default is **80**.
+ - **INTERACTION_PROTOCOL_ENGINE_API_PORT** to define the port to listen for the API calls. By default is **8083**.
+ - **MONGO_ROOT_USER** to define the root user for the MongoDB. By default is **root**.
+ - **MONGO_ROOT_PASSWORD** to define the password of the root user for the MongoDB. By default is **password**.
+ - **WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **"https://wenet.u-hopper.com/prod/profile_manager**.
+ - **WENET_SERVICE_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/service**.
+ - **WENET_INCENTIVE_SERVER_API** to define the path to the incentive server component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
+ - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the social context builder component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
 
 When the container is ready you can access the logs of the component, following the next steps:
 
@@ -162,6 +165,7 @@ The interaction protocol engine has the next available instances:
  - WeNet development interaction protocol engine API is available at [https://wenet.u-hopper.com/dev/interaction_protocol_engine](https://wenet.u-hopper.com/dev/interaction_protocol_engine).
  - The IIIA stable interaction protocol engine API is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/latest](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/latest).
  - The IIIA development interaction protocol engine API is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/dev](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/dev).
+ - The interaction protocol engine API 0.11.X is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.11/](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.11/).
  - The interaction protocol engine API 0.10.X is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.10/](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.10/).
  - The interaction protocol engine API 0.9.0 is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.9.0/](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.9.0/).
 
