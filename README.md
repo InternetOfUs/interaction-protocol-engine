@@ -34,11 +34,10 @@ Given the above, this means that norms will be attached to users, tasks and comm
 
 ## Setup and configuration
 
-### Installation
+First of all, you must to install the next software.
 
-The interaction protocol engine component required [Java version 11](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) or higher.
-
-All required java packages will be automatic installed by the compilation tool (`./mvnw clean install`).
+ - [docker](https://docs.docker.com/install/)
+ - [docker compose](https://docs.docker.com/compose/install/)
 
 ### Requirements
 
@@ -49,16 +48,7 @@ The interaction protocol engine component requires:
  - [WeNet - Interaction protocol engine](https://bitbucket.org/wenet/wenet-interaction-protocol-engine/)
  - [WeNet - Service API](https://bitbucket.org/wenet/wenet-service-api/)
 
-
-### Docker support
-
-To use this feature you must to install the next software.
-
- - [docker](https://docs.docker.com/install/)
- - [docker compose](https://docs.docker.com/compose/install/)
-
-
-#### Create docker image
+### Create docker image
 
 If you want to create an image execute the next command.
 
@@ -84,7 +74,8 @@ This create the generic docker image, but you can create a different wit the **d
 This arguments are used to create a configurations files at **/usr/wenet/interaction-protocol-engine/etc**.
 So you can mount a volume to this if you want to modify any configuration property at runtime.
 
-#### Run docker image
+
+### Run and configure alone
 
 To run a the created docker image, run the next command:
 
@@ -108,6 +99,9 @@ You can modify use the next environment properties to modify some parameters of 
 
 Also you can define your own configuration that modify this properties and mount to  **/usr/wenet/interaction-protocol-engine/etc**.
 
+
+### Run, configure and link with a MongoDB
+
 If you want to start also a database and link both you can use the docker compose (`docker-compose -f src/main/docker/docker-compose.yml up -d`). To modify the component to links or the port to deploy use the next variables:
 
  - **INTERACTION_PROTOCOL_ENGINE_API_PORT** to define the port to listen for the API calls. By default is **8083**.
@@ -117,6 +111,9 @@ If you want to start also a database and link both you can use the docker compos
  - **WENET_SERVICE_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/service**.
  - **WENET_INCENTIVE_SERVER_API** to define the path to the incentive server component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
  - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the social context builder component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
+ 
+
+### Show running logs
 
 When the container is ready you can access the logs of the component, following the next steps:
 
@@ -127,13 +124,34 @@ When the container is ready you can access the logs of the component, following 
 
 ## Usage
 
+First of all, you must to install the next software.
+
+ - [docker](https://docs.docker.com/install/)
+ - [docker compose](https://docs.docker.com/compose/install/)
+
+### Development environment
+
+To start the development environment run the script `./startDevelopmentEnvironment.sh`.
+This script will finish with a bash shell of the created a docker image where has been installed
+all the necessary components for the development. Also start the next services:
+
+ - [Mongo express](http://localhost:8081)
+ - [Swagger editor](http://localhost:8080)
+ - [Shish](http://localhost:3050)
+ 
+ 
+To finish the development environment run the script `./stopDevelopmentEnvironment.sh`.
+
+
+### Compile and testing
+
 The project use the [Apache maven](https://maven.apache.org/) tool to solve the dependencies,
 generate the Open API documentation, compile the component and run the test.
 
- - Use `./mvnw dependency:list` to show the component dependencies.
- - Use `./mvnw compile` to compile and generate the Open API documentation (**target/classes/wenet-interaction_protocol_engine-openapi.yml**).
- - Use `./mvnw tests` to run the test.
- - Use `./mvnw site` to generate a HTML page (**target/site/index.html**) with all the reports (test, javadoc, PMD,CPD and coverage).
+ - Use `mvn dependency:list` to show the component dependencies.
+ - Use `mvn compile` to compile and generate the Open API documentation (**target/classes/wenet-interaction_protocol_engine-openapi.yml**).
+ - Use `mvn tests` to run the test.
+ - Use `mvn site` to generate a HTML page (**target/site/index.html**) with all the reports (test, javadoc, PMD,CPD and coverage).
 
 
 ### Run and configure
