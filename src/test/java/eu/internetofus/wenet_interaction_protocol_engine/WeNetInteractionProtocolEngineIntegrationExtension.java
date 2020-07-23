@@ -70,7 +70,6 @@ public class WeNetInteractionProtocolEngineIntegrationExtension extends Abstract
 
     final Network network = Network.newNetwork();
 
-
     final String serviceApi = WeNetServiceMocker.start().getApiUrl();
     final String socialContextBuilderApi = WeNetSocialContextBuilderMocker.start().getApiUrl();
     final String incentiveServerApi = WeNetIncentiveServerMocker.start().getApiUrl();
