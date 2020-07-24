@@ -56,32 +56,6 @@ import io.vertx.junit5.VertxTestContext;
 public class IncentivesIT {
 
   /**
-   * Verify that can send a incentive.
-   *
-   * @param vertx       event bus to use.
-   * @param client      to connect to the server.
-   * @param testContext context to test.
-   *
-   * @see Incentives#sendIncentive(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
-   *      io.vertx.core.Handler)
-   */
-  @Test
-  public void shouldSendIncentive(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
-
-    new IncentiveTest().createModelExample(1, vertx, testContext, testContext.succeeding(incentive -> {
-
-      testRequest(client, HttpMethod.POST, Incentives.PATH).expect(res -> {
-
-        assertThat(res.statusCode()).isEqualTo(Status.ACCEPTED.getStatusCode());
-        final Incentive sent = assertThatBodyIs(Incentive.class, res);
-        assertThat(sent).isEqualTo(incentive);
-
-      }).sendJson(incentive.toJsonObject(), testContext);
-
-    }));
-  }
-
-  /**
    * Verify that can not send a bad incentive.
    *
    * @param vertx       event bus to use.
@@ -126,6 +100,32 @@ public class IncentivesIT {
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
     }).sendJson(incentive.toJsonObject(), testContext);
+  }
+
+  /**
+   * Verify that can send a incentive.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Incentives#sendIncentive(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
+   *      io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldSendIncentive(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    new IncentiveTest().createModelExample(1, vertx, testContext, testContext.succeeding(incentive -> {
+
+      testRequest(client, HttpMethod.POST, Incentives.PATH).expect(res -> {
+
+        assertThat(res.statusCode()).isEqualTo(Status.ACCEPTED.getStatusCode());
+        final Incentive sent = assertThatBodyIs(Incentive.class, res);
+        assertThat(sent).isEqualTo(incentive);
+
+      }).sendJson(incentive.toJsonObject(), testContext);
+
+    }));
   }
 
 }
