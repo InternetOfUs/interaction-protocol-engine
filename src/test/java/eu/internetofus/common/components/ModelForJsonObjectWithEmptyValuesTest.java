@@ -24,43 +24,28 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.components.profile_manager;
+package eu.internetofus.common.components;
 
-import static eu.internetofus.common.components.ValidationsTest.assertIsValid;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
-import eu.internetofus.common.components.ModelTestCase;
-import io.vertx.core.Vertx;
-import io.vertx.junit5.VertxTestContext;
+import org.junit.jupiter.api.Test;
 
 /**
- * Test the components that extends the {@link Competence}.
+ * Test {@link ModelForJsonObjectWithEmptyValues}
  *
- * @param <T> competence to test
- *
- * @see Competence
+ * @see ModelForJsonObjectWithEmptyValues
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class CompetenceTestCase<T extends Competence> extends ModelTestCase<T> {
+public class ModelForJsonObjectWithEmptyValuesTest {
 
   /**
-   * Check that the {@link #createModelExample(int)} is valid.
-   *
-   * @param index       to verify
-   * @param vertx       event bus to use.
-   * @param testContext test context to use.
-   *
-   * @see Competence#validate(String, io.vertx.core.Vertx)
+   * Check constructor.
    */
-  @ParameterizedTest(name = "The model example {0} has to be valid")
-  @ValueSource(ints = { 0, 1, 2, 3, 4, 5 })
-  public void shouldExampleBeValid(final int index, final Vertx vertx, final VertxTestContext testContext) {
+  @Test
+  public void shouldNotConvertToJsonObjectWithEmptyValues() {
 
-    final T model = this.createModelExample(index);
-    assertIsValid(model, vertx, testContext);
+    assertThat(new ModelForJsonObjectWithEmptyValues()).isNotNull();
 
   }
 

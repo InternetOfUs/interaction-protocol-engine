@@ -24,46 +24,18 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.common.components.profile_manager;
+package eu.internetofus.common.components;
 
-import java.io.IOException;
-
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.TreeNode;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
- * The component to deserialize a {@link Competence} to any of it possible sub
- * types.
+ * Model used to generate JSON object with empty values.
+ *
+ * @see Model#toJsonObjectWithEmptyValues()
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class CompetenceDeserialize extends JsonDeserializer<Competence> {
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Competence deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-
-		final TreeNode node = p.readValueAsTree();
-		if (node.get("drivingLicenseId") != null) {
-
-			return p.getCodec().treeToValue(node, DrivingLicense.class);
-
-		} else {
-
-			throw new JsonProcessingException("Unknown type of competence", p.getCurrentLocation()) {
-
-				/**
-				 * Default serialization identifier.
-				 */
-				private static final long serialVersionUID = 1L;
-			};
-
-		}
-	}
+@JsonInclude(JsonInclude.Include.ALWAYS)
+public class ModelForJsonObjectWithEmptyValues {
 
 }
