@@ -70,11 +70,11 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Override
   public PublishedNorm createModelExample(final int index) {
 
-    final PublishedNorm model = new PublishedNorm();
+    final var model = new PublishedNorm();
     model.name = "Published norm " + index;
     model.description = "Description of published norm " + index;
     model.keywords = new ArrayList<>();
-    for (int i = index - 2; i < index + 2; i++) {
+    for (var i = index - 2; i < index + 2; i++) {
 
       model.keywords.add("keyword " + i);
     }
@@ -96,7 +96,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 
     StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext, testContext.succeeding(stored -> {
 
-      final PublishedNorm model = this.createModelExample(index);
+      final var model = this.createModelExample(index);
       model.publisherId = stored.id;
       createHandler.handle(Future.succeededFuture(model));
 
@@ -117,7 +117,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @ValueSource(ints = { 0, 1, 2, 3, 4, 5 })
   public void shouldExampleNotBeValid(final int index, final Vertx vertx, final VertxTestContext testContext) {
 
-    final PublishedNorm model = this.createModelExample(index);
+    final var model = this.createModelExample(index);
     assertIsNotValid(model, "publisherId", vertx, testContext);
 
   }
@@ -342,7 +342,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 
     this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
 
-      final PublishedNorm source = new PublishedNorm();
+      final var source = new PublishedNorm();
       source.name = ValidationsTest.STRING_256;
       assertCannotMerge(target, source, "name", vertx, testContext);
     }));
@@ -362,7 +362,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 
     this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
 
-      final PublishedNorm source = new PublishedNorm();
+      final var source = new PublishedNorm();
       source.description = ValidationsTest.STRING_1024;
       assertCannotMerge(target, source, "description", vertx, testContext);
     }));
@@ -382,7 +382,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 
     this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
 
-      final PublishedNorm source = new PublishedNorm();
+      final var source = new PublishedNorm();
       source.keywords = new ArrayList<>();
       source.keywords.add(" key1 ");
       source.keywords.add(null);
@@ -406,7 +406,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 
     this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
 
-      final PublishedNorm source = new PublishedNorm();
+      final var source = new PublishedNorm();
       source.publisherId = "undefined";
       assertCannotMerge(target, source, "publisherId", vertx, testContext);
     }));

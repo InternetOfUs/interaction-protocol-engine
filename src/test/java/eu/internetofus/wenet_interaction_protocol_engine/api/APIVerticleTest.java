@@ -37,15 +37,15 @@ import eu.internetofus.common.vertx.AbstractAPIVerticleTestCase;
  */
 public class APIVerticleTest extends AbstractAPIVerticleTestCase<APIVerticle> {
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see APIVerticle#APIVerticle()
-	 */
-	@Override
-	protected APIVerticle createAPIVerticle() {
+  /**
+   * {@inheritDoc}
+   *
+   * @see APIVerticle#APIVerticle()
+   */
+  @Override
+  protected APIVerticle createAPIVerticle() {
 
-		return new APIVerticle();
-	}
+    return new APIVerticle();
+  }
 
 }

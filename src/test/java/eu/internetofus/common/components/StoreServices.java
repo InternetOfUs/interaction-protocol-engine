@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import eu.internetofus.common.components.profile_manager.CommunityProfile;
+import eu.internetofus.common.components.profile_manager.CommunityProfileTest;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfileTest;
@@ -67,7 +69,7 @@ public interface StoreServices {
 
     WeNetProfileManager.createProxy(vertx).createProfile(profile.toJsonObject(), testContext.succeeding(created -> {
 
-      final WeNetUserProfile result = Model.fromJsonObject(created, WeNetUserProfile.class);
+      final var result = Model.fromJsonObject(created, WeNetUserProfile.class);
       storeHandler.handle(Future.succeededFuture(result));
 
     }));
@@ -120,7 +122,7 @@ public interface StoreServices {
    */
   static void storeTaskTypeExample(final int index, final Vertx vertx, final VertxTestContext testContext, final Handler<AsyncResult<TaskType>> storeHandler) {
 
-    final TaskType example = new TaskTypeTest().createModelExample(index);
+    final var example = new TaskTypeTest().createModelExample(index);
     storeTaskType(example, vertx, testContext, storeHandler);
 
   }
@@ -189,7 +191,7 @@ public interface StoreServices {
    */
   static void storeAppExample(final int index, final Vertx vertx, final VertxTestContext testContext, final Handler<AsyncResult<App>> storeHandler) {
 
-    final App example = new AppTest().createModelExample(index);
+    final var example = new AppTest().createModelExample(index);
     storeApp(example, vertx, testContext, storeHandler);
 
   }
@@ -208,11 +210,11 @@ public interface StoreServices {
   static Future<List<Task>> storeSomeTask(final int max, final Vertx vertx, final VertxTestContext testContext, final BiConsumer<Integer, Task> change) {
 
     final Promise<List<Task>> promise = Promise.promise();
-    Future<List<Task>> future = promise.future();
+    var future = promise.future();
     promise.complete(new ArrayList<Task>());
-    for (int i = 0; i < max; i++) {
+    for (var i = 0; i < max; i++) {
 
-      final int exampleIndex = i;
+      final var exampleIndex = i;
       future = future.compose(tasks -> {
 
         final Promise<List<Task>> storePromise = Promise.promise();
@@ -234,5 +236,42 @@ public interface StoreServices {
     }
 
     return future;
+  }
+
+  /**
+   * Store a community.
+   *
+   * @param community    to store.
+   * @param vertx        event bus to use.
+   * @param testContext  test context to use.
+   * @param storeHandler the component that will manage the stored model.
+   */
+  static void storeCommunity(final CommunityProfile community, final Vertx vertx, final VertxTestContext testContext, final Handler<AsyncResult<CommunityProfile>> storeHandler) {
+
+    WeNetProfileManager.createProxy(vertx).createCommunity(community, testContext.succeeding(created -> {
+
+      storeHandler.handle(Future.succeededFuture(created));
+
+    }));
+
+  }
+
+  /**
+   * Store a community example.
+   *
+   * @param index        of the example to store.
+   * @param vertx        event bus to use.
+   * @param testContext  test context to use.
+   * @param storeHandler the component that will manage the stored model.
+   */
+  static void storeCommunityExample(final int index, final Vertx vertx, final VertxTestContext testContext, final Handler<AsyncResult<CommunityProfile>> storeHandler) {
+
+    new CommunityProfileTest().createModelExample(index, vertx, testContext, testContext.succeeding(example -> {
+
+      example.id = null;
+      storeCommunity(example, vertx, testContext, storeHandler);
+
+    }));
+
   }
 }

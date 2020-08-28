@@ -74,7 +74,7 @@ public class MessagesIT {
       testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.ACCEPTED.getStatusCode());
-        final Message sent = assertThatBodyIs(Message.class, res);
+        final var sent = assertThatBodyIs(Message.class, res);
         assertThat(sent).isEqualTo(message);
 
       }).sendJson(message.toJsonObject(), testContext);
@@ -98,7 +98,7 @@ public class MessagesIT {
     testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-      final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+      final var error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty().isEqualTo("bad_message");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -119,11 +119,11 @@ public class MessagesIT {
   @Test
   public void shouldNotSendInvalidMessage(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    final Message message = new MessageTest().createModelExample(1);
+    final var message = new MessageTest().createModelExample(1);
     testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-      final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+      final var error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty().isEqualTo("bad_message.content");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 

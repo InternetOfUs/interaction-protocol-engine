@@ -1,3 +1,4 @@
+
 /*
  * -----------------------------------------------------------------------------
  *
@@ -26,7 +27,17 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.Writer;
+import java.nio.charset.Charset;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.tinylog.Logger;
+
+import com.google.common.io.Files;
 
 import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.Model;
@@ -77,6 +88,11 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
   protected MessageConsumer<JsonObject> consumer;
 
   /**
+   * The file where the prolog engine is stored.
+   */
+  protected File engine;
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -91,7 +107,21 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
       } else {
 
-        startPromise.complete();
+        try {
+
+          final var prologConf = this.config().getJsonObject("engine", new JsonObject()).getJsonObject("prolog", new JsonObject());
+          final var workDir = new File(prologConf.getString("workDir", "var/prolog"));
+          workDir.mkdirs();
+          this.engine = new File(workDir, prologConf.getString("engineName", "engine.pl"));
+          final Writer writer = new FileWriter(this.engine);
+          IOUtils.copy(this.getClass().getClassLoader().getResourceAsStream("engine.pl"), writer);
+          writer.close();
+          startPromise.complete();
+
+        } catch (final Throwable cause) {
+
+          startPromise.fail(cause);
+        }
       }
 
     });
@@ -106,8 +136,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
     try {
 
-      final JsonObject body = event.body();
-      final Message message = Model.fromJsonObject(body, Message.class);
+      final var body = event.body();
+      final var message = Model.fromJsonObject(body, Message.class);
       if (message == null) {
 
         Logger.trace("Can not process the event {}, because does not contains a valid Message.", event);
@@ -136,7 +166,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
       try {
 
-        final EngineEnvironment env = creation.result();
+        final var env = creation.result();
         switch (message.type) {
         case TASK_CREATED:
 
@@ -149,6 +179,11 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
         case INCENTIVE:
 
           this.handleIncentive(env, message);
+          break;
+
+        case SWI_PROLOG:
+
+          this.handleSWIProlog(env, message);
           break;
 
         default:
@@ -173,36 +208,36 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    */
   protected void handleTaskTransaction(final EngineEnvironment env, final Message message) {
 
-    final JsonObject content = (JsonObject) message.content;
-    final WebClientOptions options = new WebClientOptions();
-    final WebClient client = WebClient.create(this.vertx, options);
-    final TaskTransaction transaction = Model.fromJsonObject(content, TaskTransaction.class);
+    final var content = (JsonObject) message.content;
+    final var options = new WebClientOptions();
+    final var client = WebClient.create(this.vertx, options);
+    final var transaction = Model.fromJsonObject(content, TaskTransaction.class);
     this.fixTaskAttributes(env, message);
     if (env.task.closeTs == null) {
 
       if ("volunteerForTask".equalsIgnoreCase(transaction.label)) {
 
-        final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
+        final var volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
         this.handleVolunteerForTask(volunteerId, env, client);
 
       } else if ("refuseTask".equalsIgnoreCase(transaction.label)) {
 
-        final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
+        final var volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
         this.handleRefuseTask(volunteerId, env, client);
 
       } else if ("acceptVolunteer".equalsIgnoreCase(transaction.label)) {
 
-        final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
+        final var volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
         this.handleAcceptVolunteer(volunteerId, env, client);
 
       } else if ("refuseVolunteer".equalsIgnoreCase(transaction.label)) {
 
-        final String volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
+        final var volunteerId = content.getJsonObject("attributes", new JsonObject()).getString("volunteerId", "0");
         this.handleRefuseVolunteer(volunteerId, env, client);
 
       } else if ("taskCompleted".equalsIgnoreCase(transaction.label)) {
 
-        final String outcome = content.getJsonObject("attributes", new JsonObject()).getString("outcome", "cancelled");
+        final var outcome = content.getJsonObject("attributes", new JsonObject()).getString("outcome", "cancelled");
         this.handleTaskCompleted(outcome, env, client);
 
       } else {
@@ -212,7 +247,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
     } else {
       // Error task closed
-      final TextualMessage msg = new TextualMessage();
+      final var msg = new TextualMessage();
       msg.recipientId = transaction.attributes.getString("volunteerId", env.task.requesterId);
       msg.title = "Task already closed";
       msg.text = "It's too late the task is already completed.";
@@ -230,7 +265,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    */
   protected void sendTo(final App app, final WebClient client, final eu.internetofus.common.components.service.Message notification) {
 
-    final JsonObject body = notification.toJsonObject();
+    final var body = notification.toJsonObject();
     client.postAbs(app.messageCallbackUrl).sendJsonObject(body, send -> {
 
       if (send.failed()) {
@@ -239,7 +274,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
       } else {
 
-        final HttpResponse<Buffer> response = send.result();
+        final var response = send.result();
         Logger.trace("App[{}]: POST {} with {} responds with code {} and body {}", () -> app.appId, () -> app.messageCallbackUrl, () -> body, () -> response.statusCode(), () -> response.bodyAsString());
       }
 
@@ -257,7 +292,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    */
   protected void sendTo(final JsonArray users, final App app, final WebClient client, final eu.internetofus.common.components.service.Message notification) {
 
-    for (int i = 0; i < users.size(); i++) {
+    for (var i = 0; i < users.size(); i++) {
 
       notification.recipientId = users.getString(i);
       this.sendTo(app, client, notification);
@@ -285,27 +320,27 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
       env.task.attributes = new JsonObject();
     }
 
-    final JsonArray unanswered = env.task.attributes.getJsonArray("unanswered", null);
+    final var unanswered = env.task.attributes.getJsonArray("unanswered", null);
     if (unanswered == null) {
 
       env.task.attributes.put("unanswered", new JsonArray());
     }
-    final JsonArray volunteers = env.task.attributes.getJsonArray("volunteers", null);
+    final var volunteers = env.task.attributes.getJsonArray("volunteers", null);
     if (volunteers == null) {
 
       env.task.attributes.put("volunteers", new JsonArray());
     }
-    final JsonArray declined = env.task.attributes.getJsonArray("declined", null);
+    final var declined = env.task.attributes.getJsonArray("declined", null);
     if (declined == null) {
 
       env.task.attributes.put("declined", new JsonArray());
     }
-    final JsonArray accepted = env.task.attributes.getJsonArray("accepted", null);
+    final var accepted = env.task.attributes.getJsonArray("accepted", null);
     if (accepted == null) {
 
       env.task.attributes.put("accepted", new JsonArray());
     }
-    final JsonArray refused = env.task.attributes.getJsonArray("refused", null);
+    final var refused = env.task.attributes.getJsonArray("refused", null);
     if (refused == null) {
 
       env.task.attributes.put("refused", new JsonArray());
@@ -320,8 +355,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    */
   private void handleTaskCreated(final EngineEnvironment env) {
 
-    final WebClientOptions options = new WebClientOptions();
-    final WebClient client = WebClient.create(this.vertx, options);
+    final var options = new WebClientOptions();
+    final var client = WebClient.create(this.vertx, options);
 
     WeNetService.createProxy(this.vertx).retrieveJsonArrayAppUserIds(env.app.appId, retrieve -> {
 
@@ -331,10 +366,10 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
       } else {
 
-        final JsonArray appUsers = retrieve.result();
+        final var appUsers = retrieve.result();
         appUsers.remove(env.task.requesterId);
         // TO DO RANKING users before ask them
-        final Task taskWithUnanswered = new Task();
+        final var taskWithUnanswered = new Task();
         taskWithUnanswered.attributes = env.task.attributes;
         if (taskWithUnanswered.attributes == null) {
 
@@ -349,14 +384,14 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
           } else {
 
-            final TaskProposalNotification notification = new TaskProposalNotification();
+            final var notification = new TaskProposalNotification();
             notification.taskId = env.task.id;
             notification.title = "Can you help?";
             notification.text = env.task.goal.name;
             notification.title = "Can you help?";
             this.sendTo(appUsers, env.app, client, notification);
 
-            final TaskStatus status = new TaskStatus();
+            final var status = new TaskStatus();
             status.user_id = env.task.requesterId;
             status.task_id = env.task.id;
             status.Action = "taskCreated";
@@ -381,12 +416,12 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
     if (env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
 
-      final Task taskWhithNewVolunteer = new Task();
+      final var taskWhithNewVolunteer = new Task();
       taskWhithNewVolunteer.attributes = env.task.attributes;
-      final JsonArray unanswered = env.task.attributes.getJsonArray("unanswered");
+      final var unanswered = env.task.attributes.getJsonArray("unanswered");
       if (!unanswered.remove(volunteerId)) {
 
-        final TextualMessage msg = new TextualMessage();
+        final var msg = new TextualMessage();
         msg.recipientId = volunteerId;
         msg.title = "Accept not allowed";
         msg.text = "You cannot be a volunteer, because you already are or you are not a person that can provide help.";
@@ -394,7 +429,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
       } else {
 
-        final JsonArray volunteers = env.task.attributes.getJsonArray("volunteers");
+        final var volunteers = env.task.attributes.getJsonArray("volunteers");
         volunteers.add(volunteerId);
         WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWhithNewVolunteer, update -> {
 
@@ -405,7 +440,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
           } else {
 
             Logger.trace("Added volunteer {} into task {}", () -> volunteerId, () -> env.task.id);
-            final WeNetSocialContextBuilder socialContextBuilder = WeNetSocialContextBuilder.createProxy(this.vertx);
+            final var socialContextBuilder = WeNetSocialContextBuilder.createProxy(this.vertx);
             socialContextBuilder.updatePreferencesForUserOnTask(volunteerId, env.task.id, volunteers, updated -> {
 
               if (updated.failed()) {
@@ -421,7 +456,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
             socialContextBuilder.retrieveSocialExplanation(volunteerId, env.task.id, retrieve -> {
 
-              final TaskVolunteerNotification notification = new TaskVolunteerNotification();
+              final var notification = new TaskVolunteerNotification();
               notification.recipientId = env.task.requesterId;
               notification.taskId = env.task.id;
               notification.title = "Found volunteer";
@@ -434,17 +469,17 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
               } else {
 
-                final SocialExplanation explanation = retrieve.result();
+                final var explanation = retrieve.result();
                 Logger.trace("Obtain the explanation {} for user {} on task {}", () -> explanation, () -> volunteerId, () -> env.task.id);
                 if (explanation != null && explanation.description != null && explanation.description.length() > 0) {
 
-                  notification.text = explanation.description;
+                  notification.explanation = explanation.description;
 
                 }
               }
 
               this.sendTo(env.app, client, notification);
-              final TaskStatus status = new TaskStatus();
+              final var status = new TaskStatus();
               status.user_id = volunteerId;
               status.task_id = env.task.id;
               status.Action = "volunteerForTask";
@@ -460,7 +495,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
     } else {
       // Error too late
-      final TextualMessage msg = new TextualMessage();
+      final var msg = new TextualMessage();
       msg.recipientId = volunteerId;
       msg.title = "Deadline reached";
       msg.text = "It's too late to be a volunteer.";
@@ -502,12 +537,12 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
   private void handleRefuseTask(final String volunteerId, final EngineEnvironment env, final WebClient client) {
 
     if (env.task.deadlineTs != null && env.task.deadlineTs > TimeManager.now()) {
-      final Task taskWhereDeclined = new Task();
+      final var taskWhereDeclined = new Task();
       taskWhereDeclined.attributes = env.task.attributes;
-      final JsonArray unanswered = env.task.attributes.getJsonArray("unanswered");
+      final var unanswered = env.task.attributes.getJsonArray("unanswered");
       if (!unanswered.remove(volunteerId)) {
 
-        final TextualMessage msg = new TextualMessage();
+        final var msg = new TextualMessage();
         msg.recipientId = volunteerId;
         msg.title = "Refuse not allowed";
         msg.text = "You cannot refuse to be a volunteer, because you already refused or you are not a person that can provide help.";
@@ -515,7 +550,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
       } else {
 
-        final JsonArray declined = env.task.attributes.getJsonArray("declined");
+        final var declined = env.task.attributes.getJsonArray("declined");
         declined.add(volunteerId);
         WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWhereDeclined, update -> {
 
@@ -526,7 +561,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
           } else {
 
             Logger.trace("Added declined users {} into task {}", () -> volunteerId, () -> env.task.id);
-            final TaskStatus status = new TaskStatus();
+            final var status = new TaskStatus();
             status.user_id = volunteerId;
             status.task_id = env.task.id;
             status.Action = "refuseTask";
@@ -539,7 +574,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
     } else {
       // Error too late
-      final TextualMessage msg = new TextualMessage();
+      final var msg = new TextualMessage();
       msg.recipientId = volunteerId;
       msg.title = "Deadline reached";
       msg.text = "It's too late to refuse to be a volunteer.";
@@ -557,10 +592,10 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    */
   private void handleAcceptVolunteer(final String volunteerId, final EngineEnvironment env, final WebClient client) {
 
-    final JsonArray volunteers = env.task.attributes.getJsonArray("volunteers");
+    final var volunteers = env.task.attributes.getJsonArray("volunteers");
     if (!volunteers.remove(volunteerId)) {
 
-      final TextualMessage msg = new TextualMessage();
+      final var msg = new TextualMessage();
       msg.recipientId = env.task.requesterId;
       msg.title = "Unexpected volunteer to accept";
       msg.text = "The user '" + volunteerId + "' is not a volunteer of the task, so you can not accept it.";
@@ -568,9 +603,9 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
     } else {
 
-      final JsonArray accepted = env.task.attributes.getJsonArray("accepted");
+      final var accepted = env.task.attributes.getJsonArray("accepted");
       accepted.add(volunteerId);
-      final Task taskWhereAccepted = new Task();
+      final var taskWhereAccepted = new Task();
       taskWhereAccepted.attributes = env.task.attributes;
       WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWhereAccepted, update -> {
 
@@ -581,7 +616,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
         } else {
 
           Logger.trace("Added accepted users {} into task {}", () -> volunteerId, () -> env.task.id);
-          final TaskSelectionNotification notification = new TaskSelectionNotification();
+          final var notification = new TaskSelectionNotification();
           notification.recipientId = volunteerId;
           notification.taskId = env.task.id;
           notification.title = "Help accepted";
@@ -589,7 +624,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
           notification.outcome = TaskSelectionNotification.Outcome.accepted;
           this.sendTo(env.app, client, notification);
 
-          final TaskStatus status = new TaskStatus();
+          final var status = new TaskStatus();
           status.user_id = volunteerId;
           status.task_id = env.task.id;
           status.Action = "acceptVolunteer";
@@ -611,10 +646,10 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    */
   private void handleRefuseVolunteer(final String volunteerId, final EngineEnvironment env, final WebClient client) {
 
-    final JsonArray volunteers = env.task.attributes.getJsonArray("volunteers");
+    final var volunteers = env.task.attributes.getJsonArray("volunteers");
     if (!volunteers.remove(volunteerId)) {
 
-      final TextualMessage msg = new TextualMessage();
+      final var msg = new TextualMessage();
       msg.recipientId = env.task.requesterId;
       msg.title = "Unexpected volunteer to refuse";
       msg.text = "The user '" + volunteerId + "' is not a volunteer of the task, so you can not refuse it.";
@@ -622,9 +657,9 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
     } else {
 
-      final JsonArray refused = env.task.attributes.getJsonArray("refused");
+      final var refused = env.task.attributes.getJsonArray("refused");
       refused.add(volunteerId);
-      final Task taskWhereRefused = new Task();
+      final var taskWhereRefused = new Task();
       taskWhereRefused.attributes = env.task.attributes;
       WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWhereRefused, update -> {
 
@@ -635,7 +670,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
         } else {
 
           Logger.trace("Added refused users {} into task {}", () -> volunteerId, () -> env.task.id);
-          final TaskSelectionNotification notification = new TaskSelectionNotification();
+          final var notification = new TaskSelectionNotification();
           notification.recipientId = volunteerId;
           notification.taskId = env.task.id;
           notification.title = "Help not needed";
@@ -643,7 +678,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
           notification.outcome = TaskSelectionNotification.Outcome.refused;
           this.sendTo(env.app, client, notification);
 
-          final TaskStatus status = new TaskStatus();
+          final var status = new TaskStatus();
           status.user_id = volunteerId;
           status.task_id = env.task.id;
           status.Action = "refuseVolunteer";
@@ -666,7 +701,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    */
   private void handleTaskCompleted(final String outcome, final EngineEnvironment env, final WebClient client) {
 
-    final Task closedTask = new Task();
+    final var closedTask = new Task();
     closedTask.closeTs = TimeManager.now();
     closedTask.attributes = env.task.attributes;
     closedTask.attributes.put("outcome", outcome);
@@ -680,22 +715,22 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
         Logger.trace("Closed {} task", () -> env.task.id);
 
-        final TaskConcludedNotification notification = new TaskConcludedNotification();
+        final var notification = new TaskConcludedNotification();
         notification.taskId = env.task.id;
         notification.title = "Help not needed";
         notification.text = "Your help is not necessary to do the task.";
         notification.outcome = TaskConcludedNotification.Outcome.valueOf(outcome);
-        final JsonArray unanswered = env.task.attributes.getJsonArray("unanswered");
+        final var unanswered = env.task.attributes.getJsonArray("unanswered");
         this.sendTo(unanswered, env.app, client, notification);
-        final JsonArray volunteers = env.task.attributes.getJsonArray("volunteers");
+        final var volunteers = env.task.attributes.getJsonArray("volunteers");
         this.sendTo(volunteers, env.app, client, notification);
 
         notification.title = "Task concluded";
         notification.text = "Your help is not necessary because the task is concluded.";
-        final JsonArray accepted = env.task.attributes.getJsonArray("accepted");
+        final var accepted = env.task.attributes.getJsonArray("accepted");
         this.sendTo(accepted, env.app, client, notification);
 
-        final TaskStatus status = new TaskStatus();
+        final var status = new TaskStatus();
         status.user_id = env.task.requesterId;
         status.task_id = env.task.id;
         status.Action = "taskCompleted";
@@ -715,12 +750,12 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    */
   protected void handleIncentive(final EngineEnvironment env, final Message message) {
 
-    final JsonObject content = (JsonObject) message.content;
-    final Incentive incentive = Model.fromJsonObject(content, Incentive.class);
-    final WebClientOptions options = new WebClientOptions();
-    final WebClient client = WebClient.create(this.vertx, options);
+    final var content = (JsonObject) message.content;
+    final var incentive = Model.fromJsonObject(content, Incentive.class);
+    final var options = new WebClientOptions();
+    final var client = WebClient.create(this.vertx, options);
 
-    final TextualMessage notification = new TextualMessage();
+    final var notification = new TextualMessage();
     notification.title = "    ";
     notification.recipientId = incentive.UserId;
     if (incentive.Message != null) {
@@ -735,4 +770,85 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
     this.sendTo(env.app, client, notification);
 
   }
+
+  /**
+   * Handle a SWIProlog event.
+   *
+   * @param env     environment to use for the message.
+   * @param message that contains the task transaction.
+   */
+  protected void handleSWIProlog(final EngineEnvironment env, final Message message) {
+
+    File tmp = null;
+    try {
+
+      tmp = Files.createTempDir();
+      final var error = new File(tmp, "error.txt");
+      final var output = new File(tmp, "output.txt");
+      final var messageFile = new File(tmp, "message.json");
+      Files.write(message.toJsonString().getBytes(), messageFile);
+      final var environmentFile = new File(tmp, "environment.json");
+      Files.write(env.toJsonString().getBytes(), environmentFile);
+      final var configurationFile = new File(tmp, "configuration.json");
+      Files.write(this.config().encode().getBytes(), configurationFile);
+      final var initPl = new File(tmp, "init.pl");
+      final var init = new StringBuilder();
+      init.append("message_file('");
+      init.append(messageFile.getAbsolutePath());
+      init.append("').\n");
+      init.append("environment_file('");
+      init.append(environmentFile.getAbsolutePath());
+      init.append("').\n");
+      init.append("configuration_file('");
+      init.append(configurationFile.getAbsolutePath());
+      init.append("').\n");
+      Files.asCharSink(initPl, Charset.defaultCharset()).write(init);
+
+      final var processBuilder = new ProcessBuilder("swipl", "-O", "-f", initPl.getAbsolutePath(), "-s", this.engine.getAbsolutePath(), "-g", "go", "-t", "halt");
+      processBuilder.directory(tmp);
+      processBuilder.redirectError(error);
+      processBuilder.redirectOutput(output);
+      final var process = processBuilder.start();
+      Logger.trace("Start process with {}", () -> processBuilder.command());
+      final var status = process.waitFor();
+      Logger.trace("Finished process {} with code {}.\nThe error stream is:\n{}\nThe output stream is:\n{}", () -> processBuilder.command(), () -> status, () -> readQuietly(error), () -> readQuietly(output));
+      if (status == 0) {
+
+        final var actions = new JsonArray(Buffer.buffer(IOUtils.toString(new FileReader(new File(tmp, "actions.json")))));
+        Logger.trace("Actions {}", () -> actions.encodePrettily());
+      }
+
+    } catch (final Throwable t) {
+
+      Logger.error(t, "Cannot process the SWI Prolog message");
+    }
+
+    if (!FileUtils.deleteQuietly(tmp)) {
+
+      Logger.error("Cannot remove the working directory {}", tmp);
+
+    }
+
+  }
+
+  /**
+   * Read a file quietly.
+   *
+   * @param file to read.
+   *
+   * @return the content of the file.
+   */
+  public static String readQuietly(final File file) {
+
+    try {
+
+      return Files.asCharSource(file, Charset.defaultCharset()).read();
+
+    } catch (final Throwable t) {
+
+      return t.toString();
+    }
+
+  }
+
 }

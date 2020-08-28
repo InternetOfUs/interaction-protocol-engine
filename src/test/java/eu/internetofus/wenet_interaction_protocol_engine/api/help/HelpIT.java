@@ -61,7 +61,7 @@ public class HelpIT {
 
     testRequest(client, HttpMethod.GET, Help.PATH + Help.INFO_PATH).expect(res -> {
       assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-      final APIInfo info = assertThatBodyIs(APIInfo.class, res);
+      final var info = assertThatBodyIs(APIInfo.class, res);
       assertThat(info.name).isNotEmpty();
       assertThat(info.apiVersion).isNotEmpty();
       assertThat(info.softwareVersion).isNotEmpty();

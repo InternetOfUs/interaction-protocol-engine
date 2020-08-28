@@ -32,7 +32,6 @@ import javax.ws.rs.core.Response.Status;
 import eu.internetofus.common.components.ErrorMessage;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
 
 /**
@@ -42,31 +41,30 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class NotFoundHandler implements Handler<RoutingContext> {
 
-	/**
-	 * Create the handler for the not found.
-	 *
-	 * @return a new instance of the handler for the not found.
-	 */
-	public static Handler<RoutingContext> build() {
+  /**
+   * Create the handler for the not found.
+   *
+   * @return a new instance of the handler for the not found.
+   */
+  public static Handler<RoutingContext> build() {
 
-		return new NotFoundHandler();
-	}
+    return new NotFoundHandler();
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void handle(RoutingContext event) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void handle(final RoutingContext event) {
 
-		final HttpServerResponse response = event.response();
-		response.setStatusCode(Status.NOT_FOUND.getStatusCode());
-		response.putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
-		final String path = event.normalisedPath();
-		final ErrorMessage error = new ErrorMessage("not_found_api_request_path",
-				"The '" + path + "' is not defined on the API.");
-		final String body = error.toJsonString();
-		response.end(body);
+    final var response = event.response();
+    response.setStatusCode(Status.NOT_FOUND.getStatusCode());
+    response.putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
+    final var path = event.normalisedPath();
+    final var error = new ErrorMessage("not_found_api_request_path", "The '" + path + "' is not defined on the API.");
+    final var body = error.toJsonString();
+    response.end(body);
 
-	}
+  }
 
 }

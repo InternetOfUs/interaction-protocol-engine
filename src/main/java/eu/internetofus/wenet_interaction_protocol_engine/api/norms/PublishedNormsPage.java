@@ -38,26 +38,24 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(description = "Contains a set of published norms found")
-public class PublishedNormsPage extends Model {
+public class PublishedNormsPage extends ReflectionModel implements Model {
 
-	/**
-	 * The index of the first community returned.
-	 */
-	@Schema(description = "The index of the first published norm returned.", example = "0")
-	public int offset;
+  /**
+   * The index of the first community returned.
+   */
+  @Schema(description = "The index of the first published norm returned.", example = "0")
+  public int offset;
 
-	/**
-	 * The number total of communities that satisfies the search.
-	 */
-	@Schema(description = "The number total of published norms that satisfies the search.", example = "100")
-	public long total;
+  /**
+   * The number total of communities that satisfies the search.
+   */
+  @Schema(description = "The number total of published norms that satisfies the search.", example = "100")
+  public long total;
 
-	/**
-	 * The published norms.
-	 */
-	@ArraySchema(
-			schema = @Schema(implementation = PublishedNorm.class),
-			arraySchema = @Schema(description = "The set of published norms found"))
-	public List<PublishedNorm> norms;
+  /**
+   * The published norms.
+   */
+  @ArraySchema(schema = @Schema(implementation = PublishedNorm.class), arraySchema = @Schema(description = "The set of published norms found"))
+  public List<PublishedNorm> norms;
 
 }

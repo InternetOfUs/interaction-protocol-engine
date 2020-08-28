@@ -51,7 +51,7 @@ import io.vertx.core.Vertx;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class EngineEnvironment {
+public class EngineEnvironment extends ReflectionModel implements Model {
 
   /**
    * The profile of the user that has send the message.
@@ -84,7 +84,7 @@ public class EngineEnvironment {
 
     return env -> {
 
-      final Promise<EngineEnvironment> loadPromise = Promise.promise();
+      final var loadPromise = Promise.promise();
       loader.accept(load -> {
         if (load.failed()) {
 
@@ -92,7 +92,7 @@ public class EngineEnvironment {
 
         } else {
 
-          final T result = load.result();
+          final var result = load.result();
           setter.accept(env, result);
         }
         loadPromise.complete(env);
@@ -111,8 +111,8 @@ public class EngineEnvironment {
    */
   public static Future<EngineEnvironment> create(final Vertx vertx, final Message message) {
 
-    final Promise<EngineEnvironment> promise = Promise.promise();
-    Future<EngineEnvironment> future = promise.future();
+    final var promise = Promise.promise();
+    var future = promise.future();
 
     if (message.senderId != null) {
 
@@ -138,9 +138,9 @@ public class EngineEnvironment {
 
         future = future.compose(partialEnv -> {
 
-          final Promise<EngineEnvironment> loadAppPromise = Promise.promise();
-          Future<EngineEnvironment> loadAppFuture = loadAppPromise.future();
-          final String appId = partialEnv.task.appId;
+          final var loadAppPromise = Promise.promise();
+          var loadAppFuture = loadAppPromise.future();
+          final var appId = partialEnv.task.appId;
           loadAppFuture = loadAppFuture.compose(loadField(App.class, loader -> {
             WeNetService.createProxy(vertx).retrieveApp(appId, loader);
           }, "app", (env, profile) -> env.app = profile));

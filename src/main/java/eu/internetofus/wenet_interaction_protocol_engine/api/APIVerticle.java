@@ -89,9 +89,9 @@ public class APIVerticle extends AbstractAPIVerticle {
   @Override
   protected void startedServerAt(final String host, final int port) {
 
-    final JsonObject conf = new JsonObject();
+    final var conf = new JsonObject();
     conf.put(WeNetInteractionProtocolEngineClient.INTERACTION_PROTOCOL_ENGINE_CONF_KEY, "http://" + host + ":" + port);
-    final WebClient client = WebClient.create(this.vertx);
+    final var client = WebClient.create(this.vertx);
     WeNetInteractionProtocolEngine.register(this.vertx, client, conf);
 
   }

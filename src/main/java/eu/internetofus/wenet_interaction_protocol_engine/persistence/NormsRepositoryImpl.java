@@ -63,9 +63,9 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
   @Override
   public void searchPublishedNormObject(final String id, final Handler<AsyncResult<JsonObject>> searchHandler) {
 
-    final JsonObject query = new JsonObject().put("_id", id);
+    final var query = new JsonObject().put("_id", id);
     this.findOneDocument(PUBLISHED_NORMS_COLLECTION, query, null, found -> {
-      final String _id = (String) found.remove("_id");
+      final var _id = (String) found.remove("_id");
       return found.put("id", _id);
     }, searchHandler);
 
@@ -77,17 +77,17 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
   @Override
   public void storePublishedNorm(final JsonObject norm, final Handler<AsyncResult<JsonObject>> storeHandler) {
 
-    final String id = (String) norm.remove("id");
+    final var id = (String) norm.remove("id");
     if (id != null) {
 
       norm.put("_id", id);
     }
-    final long now = TimeManager.now();
+    final var now = TimeManager.now();
     norm.put("_creationTs", now);
     norm.put("_lastUpdateTs", now);
     this.storeOneDocument(PUBLISHED_NORMS_COLLECTION, norm, stored -> {
 
-      final String _id = (String) stored.remove("_id");
+      final var _id = (String) stored.remove("_id");
       return stored.put("id", _id);
 
     }, storeHandler);
@@ -99,10 +99,10 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
   @Override
   public void updatePublishedNorm(final JsonObject norm, final Handler<AsyncResult<Void>> updateHandler) {
 
-    final Object id = norm.remove("id");
+    final var id = norm.remove("id");
     norm.remove("_creationTs");
-    final JsonObject query = new JsonObject().put("_id", id);
-    final long now = TimeManager.now();
+    final var query = new JsonObject().put("_id", id);
+    final var now = TimeManager.now();
     norm.put("_lastUpdateTs", now);
     this.updateOneDocument(PUBLISHED_NORMS_COLLECTION, query, norm, updateHandler);
   }
@@ -113,7 +113,7 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
   @Override
   public void deletePublishedNorm(final String id, final Handler<AsyncResult<Void>> deleteHandler) {
 
-    final JsonObject query = new JsonObject().put("_id", id);
+    final var query = new JsonObject().put("_id", id);
     this.deleteOneDocument(PUBLISHED_NORMS_COLLECTION, query, deleteHandler);
 
   }
@@ -124,7 +124,7 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
   @Override
   public void retrievePublishedNormsPageObject(final JsonObject query, final JsonObject sort, final int offset, final int limit, final Handler<AsyncResult<JsonObject>> searchHandler) {
 
-    final FindOptions options = new FindOptions();
+    final var options = new FindOptions();
     options.setSort(sort);
     options.setSkip(offset);
     options.setLimit(limit);

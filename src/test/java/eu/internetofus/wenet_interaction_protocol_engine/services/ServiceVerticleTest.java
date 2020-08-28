@@ -37,15 +37,15 @@ import eu.internetofus.common.vertx.AbstractServicesVerticleTestCase;
  */
 public class ServiceVerticleTest extends AbstractServicesVerticleTestCase<ServicesVerticle> {
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see ServicesVerticle#ServicesVerticle()
-	 */
-	@Override
-	protected ServicesVerticle createServicesVerticle() {
+  /**
+   * {@inheritDoc}
+   *
+   * @see ServicesVerticle#ServicesVerticle()
+   */
+  @Override
+  protected ServicesVerticle createServicesVerticle() {
 
-		return new ServicesVerticle();
-	}
+    return new ServicesVerticle();
+  }
 
 }

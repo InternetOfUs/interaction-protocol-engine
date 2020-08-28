@@ -63,9 +63,9 @@ public class HarcodedSendIncentivesIT {
 
         waitUntilCallbacks(incentive.AppID, callbacks -> {
 
-          for (int i = 0; i < callbacks.size(); i++) {
+          for (var i = 0; i < callbacks.size(); i++) {
 
-            final TextualMessage message = Model.fromJsonObject(callbacks.getJsonObject(i), TextualMessage.class);
+            final var message = Model.fromJsonObject(callbacks.getJsonObject(i), TextualMessage.class);
             if (message != null && "".equals(message.title.trim()) && incentive.UserId.equals(message.recipientId) && incentive.Message.content.equals(message.text)) {
 
               return true;
@@ -100,9 +100,9 @@ public class HarcodedSendIncentivesIT {
 
         waitUntilCallbacks(incentive.AppID, callbacks -> {
 
-          for (int i = 0; i < callbacks.size(); i++) {
+          for (var i = 0; i < callbacks.size(); i++) {
 
-            final TextualMessage message = Model.fromJsonObject(callbacks.getJsonObject(i), TextualMessage.class);
+            final var message = Model.fromJsonObject(callbacks.getJsonObject(i), TextualMessage.class);
             if (message != null && "".equals(message.title.trim()) && incentive.UserId.equals(message.recipientId) && incentive.Badge.Message.equals(message.text)) {
 
               return true;

@@ -98,8 +98,8 @@ public interface NormsRepository {
 
       } else {
 
-        final JsonObject value = search.result();
-        final PublishedNorm norm = Model.fromJsonObject(value, PublishedNorm.class);
+        final var value = search.result();
+        final var norm = Model.fromJsonObject(value, PublishedNorm.class);
         if (norm == null) {
 
           searchHandler.handle(Future.failedFuture("The stored published norm is not valid."));
@@ -129,7 +129,7 @@ public interface NormsRepository {
   @GenIgnore
   default void storePublishedNorm(final PublishedNorm norm, final Handler<AsyncResult<PublishedNorm>> storeHandler) {
 
-    final JsonObject object = norm.toJsonObject();
+    final var object = norm.toJsonObject();
     if (object == null) {
 
       storeHandler.handle(Future.failedFuture("The published norm can not converted to JSON."));
@@ -159,8 +159,8 @@ public interface NormsRepository {
 
       } else {
 
-        final JsonObject value = action.result();
-        final PublishedNorm storedNorm = Model.fromJsonObject(value, PublishedNorm.class);
+        final var value = action.result();
+        final var storedNorm = Model.fromJsonObject(value, PublishedNorm.class);
         if (storedNorm == null) {
 
           handler.handle(Future.failedFuture("The stored published norm is not valid."));
@@ -192,7 +192,7 @@ public interface NormsRepository {
   @GenIgnore
   default void updatePublishedNorm(final PublishedNorm norm, final Handler<AsyncResult<Void>> updateHandler) {
 
-    final JsonObject object = norm.toJsonObject();
+    final var object = norm.toJsonObject();
     if (object == null) {
 
       updateHandler.handle(Future.failedFuture("The published norm can not converted to JSON."));
@@ -259,7 +259,7 @@ public interface NormsRepository {
    */
   static JsonObject createPublishedNormsPageSort(final List<String> order) throws ValidationErrorException {
 
-    final JsonObject sort = Repository.queryParamToSort(order, "bad_order", (value) -> {
+    final var sort = Repository.queryParamToSort(order, "bad_order", (value) -> {
 
       switch (value) {
       case "name":
@@ -299,8 +299,8 @@ public interface NormsRepository {
 
       } else {
 
-        final JsonObject value = search.result();
-        final PublishedNormsPage page = Model.fromJsonObject(value, PublishedNormsPage.class);
+        final var value = search.result();
+        final var page = Model.fromJsonObject(value, PublishedNormsPage.class);
         if (page == null) {
 
           searchHandler.handle(Future.failedFuture("The stored published norms page is not valid."));

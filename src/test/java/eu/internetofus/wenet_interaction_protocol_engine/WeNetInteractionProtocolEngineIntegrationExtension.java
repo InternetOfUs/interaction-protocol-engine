@@ -55,9 +55,9 @@ public class WeNetInteractionProtocolEngineIntegrationExtension extends Abstract
   @Override
   protected void afterStarted(final WeNetModuleContext context) {
 
-    final Vertx vertx = context.vertx;
-    final WebClient client = WebClient.create(vertx);
-    final JsonObject conf = context.configuration.getJsonObject("wenetComponents", new JsonObject());
+    final var vertx = context.vertx;
+    final var client = WebClient.create(vertx);
+    final var conf = context.configuration.getJsonObject("wenetComponents", new JsonObject());
     WeNetServiceSimulator.register(vertx, client, conf);
 
   }
@@ -68,20 +68,20 @@ public class WeNetInteractionProtocolEngineIntegrationExtension extends Abstract
   @Override
   protected String[] createMainStartArguments() {
 
-    final Network network = Network.newNetwork();
+    final var network = Network.newNetwork();
 
-    final String serviceApi = WeNetServiceMocker.start().getApiUrl();
-    final String socialContextBuilderApi = WeNetSocialContextBuilderMocker.start().getApiUrl();
-    final String incentiveServerApi = WeNetIncentiveServerMocker.start().getApiUrl();
+    final var serviceApi = WeNetServiceMocker.start().getApiUrl();
+    final var socialContextBuilderApi = WeNetSocialContextBuilderMocker.start().getApiUrl();
+    final var incentiveServerApi = WeNetIncentiveServerMocker.start().getApiUrl();
 
-    final int profileManagerApiPort = Containers.nextFreePort();
-    String profileManagerApi = Containers.exposedApiFor(profileManagerApiPort);
+    final var profileManagerApiPort = Containers.nextFreePort();
+    var profileManagerApi = Containers.exposedApiFor(profileManagerApiPort);
 
-    final int taskManagerApiPort = Containers.nextFreePort();
-    String taskManagerApi = Containers.exposedApiFor(taskManagerApiPort);
+    final var taskManagerApiPort = Containers.nextFreePort();
+    var taskManagerApi = Containers.exposedApiFor(taskManagerApiPort);
 
-    final int interactionProtocolEngineApiPort = Containers.nextFreePort();
-    final String interactionProtocolEngineApi = Containers.exposedApiFor(interactionProtocolEngineApiPort);
+    final var interactionProtocolEngineApiPort = Containers.nextFreePort();
+    final var interactionProtocolEngineApi = Containers.exposedApiFor(interactionProtocolEngineApiPort);
 
     Testcontainers.exposeHostPorts(profileManagerApiPort, taskManagerApiPort, interactionProtocolEngineApiPort);
 

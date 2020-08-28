@@ -72,7 +72,7 @@ public class HelpResource implements Help {
   public HelpResource(final APIVerticle apiVerticle) {
 
     this.info = new APIInfo();
-    final JsonObject conf = apiVerticle.config().getJsonObject("help", new JsonObject()).getJsonObject("info", new JsonObject());
+    final var conf = apiVerticle.config().getJsonObject("help", new JsonObject()).getJsonObject("info", new JsonObject());
     this.info.name = conf.getString("name", "wenet/interaction-protocol-engine");
     this.info.apiVersion = conf.getString("apiVersion", "Undefined");
     this.info.softwareVersion = conf.getString("softwareVersion", "Undefined");
@@ -101,8 +101,8 @@ public class HelpResource implements Help {
 
       try {
 
-        final InputStream in = this.getClass().getClassLoader().getResourceAsStream(OPENA_API_RESOURCE);
-        final String openapi = IOUtils.toString(in);
+        final var in = this.getClass().getClassLoader().getResourceAsStream(OPENA_API_RESOURCE);
+        final var openapi = IOUtils.toString(in);
         promise.complete(openapi);
 
       } catch (final Throwable cause) {

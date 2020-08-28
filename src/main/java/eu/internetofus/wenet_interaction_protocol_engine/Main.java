@@ -38,44 +38,43 @@ import eu.internetofus.common.vertx.AbstractMainVerticle;
  */
 public class Main extends AbstractMain {
 
-	/**
-	 * Start the verticles.
-	 *
-	 * @param args arguments to configure the main process.
-	 *
-	 * @see MainVerticle
-	 */
-	public static void main(String... args) {
+  /**
+   * Start the verticles.
+   *
+   * @param args arguments to configure the main process.
+   *
+   * @see MainVerticle
+   */
+  public static void main(final String... args) {
 
-		final Main main = new Main();
-		main.startWith(args).onComplete(result -> {
+    final var main = new Main();
+    main.startWith(args).onComplete(result -> {
 
-			if (!result.succeeded()) {
+      if (!result.succeeded()) {
 
-				InternalLogger.log(Level.ERROR, result.cause(),
-						"Can not start the WeNet interaction protocol engine!\n Check the Logs to known why.");
-			}
+        InternalLogger.log(Level.ERROR, result.cause(), "Can not start the WeNet interaction protocol engine!\n Check the Logs to known why.");
+      }
 
-		});
+    });
 
-	}
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected String getModuleName() {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected String getModuleName() {
 
-		return "wenet-interaction-protocol-engine";
-	}
+    return "wenet-interaction-protocol-engine";
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected AbstractMainVerticle createMainVerticle() {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected AbstractMainVerticle createMainVerticle() {
 
-		return new MainVerticle();
-	}
+    return new MainVerticle();
+  }
 
 }

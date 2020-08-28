@@ -61,14 +61,14 @@ public class MessagesResourceTest {
   public void shouldSendMessageToEngineWorker(final Vertx vertx, final VertxTestContext testContext) {
 
     vertx.eventBus().consumer(EngineWorker.ADDRESSS, msg -> testContext.completeNow());
-    final MessagesResource resource = new MessagesResource(vertx);
-    final Message message = new Message();
+    final var resource = new MessagesResource(vertx);
+    final var message = new Message();
     message.type = Message.Type.INCENTIVE;
-    final Incentive incentive = new Incentive();
+    final var incentive = new Incentive();
     incentive.Badge = new BadgeTest().createModelExample(1);
     message.content = incentive.toJsonObject();
-    final JsonObject body = message.toJsonObject();
-    final OperationRequest context = new OperationRequest();
+    final var body = message.toJsonObject();
+    final var context = new OperationRequest();
     resource.sendMessage(body, context, testContext.succeeding(response -> testContext.verify(() -> {
 
       assertThat(response.getStatusCode()).isEqualTo(Status.ACCEPTED.getStatusCode());

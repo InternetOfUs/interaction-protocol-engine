@@ -41,21 +41,21 @@ import io.vertx.core.json.JsonObject;
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
 public class APIVerticleIT extends AbstractAPIVerticleIntegrationTestCase {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected String getBadRequestPostPath() {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected String getBadRequestPostPath() {
 
-		return Norms.PATH;
-	}
+    return Norms.PATH;
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected JsonObject createBadRequestPostBody() {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected JsonObject createBadRequestPostBody() {
 
-		return new JsonObject().put("id", new JsonObject().put("key", "value"));
-	}
+    return new JsonObject().put("id", new JsonObject().put("key", "value"));
+  }
 }

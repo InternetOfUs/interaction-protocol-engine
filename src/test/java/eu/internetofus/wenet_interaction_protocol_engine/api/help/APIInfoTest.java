@@ -43,7 +43,7 @@ public class APIInfoTest extends ModelTestCase<APIInfo> {
   @Override
   public APIInfo createModelExample(final int index) {
 
-    final APIInfo version = new APIInfo();
+    final var version = new APIInfo();
     version.name = "name" + index;
     version.apiVersion = "0.0." + index;
     version.softwareVersion = "0." + index + ".0";

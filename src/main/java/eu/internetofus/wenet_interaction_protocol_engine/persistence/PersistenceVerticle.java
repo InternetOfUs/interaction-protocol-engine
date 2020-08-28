@@ -35,14 +35,14 @@ import eu.internetofus.common.vertx.AbstractPersistenceVerticle;
  */
 public class PersistenceVerticle extends AbstractPersistenceVerticle {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void registerRepositories() throws Exception {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void registerRepositories() throws Exception {
 
-		NormsRepository.register(this.vertx, this.pool);
+    NormsRepository.register(this.vertx, this.pool);
 
-	}
+  }
 
 }

@@ -70,7 +70,7 @@ public class MessagesResource implements Messages {
   @Override
   public void sendMessage(final JsonObject body, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-    final Message message = Model.fromJsonObject(body, Message.class);
+    final var message = Model.fromJsonObject(body, Message.class);
     if (message == null) {
 
       Logger.trace("Fail sendMessage: {} is not a valid JSON.", body);
@@ -82,7 +82,7 @@ public class MessagesResource implements Messages {
 
         if (validation.failed()) {
 
-          final Throwable cause = validation.cause();
+          final var cause = validation.cause();
           Logger.trace(cause, "Fail sendMessage: {} is not valid.", message);
           OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 

@@ -25,8 +25,7 @@
  */
 
 /**
- * The component to manage the interaction protocols between users on the WeNet
- * platform.
+ * The component to manage the interaction protocols between users on the WeNet platform.
  *
  * @author UDT-IA, IIIA-CSIC
  */

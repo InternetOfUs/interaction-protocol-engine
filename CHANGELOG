@@ -2,6 +2,11 @@
 
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
+## Version 0.12.0 (2020-08-13)
+
+ * Integrate engine with SWIProlog.
+
+
 ## Version 0.11.0 (2020-07-17)
 
  * Add new service to obtain information of the API.

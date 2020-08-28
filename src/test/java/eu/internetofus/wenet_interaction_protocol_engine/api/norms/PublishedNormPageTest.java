@@ -39,18 +39,18 @@ import eu.internetofus.common.components.ModelTestCase;
  */
 public class PublishedNormPageTest extends ModelTestCase<PublishedNormsPage> {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public PublishedNormsPage createModelExample(int index) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public PublishedNormsPage createModelExample(final int index) {
 
-		final PublishedNormsPage model = new PublishedNormsPage();
-		model.offset = index;
-		model.total = 100 + index;
-		model.norms = new ArrayList<>();
-		model.norms.add(new PublishedNormTest().createModelExample(index));
-		return model;
-	}
+    final var model = new PublishedNormsPage();
+    model.offset = index;
+    model.total = 100 + index;
+    model.norms = new ArrayList<>();
+    model.norms.add(new PublishedNormTest().createModelExample(index));
+    return model;
+  }
 
 }

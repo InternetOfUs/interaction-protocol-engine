@@ -85,7 +85,7 @@ public class NormsResource implements Norms {
   @Override
   public void publishNorm(final JsonObject body, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-    final PublishedNorm publishedNorm = Model.fromJsonObject(body, PublishedNorm.class);
+    final var publishedNorm = Model.fromJsonObject(body, PublishedNorm.class);
     if (publishedNorm == null) {
 
       Logger.debug("The {} is not a valid norm to publish.", body);
@@ -97,7 +97,7 @@ public class NormsResource implements Norms {
 
         if (validation.failed()) {
 
-          final Throwable cause = validation.cause();
+          final var cause = validation.cause();
           Logger.debug(cause, "The {} is not valid.", publishedNorm);
           OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
@@ -106,7 +106,7 @@ public class NormsResource implements Norms {
           this.repository.storePublishedNorm(publishedNorm, stored -> {
             if (stored.failed()) {
 
-              final Throwable cause = stored.cause();
+              final var cause = stored.cause();
               Logger.debug(cause, "Cannot store  {}.", publishedNorm);
               OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
@@ -130,22 +130,22 @@ public class NormsResource implements Norms {
   public void retrievePublishedNormsPage(final String name, final String description, final List<String> keywords, final String publisherId, final Long publishFrom, final Long publishTo, final List<String> order, final int offset,
       final int limit, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-    final JsonObject query = NormsRepository.createPublishedNormsPageQuery(name, description, keywords, publisherId, publishFrom, publishTo);
+    final var query = NormsRepository.createPublishedNormsPageQuery(name, description, keywords, publisherId, publishFrom, publishTo);
 
     try {
 
-      final JsonObject sort = NormsRepository.createPublishedNormsPageSort(order);
+      final var sort = NormsRepository.createPublishedNormsPageSort(order);
       this.repository.retrievePublishedNormsPageObject(query, sort, offset, limit, search -> {
 
         if (search.failed()) {
 
-          final Throwable cause = search.cause();
+          final var cause = search.cause();
           Logger.debug(cause, "Cannot found published norms.");
           OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
         } else {
 
-          final JsonObject page = search.result();
+          final var page = search.result();
           OperationReponseHandlers.responseOk(resultHandler, page);
         }
       });
@@ -166,7 +166,7 @@ public class NormsResource implements Norms {
 
     this.repository.searchPublishedNormObject(publishedNormId, search -> {
 
-      final JsonObject publishedNorm = search.result();
+      final var publishedNorm = search.result();
       if (publishedNorm == null) {
 
         Logger.debug(search.cause(), "Not found published norm for {}", publishedNormId);
@@ -187,7 +187,7 @@ public class NormsResource implements Norms {
   @Override
   public void updatePublishedNorm(final String publishedNormId, final JsonObject body, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-    final PublishedNorm source = Model.fromJsonObject(body, PublishedNorm.class);
+    final var source = Model.fromJsonObject(body, PublishedNorm.class);
     if (source == null) {
 
       Logger.debug("The {} is not a valid published norm to update.", body);
@@ -197,7 +197,7 @@ public class NormsResource implements Norms {
 
       this.repository.searchPublishedNorm(publishedNormId, search -> {
 
-        final PublishedNorm target = search.result();
+        final var target = search.result();
         if (target == null) {
 
           Logger.debug(search.cause(), "Not found published norm {} to update", publishedNormId);
@@ -214,7 +214,7 @@ public class NormsResource implements Norms {
 
             if (validate.failed()) {
 
-              final Throwable cause = validate.cause();
+              final var cause = validate.cause();
               Logger.debug(cause, "Cannot update  {} with {}.", target, source);
               OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
@@ -228,7 +228,7 @@ public class NormsResource implements Norms {
 
                 if (updated.failed()) {
 
-                  final Throwable cause = updated.cause();
+                  final var cause = updated.cause();
                   Logger.debug(cause, "Cannot update  {}.", target);
                   OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
@@ -257,7 +257,7 @@ public class NormsResource implements Norms {
 
       if (delete.failed()) {
 
-        final Throwable cause = delete.cause();
+        final var cause = delete.cause();
         Logger.debug(cause, "Cannot delete the published norm  {}.", publishedNormId);
         OperationReponseHandlers.responseFailedWith(resultHandler, Status.NOT_FOUND, cause);
 
@@ -276,7 +276,7 @@ public class NormsResource implements Norms {
   @Override
   public void mergePublishedNorm(final String publishedNormId, final JsonObject body, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-    final PublishedNorm source = Model.fromJsonObject(body, PublishedNorm.class);
+    final var source = Model.fromJsonObject(body, PublishedNorm.class);
     if (source == null) {
 
       Logger.debug("The {} is not a valid published norm to merge.", body);
@@ -286,7 +286,7 @@ public class NormsResource implements Norms {
 
       this.repository.searchPublishedNorm(publishedNormId, search -> {
 
-        final PublishedNorm target = search.result();
+        final var target = search.result();
         if (target == null) {
 
           Logger.debug(search.cause(), "Not found published norm {} to merge", publishedNormId);
@@ -298,13 +298,13 @@ public class NormsResource implements Norms {
 
             if (merge.failed()) {
 
-              final Throwable cause = merge.cause();
+              final var cause = merge.cause();
               Logger.debug(cause, "Cannot merge  {} with {}.", target, source);
               OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
             } else {
 
-              final PublishedNorm merged = merge.result();
+              final var merged = merge.result();
               if (merged.equals(target)) {
 
                 OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "published_norm_to_merge_equal_to_original",
@@ -317,7 +317,7 @@ public class NormsResource implements Norms {
 
                   if (updated.failed()) {
 
-                    final Throwable cause = updated.cause();
+                    final var cause = updated.cause();
                     Logger.debug(cause, "Cannot merge  {}.", target);
                     OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 

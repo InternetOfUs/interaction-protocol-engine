@@ -120,14 +120,14 @@ public class MessageTest extends ModelTestCase<Message> {
   @BeforeEach
   public void registerServices(final Vertx vertx) {
 
-    final WebClient client = WebClient.create(vertx);
-    final JsonObject profileConf = profileManagerMocker.getComponentConfiguration();
+    final var client = WebClient.create(vertx);
+    final var profileConf = profileManagerMocker.getComponentConfiguration();
     WeNetProfileManager.register(vertx, client, profileConf);
 
-    final JsonObject taskConf = taskManagerMocker.getComponentConfiguration();
+    final var taskConf = taskManagerMocker.getComponentConfiguration();
     WeNetTaskManager.register(vertx, client, taskConf);
 
-    final JsonObject conf = serviceMocker.getComponentConfiguration();
+    final var conf = serviceMocker.getComponentConfiguration();
     WeNetService.register(vertx, client, conf);
     WeNetServiceSimulator.register(vertx, client, conf);
 
@@ -139,7 +139,7 @@ public class MessageTest extends ModelTestCase<Message> {
   @Override
   public Message createModelExample(final int index) {
 
-    final Message model = new Message();
+    final var model = new Message();
     model.appId = "appId_" + index;
     model.communityId = "communityId_" + index;
     model.senderId = "senderId_" + index;
@@ -159,12 +159,10 @@ public class MessageTest extends ModelTestCase<Message> {
 
       model.content = new IncentiveTest().createModelExample(index).toJsonObject();
 
-    }else {
+    } else {
 
       model.content = new JsonObject();
     }
-
-
 
     return model;
 
@@ -182,11 +180,11 @@ public class MessageTest extends ModelTestCase<Message> {
 
     StoreServices.storeTaskExample(index, vertx, testContext, testContext.succeeding(task -> {
 
-      final Message model = this.createModelExample(index);
+      final var model = this.createModelExample(index);
       model.appId = task.appId;
       model.senderId = task.requesterId;
       model.taskId = task.id;
-      final JsonObject content = (JsonObject) model.content;
+      final var content = (JsonObject) model.content;
       if (model.type == Type.TASK_CREATED) {
 
         model.content = task.toJsonObject();
@@ -221,7 +219,7 @@ public class MessageTest extends ModelTestCase<Message> {
   @ValueSource(ints = { 0, 1, 2, 3, 4, 5, 6 })
   public void shouldExampleNotBeValid(final int index, final Vertx vertx, final VertxTestContext testContext) {
 
-    final Message model = this.createModelExample(index);
+    final var model = this.createModelExample(index);
     assertIsNotValid(model, vertx, testContext);
 
   }
@@ -461,7 +459,7 @@ public class MessageTest extends ModelTestCase<Message> {
   public void shouldNotBeValidWithABadNorm(final Vertx vertx, final VertxTestContext testContext) {
 
     this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
-      final Norm badNorm = new Norm();
+      final var badNorm = new Norm();
       badNorm.attribute = ValidationsTest.STRING_256;
       model.norms.add(badNorm);
       assertIsNotValid(model, "norms[1].attribute", vertx, testContext);
@@ -640,6 +638,59 @@ public class MessageTest extends ModelTestCase<Message> {
       ((JsonObject) model.content).put("goal", new JsonObject().put("name", "different name"));
       assertIsNotValid(model, "content", vertx, testContext);
     }));
+  }
+
+  /**
+   * Check that a {@link #createModelExample(int, Vertx, VertxTestContext, Handler)} with multiple norms is valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see Message#validate(String, Vertx)
+   */
+  @Test
+  public void shouldExampleWithMultipleNormsBeValid(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+      model.norms.add(new NormTest().createModelExample(2));
+      model.norms.add(new NormTest().createModelExample(3));
+      for (var i = 0; i < model.norms.size(); i++) {
+
+        model.norms.get(i).id = String.valueOf(i);
+      }
+
+      assertIsValid(model, vertx, testContext);
+
+    }));
+
+  }
+
+  /**
+   * Check that a {@link #createModelExample(int, Vertx, VertxTestContext, Handler)} with multiple norms with the same id
+   * is not valid.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see Message#validate(String, Vertx)
+   */
+  @Test
+  public void shouldExampleWithDuplicatedNormIdsNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+
+      model.norms.add(new NormTest().createModelExample(2));
+      model.norms.add(new NormTest().createModelExample(3));
+      for (var i = 0; i < model.norms.size(); i++) {
+
+        model.norms.get(i).id = "1";
+      }
+
+      assertIsNotValid(model, "norms[1]", vertx, testContext);
+
+    }));
+
   }
 
 }

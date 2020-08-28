@@ -28,11 +28,19 @@ package eu.internetofus.common.vertx;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import eu.internetofus.common.components.DummyModel;
+import eu.internetofus.common.components.DummyModelTest;
+import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.profile_manager.CreateUpdateTsDetails;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfileTest;
@@ -42,7 +50,6 @@ import eu.internetofus.common.components.task_manager.TaskTypeTest;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.http.HttpVersion;
 import io.vertx.core.impl.NoStackTraceThrowable;
 import io.vertx.core.json.DecodeException;
@@ -66,16 +73,128 @@ import io.vertx.serviceproxy.ServiceException;
 public class ComponentClientTest {
 
   /**
-   * Verify that can not post over an undefined service.
+   * Verify that can not post a {@link Model} over an undefined service.
    *
    * @param client      to use.
    * @param testContext context that manage the test.
    */
   @Test
-  public void shouldNotPostOverAnUndefinedService(final WebClient client, final VertxTestContext testContext) {
+  public void shouldNotPostModelOverAnUndefinedService(final WebClient client, final VertxTestContext testContext) {
 
-    final ComponentClient service = new ComponentClient(client, "http://undefined/");
+    final var service = new ComponentClient(client, "http://undefined/");
+    service.post(new DummyModel(), testContext.failing(ignored -> testContext.completeNow()), "path");
+
+  }
+
+  /**
+   * Verify that can not post a {@link JsonArray} over an undefined service.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   */
+  @Test
+  public void shouldNotPostJsonArrayOverAnUndefinedService(final WebClient client, final VertxTestContext testContext) {
+
+    final var service = new ComponentClient(client, "http://undefined/");
+    service.post(new JsonArray(), testContext.failing(ignored -> testContext.completeNow()), "path");
+
+  }
+
+  /**
+   * Verify that can not post a {@link JsonObject} over an undefined service.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   */
+  @Test
+  public void shouldNotPostJsonObjectOverAnUndefinedService(final WebClient client, final VertxTestContext testContext) {
+
+    final var service = new ComponentClient(client, "http://undefined/");
     service.post(new JsonObject(), testContext.failing(ignored -> testContext.completeNow()), "path");
+
+  }
+
+  /**
+   * Verify that can not put a {@link Model} over an undefined service.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   */
+  @Test
+  public void shouldNotPutModelOverAnUndefinedService(final WebClient client, final VertxTestContext testContext) {
+
+    final var service = new ComponentClient(client, "http://undefined/");
+    service.put(new DummyModel(), testContext.failing(ignored -> testContext.completeNow()), "path");
+
+  }
+
+  /**
+   * Verify that can not put a {@link JsonArray} over an undefined service.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   */
+  @Test
+  public void shouldNotPutJsonArrayOverAnUndefinedService(final WebClient client, final VertxTestContext testContext) {
+
+    final var service = new ComponentClient(client, "http://undefined/");
+    service.put(new JsonArray(), testContext.failing(ignored -> testContext.completeNow()), "path");
+
+  }
+
+  /**
+   * Verify that can not put a {@link JsonObject} over an undefined service.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   */
+  @Test
+  public void shouldNotPutJsonObjectOverAnUndefinedService(final WebClient client, final VertxTestContext testContext) {
+
+    final var service = new ComponentClient(client, "http://undefined/");
+    service.put(new JsonObject(), testContext.failing(ignored -> testContext.completeNow()), "path");
+
+  }
+
+  /**
+   * Verify that can not get a {@link Model} from undefined service.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   */
+  @Test
+  public void shouldNotGetModelOverAnUndefinedService(final WebClient client, final VertxTestContext testContext) {
+
+    final var service = new ComponentClient(client, "http://undefined/");
+    service.getModel(DummyModel.class, testContext.failing(ignored -> testContext.completeNow()), "path");
+
+  }
+
+  /**
+   * Verify that can not get over an undefined service.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   */
+  @Test
+  public void shouldNotGetJsonArrayOverAnUndefinedService(final WebClient client, final VertxTestContext testContext) {
+
+    final var service = new ComponentClient(client, "http://undefined/");
+    service.getJsonArray(testContext.failing(ignored -> testContext.completeNow()), "path");
+
+  }
+
+  /**
+   * Verify that can not get over an undefined service.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   */
+  @Test
+  public void shouldNotGetJsonObjectOverAnUndefinedService(final WebClient client, final VertxTestContext testContext) {
+
+    final var service = new ComponentClient(client, "http://undefined/");
+    service.getJsonObject(testContext.failing(ignored -> testContext.completeNow()), "path");
 
   }
 
@@ -90,12 +209,12 @@ public class ComponentClientTest {
   public void shouldFailPostIfNotReturnJsonObject(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
     vertx.createHttpServer().requestHandler(request -> {
-      final HttpServerResponse response = request.response();
+      final var response = request.response();
       response.putHeader("content-type", "text/plain");
       response.end("Hello World!");
     }).listen(0, "localhost", testContext.succeeding(server -> {
 
-      final ComponentClient service = new ComponentClient(client, "http://localhost:" + server.actualPort() + "/api");
+      final var service = new ComponentClient(client, "http://localhost:" + server.actualPort() + "/api");
       service.post(new JsonObject(), testContext.failing(cause -> {
 
         server.close();
@@ -117,7 +236,7 @@ public class ComponentClientTest {
   @Test
   public void shouldNotGetOverAnUndefinedService(final WebClient client, final VertxTestContext testContext) {
 
-    final ComponentClient service = new ComponentClient(client, "http://undefined");
+    final var service = new ComponentClient(client, "http://undefined");
     service.getJsonObject(testContext.failing(ignored -> testContext.completeNow()), "path");
 
   }
@@ -131,7 +250,7 @@ public class ComponentClientTest {
   @Test
   public void shouldNotDeleteOverAnUndefinedService(final WebClient client, final VertxTestContext testContext) {
 
-    final ComponentClient service = new ComponentClient(client, "http://undefined");
+    final var service = new ComponentClient(client, "http://undefined");
     service.delete(testContext.failing(ignored -> testContext.completeNow()), "path");
 
   }
@@ -145,7 +264,7 @@ public class ComponentClientTest {
   @Test
   public void shoulHandlerForModelFail(final WebClient client, final VertxTestContext testContext) {
 
-    final Throwable cause = new Throwable("Cause");
+    final var cause = new Throwable("Cause");
     ComponentClient.handlerForModel(CreateUpdateTsDetails.class, testContext.failing(error -> testContext.verify(() -> {
 
       assertThat(error).isSameAs(cause);
@@ -182,7 +301,7 @@ public class ComponentClientTest {
   @Test
   public void shoulHandlerForModelSuccessWithModel(final WebClient client, final VertxTestContext testContext) {
 
-    final WeNetUserProfile model = new WeNetUserProfileTest().createBasicExample(1);
+    final var model = new WeNetUserProfileTest().createBasicExample(1);
     ComponentClient.handlerForModel(WeNetUserProfile.class, testContext.succeeding(result -> testContext.verify(() -> {
 
       assertThat(result).isEqualTo(model);
@@ -201,7 +320,7 @@ public class ComponentClientTest {
   @Test
   public void shoulHandlerForModelFailBecauseJsonNotMatchType(final WebClient client, final VertxTestContext testContext) {
 
-    final JsonObject jsonModel = new JsonObject().put("id", new JsonObject().put("key", "value"));
+    final var jsonModel = new JsonObject().put("id", new JsonObject().put("key", "value"));
     ComponentClient.handlerForModel(WeNetUserProfile.class, testContext.failing(error -> testContext.verify(() -> {
 
       assertThat(error).hasMessageContaining("WeNetUserProfile").hasMessageContaining(jsonModel.toString());
@@ -222,11 +341,11 @@ public class ComponentClientTest {
    */
   @ParameterizedTest(name = "Should the absolute URL for component {0} with parameters {1} be equals to {2}")
   @CsvSource({ "https://localhost:8080,     ,https://localhost:8080", "https://localhost:8080,a:b:c,https://localhost:8080/a/b/c", "https://localhost:8080,   a  :  b  : c  ,https://localhost:8080/a/b/c",
-    "https://localhost:8080/,/a/:/b:c/,https://localhost:8080/a/b/c/", "https://localhost:8080/,  /a/  :  b/  :  /c  ,https://localhost:8080/a/b/c", "https://localhost:8080/,  a/  :  /b/  :  /c  ,https://localhost:8080/a/b/c" })
+      "https://localhost:8080/,/a/:/b:c/,https://localhost:8080/a/b/c/", "https://localhost:8080/,  /a/  :  b/  :  /c  ,https://localhost:8080/a/b/c", "https://localhost:8080/,  a/  :  /b/  :  /c  ,https://localhost:8080/a/b/c" })
   public void shouldCreateAbsoluteUrlWith(final String componentURL, final String values, final String expectedURL, final WebClient client, final VertxTestContext testContext) {
 
-    final ComponentClient componentClient = new ComponentClient(client, componentURL);
-    Object[] paths = new Object[0];
+    final var componentClient = new ComponentClient(client, componentURL);
+    var paths = new Object[0];
     if (values != null) {
 
       paths = values.split(":");
@@ -246,12 +365,12 @@ public class ComponentClientTest {
   @Test
   public void shouldNotifyWhenTheReposeDoesNotContainsErrorMessage(final WebClient client, final VertxTestContext testContext) {
 
-    final ComponentClient componentClient = new ComponentClient(client, "http://localhost:8080");
+    final var componentClient = new ComponentClient(client, "http://localhost:8080");
     final HttpResponse<Buffer> response = new HttpResponseImpl<Buffer>(HttpVersion.HTTP_1_1, 404, "statusMessage", null, null, null, null, null);
     componentClient.notifyErrorTo(testContext.failing(exception -> testContext.verify(() -> {
 
       assertThat(exception).isInstanceOf(ServiceException.class);
-      final ServiceException serviceException = (ServiceException) exception;
+      final var serviceException = (ServiceException) exception;
       assertThat(serviceException.failureCode()).isEqualTo(404);
       assertThat(serviceException.getMessage()).isEqualTo("statusMessage");
       testContext.completeNow();
@@ -270,7 +389,7 @@ public class ComponentClientTest {
   @Test
   public void shouldFailConsumeArrayWithObjectReponse(final WebClient client, final VertxTestContext testContext) {
 
-    final ComponentClient componentClient = new ComponentClient(client, "http://localhost:8080");
+    final var componentClient = new ComponentClient(client, "http://localhost:8080");
     final HttpResponse<Buffer> response = new HttpResponseImpl<Buffer>(HttpVersion.HTTP_1_1, 404, "statusMessage", null, null, null, new JsonObject().toBuffer(), null);
     componentClient.jsonArrayConsumer("actionId").accept(testContext.failing(exception -> testContext.verify(() -> {
 
@@ -292,7 +411,7 @@ public class ComponentClientTest {
   @Test
   public void shouldFailConsumeArrayWithReturnNullArray(final WebClient client, final VertxTestContext testContext) {
 
-    final ComponentClient componentClient = new ComponentClient(client, "http://localhost:8080");
+    final var componentClient = new ComponentClient(client, "http://localhost:8080");
     final HttpResponse<Buffer> response = new HttpResponseImpl<Buffer>(HttpVersion.HTTP_1_1, 404, "statusMessage", null, null, null, new JsonObject().toBuffer(), null) {
       /**
        * {@inheritDoc}
@@ -323,7 +442,7 @@ public class ComponentClientTest {
   @Test
   public void shouldFailConsumeObjectWithArrayReponse(final WebClient client, final VertxTestContext testContext) {
 
-    final ComponentClient componentClient = new ComponentClient(client, "http://localhost:8080");
+    final var componentClient = new ComponentClient(client, "http://localhost:8080");
     final HttpResponse<Buffer> response = new HttpResponseImpl<Buffer>(HttpVersion.HTTP_1_1, 404, "statusMessage", null, null, null, new JsonArray().toBuffer(), null);
     componentClient.jsonObjectConsumer("actionId").accept(testContext.failing(exception -> testContext.verify(() -> {
 
@@ -345,7 +464,7 @@ public class ComponentClientTest {
   @Test
   public void shouldFailConsumeObjectWithReturnNullObject(final WebClient client, final VertxTestContext testContext) {
 
-    final ComponentClient componentClient = new ComponentClient(client, "http://localhost:8080");
+    final var componentClient = new ComponentClient(client, "http://localhost:8080");
     final HttpResponse<Buffer> response = new HttpResponseImpl<Buffer>(HttpVersion.HTTP_1_1, 404, "statusMessage", null, null, null, new JsonObject().toBuffer(), null) {
       /**
        * {@inheritDoc}
@@ -376,7 +495,7 @@ public class ComponentClientTest {
   @Test
   public void shouldFailConsumeNoContentWithContent(final WebClient client, final VertxTestContext testContext) {
 
-    final ComponentClient componentClient = new ComponentClient(client, "http://localhost:8080");
+    final var componentClient = new ComponentClient(client, "http://localhost:8080");
     final HttpResponse<Buffer> response = new HttpResponseImpl<Buffer>(HttpVersion.HTTP_1_1, 200, "statusMessage", null, null, null, new JsonArray().toBuffer(), null);
     componentClient.noContentConsumer("actionId").accept(testContext.failing(exception -> testContext.verify(() -> {
 
@@ -396,9 +515,9 @@ public class ComponentClientTest {
    * @see ComponentClient#notifyErrorTo(io.vertx.core.Handler, io.vertx.ext.web.client.HttpResponse)
    */
   @Test
-  public void shouldFailConsumeModelWithUnexpectedmodelReponse(final WebClient client, final VertxTestContext testContext) {
+  public void shouldFailConsumeModelWithUnexpectedModelReponse(final WebClient client, final VertxTestContext testContext) {
 
-    final ComponentClient componentClient = new ComponentClient(client, "http://localhost:8080");
+    final var componentClient = new ComponentClient(client, "http://localhost:8080");
     final HttpResponse<Buffer> response = new HttpResponseImpl<Buffer>(HttpVersion.HTTP_1_1, 200, "statusMessage", null, null, null, new TaskTypeTest().createModelExample(1).toBuffer(), null);
     componentClient.modelConsumer(Task.class, "actionId").accept(testContext.failing(exception -> testContext.verify(() -> {
 
@@ -420,8 +539,8 @@ public class ComponentClientTest {
   @Test
   public void shouldConsumeModel(final WebClient client, final VertxTestContext testContext) {
 
-    final ComponentClient componentClient = new ComponentClient(client, "http://localhost:8080");
-    final TaskType model = new TaskTypeTest().createModelExample(1);
+    final var componentClient = new ComponentClient(client, "http://localhost:8080");
+    final var model = new TaskTypeTest().createModelExample(1);
     final HttpResponse<Buffer> response = new HttpResponseImpl<Buffer>(HttpVersion.HTTP_1_1, 200, "statusMessage", null, null, null, model.toBuffer(), null);
     componentClient.modelConsumer(TaskType.class, "actionId").accept(testContext.succeeding(consumed -> testContext.verify(() -> {
 
@@ -430,6 +549,132 @@ public class ComponentClientTest {
 
     })), response);
 
+  }
+
+  /**
+   * Should provide the same error when handle for list fails.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   *
+   * @see ComponentClient#handlerForListModel(Class, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldHandleForListModelWhenHandleFail(final WebClient client, final VertxTestContext testContext) {
+
+    final var cause = new Throwable("Cause" + UUID.randomUUID());
+    ComponentClient.handlerForListModel(DummyModel.class, testContext.failing(exception -> testContext.verify(() -> {
+
+      assertThat(exception).isSameAs(cause);
+      testContext.completeNow();
+
+    }))).handle(Future.failedFuture(cause));
+  }
+
+  /**
+   * Should provide success empty when {@code null} result.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   *
+   * @see ComponentClient#handlerForListModel(Class, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldHandleForListModelWhenHandleReturnNull(final WebClient client, final VertxTestContext testContext) {
+
+    ComponentClient.handlerForListModel(DummyModel.class, testContext.succeeding(result -> testContext.verify(() -> {
+
+      assertThat(result).isNull();
+      testContext.completeNow();
+
+    }))).handle(Future.succeededFuture());
+  }
+
+  /**
+   * Should provide success empty when {@code empty} result.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   *
+   * @see ComponentClient#handlerForListModel(Class, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldHandleForListModelWhenHandleReturnEmpty(final WebClient client, final VertxTestContext testContext) {
+
+    ComponentClient.handlerForListModel(DummyModel.class, testContext.succeeding(result -> testContext.verify(() -> {
+
+      assertThat(result).isEqualTo(Collections.emptyList());
+      testContext.completeNow();
+
+    }))).handle(Future.succeededFuture(new JsonArray()));
+  }
+
+  /**
+   * Should provide success empty when {@code empty} result.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   *
+   * @see ComponentClient#handlerForListModel(Class, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldFailHandleForListModelWhenReturnArrayDoesNotHaveValidModel(final WebClient client, final VertxTestContext testContext) {
+
+    final var badModel = new JsonObject().put("undefinedKey", "value");
+    ComponentClient.handlerForListModel(DummyModel.class, testContext.failing(exception -> testContext.verify(() -> {
+
+      assertThat(exception.getMessage()).contains(badModel.toString(), "1", DummyModel.class.toString());
+      testContext.completeNow();
+
+    }))).handle(Future.succeededFuture(new JsonArray().add(new JsonObject()).add(badModel)));
+  }
+
+  /**
+   * Should provide success empty when {@code empty} result.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   *
+   * @see ComponentClient#handlerForListModel(Class, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldFailHandleForListModelWhenReturnArrayDoesNotHaveJsonObjects(final WebClient client, final VertxTestContext testContext) {
+
+    ComponentClient.handlerForListModel(DummyModel.class, testContext.failing(exception -> testContext.verify(() -> {
+
+      assertThat(exception.getMessage()).contains("1", "0", DummyModel.class.toString());
+      testContext.completeNow();
+
+    }))).handle(Future.succeededFuture(new JsonArray().add(1)));
+  }
+
+  /**
+   * Should provide success empty when {@code empty} result.
+   *
+   * @param client      to use.
+   * @param testContext context that manage the test.
+   *
+   * @see ComponentClient#handlerForListModel(Class, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldHandleForListModelWithAnArrayOdModels(final WebClient client, final VertxTestContext testContext) {
+
+    var source = new JsonArray();
+    final List<DummyModel> expected = new ArrayList<>();
+    for (var i = 0; i < 10; i++) {
+
+      final var model = new DummyModelTest().createModelExample(i);
+      expected.add(model);
+      source = source.add(model.toJsonObject());
+
+    }
+
+    ComponentClient.handlerForListModel(DummyModel.class, testContext.succeeding(result -> testContext.verify(() -> {
+
+      assertThat(result).isEqualTo(expected);
+      testContext.completeNow();
+
+    }))).handle(Future.succeededFuture(source));
   }
 
 }

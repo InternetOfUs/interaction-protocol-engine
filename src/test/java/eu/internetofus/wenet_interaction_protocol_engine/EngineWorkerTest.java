@@ -52,11 +52,11 @@ public class EngineWorkerTest {
   @Test
   public void shouldFixTaskAttributes() {
 
-    final EngineWorker worker = new EngineWorker();
+    final var worker = new EngineWorker();
 
-    final Message message = new Message();
+    final var message = new Message();
     message.taskId = UUID.randomUUID().toString();
-    final EngineEnvironment env = new EngineEnvironment();
+    final var env = new EngineEnvironment();
     worker.fixTaskAttributes(env, message);
     assertThat(env.task).isNotNull();
     assertThat(env.task.id).isEqualTo(message.taskId);
@@ -75,7 +75,7 @@ public class EngineWorkerTest {
   @Test
   public void shouldCaptureErrorWhenHandleNullMessage() {
 
-    final EngineWorker worker = new EngineWorker();
+    final var worker = new EngineWorker();
     final io.vertx.core.eventbus.Message<JsonObject> event = null;
     worker.handle(event);
 
@@ -87,7 +87,7 @@ public class EngineWorkerTest {
   @Test
   public void shouldCaptureErrorWhenHandleEmptyMessage() {
 
-    final EngineWorker worker = new EngineWorker();
+    final var worker = new EngineWorker();
     @SuppressWarnings("unchecked")
     final io.vertx.core.eventbus.Message<JsonObject> event = mock(io.vertx.core.eventbus.Message.class);
     worker.handle(event);

@@ -175,8 +175,8 @@ public class NormsRepositoryIT {
   @Test
   public void shouldStorePublishedNorm(final Vertx vertx, final VertxTestContext testContext) {
 
-    final PublishedNorm norm = new PublishedNorm();
-    final long now = TimeManager.now();
+    final var norm = new PublishedNorm();
+    final var now = TimeManager.now();
     NormsRepository.createProxy(vertx).storePublishedNorm(norm, testContext.succeeding(storedNorm -> testContext.verify(() -> {
 
       assertThat(storedNorm).isNotNull();
@@ -199,11 +199,11 @@ public class NormsRepositoryIT {
   @Test
   public void shouldStorePublishedNormObject(final Vertx vertx, final VertxTestContext testContext) {
 
-    final long now = TimeManager.now();
+    final var now = TimeManager.now();
     NormsRepository.createProxy(vertx).storePublishedNorm(new JsonObject(), testContext.succeeding(storedNorm -> testContext.verify(() -> {
 
       assertThat(storedNorm).isNotNull();
-      final String id = storedNorm.getString("id");
+      final var id = storedNorm.getString("id");
       assertThat(id).isNotEmpty();
       assertThat(storedNorm.getLong("_creationTs", 0l)).isNotEqualTo(0).isGreaterThanOrEqualTo(now);
       assertThat(storedNorm.getLong("_lastUpdateTs", 0l)).isNotEqualTo(0).isGreaterThanOrEqualTo(now);
@@ -223,7 +223,7 @@ public class NormsRepositoryIT {
   @Test
   public void shouldNotUpdateUndefinedPublishedNorm(final Vertx vertx, final VertxTestContext testContext) {
 
-    final PublishedNorm norm = new PublishedNorm();
+    final var norm = new PublishedNorm();
     norm.id = "undefined norm identifier";
     NormsRepository.createProxy(vertx).updatePublishedNorm(norm, testContext.failing(failed -> {
       testContext.completeNow();
@@ -242,7 +242,7 @@ public class NormsRepositoryIT {
   @Test
   public void shouldNotUpdateUndefinedPublishedNormObject(final Vertx vertx, final VertxTestContext testContext) {
 
-    final JsonObject norm = new JsonObject().put("id", "undefined norm identifier");
+    final var norm = new JsonObject().put("id", "undefined norm identifier");
     NormsRepository.createProxy(vertx).updatePublishedNorm(norm, testContext.failing(failed -> {
       testContext.completeNow();
     }));
@@ -289,14 +289,14 @@ public class NormsRepositoryIT {
   @Test
   public void shouldUpdatePublishedNorm(final Vertx vertx, final VertxTestContext testContext) {
 
-    final PublishedNorm norm = new PublishedNorm();
+    final var norm = new PublishedNorm();
 
     NormsRepository.createProxy(vertx).storePublishedNorm(norm, testContext.succeeding(stored -> testContext.verify(() -> {
 
-      final PublishedNorm update = new PublishedNormTest().createModelExample(23);
+      final var update = new PublishedNormTest().createModelExample(23);
       update.id = stored.id;
       Thread.sleep(1000);
-      final long now = TimeManager.now();
+      final var now = TimeManager.now();
       NormsRepository.createProxy(vertx).updatePublishedNorm(update, testContext.succeeding(empty -> {
 
         NormsRepository.createProxy(vertx).searchPublishedNorm(stored.id, testContext.succeeding(foundNorm -> testContext.verify(() -> {
@@ -327,8 +327,8 @@ public class NormsRepositoryIT {
 
     NormsRepository.createProxy(vertx).storePublishedNorm(new JsonObject().put("name", "Norm name"), testContext.succeeding(stored -> testContext.verify(() -> {
 
-      final String id = stored.getString("id");
-      final JsonObject update = new JsonObject().put("id", id).put("name", "New norm name");
+      final var id = stored.getString("id");
+      final var update = new JsonObject().put("id", id).put("name", "New norm name");
       NormsRepository.createProxy(vertx).updatePublishedNorm(update, testContext.succeeding(empty -> testContext.verify(() -> {
 
         NormsRepository.createProxy(vertx).searchPublishedNormObject(id, testContext.succeeding(foundNorm -> testContext.verify(() -> {
@@ -372,7 +372,7 @@ public class NormsRepositoryIT {
 
     NormsRepository.createProxy(vertx).storePublishedNorm(new JsonObject(), testContext.succeeding(stored -> {
 
-      final String id = stored.getString("id");
+      final var id = stored.getString("id");
       NormsRepository.createProxy(vertx).deletePublishedNorm(id, testContext.succeeding(success -> {
 
         NormsRepository.createProxy(vertx).searchPublishedNormObject(id, testContext.failing(search -> {
@@ -406,7 +406,7 @@ public class NormsRepositoryIT {
 
     } else {
 
-      final PublishedNorm norm = new PublishedNormTest().createModelExample(norms.size());
+      final var norm = new PublishedNormTest().createModelExample(norms.size());
       change.accept(norm);
       NormsRepository.createProxy(vertx).storePublishedNorm(norm, testContext.succeeding(stored -> {
 
@@ -428,10 +428,10 @@ public class NormsRepositoryIT {
   @Test
   public void shoulFoundPublishedNormPageByName(final Vertx vertx, final VertxTestContext testContext) {
 
-    final NormsRepository repository = NormsRepository.createProxy(vertx);
-    final String name = UUID.randomUUID().toString();
-    final JsonObject query = NormsRepository.createPublishedNormsPageQuery(name, null, null, null, null, null);
-    final JsonObject sort = new JsonObject();
+    final var repository = NormsRepository.createProxy(vertx);
+    final var name = UUID.randomUUID().toString();
+    final var query = NormsRepository.createPublishedNormsPageQuery(name, null, null, null, null, null);
+    final var sort = new JsonObject();
     repository.retrievePublishedNormsPage(query, sort, 0, 10, testContext.succeeding(found -> testContext.verify(() -> {
 
       assertThat(found).isNotNull();
@@ -474,10 +474,10 @@ public class NormsRepositoryIT {
   @Test
   public void shoulFoundPublishedNormPageByDescription(final Vertx vertx, final VertxTestContext testContext) {
 
-    final NormsRepository repository = NormsRepository.createProxy(vertx);
-    final String description = UUID.randomUUID().toString();
-    final JsonObject query = NormsRepository.createPublishedNormsPageQuery(null, description, null, null, null, null);
-    final JsonObject sort = new JsonObject();
+    final var repository = NormsRepository.createProxy(vertx);
+    final var description = UUID.randomUUID().toString();
+    final var query = NormsRepository.createPublishedNormsPageQuery(null, description, null, null, null, null);
+    final var sort = new JsonObject();
     repository.retrievePublishedNormsPage(query, sort, 0, 10, testContext.succeeding(found -> testContext.verify(() -> {
 
       assertThat(found).isNotNull();

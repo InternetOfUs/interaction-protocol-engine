@@ -97,7 +97,6 @@ public interface Help {
   @Operation(summary = "Get the Open API description", description = "Return the Open API description of this API")
   @ApiResponse(responseCode = "200", description = "The API description")
   @Produces("application/yaml")
-  void getOpenApi(@Parameter(hidden = true, required = false) OperationRequest context,
-      @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+  void getOpenApi(@Parameter(hidden = true, required = false) OperationRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
 
 }

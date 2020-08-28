@@ -69,7 +69,7 @@ public interface Containers {
   /**
    * The name of the WeNet profile manager docker container to use.
    */
-  String WENET_PROFILE_MANAGER_DOCKER_NAME = "wenet/profile-manager:0.14.0";
+  String WENET_PROFILE_MANAGER_DOCKER_NAME = "wenet/profile-manager:0.15.0";
 
   /**
    * The name of the WeNet profile manager database.
@@ -79,7 +79,7 @@ public interface Containers {
   /**
    * The name of the WeNet task manager docker container to use.
    */
-  String WENET_TASK_MANAGER_DOCKER_NAME = "wenet/task-manager:0.5.0";
+  String WENET_TASK_MANAGER_DOCKER_NAME = "wenet/task-manager:0.6.0";
 
   /**
    * The name of the WeNet task manager database.
@@ -89,7 +89,7 @@ public interface Containers {
   /**
    * The name of the WeNet interaction manager docker container to use.
    */
-  String WENET_INTERACTION_PROTOCOL_ENGINE_DOCKER_NAME = "wenet/interaction-protocol-engine:0.10.0";
+  String WENET_INTERACTION_PROTOCOL_ENGINE_DOCKER_NAME = "wenet/interaction-protocol-engine:0.12.0";
 
   /**
    * The name of the WeNet interaction manager database.
@@ -103,9 +103,9 @@ public interface Containers {
    */
   static int nextFreePort() {
 
-    int port = 0;
+    var port = 0;
     try {
-      final ServerSocket server = new ServerSocket(0);
+      final var server = new ServerSocket(0);
       port = server.getLocalPort();
       server.close();
     } catch (final Throwable ignored) {
@@ -140,7 +140,7 @@ public interface Containers {
    */
   static String exposedApiFor(final int port) {
 
-    final StringBuilder builder = new StringBuilder();
+    final var builder = new StringBuilder();
     builder.append("http://host.testcontainers.internal:");
     builder.append(port);
     return builder.toString();
@@ -229,10 +229,10 @@ public interface Containers {
    */
   static void defaultEffectiveConfiguration(final Vertx vertx, final Handler<AsyncResult<JsonObject>> configurationHandler) {
 
-    final ConfigStoreOptions effectiveConfigurationFile = new ConfigStoreOptions().setType("file").setFormat("json")
+    final var effectiveConfigurationFile = new ConfigStoreOptions().setType("file").setFormat("json")
         .setConfig(new JsonObject().put("path", FileSystems.getDefault().getPath(AbstractMain.DEFAULT_EFFECTIVE_CONFIGURATION_PATH).toFile().getAbsolutePath()));
 
-    final ConfigRetrieverOptions options = new ConfigRetrieverOptions().addStore(effectiveConfigurationFile);
+    final var options = new ConfigRetrieverOptions().addStore(effectiveConfigurationFile);
     ConfigRetriever.create(vertx, options).getConfig(configurationHandler);
 
   }

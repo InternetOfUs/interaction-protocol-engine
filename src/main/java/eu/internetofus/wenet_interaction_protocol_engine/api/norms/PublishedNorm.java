@@ -93,8 +93,8 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
   @Override
   public Future<Void> validate(final String codePrefix, final Vertx vertx) {
 
-    final Promise<Void> promise = Promise.promise();
-    Future<Void> future = promise.future();
+    final var promise = Promise.promise();
+    var future = promise.future();
     try {
 
       this.id = Validations.validateNullableStringField(codePrefix, "id", 255, this.id);
@@ -102,7 +102,7 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
 
         future = future.compose(mapper -> {
 
-          final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
+          final var verifyNotRepeatedIdPromise = Promise.promise();
           NormsRepository.createProxy(vertx).searchPublishedNorm(this.id, search -> {
 
             if (search.failed()) {
@@ -126,7 +126,7 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
 
         future = future.compose(mapper -> {
 
-          final Promise<Void> verifyPublishedExistPromise = Promise.promise();
+          final var verifyPublishedExistPromise = Promise.promise();
           WeNetProfileManager.createProxy(vertx).retrieveProfile(this.publisherId, profile -> {
 
             if (profile.failed()) {
@@ -165,11 +165,11 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
   @Override
   public Future<PublishedNorm> merge(final PublishedNorm source, final String codePrefix, final Vertx vertx) {
 
-    final Promise<PublishedNorm> promise = Promise.promise();
-    Future<PublishedNorm> future = promise.future();
+    final var promise = Promise.promise();
+    var future = promise.future();
     if (source != null) {
 
-      final PublishedNorm merged = new PublishedNorm();
+      final var merged = new PublishedNorm();
       merged.name = source.name;
       if (merged.name == null) {
 

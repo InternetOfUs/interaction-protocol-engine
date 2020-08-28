@@ -72,7 +72,7 @@ public class NormsIT {
     testRequest(client, HttpMethod.GET, Norms.PATH + "/undefined-published-norm-identifier").expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
-      final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+      final var error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty();
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -96,7 +96,7 @@ public class NormsIT {
       testRequest(client, HttpMethod.GET, Norms.PATH + "/" + stored.id).expect(res -> testContext.verify(() -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-        final PublishedNorm found = assertThatBodyIs(PublishedNorm.class, res);
+        final var found = assertThatBodyIs(PublishedNorm.class, res);
         assertThat(found).isEqualTo(stored);
 
       })).send(testContext);
@@ -119,7 +119,7 @@ public class NormsIT {
     testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-      final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+      final var error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty().isEqualTo("bad_publishedNorm");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -138,11 +138,11 @@ public class NormsIT {
   @Test
   public void shouldNotPublishInvalidNorm(final WebClient client, final VertxTestContext testContext) {
 
-    final PublishedNorm norm = new PublishedNormTest().createModelExample(1);
+    final var norm = new PublishedNormTest().createModelExample(1);
     testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-      final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+      final var error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty().isEqualTo("bad_publishedNorm.publisherId");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -166,11 +166,11 @@ public class NormsIT {
 
       model._creationTs = 0;
       model._lastUpdateTs = 1;
-      final long now = TimeManager.now();
+      final var now = TimeManager.now();
       testRequest(client, HttpMethod.POST, Norms.PATH).expect(res -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.CREATED.getStatusCode());
-        final PublishedNorm published = assertThatBodyIs(PublishedNorm.class, res);
+        final var published = assertThatBodyIs(PublishedNorm.class, res);
         assertThat(published).isNotNull();
         assertThat(published._creationTs).isGreaterThanOrEqualTo(now);
         assertThat(published._lastUpdateTs).isGreaterThanOrEqualTo(published._creationTs);
@@ -198,19 +198,19 @@ public class NormsIT {
   @Test
   public void shouldFoundNormsByName(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    final PublishedNorm publishedNorm1 = new PublishedNormTest().createModelExample(1);
-    final String name = UUID.randomUUID().toString();
+    final var publishedNorm1 = new PublishedNormTest().createModelExample(1);
+    final var name = UUID.randomUUID().toString();
     publishedNorm1.name = name + " 1";
     NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
 
-      final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
+      final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
       publishedNorm2.name += " " + name + " 2";
       NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
 
         testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("name", "/.*" + name + ".*/")).expect(res -> {
 
           assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-          final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
+          final var page = assertThatBodyIs(PublishedNormsPage.class, res);
           assertThat(page.offset).isEqualTo(0);
           assertThat(page.total).isEqualTo(2);
           assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
@@ -233,19 +233,19 @@ public class NormsIT {
   @Test
   public void shouldFoundNormsByDescription(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    final PublishedNorm publishedNorm1 = new PublishedNormTest().createModelExample(1);
-    final String description = UUID.randomUUID().toString();
+    final var publishedNorm1 = new PublishedNormTest().createModelExample(1);
+    final var description = UUID.randomUUID().toString();
     publishedNorm1.description = description;
     NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
 
-      final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
+      final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
       publishedNorm2.description = description;
       NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
 
         testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("description", description), queryParam("offset", "1")).expect(res -> {
 
           assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-          final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
+          final var page = assertThatBodyIs(PublishedNormsPage.class, res);
           assertThat(page.offset).isEqualTo(1);
           assertThat(page.total).isEqualTo(2);
           assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm2);
@@ -268,19 +268,19 @@ public class NormsIT {
   @Test
   public void shouldFoundNormsByAKeyword(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    final PublishedNorm publishedNorm1 = new PublishedNormTest().createModelExample(1);
-    final String keyword = UUID.randomUUID().toString();
+    final var publishedNorm1 = new PublishedNormTest().createModelExample(1);
+    final var keyword = UUID.randomUUID().toString();
     publishedNorm1.keywords.add(keyword);
     NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
 
-      final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
+      final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
       publishedNorm2.keywords.add(keyword);
       NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
 
         testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("keywords", keyword), queryParam("limit", "1")).expect(res -> {
 
           assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-          final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
+          final var page = assertThatBodyIs(PublishedNormsPage.class, res);
           assertThat(page.offset).isEqualTo(0);
           assertThat(page.total).isEqualTo(2);
           assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1);
@@ -303,24 +303,24 @@ public class NormsIT {
   @Test
   public void shouldFoundNormsBySomeKeyword(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    final PublishedNorm publishedNorm1 = new PublishedNormTest().createModelExample(1);
-    final String keyword = UUID.randomUUID().toString();
+    final var publishedNorm1 = new PublishedNormTest().createModelExample(1);
+    final var keyword = UUID.randomUUID().toString();
     publishedNorm1.keywords.add(keyword);
-    final NormsRepository repository = NormsRepository.createProxy(vertx);
+    final var repository = NormsRepository.createProxy(vertx);
     repository.storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
 
-      final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
+      final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
       publishedNorm2.keywords.add(1, keyword);
       repository.storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
 
-        final PublishedNorm publishedNorm3 = new PublishedNormTest().createModelExample(30);
+        final var publishedNorm3 = new PublishedNormTest().createModelExample(30);
         publishedNorm3.keywords.add(0, keyword);
         repository.storePublishedNorm(publishedNorm3, testContext.succeeding(storedPublishedNorm3 -> {
 
           testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("keywords", keyword + ",keyword 1")).expect(res -> {
 
             assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-            final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
+            final var page = assertThatBodyIs(PublishedNormsPage.class, res);
             assertThat(page.offset).isEqualTo(0);
             assertThat(page.total).isEqualTo(2);
             assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
@@ -344,20 +344,20 @@ public class NormsIT {
   @Test
   public void shouldFoundNormsByPublisherId(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    final PublishedNorm publishedNorm1 = new PublishedNormTest().createModelExample(1);
-    final String publisherId = "http://host.com/publisherId_" + UUID.randomUUID().toString() + ".png";
+    final var publishedNorm1 = new PublishedNormTest().createModelExample(1);
+    final var publisherId = "http://host.com/publisherId_" + UUID.randomUUID().toString() + ".png";
     publishedNorm1.publisherId = publisherId;
-    final NormsRepository repository = NormsRepository.createProxy(vertx);
+    final var repository = NormsRepository.createProxy(vertx);
     repository.storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
 
-      final PublishedNorm publishedNorm2 = new PublishedNormTest().createModelExample(2);
+      final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
       publishedNorm2.publisherId = publisherId;
       repository.storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
 
         testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("publisherId", publisherId)).expect(res -> {
 
           assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-          final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
+          final var page = assertThatBodyIs(PublishedNormsPage.class, res);
           assertThat(page.offset).isEqualTo(0);
           assertThat(page.total).isEqualTo(2);
           assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
@@ -382,7 +382,7 @@ public class NormsIT {
     testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("name", "/a{12(/")).expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-      final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+      final var error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty();
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -404,7 +404,7 @@ public class NormsIT {
     testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("name", UUID.randomUUID().toString())).expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-      final PublishedNormsPage page = assertThatBodyIs(PublishedNormsPage.class, res);
+      final var page = assertThatBodyIs(PublishedNormsPage.class, res);
       assertThat(page.offset).isEqualTo(0);
       assertThat(page.total).isEqualTo(0);
       assertThat(page.norms).isNull();
@@ -427,7 +427,7 @@ public class NormsIT {
     testRequest(client, HttpMethod.DELETE, Norms.PATH + "/undefined").expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
-      final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+      final var error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty();
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -475,7 +475,7 @@ public class NormsIT {
       testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + norm.id).expect(res -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-        final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+        final var error = assertThatBodyIs(ErrorMessage.class, res);
         assertThat(error.code).isNotEmpty();
         assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -501,7 +501,7 @@ public class NormsIT {
       testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + norm.id).expect(res -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-        final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+        final var error = assertThatBodyIs(ErrorMessage.class, res);
         assertThat(error.code).isNotEmpty();
         assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -527,7 +527,7 @@ public class NormsIT {
       testRequest(client, HttpMethod.PUT, Norms.PATH + "/undefined").expect(res -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
-        final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+        final var error = assertThatBodyIs(ErrorMessage.class, res);
         assertThat(error.code).isNotEmpty();
         assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -555,7 +555,7 @@ public class NormsIT {
         testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + norm.id).expect(res -> {
 
           assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-          final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+          final var error = assertThatBodyIs(ErrorMessage.class, res);
           assertThat(error.code).isNotEmpty();
           assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -583,11 +583,11 @@ public class NormsIT {
       new PublishedNormTest().createModelExample(2, vertx, testContext, testContext.succeeding(source -> {
         NormsRepository.createProxy(vertx).storePublishedNorm(created, testContext.succeeding(target -> {
 
-          final long now = TimeManager.now();
+          final var now = TimeManager.now();
           testRequest(client, HttpMethod.PUT, Norms.PATH + "/" + target.id).expect(res -> {
 
             assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-            final PublishedNorm updated = assertThatBodyIs(PublishedNorm.class, res);
+            final var updated = assertThatBodyIs(PublishedNorm.class, res);
             assertThat(updated).isNotNull();
             assertThat(updated._lastUpdateTs).isGreaterThanOrEqualTo(now);
             source._creationTs = target._creationTs;
@@ -620,7 +620,7 @@ public class NormsIT {
       testRequest(client, HttpMethod.PATCH, Norms.PATH + "/" + norm.id).expect(res -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-        final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+        final var error = assertThatBodyIs(ErrorMessage.class, res);
         assertThat(error.code).isNotEmpty();
         assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -646,7 +646,7 @@ public class NormsIT {
       testRequest(client, HttpMethod.PATCH, Norms.PATH + "/" + norm.id).expect(res -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-        final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+        final var error = assertThatBodyIs(ErrorMessage.class, res);
         assertThat(error.code).isNotEmpty();
         assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -672,7 +672,7 @@ public class NormsIT {
       testRequest(client, HttpMethod.PATCH, Norms.PATH + "/undefined").expect(res -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.NOT_FOUND.getStatusCode());
-        final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+        final var error = assertThatBodyIs(ErrorMessage.class, res);
         assertThat(error.code).isNotEmpty();
         assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -700,7 +700,7 @@ public class NormsIT {
         testRequest(client, HttpMethod.PATCH, Norms.PATH + "/" + norm.id).expect(res -> {
 
           assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-          final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+          final var error = assertThatBodyIs(ErrorMessage.class, res);
           assertThat(error.code).isNotEmpty();
           assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -727,13 +727,13 @@ public class NormsIT {
 
       NormsRepository.createProxy(vertx).storePublishedNorm(created, testContext.succeeding(target -> {
 
-        final PublishedNorm source = new PublishedNorm();
+        final var source = new PublishedNorm();
         source.name = "NEW NAME";
-        final long now = TimeManager.now();
+        final var now = TimeManager.now();
         testRequest(client, HttpMethod.PATCH, Norms.PATH + "/" + target.id).expect(res -> {
 
           assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-          final PublishedNorm merged = assertThatBodyIs(PublishedNorm.class, res);
+          final var merged = assertThatBodyIs(PublishedNorm.class, res);
           assertThat(merged).isNotNull();
           assertThat(merged._lastUpdateTs).isGreaterThanOrEqualTo(now);
           target._lastUpdateTs = merged._lastUpdateTs;

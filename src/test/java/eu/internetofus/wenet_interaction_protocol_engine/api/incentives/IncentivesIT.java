@@ -71,7 +71,7 @@ public class IncentivesIT {
     testRequest(client, HttpMethod.POST, Incentives.PATH).expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-      final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+      final var error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty().isEqualTo("bad_incentive");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -91,11 +91,11 @@ public class IncentivesIT {
   @Test
   public void shouldNotSendInvalidIncentive(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    final Incentive incentive = new IncentiveTest().createModelExample(1);
+    final var incentive = new IncentiveTest().createModelExample(1);
     testRequest(client, HttpMethod.POST, Incentives.PATH).expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
-      final ErrorMessage error = assertThatBodyIs(ErrorMessage.class, res);
+      final var error = assertThatBodyIs(ErrorMessage.class, res);
       assertThat(error.code).isNotEmpty().isEqualTo("bad_incentive.AppID");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
@@ -120,7 +120,7 @@ public class IncentivesIT {
       testRequest(client, HttpMethod.POST, Incentives.PATH).expect(res -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.ACCEPTED.getStatusCode());
-        final Incentive sent = assertThatBodyIs(Incentive.class, res);
+        final var sent = assertThatBodyIs(Incentive.class, res);
         assertThat(sent).isEqualTo(incentive);
 
       }).sendJson(incentive.toJsonObject(), testContext);

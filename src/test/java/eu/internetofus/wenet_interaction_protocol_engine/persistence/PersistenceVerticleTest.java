@@ -37,15 +37,15 @@ import eu.internetofus.common.vertx.AbstractPersistenceVerticleTestCase;
  */
 public class PersistenceVerticleTest extends AbstractPersistenceVerticleTestCase<PersistenceVerticle> {
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see PersistenceVerticle#PersistenceVerticle()
-	 */
-	@Override
-	protected PersistenceVerticle createPersitenceVerticle() {
+  /**
+   * {@inheritDoc}
+   *
+   * @see PersistenceVerticle#PersistenceVerticle()
+   */
+  @Override
+  protected PersistenceVerticle createPersitenceVerticle() {
 
-		return new PersistenceVerticle();
-	}
+    return new PersistenceVerticle();
+  }
 
 }

@@ -72,7 +72,7 @@ public class IncentivesResource implements Incentives {
   @Override
   public void sendIncentive(final JsonObject body, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-    final Incentive incentive = Model.fromJsonObject(body, Incentive.class);
+    final var incentive = Model.fromJsonObject(body, Incentive.class);
     if (incentive == null) {
 
       Logger.trace("Fail sendIncentive: {} is not a valid incentive to send", body);
@@ -84,13 +84,13 @@ public class IncentivesResource implements Incentives {
 
         if (validate.failed()) {
 
-          final Throwable cause = validate.cause();
+          final var cause = validate.cause();
           Logger.trace(cause, "Fail sendIncentive: {} does not contains a valid incentive", body);
           OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
         } else {
 
-          final Message message = new Message();
+          final var message = new Message();
           message.appId = incentive.AppID;
           message.type = Type.INCENTIVE;
           message.content = incentive.toJsonObject();
@@ -98,7 +98,7 @@ public class IncentivesResource implements Incentives {
 
             if (send.failed()) {
 
-              final Throwable cause = send.cause();
+              final var cause = send.cause();
               Logger.trace(cause, "Fail sendIncentive: {} of {} is not accepted", message, body);
               OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 

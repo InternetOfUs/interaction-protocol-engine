@@ -132,12 +132,6 @@ public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable
   public List<SocialNetworkRelationship> relationships;
 
   /**
-   * The user social practices.
-   */
-  @ArraySchema(schema = @Schema(implementation = SocialPractice.class), arraySchema = @Schema(description = "The user social practices"))
-  public List<SocialPractice> socialPractices;
-
-  /**
    * The user routines.
    */
   @ArraySchema(schema = @Schema(implementation = Routine.class), arraySchema = @Schema(description = "The user routines"))
@@ -168,7 +162,7 @@ public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable
   public Future<Void> validate(final String codePrefix, final Vertx vertx) {
 
     final Promise<Void> promise = Promise.promise();
-    Future<Void> future = promise.future();
+    var future = promise.future();
     try {
 
       this.id = Validations.validateNullableStringField(codePrefix, "id", 255, this.id);
@@ -208,11 +202,10 @@ public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable
       this.avatar = Validations.validateNullableURLField(codePrefix, "avatar", this.avatar);
       this.nationality = Validations.validateNullableStringField(codePrefix, "nationality", 255, this.nationality);
       this.occupation = Validations.validateNullableStringField(codePrefix, "occupation", 255, this.occupation);
-      future = future.compose(Validations.validate(this.norms, (a, b) -> a.equals(b), codePrefix + ".norms", vertx));
+      future = future.compose(Validations.validate(this.norms, (a, b) -> a.id.equals(b.id), codePrefix + ".norms", vertx));
       future = future.compose(Validations.validate(this.plannedActivities, (a, b) -> a.equals(b), codePrefix + ".plannedActivities", vertx));
-      future = future.compose(Validations.validate(this.relevantLocations, (a, b) -> a.equals(b), codePrefix + ".relevantLocations", vertx));
+      future = future.compose(Validations.validate(this.relevantLocations, (a, b) -> a.id.equals(b.id), codePrefix + ".relevantLocations", vertx));
       future = future.compose(Validations.validate(this.relationships, (a, b) -> a.equals(b), codePrefix + ".relationships", vertx));
-      future = future.compose(Validations.validate(this.socialPractices, (a, b) -> a.equals(b), codePrefix + ".socialPractices", vertx));
       future = future.compose(Validations.validate(this.personalBehaviors, (a, b) -> a.equals(b), codePrefix + ".personalBehaviors", vertx));
       future = future.compose(Validations.validate(this.materials, (a, b) -> a.equals(b), codePrefix + ".materials", vertx));
       future = future.compose(Validations.validate(this.competences, (a, b) -> a.equals(b), codePrefix + ".competences", vertx));
@@ -235,11 +228,10 @@ public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable
   public Future<WeNetUserProfile> merge(final WeNetUserProfile source, final String codePrefix, final Vertx vertx) {
 
     final Promise<WeNetUserProfile> promise = Promise.promise();
-    Future<WeNetUserProfile> future = promise.future();
+    var future = promise.future();
+    if (source != null) {
 
-    try {
-
-      final WeNetUserProfile merged = new WeNetUserProfile();
+      final var merged = new WeNetUserProfile();
       merged.gender = source.gender;
       if (merged.gender == null) {
 
@@ -273,7 +265,7 @@ public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable
         merged.nationality = this.nationality;
       }
 
-      merged.occupation = Validations.validateNullableStringField(codePrefix, "occupation", 255, source.occupation);
+      merged.occupation = source.occupation;
       if (merged.occupation == null) {
 
         merged.occupation = this.occupation;
@@ -303,10 +295,6 @@ public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable
         model.relevantLocations = mergedRelevantLocations;
       }));
 
-      future = future.compose(Merges.mergeSocialPractices(this.socialPractices, source.socialPractices, codePrefix + ".socialPractices", vertx, (model, mergedSocialPractices) -> {
-        model.socialPractices = mergedSocialPractices;
-      }));
-
       future = future.compose(Merges.mergeRoutines(this.personalBehaviors, source.personalBehaviors, codePrefix + ".personalBehaviors", vertx, (model, mergedPersonalBehaviors) -> {
         model.personalBehaviors = mergedPersonalBehaviors;
       }));
@@ -334,11 +322,9 @@ public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable
         return mergedValidatedModel;
       });
 
-      return future;
+    } else {
 
-    } catch (final ValidationErrorException validationError) {
-
-      promise.fail(validationError);
+      promise.complete(this);
     }
 
     return future;
