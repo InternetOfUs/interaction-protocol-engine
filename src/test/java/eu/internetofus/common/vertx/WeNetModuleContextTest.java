@@ -27,50 +27,33 @@
 package eu.internetofus.common.vertx;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.Test;
 
-import io.vertx.ext.mongo.MongoClient;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 
 /**
- * General test over the classes that extends the {@link AbstractPersistenceVerticle}.
+ * Test the {@link WeNetModuleContext},
  *
- * @param <T> type of persitence verticle to test.
+ * @see WeNetModuleContext
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class AbstractPersistenceVerticleTestCase<T extends AbstractPersistenceVerticle> {
+public class WeNetModuleContextTest {
 
   /**
-   * Create the verticle to start the persistence repositories.
-   *
-   * @return the instance of the persistence verticle to test.
-   */
-  protected abstract T createPersitenceVerticle();
-
-  /**
-   * Check that not stop the server if it is not started.
+   * Should the constructor store the values.
    */
   @Test
-  public void shouldNotStopIfServerNotStarted() {
+  public void shouldConstructorStoreValues() {
 
-    final var persistence = this.createPersitenceVerticle();
-    assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
 
-  }
-
-  /**
-   * Check that not stop the server if it is not started.
-   */
-  @Test
-  public void shouldStopIfServerStarted() {
-
-    final var persistence = this.createPersitenceVerticle();
-    persistence.pool = mock(MongoClient.class);
-    assertThatCode(() -> persistence.stop()).doesNotThrowAnyException();
-    assertThat(persistence.pool).isNull();
+    final Vertx vertx = Vertx.vertx();
+    final JsonObject configuration = new JsonObject();
+    final var context = new WeNetModuleContext(vertx, configuration);
+    assertThat(context.vertx).isSameAs(vertx);
+    assertThat(context.configuration).isSameAs(configuration);
 
   }
 

@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,28 +24,66 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.services;
+package eu.internetofus.common.vertx;
 
-import eu.internetofus.common.vertx.AbstractServicesVerticleTestCase;
+import eu.internetofus.common.components.Model;
 
 /**
- * Test the {@link ServicesVerticle}.
+ * Contains the information of a model that is used on a operation.
  *
- * @see ServicesVerticle
+ * @param <T> type of model.
+ * @param <I> type for the model identifier.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class ServiceVerticleTest extends AbstractServicesVerticleTestCase<ServicesVerticle> {
+public class ModelContext<T extends Model, I> {
+
+  /**
+   * The name of the model.
+   */
+  public String name;
+
+  /**
+   * The type of the model.
+   */
+  public Class<T> type;
+
+  /**
+   * The identifier of the model.
+   */
+  public I id;
+
+  /**
+   * The value of the context.
+   */
+  public T value;
+
+  /**
+   * The new value for the model.
+   */
+  public T source;
+
+  /**
+   * The stored value of the model.
+   */
+  public T target;
 
   /**
    * {@inheritDoc}
-   *
-   * @see ServicesVerticle#ServicesVerticle()
    */
   @Override
-  protected ServicesVerticle createServicesVerticle() {
+  public String toString() {
 
-    return new ServicesVerticle();
+    final StringBuilder builder = new StringBuilder();
+
+    builder.append(this.name);
+    if (this.id != null) {
+
+      builder.append('(');
+      builder.append(this.id);
+      builder.append(')');
+    }
+    return builder.toString();
   }
 
 }

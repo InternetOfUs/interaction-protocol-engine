@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,9 +32,9 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import eu.internetofus.common.components.Mergeable;
-import eu.internetofus.common.components.Merges;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.ReflectionModel;
+import eu.internetofus.common.components.Updateable;
 import eu.internetofus.common.components.Validable;
 import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.components.Validations;
@@ -50,7 +50,7 @@ import io.vertx.core.Vertx;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(description = "An activity planned by an user.")
-public class PlannedActivity extends ReflectionModel implements Model, Validable, Mergeable<PlannedActivity> {
+public class PlannedActivity extends ReflectionModel implements Model, Validable, Mergeable<PlannedActivity>, Updateable<PlannedActivity> {
 
   /**
    * The identifier of the activity.
@@ -207,7 +207,7 @@ public class PlannedActivity extends ReflectionModel implements Model, Validable
       promise.complete(merged);
 
       // validate the merged value and set the i<d
-      future = future.compose(Merges.validateMerged(codePrefix, vertx)).map(mergedValidatedModel -> {
+      future = future.compose(Validations.validateChain(codePrefix, vertx)).map(mergedValidatedModel -> {
 
         mergedValidatedModel.id = this.id;
         return mergedValidatedModel;
@@ -220,6 +220,40 @@ public class PlannedActivity extends ReflectionModel implements Model, Validable
     }
     return future;
 
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Future<PlannedActivity> update(final PlannedActivity source, final String codePrefix, final Vertx vertx) {
+
+    final Promise<PlannedActivity> promise = Promise.promise();
+    var future = promise.future();
+    if (source != null) {
+
+      // merge the values
+      final var updated = new PlannedActivity();
+      updated.startTime = source.startTime;
+      updated.endTime = source.endTime;
+      updated.description = source.description;
+      updated.attendees = source.attendees;
+      updated.status = source.status;
+      promise.complete(updated);
+
+      // validate the merged value and set the i<d
+      future = future.compose(Validations.validateChain(codePrefix, vertx)).map(mergedValidatedModel -> {
+
+        mergedValidatedModel.id = this.id;
+        return mergedValidatedModel;
+      });
+
+    } else {
+
+      promise.complete(this);
+
+    }
+    return future;
   }
 
 }

@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -29,6 +29,7 @@ package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.vertx.Repository;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.FindOptions;
@@ -50,10 +51,11 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
    * Create a new service.
    *
    * @param pool to create the connections.
+   * @param version of the schemas.
    */
-  public NormsRepositoryImpl(final MongoClient pool) {
+  public NormsRepositoryImpl(final MongoClient pool, final String version) {
 
-    super(pool);
+    super(pool, version);
 
   }
 
@@ -131,5 +133,17 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
     this.searchPageObject(PUBLISHED_NORMS_COLLECTION, query, options, "norms", norm -> norm.put("id", norm.remove("_id")), searchHandler);
 
   }
+
+  /**
+   * Migrate the collections to the current version.
+   *
+   * @return the future that will inform if the migration is a success or not.
+   */
+  public Future<Void> migrateDocumentsToCurrentVersions() {
+
+    return this.updateSchemaVersionOnCollection(PUBLISHED_NORMS_COLLECTION);
+
+  }
+
 
 }

@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,9 +27,9 @@
 package eu.internetofus.common.components.profile_manager;
 
 import eu.internetofus.common.components.Mergeable;
-import eu.internetofus.common.components.Merges;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.ReflectionModel;
+import eu.internetofus.common.components.Updateable;
 import eu.internetofus.common.components.Validable;
 import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.components.Validations;
@@ -44,7 +44,7 @@ import io.vertx.core.Vertx;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(hidden = true, name = "Meaning", description = "For defining more general purpose concepts.")
-public class Meaning extends ReflectionModel implements Model, Validable, Mergeable<Meaning> {
+public class Meaning extends ReflectionModel implements Model, Validable, Mergeable<Meaning>,Updateable<Meaning> {
 
   /**
    * The name of the meaning.
@@ -118,7 +118,34 @@ public class Meaning extends ReflectionModel implements Model, Validable, Mergea
       promise.complete(merged);
 
       // Validate the merged value
-      future = future.compose(Merges.validateMerged(codePrefix, vertx));
+      future = future.compose(Validations.validateChain(codePrefix, vertx));
+
+    } else {
+
+      promise.complete(this);
+    }
+    return future;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Future<Meaning> update(final Meaning source, final String codePrefix, final Vertx vertx) {
+
+    final Promise<Meaning> promise = Promise.promise();
+    var future = promise.future();
+    if (source != null) {
+
+      final var updated = new Meaning();
+      updated.name = source.name;
+      updated.category = source.category;
+      updated.level = source.level;
+
+      promise.complete(updated);
+
+      // Validate the updated value
+      future = future.compose(Validations.validateChain(codePrefix, vertx));
 
     } else {
 

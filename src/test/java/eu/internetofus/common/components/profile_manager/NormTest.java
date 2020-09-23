@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,6 +28,8 @@ package eu.internetofus.common.components.profile_manager;
 
 import static eu.internetofus.common.components.MergesTest.assertCanMerge;
 import static eu.internetofus.common.components.MergesTest.assertCannotMerge;
+import static eu.internetofus.common.components.UpdatesTest.assertCanUpdate;
+import static eu.internetofus.common.components.UpdatesTest.assertCannotUpdate;
 import static eu.internetofus.common.components.ValidationsTest.assertIsNotValid;
 import static eu.internetofus.common.components.ValidationsTest.assertIsValid;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -345,6 +347,57 @@ public class NormTest extends ModelTestCase<Norm> {
       assertThat(merged).isEqualTo(target);
 
     });
+
+  }
+
+  /**
+   * Check that update.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see Norm#update(Norm, String, io.vertx.core.Vertx)
+   */
+  @Test
+  public void shouldUpdate(final Vertx vertx, final VertxTestContext testContext) {
+
+    final var target = this.createModelExample(1);
+    final var source = this.createModelExample(2);
+    assertCanUpdate(target, source, vertx, testContext, updated -> assertThat(updated).isNotEqualTo(target).isEqualTo(source));
+
+  }
+
+  /**
+   * Check that update with {@code null}.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see Norm#update(Norm, String, io.vertx.core.Vertx)
+   */
+  @Test
+  public void shouldUpdateWithNull(final Vertx vertx, final VertxTestContext testContext) {
+
+    final var target = this.createModelExample(1);
+    assertCanUpdate(target, null, vertx, testContext, updated -> assertThat(updated).isSameAs(target));
+
+  }
+
+  /**
+   * Check that not update with bad attribute.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @see Norm#update(Norm, String, io.vertx.core.Vertx)
+   */
+  @Test
+  public void shouldNotUpdateWithABadAttribute(final Vertx vertx, final VertxTestContext testContext) {
+
+    final var target = new Norm();
+    final var source = new Norm();
+    source.attribute = ValidationsTest.STRING_256;
+    assertCannotUpdate(target, source, "attribute", vertx, testContext);
 
   }
 

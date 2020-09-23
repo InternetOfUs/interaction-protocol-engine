@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,9 +28,12 @@ package eu.internetofus.common.components;
 
 import static eu.internetofus.common.components.MergesTest.assertCanMerge;
 import static eu.internetofus.common.components.MergesTest.assertCannotMerge;
+import static eu.internetofus.common.components.UpdatesTest.assertCannotUpdate;
 import static eu.internetofus.common.components.ValidationsTest.assertIsNotValid;
 import static eu.internetofus.common.components.ValidationsTest.assertIsValid;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.ArrayList;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,6 +64,12 @@ public class DummyComplexModelTest extends ModelTestCase<DummyComplexModel> {
     final var model = new DummyComplexModel();
     model.id = "Id_" + index;
     model.index = index;
+    if (index % 2 == 0) {
+
+      model.siblings = new ArrayList<>();
+      model.siblings.add(this.createModelExample(index - 1));
+      model.siblings.add(this.createModelExample(index + 1));
+    }
     return model;
   }
 
@@ -73,9 +82,10 @@ public class DummyComplexModelTest extends ModelTestCase<DummyComplexModel> {
    * @see DummyComplexModel#validate(String, Vertx)
    */
   @Test
-  public void shouldEmptyModelNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
+  public void shoudModelWithBadIdNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
     final var model = new DummyComplexModel();
+    model.id = ValidationsTest.STRING_256;
     assertIsNotValid(model, "id", vertx, testContext);
 
   }
@@ -130,13 +140,16 @@ public class DummyComplexModelTest extends ModelTestCase<DummyComplexModel> {
     final var target = this.createModelExample(1);
     final var source = this.createModelExample(2);
     assertCanMerge(target, source, vertx, testContext, merged -> {
-      assertThat(merged).isNotEqualTo(target).isEqualTo(source);
+      assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
+      target.index = source.index;
+      target.siblings = source.siblings;
+      assertThat(merged).isEqualTo(target);
     });
 
   }
 
   /**
-   * Should not merge with a bad user identifier.
+   * Should not merge with a bad sibling.
    *
    * @param vertx       event bus to use.
    * @param testContext context to test.
@@ -144,12 +157,34 @@ public class DummyComplexModelTest extends ModelTestCase<DummyComplexModel> {
    * @see DummyComplexModel#merge(DummyComplexModel, String, Vertx)
    */
   @Test
-  public void shoudNotMergeWithBadId(final Vertx vertx, final VertxTestContext testContext) {
+  public void shoudNotMergeWithBadSibling(final Vertx vertx, final VertxTestContext testContext) {
 
     final var target = this.createModelExample(1);
     final var source = new DummyComplexModel();
-    source.id = ValidationsTest.STRING_256;
-    assertCannotMerge(target, source, "id", vertx, testContext);
+    source.siblings = new ArrayList<>();
+    source.siblings.add(new DummyComplexModel());
+    source.siblings.get(0).id = ValidationsTest.STRING_256;
+    assertCannotMerge(target, source, "siblings[0].id", vertx, testContext);
+
+  }
+
+  /**
+   * Should not update with a bad sibling.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see DummyComplexModel#update(DummyComplexModel, String, Vertx)
+   */
+  @Test
+  public void shoudNotUpdateWithBadSibling(final Vertx vertx, final VertxTestContext testContext) {
+
+    final var target = this.createModelExample(1);
+    final var source = new DummyComplexModel();
+    source.siblings = new ArrayList<>();
+    source.siblings.add(new DummyComplexModel());
+    source.siblings.get(0).id = ValidationsTest.STRING_256;
+    assertCannotUpdate(target, source, "siblings[0].id", vertx, testContext);
 
   }
 

@@ -15,7 +15,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-wenetDB}
     volumes:
-      - src/main/docker/initialize-wenetInteractionProtocolEngineDB.js:/docker-entrypoint-initdb.d/init-mongo.js
+      - ../../main/docker/initialize-wenetInteractionProtocolEngineDB.js:/docker-entrypoint-initdb.d/init-mongo.js
       - wenet_interaction_protocol_engine_dev:/data/db
   mongo-express:
     image: mongo-express:latest

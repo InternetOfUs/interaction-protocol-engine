@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -33,6 +33,7 @@ import java.util.function.Function;
 import org.tinylog.Logger;
 
 import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.ReflectionModel;
 import eu.internetofus.common.components.interaction_protocol_engine.Message;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
@@ -84,7 +85,7 @@ public class EngineEnvironment extends ReflectionModel implements Model {
 
     return env -> {
 
-      final var loadPromise = Promise.promise();
+      final Promise<EngineEnvironment> loadPromise = Promise.promise();
       loader.accept(load -> {
         if (load.failed()) {
 
@@ -111,7 +112,7 @@ public class EngineEnvironment extends ReflectionModel implements Model {
    */
   public static Future<EngineEnvironment> create(final Vertx vertx, final Message message) {
 
-    final var promise = Promise.promise();
+    final Promise<EngineEnvironment> promise = Promise.promise();
     var future = promise.future();
 
     if (message.senderId != null) {
@@ -138,7 +139,7 @@ public class EngineEnvironment extends ReflectionModel implements Model {
 
         future = future.compose(partialEnv -> {
 
-          final var loadAppPromise = Promise.promise();
+          final Promise<EngineEnvironment> loadAppPromise = Promise.promise();
           var loadAppFuture = loadAppPromise.future();
           final var appId = partialEnv.task.appId;
           loadAppFuture = loadAppFuture.compose(loadField(App.class, loader -> {

@@ -26,55 +26,23 @@
 
 package eu.internetofus.common.vertx;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-
-import org.junit.jupiter.api.Test;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
 
 /**
- * Generic test over the classes that extends the {@link AbstractAPIVerticle}.
- *
- * @param <T> type of verticle to test.
+ * A dummy worker verticle.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class AbstractAPIVerticleTestCase<T extends AbstractAPIVerticle> {
+@Worker
+public class DummyWorkerVerticle extends AbstractVerticle {
 
   /**
-   * Check that not stop the server if it is not started.
+   * {@inheritDoc}
    */
-  @Test
-  public void shouldNotStopIfServerNotStarted() {
+  @Override
+  public void start(final Promise<Void> startPromise) throws Exception {
 
-    final var api = this.createAPIVerticle();
-    assertThatCode(() -> api.stop()).doesNotThrowAnyException();
-
+    startPromise.complete();
   }
-
-  /**
-   * Return the {@link AbstractAPIVerticle} to test.
-   *
-   * @return the instance of the API verticle to test.
-   */
-  protected abstract T createAPIVerticle();
-
-  /**
-   * Check that not stop the server if it is not started.
-   */
-  @Test
-  public void shouldStopIfServerStarted() {
-
-    final var api = this.createAPIVerticle();
-    final var options = new HttpServerOptions();
-    options.setHost("localhost");
-    options.setPort(0);
-    api.server = Vertx.vertx().createHttpServer(options);
-    assertThatCode(() -> api.stop()).doesNotThrowAnyException();
-    assertThat(api.server).isNull();
-
-  }
-
 }

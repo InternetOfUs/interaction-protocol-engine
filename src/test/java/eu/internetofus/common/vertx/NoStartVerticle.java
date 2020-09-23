@@ -24,28 +24,25 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api;
+package eu.internetofus.common.vertx;
 
-import eu.internetofus.common.vertx.AbstractAPIVerticleTestCase;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
 
 /**
- * Test the {@link APIVerticle}.
- *
- * @see APIVerticle
+ * A verticle that can not start.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class APIVerticleTest extends AbstractAPIVerticleTestCase<APIVerticle> {
+public class NoStartVerticle extends AbstractVerticle {
 
   /**
    * {@inheritDoc}
-   *
-   * @see APIVerticle#APIVerticle()
    */
   @Override
-  protected APIVerticle createAPIVerticle() {
+  public void start(final Promise<Void> startPromise) throws Exception {
 
-    return new APIVerticle();
+    startPromise.fail("Verticle that not start");
   }
 
 }

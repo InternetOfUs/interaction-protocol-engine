@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -30,6 +30,7 @@ import java.util.List;
 
 import eu.internetofus.common.components.Mergeable;
 import eu.internetofus.common.components.Merges;
+import eu.internetofus.common.components.Updateable;
 import eu.internetofus.common.components.Validable;
 import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.components.Validations;
@@ -49,7 +50,7 @@ import io.vertx.core.Vertx;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(description = "A norm that is published to share with all the WeNet users.")
-public class PublishedNorm extends CreateUpdateTsDetails implements Validable, Mergeable<PublishedNorm> {
+public class PublishedNorm extends CreateUpdateTsDetails implements Validable, Mergeable<PublishedNorm>, Updateable<PublishedNorm> {
 
   /**
    * The identifier of the published norm.
@@ -93,8 +94,8 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
   @Override
   public Future<Void> validate(final String codePrefix, final Vertx vertx) {
 
-    final var promise = Promise.promise();
-    var future = promise.future();
+    final Promise<Void> promise = Promise.promise();
+    Future<Void> future = promise.future();
     try {
 
       this.id = Validations.validateNullableStringField(codePrefix, "id", 255, this.id);
@@ -102,7 +103,7 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
 
         future = future.compose(mapper -> {
 
-          final var verifyNotRepeatedIdPromise = Promise.promise();
+          final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
           NormsRepository.createProxy(vertx).searchPublishedNorm(this.id, search -> {
 
             if (search.failed()) {
@@ -126,7 +127,7 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
 
         future = future.compose(mapper -> {
 
-          final var verifyPublishedExistPromise = Promise.promise();
+          final Promise<Void> verifyPublishedExistPromise = Promise.promise();
           WeNetProfileManager.createProxy(vertx).retrieveProfile(this.publisherId, profile -> {
 
             if (profile.failed()) {
@@ -165,8 +166,8 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
   @Override
   public Future<PublishedNorm> merge(final PublishedNorm source, final String codePrefix, final Vertx vertx) {
 
-    final var promise = Promise.promise();
-    var future = promise.future();
+    final Promise<PublishedNorm> promise = Promise.promise();
+    Future<PublishedNorm> future = promise.future();
     if (source != null) {
 
       final var merged = new PublishedNorm();
@@ -198,7 +199,7 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
         merged.norm = new Norm();
       }
 
-      future = future.compose(Merges.validateMerged(codePrefix, vertx));
+      future = future.compose(Validations.validateChain(codePrefix, vertx));
       future = future.compose(Merges.mergeField(this.norm, source.norm, codePrefix + ".norm", vertx, (model, mergedNorm) -> model.norm = mergedNorm));
 
       promise.complete(merged);
@@ -209,6 +210,41 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
         mergedValidatedModel._lastUpdateTs = this._lastUpdateTs;
         return mergedValidatedModel;
       });
+
+    } else {
+
+      promise.complete(this);
+    }
+    return future;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Future<PublishedNorm> update(final PublishedNorm source, final String codePrefix, final Vertx vertx) {
+
+    final Promise<PublishedNorm> promise = Promise.promise();
+    Future<PublishedNorm> future = promise.future();
+    if (source != null) {
+
+      final var merged = new PublishedNorm();
+      merged.name = source.name;
+      merged.description = source.description;
+      merged.keywords = source.keywords;
+      merged.publisherId = source.publisherId;
+      merged.norm = source.norm;
+
+      future = future.compose(Validations.validateChain(codePrefix, vertx));
+      future = future.map(mergedValidatedModel -> {
+
+        mergedValidatedModel.id = this.id;
+        mergedValidatedModel._creationTs = this._creationTs;
+        mergedValidatedModel._lastUpdateTs = this._lastUpdateTs;
+        return mergedValidatedModel;
+      });
+
+      promise.complete(merged);
 
     } else {
 

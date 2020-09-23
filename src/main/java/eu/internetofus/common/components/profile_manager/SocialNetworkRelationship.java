@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -27,9 +27,9 @@
 package eu.internetofus.common.components.profile_manager;
 
 import eu.internetofus.common.components.Mergeable;
-import eu.internetofus.common.components.Merges;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.ReflectionModel;
+import eu.internetofus.common.components.Updateable;
 import eu.internetofus.common.components.Validable;
 import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.components.Validations;
@@ -44,7 +44,7 @@ import io.vertx.core.Vertx;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(description = "A social relationship with another WeNet user.")
-public class SocialNetworkRelationship extends ReflectionModel implements Model, Validable, Mergeable<SocialNetworkRelationship> {
+public class SocialNetworkRelationship extends ReflectionModel implements Model, Validable, Mergeable<SocialNetworkRelationship>, Updateable<SocialNetworkRelationship> {
 
   /**
    * The identifier of the WeNet user the relationship is related to.
@@ -101,33 +101,26 @@ public class SocialNetworkRelationship extends ReflectionModel implements Model,
 
       } else {
 
-        this.userId = Validations.validateNullableStringField(codePrefix, "userId", 255, this.userId);
-        if (this.userId == null) {
+        this.userId = Validations.validateStringField(codePrefix, "userId", 255, this.userId);
+        future = future.compose(mapper -> {
 
-          promise.fail(new ValidationErrorException(codePrefix + ".userId", "It is not allowed a social relationship without an user identifier'."));
+          final Promise<Void> searchPromise = Promise.promise();
+          WeNetProfileManager.createProxy(vertx).retrieveProfile(this.userId, search -> {
 
-        } else {
+            if (search.result() != null) {
 
-          this.weight = Validations.validateNumberOnRange(codePrefix, "weight", this.weight, true, 0d, 1d);
-          future = future.compose(mapper -> {
+              searchPromise.complete();
 
-            final Promise<Void> searchPromise = Promise.promise();
-            WeNetProfileManager.createProxy(vertx).retrieveProfile(this.userId, search -> {
+            } else {
 
-              if (search.result() != null) {
+              searchPromise.fail(new ValidationErrorException(codePrefix + ".userId", "Does not exist any user identifier by '" + this.userId + "'."));
+            }
 
-                searchPromise.complete();
-
-              } else {
-
-                searchPromise.fail(new ValidationErrorException(codePrefix + ".userId", "Does not exist any user identifier by '" + this.userId + "'."));
-              }
-
-            });
-            return searchPromise.future();
           });
-          promise.complete();
-        }
+          return searchPromise.future();
+        });
+        this.weight = Validations.validateNumberOnRange(codePrefix, "weight", this.weight, true, 0d, 1d);
+        promise.complete();
       }
     } catch (final ValidationErrorException validationError) {
 
@@ -169,8 +162,8 @@ public class SocialNetworkRelationship extends ReflectionModel implements Model,
 
       promise.complete(merged);
 
-      // validate the merged value and set the id
-      future = future.compose(Merges.validateMerged(codePrefix, vertx));
+      // validate the merged value
+      future = future.compose(Validations.validateChain(codePrefix, vertx));
 
     } else {
 
@@ -179,5 +172,32 @@ public class SocialNetworkRelationship extends ReflectionModel implements Model,
     }
     return future;
 
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Future<SocialNetworkRelationship> update(final SocialNetworkRelationship source, final String codePrefix, final Vertx vertx) {
+    final Promise<SocialNetworkRelationship> promise = Promise.promise();
+    var future = promise.future();
+    if (source != null) {
+
+      final var updated = new SocialNetworkRelationship();
+      updated.userId = source.userId;
+      updated.type = source.type;
+      updated.weight = source.weight;
+
+      promise.complete(updated);
+
+      // validate the updated value
+      future = future.compose(Validations.validateChain(codePrefix, vertx));
+
+    } else {
+
+      promise.complete(this);
+
+    }
+    return future;
   }
 }

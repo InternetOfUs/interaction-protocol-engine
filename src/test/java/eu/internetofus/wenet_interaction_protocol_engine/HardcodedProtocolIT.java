@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -52,7 +52,6 @@ import eu.internetofus.common.components.StoreServices;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.components.service.App;
 import eu.internetofus.common.components.service.TaskConcludedNotification;
-import eu.internetofus.common.components.service.TaskConcludedNotification.Outcome;
 import eu.internetofus.common.components.service.TaskProposalNotification;
 import eu.internetofus.common.components.service.TaskSelectionNotification;
 import eu.internetofus.common.components.service.TaskVolunteerNotification;
@@ -145,7 +144,7 @@ public class HardcodedProtocolIT {
    * @param vertx       event bus to use.
    * @param testContext context to do the test.
    */
-  @Timeout(value = 1, timeUnit = TimeUnit.MINUTES)
+  @Timeout(value = 1, timeUnit = TimeUnit.HOURS)
   @Test
   @Order(3)
   public void shouldCreateTask(final Vertx vertx, final VertxTestContext testContext) {
@@ -323,7 +322,7 @@ public class HardcodedProtocolIT {
     assert HardcodedProtocolIT.task != null;
     assert HardcodedProtocolIT.users != null;
 
-    var future = Future.succeededFuture();
+    Future<Void> future = Future.succeededFuture();
     for (var i = 2; i < MAX_USERS - 1; i++) {
 
       final var volunteerId = HardcodedProtocolIT.users.get(i).id;
@@ -351,7 +350,7 @@ public class HardcodedProtocolIT {
    */
   protected Future<Void> doTaskTransactionVolunteerForTask(final String volunteerId, final Vertx vertx, final VertxTestContext testContext) {
 
-    final var promise = Promise.promise();
+    final Promise<Void> promise = Promise.promise();
     final var taskTransaction = new TaskTransaction();
     taskTransaction.taskId = HardcodedProtocolIT.task.id;
     taskTransaction.label = "volunteerForTask";

@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,6 +30,7 @@ import java.util.List;
 
 import eu.internetofus.common.components.Mergeable;
 import eu.internetofus.common.components.Merges;
+import eu.internetofus.common.components.Updateable;
 import eu.internetofus.common.components.Validable;
 import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.components.Validations;
@@ -45,7 +46,7 @@ import io.vertx.core.Vertx;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(hidden = true, name = "WeNetUserProfile", description = "The profile of a WeNet user.")
-public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable, Mergeable<WeNetUserProfile> {
+public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable, Mergeable<WeNetUserProfile>, Updateable<WeNetUserProfile> {
 
   /**
    * The identifier of the profile.
@@ -203,7 +204,7 @@ public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable
       this.nationality = Validations.validateNullableStringField(codePrefix, "nationality", 255, this.nationality);
       this.occupation = Validations.validateNullableStringField(codePrefix, "occupation", 255, this.occupation);
       future = future.compose(Validations.validate(this.norms, (a, b) -> a.id.equals(b.id), codePrefix + ".norms", vertx));
-      future = future.compose(Validations.validate(this.plannedActivities, (a, b) -> a.equals(b), codePrefix + ".plannedActivities", vertx));
+      future = future.compose(Validations.validate(this.plannedActivities, (a, b) -> a.id.equals(b.id), codePrefix + ".plannedActivities", vertx));
       future = future.compose(Validations.validate(this.relevantLocations, (a, b) -> a.id.equals(b.id), codePrefix + ".relevantLocations", vertx));
       future = future.compose(Validations.validate(this.relationships, (a, b) -> a.equals(b), codePrefix + ".relationships", vertx));
       future = future.compose(Validations.validate(this.personalBehaviors, (a, b) -> a.equals(b), codePrefix + ".personalBehaviors", vertx));
@@ -277,7 +278,7 @@ public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable
         merged.relationships = this.relationships;
       }
 
-      future = future.compose(Merges.validateMerged(codePrefix, vertx));
+      future = future.compose(Validations.validateChain(codePrefix, vertx));
 
       future = future.compose(Merges.mergeField(this.name, source.name, codePrefix + ".name", vertx, (model, mergedName) -> model.name = mergedName));
 
@@ -321,6 +322,54 @@ public class WeNetUserProfile extends CreateUpdateTsDetails implements Validable
         mergedValidatedModel._lastUpdateTs = this._lastUpdateTs;
         return mergedValidatedModel;
       });
+
+    } else {
+
+      promise.complete(this);
+    }
+
+    return future;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Future<WeNetUserProfile> update(final WeNetUserProfile source, final String codePrefix, final Vertx vertx) {
+
+    final Promise<WeNetUserProfile> promise = Promise.promise();
+    var future = promise.future();
+    if (source != null) {
+
+      final var updated = new WeNetUserProfile();
+      updated.gender = source.gender;
+      updated.email = source.email;
+      updated.locale = source.locale;
+      updated.phoneNumber = source.phoneNumber;
+      updated.avatar = source.avatar;
+      updated.nationality = source.nationality;
+      updated.occupation = source.occupation;
+      updated.relationships = source.relationships;
+      updated.name = source.name;
+      updated.dateOfBirth = source.dateOfBirth;
+      updated.norms = source.norms;
+      updated.plannedActivities = source.plannedActivities;
+      updated.relevantLocations = source.relevantLocations;
+      updated.personalBehaviors = source.personalBehaviors;
+      updated.materials = source.materials;
+      updated.competences = source.competences;
+      updated.meanings = source.meanings;
+
+      future = future.compose(Validations.validateChain(codePrefix, vertx));
+      future = future.map(updatedValidatedModel -> {
+
+        updatedValidatedModel.id = this.id;
+        updatedValidatedModel._creationTs = this._creationTs;
+        updatedValidatedModel._lastUpdateTs = this._lastUpdateTs;
+        return updatedValidatedModel;
+      });
+
+      promise.complete(updated);
 
     } else {
 

@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,6 +30,7 @@ import java.util.List;
 
 import eu.internetofus.common.components.Mergeable;
 import eu.internetofus.common.components.Merges;
+import eu.internetofus.common.components.Updateable;
 import eu.internetofus.common.components.Validable;
 import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.components.Validations;
@@ -46,7 +47,7 @@ import io.vertx.core.Vertx;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(hidden = true, name = "CommunityProfile", description = "A community of WeNet users.")
-public class CommunityProfile extends CreateUpdateTsDetails implements Validable, Mergeable<CommunityProfile> {
+public class CommunityProfile extends CreateUpdateTsDetails implements Validable, Mergeable<CommunityProfile>, Updateable<CommunityProfile> {
 
   /**
    * The identifier of the community.
@@ -179,7 +180,7 @@ public class CommunityProfile extends CreateUpdateTsDetails implements Validable
         model.norms = mergedNorms;
       }));
 
-      future = future.compose(Merges.validateMerged(codePrefix, vertx));
+      future = future.compose(Validations.validateChain(codePrefix, vertx));
 
       // When merged set the fixed field values
       future = future.map(mergedValidatedModel -> {
@@ -198,6 +199,46 @@ public class CommunityProfile extends CreateUpdateTsDetails implements Validable
     }
     return future;
 
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Future<CommunityProfile> update(final CommunityProfile source, final String codePrefix, final Vertx vertx) {
+
+    final Promise<CommunityProfile> promise = Promise.promise();
+    var future = promise.future();
+
+    if (source != null) {
+
+      final var updated = new CommunityProfile();
+      updated.appId = source.appId;
+      updated.name = source.name;
+      updated.description = source.description;
+      updated.keywords = source.keywords;
+      updated.members = source.members;
+      updated.socialPractices = source.socialPractices;
+      updated.norms = source.norms;
+
+      future = future.compose(Validations.validateChain(codePrefix, vertx));
+
+      // When merged set the fixed field values
+      future = future.map(updatedValidatedModel -> {
+
+        updatedValidatedModel.id = this.id;
+        updatedValidatedModel._creationTs = this._creationTs;
+        updatedValidatedModel._lastUpdateTs = this._lastUpdateTs;
+        return updatedValidatedModel;
+      });
+
+      promise.complete(updated);
+
+    } else {
+
+      promise.complete(this);
+    }
+    return future;
   }
 
 }

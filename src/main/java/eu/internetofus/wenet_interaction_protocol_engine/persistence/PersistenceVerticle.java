@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -27,6 +27,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
 import eu.internetofus.common.vertx.AbstractPersistenceVerticle;
+import io.vertx.core.Future;
 
 /**
  * The verticle that provide the persistence services.
@@ -39,10 +40,9 @@ public class PersistenceVerticle extends AbstractPersistenceVerticle {
    * {@inheritDoc}
    */
   @Override
-  protected void registerRepositories() throws Exception {
+  protected Future<Void> registerRepositoriesFor(final String schemaVersion) {
 
-    NormsRepository.register(this.vertx, this.pool);
-
+    return NormsRepository.register(this.vertx, this.pool, schemaVersion);
   }
 
 }

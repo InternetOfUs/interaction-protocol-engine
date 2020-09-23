@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -28,6 +28,8 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
 import static eu.internetofus.common.components.MergesTest.assertCanMerge;
 import static eu.internetofus.common.components.MergesTest.assertCannotMerge;
+import static eu.internetofus.common.components.UpdatesTest.assertCanUpdate;
+import static eu.internetofus.common.components.UpdatesTest.assertCannotUpdate;
 import static eu.internetofus.common.components.ValidationsTest.assertIsNotValid;
 import static eu.internetofus.common.components.ValidationsTest.assertIsValid;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +42,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.ModelTestCase;
 import eu.internetofus.common.components.StoreServices;
 import eu.internetofus.common.components.ValidationsTest;
@@ -413,4 +416,138 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 
   }
 
+  /**
+   * Check that update {@code null} value.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see PublishedNorm#update(PublishedNorm, String, Vertx)
+   */
+  @Test
+  public void shouldUpdateNullValue(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      assertCanUpdate(target, null, vertx, testContext, updated -> testContext.verify(() -> {
+
+        assertThat(updated).isSameAs(target);
+
+      }));
+    }));
+
+  }
+
+  /**
+   * Check that update examples.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see PublishedNorm#update(PublishedNorm, String, Vertx)
+   */
+  @Test
+  public void shouldUpdateExamples(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      this.createModelExample(2, vertx, testContext, testContext.succeeding(source -> {
+
+        assertCanUpdate(target, source, vertx, testContext, updated -> testContext.verify(() -> {
+
+          assertThat(updated).isNotEqualTo(target);
+          source._creationTs = updated._creationTs;
+          source._lastUpdateTs = updated._lastUpdateTs;
+          source.norm.id = updated.norm.id;
+          assertThat(updated).isEqualTo(source);
+
+        }));
+      }));
+    }));
+
+  }
+
+  /**
+   * Check not update with invalid name.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see PublishedNorm#update(PublishedNorm, String, Vertx)
+   */
+  @Test
+  public void shouldNotUpdateWithABadName(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final var source = Model.fromJsonObject(target.toJsonObject(), PublishedNorm.class);
+      source.name = ValidationsTest.STRING_256;
+      assertCannotUpdate(target, source, "name", vertx, testContext);
+    }));
+
+  }
+
+  /**
+   * Check not update with invalid description.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see PublishedNorm#update(PublishedNorm, String, Vertx)
+   */
+  @Test
+  public void shouldNotUpdateWithABadDescription(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final var source = Model.fromJsonObject(target.toJsonObject(), PublishedNorm.class);
+      source.description = ValidationsTest.STRING_1024;
+      assertCannotUpdate(target, source, "description", vertx, testContext);
+    }));
+
+  }
+
+  /**
+   * Check not update with invalid keyword.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see PublishedNorm#update(PublishedNorm, String, Vertx)
+   */
+  @Test
+  public void shouldNotUpdateWithABadKeyword(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final var source = Model.fromJsonObject(target.toJsonObject(), PublishedNorm.class);
+      source.keywords = new ArrayList<>();
+      source.keywords.add(" key1 ");
+      source.keywords.add(null);
+      source.keywords.add("");
+      source.keywords.add(ValidationsTest.STRING_256);
+      assertCannotUpdate(target, source, "keywords[3]", vertx, testContext);
+    }));
+
+  }
+
+  /**
+   * Check not update with undefined publisher.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @see PublishedNorm#update(PublishedNorm, String, Vertx)
+   */
+  @Test
+  public void shouldNotUpdateWithAnUndefinedPublishedId(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+
+      final var source = Model.fromJsonObject(target.toJsonObject(), PublishedNorm.class);
+      source.publisherId = "undefined";
+      assertCannotUpdate(target, source, "publisherId", vertx, testContext);
+    }));
+
+  }
 }

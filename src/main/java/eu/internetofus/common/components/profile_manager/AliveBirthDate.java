@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -76,17 +76,13 @@ public class AliveBirthDate extends ProfileDate {
 
   /**
    * {@inheritDoc}
+   *
+   * @see AliveBirthDate#AliveBirthDate
    */
   @Override
-  public Future<ProfileDate> merge(final ProfileDate source, final String codePrefix, final Vertx vertx) {
+  protected ProfileDate createProfileDate() {
 
-    return super.merge(source, codePrefix, vertx).compose(model -> {
-      final var date = new AliveBirthDate();
-      date.day = model.day;
-      date.month = model.month;
-      date.year = model.year;
-      return date.validate(codePrefix, vertx).map(empty -> date);
-    });
+    return new AliveBirthDate();
   }
 
 }

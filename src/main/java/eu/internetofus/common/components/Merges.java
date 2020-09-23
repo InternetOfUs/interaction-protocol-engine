@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -303,24 +303,6 @@ public interface Merges {
   static <M> Function<M, Future<M>> mergeRoutines(final List<Routine> targetRoutines, final List<Routine> sourceRoutines, final String codePrefix, final Vertx vertx, final BiConsumer<M, List<Routine>> setter) {
 
     return Merges.mergeFieldList(targetRoutines, sourceRoutines, codePrefix, vertx, routine -> false, (targetRoutine, sourceRoutine) -> false, setter);
-
-  }
-
-  /**
-   * Convert a validation action to a merge action.
-   *
-   * @param codePrefix the prefix of the code to use for the error message.
-   * @param vertx      the event bus infrastructure to use.
-   *
-   * @param <T>        type of {@link Validable} to convert to {@link Mergeable}.
-   *
-   * @return the mapper function that can validate a merged value.
-   *
-   * @see Future#compose(Function)
-   */
-  static <T extends Validable> Function<T, Future<T>> validateMerged(final String codePrefix, final Vertx vertx) {
-
-    return merged -> merged.validate(codePrefix, vertx).map(validation -> merged);
 
   }
 

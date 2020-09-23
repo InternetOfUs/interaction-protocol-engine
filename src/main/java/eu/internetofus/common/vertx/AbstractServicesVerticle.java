@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -55,7 +55,7 @@ public abstract class AbstractServicesVerticle extends AbstractVerticle {
       // configure the web client
       final var webClientConf = this.config().getJsonObject("webClient", new JsonObject());
       final var options = new WebClientOptions(webClientConf);
-      this.client = WebClient.create(this.vertx, options);
+      this.client = WebClient.create(this.getVertx(), options);
 
       final var serviceConf = this.config().getJsonObject("wenetComponents", new JsonObject());
       this.registerServices(serviceConf);

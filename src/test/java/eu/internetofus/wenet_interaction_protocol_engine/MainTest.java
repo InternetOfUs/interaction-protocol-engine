@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -34,7 +34,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.common.vertx.AbstractMain;
-import eu.internetofus.common.vertx.AbstractMainTestCase;
 
 /**
  * Test the {@link Main}
@@ -43,18 +42,7 @@ import eu.internetofus.common.vertx.AbstractMainTestCase;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class MainTest extends AbstractMainTestCase<Main> {
-
-  /**
-   * {@inheritDoc}
-   *
-   * @see Main#Main()
-   */
-  @Override
-  protected Main createMain() {
-
-    return new Main();
-  }
+public class MainTest {
 
   /**
    * Verify show help message from calling main.

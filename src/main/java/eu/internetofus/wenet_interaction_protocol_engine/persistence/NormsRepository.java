@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -30,6 +30,7 @@ import java.util.List;
 
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.ValidationErrorException;
+import eu.internetofus.common.vertx.ModelsPageContext;
 import eu.internetofus.common.vertx.QueryBuilder;
 import eu.internetofus.common.vertx.Repository;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNorm;
@@ -60,12 +61,17 @@ public interface NormsRepository {
   /**
    * Register this service.
    *
-   * @param vertx that contains the event bus to use.
-   * @param pool  to create the database connections.
+   * @param vertx   that contains the event bus to use.
+   * @param pool    to create the database connections.
+   * @param version of the schemas.
+   *
+   * @return the future that inform when the repository will be registered or not.
    */
-  static void register(final Vertx vertx, final MongoClient pool) {
+  static Future<Void> register(final Vertx vertx, final MongoClient pool, final String version) {
 
-    new ServiceBinder(vertx).setAddress(NormsRepository.ADDRESS).register(NormsRepository.class, new NormsRepositoryImpl(pool));
+    final var repository = new NormsRepositoryImpl(pool, version);
+    new ServiceBinder(vertx).setAddress(NormsRepository.ADDRESS).register(NormsRepository.class, repository);
+    return repository.migrateDocumentsToCurrentVersions();
 
   }
 
@@ -311,6 +317,18 @@ public interface NormsRepository {
         }
       }
     });
+  }
+
+  /**
+   * Retrieve the norms defined on the context.
+   *
+   * @param context that describe witch page want to obtain.
+   * @param handler for the obtained page.
+   */
+  @GenIgnore
+  default void retrievePublishedNormsPageObject(final ModelsPageContext context, final Handler<AsyncResult<JsonObject>> handler) {
+
+    this.retrievePublishedNormsPageObject(context.query, context.sort, context.offset, context.limit, handler);
   }
 
 }

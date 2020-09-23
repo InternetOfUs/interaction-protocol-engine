@@ -11,8 +11,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -52,7 +52,6 @@ import eu.internetofus.common.components.service.TaskSelectionNotification;
 import eu.internetofus.common.components.service.TaskVolunteerNotification;
 import eu.internetofus.common.components.service.TextualMessage;
 import eu.internetofus.common.components.service.WeNetService;
-import eu.internetofus.common.components.social_context_builder.SocialExplanation;
 import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilder;
 import eu.internetofus.common.components.task_manager.Task;
 import eu.internetofus.common.components.task_manager.TaskTransaction;
@@ -65,7 +64,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 
@@ -81,6 +79,11 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    * The address used to send messages to the worker.
    */
   public static final String ADDRESSS = "eu.internetofus.wenet_interaction_protocol_engine.worker";
+
+  /**
+   * The path to the resource with the engine file.
+   */
+  public static final String ENGINE_RESOURCE = "eu/internetofus/wenet_interaction_protocol_engine/engine.pl";
 
   /**
    * The component that will consume the messages.
@@ -114,9 +117,17 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
           workDir.mkdirs();
           this.engine = new File(workDir, prologConf.getString("engineName", "engine.pl"));
           final Writer writer = new FileWriter(this.engine);
-          IOUtils.copy(this.getClass().getClassLoader().getResourceAsStream("engine.pl"), writer);
-          writer.close();
-          startPromise.complete();
+          final var engineStream = this.getClass().getClassLoader().getResourceAsStream(ENGINE_RESOURCE);
+          if (engineStream == null) {
+
+            startPromise.fail("Not found engine file");
+
+          } else {
+
+            IOUtils.copy(engineStream, writer);
+            writer.close();
+            startPromise.complete();
+          }
 
         } catch (final Throwable cause) {
 
@@ -376,7 +387,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
           taskWithUnanswered.attributes = new JsonObject();
         }
         taskWithUnanswered.attributes.put("unanswered", appUsers);
-        WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWithUnanswered, update -> {
+        WeNetTaskManager.createProxy(this.vertx).mergeTask(env.task.id, taskWithUnanswered, update -> {
 
           if (update.failed()) {
 
@@ -431,7 +442,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
         final var volunteers = env.task.attributes.getJsonArray("volunteers");
         volunteers.add(volunteerId);
-        WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWhithNewVolunteer, update -> {
+        WeNetTaskManager.createProxy(this.vertx).mergeTask(env.task.id, taskWhithNewVolunteer, update -> {
 
           if (update.failed()) {
 
@@ -552,7 +563,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
         final var declined = env.task.attributes.getJsonArray("declined");
         declined.add(volunteerId);
-        WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWhereDeclined, update -> {
+        WeNetTaskManager.createProxy(this.vertx).mergeTask(env.task.id, taskWhereDeclined, update -> {
 
           if (update.failed()) {
 
@@ -607,7 +618,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
       accepted.add(volunteerId);
       final var taskWhereAccepted = new Task();
       taskWhereAccepted.attributes = env.task.attributes;
-      WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWhereAccepted, update -> {
+      WeNetTaskManager.createProxy(this.vertx).mergeTask(env.task.id, taskWhereAccepted, update -> {
 
         if (update.failed()) {
 
@@ -661,7 +672,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
       refused.add(volunteerId);
       final var taskWhereRefused = new Task();
       taskWhereRefused.attributes = env.task.attributes;
-      WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, taskWhereRefused, update -> {
+      WeNetTaskManager.createProxy(this.vertx).mergeTask(env.task.id, taskWhereRefused, update -> {
 
         if (update.failed()) {
 
@@ -705,7 +716,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
     closedTask.closeTs = TimeManager.now();
     closedTask.attributes = env.task.attributes;
     closedTask.attributes.put("outcome", outcome);
-    WeNetTaskManager.createProxy(this.vertx).updateTask(env.task.id, closedTask, update -> {
+    WeNetTaskManager.createProxy(this.vertx).mergeTask(env.task.id, closedTask, update -> {
 
       if (update.failed()) {
 

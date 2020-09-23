@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -123,9 +123,9 @@ public interface Norms {
   @ApiResponse(responseCode = "200", description = "The published norms that match the patterns", content = @Content(schema = @Schema(implementation = PublishedNormsPage.class)))
   @ApiResponse(responseCode = "400", description = "Bad request. For example if a pattern is not right", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   void retrievePublishedNormsPage(
-      @QueryParam(value = "name") @Parameter(description = "A name to be equals on the published norms to return. You can use a Perl compatible regular expressions (PCRE) that has to match the name of the norms to return if you write between '/'. For example to get the norms with a name with the word 'eat' you must pass as 'name' '/.*eat.*/'", example = "/.*eat.*/", required = false) String name,
-      @QueryParam(value = "description") @Parameter(description = "A description to be equals on the tasks to return.or You can use a Perl compatible regular expressions (PCRE) that has to match the description of the tasks to return if you write between '/'. For example to get the norms with a description with the word 'eat' you must pass as 'description' '/.*eat.*/'", example = "/.*eat.*/", required = false) String description,
-      @QueryParam(value = "keywords") @Parameter(description = "A set of keywords to be defined on the norms to be returned. For each keyword is separated by a ',' and each field keyword can be between '/' to use a Perl compatible regular expressions (PCRE) instead the exact value.", example = "key1,/.*eat.*/,key3", required = false, explode = Explode.FALSE) List<String> keywords,
+      @QueryParam(value = "name") @Parameter(description = "A name to be equals on the published norms to return. You can use a Perl compatible regular expressions (PCRE) that has to match the name of the published norms to return if you write between '/'. For example to get the published norms with a name with the word 'eat' you must pass as 'name' '/.*eat.*/'", example = "/.*eat.*/", required = false) String name,
+      @QueryParam(value = "description") @Parameter(description = "A description to be equals on the published norms to return. You can use a Perl compatible regular expressions (PCRE) that has to match the description of the published norms to return if you write between '/'. For example to get the published norms with a description with the word 'eat' you must pass as 'description' '/.*eat.*/'", example = "/.*eat.*/", required = false) String description,
+      @QueryParam(value = "keywords") @Parameter(description = "A set of keywords to be defined on the published norms to be returned. For each keyword is separated by a ',' and each field keyword can be between '/' to use a Perl compatible regular expressions (PCRE) instead the exact value.", example = "key1,/.*eat.*/,key3", required = false, explode = Explode.FALSE) List<String> keywords,
       @QueryParam(value = "publisherId") @Parameter(description = "An user identifier to be equals on the publisher of the norm to return. You can use a Perl compatible regular expressions (PCRE) that has to match the publisher identifier of the norms to return if you write between '/'. For example to get the norms published by '1' and '2' you must pass as 'publisherId' '/^[1|2]$/'.", example = "1e346fd440", required = false) String publisherId,
       @QueryParam(value = "publishFrom") @Parameter(description = "The difference, measured in seconds, between the minimum publish time stamp of the task and midnight, January 1, 1970 UTC.", example = "1457166440", required = false) Long publishFrom,
       @QueryParam(value = "publishTo") @Parameter(description = "The difference, measured in seconds, between the maximum publish time stamp of the task and midnight, January 1, 1970 UTC.", example = "1571664406", required = false) Long publishTo,
