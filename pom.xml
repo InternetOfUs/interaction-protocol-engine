@@ -60,13 +60,13 @@
 		<org.tinylog-version>2.1.2</org.tinylog-version>
 		<commons-cli-version>1.4</commons-cli-version>
 		<!-- Test library versions -->
-        <org.junit.jupiter-version>5.7.0</org.junit.jupiter-version>
+		<org.junit.jupiter-version>5.7.0</org.junit.jupiter-version>
 		<org.assertj-version>3.17.0</org.assertj-version>
-        <org.itsallcode-junit5-system-extensions-version>1.1.0</org.itsallcode-junit5-system-extensions-version>
-        <org.mockito-version>3.5.10</org.mockito-version>
+		<org.itsallcode-junit5-system-extensions-version>1.1.0</org.itsallcode-junit5-system-extensions-version>
+		<org.mockito-version>3.5.10</org.mockito-version>
 		<org.testcontainers-version>1.14.3</org.testcontainers-version>
 		<com.intuit.karate-version>0.9.6</com.intuit.karate-version>
-    </properties>
+	</properties>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -399,6 +399,7 @@
 						<include>**/*Test.java</include>
 						<include>**/*IT.java</include>
 					</includes>
+					<runOrder>reversealphabetical</runOrder>
 				</configuration>
 			</plugin>
 			<plugin>

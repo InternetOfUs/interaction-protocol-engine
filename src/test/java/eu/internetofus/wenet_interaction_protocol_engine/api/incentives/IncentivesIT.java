@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -41,7 +41,6 @@ import eu.internetofus.common.components.incentive_server.IncentiveTest;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxTestContext;
 
@@ -75,7 +74,7 @@ public class IncentivesIT {
       assertThat(error.code).isNotEmpty().isEqualTo("bad_incentive");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
-    }).sendJson(new JsonObject().put("key", "value"), testContext);
+    }).sendJson(new IncentiveTest().createModelExample(1).toJsonObject().put("key", "value"), testContext);
   }
 
   /**

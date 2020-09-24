@@ -144,7 +144,6 @@ public class HardcodedProtocolIT {
    * @param vertx       event bus to use.
    * @param testContext context to do the test.
    */
-  @Timeout(value = 1, timeUnit = TimeUnit.HOURS)
   @Test
   @Order(3)
   public void shouldCreateTask(final Vertx vertx, final VertxTestContext testContext) {

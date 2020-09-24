@@ -81,8 +81,9 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
 
       model.keywords.add("keyword " + i);
     }
-    model.publisherId = "Published identifier " + index;
+    model.publisherId = "Published_identifier_" + index;
     model.norm = new NormTest().createModelExample(index);
+    model.norm.id = "norm_" + index;
 
     return model;
   }

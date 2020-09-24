@@ -228,23 +228,23 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
     Future<PublishedNorm> future = promise.future();
     if (source != null) {
 
-      final var merged = new PublishedNorm();
-      merged.name = source.name;
-      merged.description = source.description;
-      merged.keywords = source.keywords;
-      merged.publisherId = source.publisherId;
-      merged.norm = source.norm;
+      final var updated = new PublishedNorm();
+      updated.name = source.name;
+      updated.description = source.description;
+      updated.keywords = source.keywords;
+      updated.publisherId = source.publisherId;
+      updated.norm = source.norm;
 
       future = future.compose(Validations.validateChain(codePrefix, vertx));
-      future = future.map(mergedValidatedModel -> {
+      future = future.map(updatedValidatedModel -> {
 
-        mergedValidatedModel.id = this.id;
-        mergedValidatedModel._creationTs = this._creationTs;
-        mergedValidatedModel._lastUpdateTs = this._lastUpdateTs;
-        return mergedValidatedModel;
+        updatedValidatedModel.id = this.id;
+        updatedValidatedModel._creationTs = this._creationTs;
+        updatedValidatedModel._lastUpdateTs = this._lastUpdateTs;
+        return updatedValidatedModel;
       });
 
-      promise.complete(merged);
+      promise.complete(updated);
 
     } else {
 
