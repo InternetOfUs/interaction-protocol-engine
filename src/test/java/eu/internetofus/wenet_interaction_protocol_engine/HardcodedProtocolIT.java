@@ -81,7 +81,7 @@ import io.vertx.junit5.VertxTestContext;
 public class HardcodedProtocolIT {
 
   /**
-   * -number maximum of users to use on the test.
+   * Number maximum of users to use on the test.
    */
   private static final int MAX_USERS = 6;
 

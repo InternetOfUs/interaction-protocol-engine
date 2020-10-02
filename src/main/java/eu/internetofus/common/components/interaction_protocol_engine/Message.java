@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -55,14 +55,9 @@ import io.vertx.core.json.JsonObject;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@Schema(name = "message", description = "A message that can be interchange in an interaction protocol.")
+@Schema(name = "ProtocolMessage", description = "A message that can be interchange in an interaction protocol.")
 public class Message extends ReflectionModel implements Model, Validable {
 
-  /**
-   * The identifier of the user that is sending the message.
-   */
-  @Schema(description = "The identifier of the user that send the message", example = "15837028-645a-4a55-9aaf-ceb846439eba")
-  public String senderId;
 
   /**
    * The identifier of the application that the user has used to send the message.
@@ -81,6 +76,26 @@ public class Message extends ReflectionModel implements Model, Validable {
    */
   @Schema(description = "The identifier of the application that has used the sender to send this message.", example = "b129e5509c9bb79")
   public String taskId;
+
+  /**
+   * The identifier of the user that is sending the message.
+   */
+  @Schema(description = "The identifier of the user that send the message", example = "15837028-645a-4a55-9aaf-ceb846439eba")
+  public String senderId;
+
+
+  /**
+   * The identifier of the user that is receiving the message.
+   */
+  @Schema(description = "The identifier of the user that receive the message", example = "15837028-645a-4a55-9aaf-ceb846439eba")
+  public String receiverId;
+
+
+  /**
+   * The particle that define the intention of the message.
+   */
+  @Schema(description = "The identifier of the application that has used the sender to send this message.", example = "de")
+  public String particle;
 
   /**
    * The content of the message.
@@ -183,7 +198,6 @@ public class Message extends ReflectionModel implements Model, Validable {
       }
 
       this.senderId = Validations.validateNullableStringField(codePrefix, "senderId", 255, this.senderId);
-
       if (this.senderId != null) {
 
         future = future.compose(val -> {
@@ -205,6 +219,30 @@ public class Message extends ReflectionModel implements Model, Validable {
           return checkExistSender.future();
         });
       }
+      this.receiverId = Validations.validateNullableStringField(codePrefix, "receiverId", 255, this.receiverId);
+      if (this.receiverId != null) {
+
+        future = future.compose(val -> {
+
+          final Promise<Void> checkExistReceiver = Promise.promise();
+          WeNetProfileManager.createProxy(vertx).retrieveProfile(this.receiverId, retrieve -> {
+
+            if (retrieve.failed()) {
+
+              checkExistReceiver.fail(new ValidationErrorException(codePrefix + ".receiverId", "No found user associated to the specified identifier"));
+
+            } else {
+
+              checkExistReceiver.complete();
+            }
+
+          });
+
+          return checkExistReceiver.future();
+        });
+      }
+
+      this.particle = Validations.validateNullableStringField(codePrefix, "particle", 255, this.particle);
 
       if (this.content == null) {
 
