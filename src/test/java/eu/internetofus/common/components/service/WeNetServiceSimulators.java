@@ -106,7 +106,7 @@ public interface WeNetServiceSimulators {
 
         promise.complete(callbacks);
 
-      } else {
+      } else if (!testContext.completed()) {
 
         waitUntilCallbacks(appId, checkCallbacks, vertx, testContext, promise);
       }
@@ -114,5 +114,4 @@ public interface WeNetServiceSimulators {
     }));
 
   }
-
 }

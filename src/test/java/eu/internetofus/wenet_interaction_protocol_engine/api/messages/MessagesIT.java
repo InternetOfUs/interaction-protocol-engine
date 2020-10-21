@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,7 +27,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api.messages;
 
 import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
-import static io.vertx.junit5.web.TestRequest.testRequest;
+import static io.reactiverse.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.ws.rs.core.Response.Status;
@@ -36,8 +36,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.common.components.ErrorMessage;
-import eu.internetofus.common.components.interaction_protocol_engine.Message;
-import eu.internetofus.common.components.interaction_protocol_engine.MessageTest;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessageTest;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -68,13 +68,13 @@ public class MessagesIT {
   @Test
   public void shouldSendMessage(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    new MessageTest().createModelExample(1, vertx, testContext, testContext.succeeding(message -> {
+    new ProtocolMessageTest().createModelExample(1, vertx, testContext, testContext.succeeding(message -> {
 
       message.norms = null;
       testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {
 
         assertThat(res.statusCode()).isEqualTo(Status.ACCEPTED.getStatusCode());
-        final var sent = assertThatBodyIs(Message.class, res);
+        final var sent = assertThatBodyIs(ProtocolMessage.class, res);
         assertThat(sent).isEqualTo(message);
 
       }).sendJson(message.toJsonObject(), testContext);
@@ -119,12 +119,12 @@ public class MessagesIT {
   @Test
   public void shouldNotSendInvalidMessage(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    final var message = new MessageTest().createModelExample(1);
+    final var message = new ProtocolMessageTest().createModelExample(1);
     testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {
 
       assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
       final var error = assertThatBodyIs(ErrorMessage.class, res);
-      assertThat(error.code).isNotEmpty().isEqualTo("bad_message.content");
+      assertThat(error.code).isNotEmpty().isEqualTo("bad_message.appId");
       assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
 
     }).sendJson(message.toJsonObject(), testContext);

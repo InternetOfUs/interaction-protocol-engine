@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,7 +31,7 @@ import javax.ws.rs.core.Response.Status;
 import org.tinylog.Logger;
 
 import eu.internetofus.common.components.Model;
-import eu.internetofus.common.components.interaction_protocol_engine.Message;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
 import eu.internetofus.common.vertx.OperationReponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker;
 import io.vertx.core.AsyncResult;
@@ -70,7 +70,7 @@ public class MessagesResource implements Messages {
   @Override
   public void sendMessage(final JsonObject body, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
 
-    final var message = Model.fromJsonObject(body, Message.class);
+    final var message = Model.fromJsonObject(body, ProtocolMessage.class);
     if (message == null) {
 
       Logger.trace("Fail sendMessage: {} is not a valid JSON.", body);

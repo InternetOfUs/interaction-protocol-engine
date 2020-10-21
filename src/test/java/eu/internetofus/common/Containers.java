@@ -34,6 +34,7 @@ import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 import org.tinylog.Logger;
 
@@ -208,7 +209,8 @@ public class Containers {
     if (this.mongoContainer == null) {
 
       Logger.trace("Starting MongoDB container");
-      this.mongoContainer = new GenericContainer<>(MONGO_DOCKER_NAME).withStartupAttempts(1).withEnv("MONGO_INITDB_ROOT_USERNAME", "root").withEnv("MONGO_INITDB_ROOT_PASSWORD", "password").withEnv("MONGO_INITDB_DATABASE", MONGODB_NAME)
+      this.mongoContainer = new GenericContainer<>(DockerImageName.parse(MONGO_DOCKER_NAME)).withStartupAttempts(1).withEnv("MONGO_INITDB_ROOT_USERNAME", "root").withEnv("MONGO_INITDB_ROOT_PASSWORD", "password")
+          .withEnv("MONGO_INITDB_DATABASE", MONGODB_NAME)
           .withCopyFileToContainer(MountableFile.forClasspathResource(Containers.class.getPackageName().replaceAll("\\.", "/") + "/initialize-wenetDB.js"), "/docker-entrypoint-initdb.d/init-mongo.js").withExposedPorts(EXPORT_MONGODB_PORT)
           .withNetwork(this.network).withNetworkAliases(MONGODB_NAME).waitingFor(Wait.forListeningPort());
       this.mongoContainer.start();

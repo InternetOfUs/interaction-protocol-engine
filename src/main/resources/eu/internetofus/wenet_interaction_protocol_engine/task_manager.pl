@@ -20,14 +20,46 @@
 % SOFTWARE.
 %
 
-trace.
+:- use_module(library(http/json)).
+:- use_module(library(http/http_open)).
+:- use_module(library(http/http_client)).
+:- dynamic 
+	get_task/1,
+	get_task/2.
 
-go() :-
-	get_profile(Profile),
-	get_community(Community),
+%!	get_task_manager_url_to(+Url,-Paths)
+%
+%	Calculate the URL from a path	
+%
+get_task_manager_url_to(Url,Paths) :-
+	get_configuration(Configuration),
+	create_url(Url,[Configuration.wenetComponents.taskManager|Paths])
+	.
+
+
+%!	get_task(+Task,-Id)
+%
+%	Return the task associated to an identifier.
+%
+%	@param Task dictionary with the task information.
+%	@param Id string identifeir of the task to obtain.
+%
+get_task(Task,Id) :-
+	get_task_manager_url_to(Url,["/tasks/",Id]),
+	get_dict_from_json_url(Url,Task),
+	asserta(get_task(Task,Id)),
+	log_trace("Loaded task",Task)
+	.
+
+
+%!	get_task(+Task)
+%
+%	Return the task associated to the engine.
+%
+%	@param Task dictionary with the task information.
+%
+get_task(Task) :-
 	get_message(Message),
-	get_app(App),
-	get_app_users(Users),
-	get_task(Task),
-	print(string([Profile,Community,Message,App,Users,Task]))
+	get_task(Task,Message.taskId),
+	asserta(get_task(Task)) 
 	.

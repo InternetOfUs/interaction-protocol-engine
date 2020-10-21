@@ -1,4 +1,3 @@
-
 /*
  * -----------------------------------------------------------------------------
  *
@@ -27,25 +26,23 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
+import org.tinylog.Level;
 import org.tinylog.Logger;
-
-import com.google.common.io.Files;
+import org.tinylog.provider.InternalLogger;
 
 import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.incentive_server.Incentive;
 import eu.internetofus.common.components.incentive_server.TaskStatus;
 import eu.internetofus.common.components.incentive_server.WeNetIncentiveServer;
-import eu.internetofus.common.components.interaction_protocol_engine.Message;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
 import eu.internetofus.common.components.service.App;
 import eu.internetofus.common.components.service.TaskConcludedNotification;
 import eu.internetofus.common.components.service.TaskProposalNotification;
@@ -84,17 +81,12 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
   /**
    * The path to the resource with the engine file.
    */
-  public static final String ENGINE_RESOURCE = "eu/internetofus/wenet_interaction_protocol_engine/engine.pl";
+  public static final String PROLOG_RESOURCE_DIR = "eu/internetofus/wenet_interaction_protocol_engine/";
 
   /**
-   * The path to the resource with the engine file.
+   * The name of the files of the prolog files to copy.
    */
-  public static final String NORM_INTERPRETER_RESOURCE = "eu/internetofus/wenet_interaction_protocol_engine/Norm_interpreter.pl";
-
-  /**
-   * The path to the resource with the engine file.
-   */
-  public static final String HARDCODED_NORMS_RESOURCE = "eu/internetofus/wenet_interaction_protocol_engine/WeNet_ChatBot_norms.pl";
+  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "profile_manager.pl", "task_manager.pl", "service.pl", "ontology.pl", "Norm_interpreter.pl", "engine.pl" };
 
   /**
    * The component that will consume the messages.
@@ -104,17 +96,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
   /**
    * The file where the prolog engine is stored.
    */
-  protected File engine;
-
-  /**
-   * The file where the norm interpreter is stored.
-   */
-  protected File normInterpreter;
-
-  /**
-   * The file where are the hardcoded norms.
-   */
-  protected File communityNorms;
+  protected Path prologDir;
 
   /**
    * {@inheritDoc}
@@ -149,70 +131,31 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
     try {
 
       final var prologConf = this.config().getJsonObject("engine", new JsonObject()).getJsonObject("prolog", new JsonObject());
-      final var workDir = new File(prologConf.getString("workDir", "var/prolog"));
-      workDir.mkdirs();
-      this.engine = this.copyResource(prologConf, workDir, "engineName", "engine.pl", ENGINE_RESOURCE);
-      if (this.engine == null) {
+      this.prologDir = Paths.get(prologConf.getString("workDir", "var/prolog"));
+      this.prologDir.toFile().mkdirs();
+      for (final String prologFileName : PROLOG_FILE_NAMES) {
 
-        promise.fail("Not found engine file");
+        final var resource = PROLOG_RESOURCE_DIR + prologFileName;
+        final var engineStream = this.getClass().getClassLoader().getResourceAsStream(resource);
+        if (engineStream == null) {
 
-      } else {
-
-        this.normInterpreter = this.copyResource(prologConf, workDir, "normInterpreter", "Norm_Interpreter.pl", NORM_INTERPRETER_RESOURCE);
-
-        if (this.engine == null) {
-
-          promise.fail("Not found norm interpreter");
+          Logger.error("Not found {}", resource);
+          promise.fail("Not found prolog file");
+          return;
 
         } else {
 
-          this.communityNorms = this.copyResource(prologConf, workDir, "harcodedNorms", "WeNet_ChatBot_norms.pl", HARDCODED_NORMS_RESOURCE);
-          if (this.engine == null) {
-
-            promise.fail("Not found harcoded norms");
-
-          } else {
-            promise.complete();
-
-          }
+          final var file = this.prologDir.resolve(Paths.get(prologFileName));
+          Files.copy(engineStream, file, StandardCopyOption.REPLACE_EXISTING);
 
         }
+
       }
+      promise.complete();
 
     } catch (final Throwable cause) {
 
       promise.fail(cause);
-    }
-
-  }
-
-  /**
-   * Copy a resource into a file.
-   *
-   * @param prologConf      configuration of the prolog.
-   * @param workDir         directory to store the resources.
-   * @param key             of the configuration property.
-   * @param defaultFileName default name to the file to store the resource.
-   * @param resource        path of the resource to copy.
-   *
-   * @return the file where is stored the resource or {@code null} if cannot load it.
-   *
-   * @throws IOException If the resource can not be copied.
-   */
-  private File copyResource(final JsonObject prologConf, final File workDir, final String key, final String defaultFileName, final String resource) throws IOException {
-
-    final var engineStream = this.getClass().getClassLoader().getResourceAsStream(resource);
-    if (engineStream == null) {
-
-      return null;
-
-    } else {
-
-      final var file = new File(workDir, prologConf.getString(key, defaultFileName));
-      final Writer writer = new FileWriter(file);
-      IOUtils.copy(engineStream, writer);
-      writer.close();
-      return file;
     }
 
   }
@@ -226,7 +169,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
     try {
 
       final var body = event.body();
-      final var message = Model.fromJsonObject(body, Message.class);
+      final var message = Model.fromJsonObject(body, ProtocolMessage.class);
       if (message == null) {
 
         Logger.trace("Can not process the event {}, because does not contains a valid Message.", event);
@@ -248,44 +191,41 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    *
    * @param message to process.
    */
-  protected void handle(final Message message) {
+  protected void handle(final ProtocolMessage message) {
 
     Logger.trace("Received message to process {}", message);
-    EngineEnvironment.create(this.vertx, message).onComplete(creation -> {
+    if ("HARDCODED_TASK_CREATED".equals(message.particle) || "HARDCODED_TASK_TRANSACTION".equals(message.particle) || "INCENTIVE".equals(message.particle)) {
 
-      try {
+      EngineEnvironment.create(this.vertx, message).onComplete(creation -> {
 
-        final var env = creation.result();
-        switch (message.type) {
-        case TASK_CREATED:
+        try {
 
-          this.handleTaskCreated(env);
-          break;
-        case TASK_TRANSACTION:
+          final var env = creation.result();
+          if ("HARDCODED_TASK_CREATED".equalsIgnoreCase(message.particle)) {
 
-          this.handleTaskTransaction(env, message);
-          break;
-        case INCENTIVE:
+            this.handleTaskCreated(env);
 
-          this.handleIncentive(env, message);
-          break;
+          } else if ("HARDCODED_TASK_TRANSACTION".equalsIgnoreCase(message.particle)) {
 
-        case SWI_PROLOG:
+            this.handleTaskTransaction(env, message);
 
-          this.handleSWIProlog(env, message);
-          break;
+          } else {
 
-        default:
+            this.handleIncentive(env, message);
 
-          Logger.trace("Unexpected {}", message);
+          }
+
+        } catch (final Throwable throwable) {
+
+          Logger.trace(throwable, "Can not process {}", message);
         }
 
-      } catch (final Throwable throwable) {
+      });
 
-        Logger.trace(throwable, "Can not process {}", message);
-      }
+    } else {
 
-    });
+      this.handleSWIProlog(message);
+    }
 
   }
 
@@ -295,7 +235,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    * @param env     environment to use for the message.
    * @param message that contains the task transaction.
    */
-  protected void handleTaskTransaction(final EngineEnvironment env, final Message message) {
+  protected void handleTaskTransaction(final EngineEnvironment env, final ProtocolMessage message) {
 
     final var content = (JsonObject) message.content;
     final var options = new WebClientOptions();
@@ -395,7 +335,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    * @param env     environment where the message is processed.
    * @param message received about the task.
    */
-  protected void fixTaskAttributes(final EngineEnvironment env, final Message message) {
+  protected void fixTaskAttributes(final EngineEnvironment env, final ProtocolMessage message) {
 
     if (env.task == null) {
 
@@ -837,7 +777,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    * @param env     environment to use for the message.
    * @param message that contains the task transaction.
    */
-  protected void handleIncentive(final EngineEnvironment env, final Message message) {
+  protected void handleIncentive(final EngineEnvironment env, final ProtocolMessage message) {
 
     final var content = (JsonObject) message.content;
     final var incentive = Model.fromJsonObject(content, Incentive.class);
@@ -863,67 +803,65 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
   /**
    * Handle a SWIProlog event.
    *
-   * @param env     environment to use for the message.
    * @param message that contains the task transaction.
    */
-  protected void handleSWIProlog(final EngineEnvironment env, final Message message) {
+  protected void handleSWIProlog(final ProtocolMessage message) {
 
-    File tmp = null;
+    Path tmp = null;
     try {
 
-      tmp = Files.createTempDir();
-      final var error = new File(tmp, "error.txt");
-      final var output = new File(tmp, "output.txt");
-      final var actionsFile = new File(tmp, "actions.json");
-      final var messageFile = new File(tmp, "message.json");
-      Files.write(message.toJsonString().getBytes(), messageFile);
-      final var environmentFile = new File(tmp, "environment.json");
-      Files.write(env.toJsonString().getBytes(), environmentFile);
-      final var configurationFile = new File(tmp, "configuration.json");
-      Files.write(this.config().encode().getBytes(), configurationFile);
-      final var initPl = new File(tmp, "init.pl");
-      final var individualNorms = new File(tmp, "individual_norms.pl");
-      individualNorms.createNewFile();
-      final var friends = new File(tmp, "friends.pl");
-      this.fillInFriendsInto(friends,env);
-      final var init = new StringBuilder();
-      init.append("actions_file('");
-      init.append(actionsFile.getAbsolutePath());
-      init.append("').\n");
-      init.append("message_file('");
-      init.append(messageFile.getAbsolutePath());
-      init.append("').\n");
-      init.append("environment_file('");
-      init.append(environmentFile.getAbsolutePath());
-      init.append("').\n");
-      init.append("configuration_file('");
-      init.append(configurationFile.getAbsolutePath());
-      init.append("').\n");
-      init.append("norm_interpreter_file('");
-      init.append(this.normInterpreter.getAbsolutePath());
-      init.append("').\n");
-      init.append("individual_norms_file('");
-      init.append(individualNorms.getAbsolutePath());
-      init.append("').\n");
-      init.append("community_norms_file('");
-      init.append(this.communityNorms.getAbsolutePath());
-      init.append("').\n");
-      init.append("friends_file('");
-      init.append(friends.getAbsolutePath());
-      init.append("').\n");
-      Files.asCharSink(initPl, Charset.defaultCharset()).write(init);
+      tmp = Files.createTempDirectory("engine_worker");
+      final var error = tmp.resolve(Paths.get("error.txt"));
+      final var output = tmp.resolve(Paths.get("output.txt"));
 
-      final var processBuilder = new ProcessBuilder("swipl","--debug", "-O", "-f", initPl.getAbsolutePath(), "-s", this.engine.getAbsolutePath(), "-g", "go", "-t", "halt");
-      processBuilder.directory(tmp);
-      processBuilder.redirectError(error);
-      processBuilder.redirectOutput(output);
+      final var messagePath = tmp.resolve(Paths.get("message.json"));
+      Files.writeString(messagePath, message.toJsonString());
+      final var init = new StringBuilder();
+      init.append("message_file('");
+      init.append(messagePath.toAbsolutePath());
+      init.append("').\n");
+
+      final var configurationPath = tmp.resolve(Paths.get("configuration.json"));
+      Files.writeString(configurationPath, this.config().encode());
+      init.append("configuration_file('");
+      init.append(configurationPath.toAbsolutePath());
+      init.append("').\n");
+
+      final var actionsPath = tmp.resolve(Paths.get("actions.json"));
+      init.append("actions_file('");
+      init.append(actionsPath.toAbsolutePath());
+      init.append("').\n");
+
+      init.append(":- load_files([");
+      final int index = init.length();
+      Files.list(this.prologDir).filter(path -> path.getFileName().toString().endsWith(".pl")).forEach(path -> {
+
+        init.append(",\n\t'");
+        init.append(path.toAbsolutePath());
+        init.append("'");
+
+      });
+      init.deleteCharAt(index);// Remove the extra ,
+      init.append("\n\t],[autoload(true)]).\n");
+
+      InternalLogger.log(Level.ERROR, init.toString());
+
+      final var initPath = tmp.resolve(Paths.get("init.pl"));
+      Files.writeString(initPath, init.toString());
+
+      final var processBuilder = new ProcessBuilder("swipl", "--debug", "-O", "-s", initPath.toAbsolutePath().toString(), "-g", "go", "-t", "halt");
+      processBuilder.directory(tmp.toFile());
+      processBuilder.redirectError(error.toFile());
+      processBuilder.redirectOutput(output.toFile());
       final var process = processBuilder.start();
       Logger.trace("Start process with {}", () -> processBuilder.command());
       final var status = process.waitFor();
+      InternalLogger.log(Level.ERROR, readQuietly(error));
+      InternalLogger.log(Level.DEBUG, readQuietly(output));
       Logger.trace("Finished process {} with code {}.\nThe error stream is:\n{}\nThe output stream is:\n{}", () -> processBuilder.command(), () -> status, () -> readQuietly(error), () -> readQuietly(output));
       if (status == 0) {
 
-        final var actions = new JsonArray(Buffer.buffer(IOUtils.toString(new FileReader(actionsFile))));
+        final var actions = new JsonArray(Buffer.buffer(Files.readString(actionsPath)));
         Logger.trace("Actions {}", () -> actions.encodePrettily());
       }
 
@@ -932,7 +870,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
       Logger.error(processError, "Cannot process the SWI Prolog message");
     }
 
-    if (!FileUtils.deleteQuietly(tmp)) {
+    if (!FileUtils.deleteQuietly(tmp.toFile())) {
 
       Logger.error("Cannot remove the working directory {}", tmp);
 
@@ -941,47 +879,21 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
   }
 
   /**
-   * Add the information of the friends to the specified file.
+   * Read a file as string capturing any exception.
    *
-   * @param friends file to write.
-   * @param env environment with the data.
+   * @param path to read.
    *
-   * @throws IOException If cannot write into the file.
+   * @return the content of the file, or the error if can not read it.
    */
-  private void fillInFriendsInto(final File friends, final EngineEnvironment env) throws IOException {
-
-    final var data = new StringBuilder();
-    if( env.sender != null && env.sender.relationships != null){
-
-      for( final var relationship:env.sender.relationships ) {
-
-        data.append("friends(");
-        data.append(relationship.userId);
-        data.append(",[");
-        // TO DO add community
-        data.append("]).\n");
-
-      }
-    }
-    Files.asCharSink(friends, Charset.defaultCharset()).write(data);
-  }
-
-  /**
-   * Read a file quietly.
-   *
-   * @param file to read.
-   *
-   * @return the content of the file.
-   */
-  public static String readQuietly(final File file) {
+  private static String readQuietly(final Path path) {
 
     try {
 
-      return Files.asCharSource(file, Charset.defaultCharset()).read();
+      return Files.readString(path, Charset.defaultCharset());
 
-    } catch (final Throwable t) {
+    } catch (final Throwable error) {
 
-      return t.toString();
+      return error.toString();
     }
 
   }

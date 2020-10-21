@@ -34,8 +34,7 @@ import org.tinylog.Logger;
 
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.ReflectionModel;
-import eu.internetofus.common.components.interaction_protocol_engine.Message;
-import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.components.service.App;
 import eu.internetofus.common.components.service.WeNetService;
@@ -55,9 +54,9 @@ import io.vertx.core.Vertx;
 public class EngineEnvironment extends ReflectionModel implements Model {
 
   /**
-   * The profile of the user that has send the message.
+   * The profile of the user that the engine is related to.
    */
-  public WeNetUserProfile sender;
+  public WeNetUserProfile user;
 
   /**
    * The application that has send the message.
@@ -110,18 +109,18 @@ public class EngineEnvironment extends ReflectionModel implements Model {
    *
    * @return the loaded environment.
    */
-  public static Future<EngineEnvironment> create(final Vertx vertx, final Message message) {
+  public static Future<EngineEnvironment> create(final Vertx vertx, final ProtocolMessage message) {
 
     final Promise<EngineEnvironment> promise = Promise.promise();
     var future = promise.future();
 
-    if (message.senderId != null) {
-
-      future = future.compose(loadField(WeNetUserProfile.class, loader -> {
-        WeNetProfileManager.createProxy(vertx).retrieveProfile(message.senderId, loader);
-      }, "sender", (env, profile) -> env.sender = profile));
-
-    }
+    //    if (message.sender instanceof UserAddress) {
+    //
+    //      future = future.compose(loadField(WeNetUserProfile.class, loader -> {
+    //        WeNetProfileManager.createProxy(vertx).retrieveProfile(((UserAddress) message.sender).userId, loader);
+    //      }, "sender", (env, profile) -> env.user = profile));
+    //
+    //    }
     if (message.appId != null) {
 
       future = future.compose(loadField(App.class, loader -> {

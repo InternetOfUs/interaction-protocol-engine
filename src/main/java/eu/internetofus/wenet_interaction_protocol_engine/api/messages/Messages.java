@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,7 +33,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import eu.internetofus.common.components.ErrorMessage;
-import eu.internetofus.common.components.interaction_protocol_engine.Message;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -79,8 +79,8 @@ public interface Messages {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Send a message in an interaction protocol", description = "Publish a message in an interaction protocol that has to be validated by this engine.")
-  @RequestBody(description = "The message to publish", required = true, content = @Content(schema = @Schema(implementation = Message.class)))
-  @ApiResponse(responseCode = "202", description = "If the message is accepted to be processed", content = @Content(schema = @Schema(implementation = Message.class)))
+  @RequestBody(description = "The message to publish", required = true, content = @Content(schema = @Schema(implementation = ProtocolMessage.class)))
+  @ApiResponse(responseCode = "202", description = "If the message is accepted to be processed", content = @Content(schema = @Schema(implementation = ProtocolMessage.class)))
   @ApiResponse(responseCode = "400", description = "Bad message", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   void sendMessage(@Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) OperationRequest context,
       @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);

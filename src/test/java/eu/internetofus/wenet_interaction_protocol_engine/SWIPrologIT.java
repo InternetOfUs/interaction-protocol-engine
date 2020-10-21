@@ -27,7 +27,6 @@
 package eu.internetofus.wenet_interaction_protocol_engine;
 
 import static eu.internetofus.common.components.profile_manager.WeNetProfileManagers.createUsers;
-import static eu.internetofus.common.components.service.WeNetServiceSimulators.createApp;
 import static eu.internetofus.common.components.service.WeNetServiceSimulators.waitUntilCallbacks;
 import static eu.internetofus.common.components.task_manager.WeNetTaskManagers.waitUntilTask;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,12 +45,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.StoreServices;
-import eu.internetofus.common.components.interaction_protocol_engine.Message;
-import eu.internetofus.common.components.interaction_protocol_engine.Message.Type;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAddress;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAddress.Component;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
+import eu.internetofus.common.components.profile_manager.CommunityProfile;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.components.service.App;
 import eu.internetofus.common.components.service.TaskProposalNotification;
+import eu.internetofus.common.components.service.WeNetService;
 import eu.internetofus.common.components.service.WeNetServiceSimulator;
 import eu.internetofus.common.components.task_manager.Task;
 import eu.internetofus.common.components.task_manager.TaskGoal;
@@ -98,6 +100,11 @@ public class SWIPrologIT {
   protected static Task task;
 
   /**
+   * The community that will involved on the test.
+   */
+  protected static CommunityProfile community;
+
+  /**
    * Create the users that will be used on the tests.
    *
    * @param vertx       event bus to use.
@@ -107,9 +114,14 @@ public class SWIPrologIT {
   @Order(1)
   public void shouldCreateUsers(final Vertx vertx, final VertxTestContext testContext) {
 
-    createUsers(MAX_USERS, vertx, testContext).onComplete(testContext.succeeding(users -> {
-      HardcodedProtocolIT.users = users;
-      testContext.completeNow();
+    StoreServices.storeProfileExample(1, vertx, testContext, testContext.succeeding(me -> {
+
+      createUsers(MAX_USERS, vertx, testContext).onComplete(testContext.succeeding(users -> {
+        SWIPrologIT.users = users;
+        SWIPrologIT.users.add(0, me);
+        testContext.completeNow();
+      }));
+
     }));
   }
 
@@ -123,11 +135,23 @@ public class SWIPrologIT {
   @Order(2)
   public void shouldCreateApp(final Vertx vertx, final VertxTestContext testContext) {
 
-    assert HardcodedProtocolIT.users != null;
-    createApp(HardcodedProtocolIT.users, vertx, testContext).onComplete(testContext.succeeding(app -> {
-      HardcodedProtocolIT.app = app;
-      testContext.completeNow();
+    assert SWIPrologIT.users != null;
+    StoreServices.storeCommunityExample(1, vertx, testContext, testContext.succeeding(community -> {
+
+      SWIPrologIT.community = community;
+      WeNetService.createProxy(vertx).retrieveApp(community.appId, testContext.succeeding(app -> {
+        SWIPrologIT.app = app;
+        final var appUsers = new JsonArray();
+        for (final WeNetUserProfile profile : users) {
+
+          appUsers.add(profile.id);
+        }
+        WeNetServiceSimulator.createProxy(vertx).addUsers(app.appId, appUsers, testContext.succeeding(added -> testContext.completeNow()));
+
+      }));
+
     }));
+
   }
 
   /**
@@ -140,27 +164,28 @@ public class SWIPrologIT {
   @Order(3)
   public void shouldCreateTask(final Vertx vertx, final VertxTestContext testContext) {
 
-    assert HardcodedProtocolIT.users != null;
-    assert HardcodedProtocolIT.app != null;
+    assert SWIPrologIT.users != null;
+    assert SWIPrologIT.app != null;
     StoreServices.storeTaskTypeExample(1, vertx, testContext, testContext.succeeding(taskType -> {
 
-      HardcodedProtocolIT.taskType = taskType;
+      SWIPrologIT.taskType = taskType;
       final var task = new Task();
-      task.appId = HardcodedProtocolIT.app.appId;
+      task.appId = SWIPrologIT.app.appId;
+      // task.communityId = SWIPrologIT.community.id;
       task.deadlineTs = TimeManager.now() + 120;
       task.startTs = task.deadlineTs + 30;
       task.endTs = task.startTs + 300;
       task.taskTypeId = taskType.id;
       task.goal = new TaskGoal();
       task.goal.name = "Test create task";
-      task.requesterId = HardcodedProtocolIT.users.get(0).id;
+      task.requesterId = SWIPrologIT.users.get(0).id;
       WeNetTaskManager.createProxy(vertx).createTask(task, testContext.succeeding(createdTask -> {
 
-        HardcodedProtocolIT.task = createdTask;
-        waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+        SWIPrologIT.task = createdTask;
+        waitUntilCallbacks(SWIPrologIT.app.appId, callbacks -> {
 
           final Set<String> ids = new HashSet<>();
-          for (final WeNetUserProfile profile : HardcodedProtocolIT.users) {
+          for (final WeNetUserProfile profile : SWIPrologIT.users) {
 
             ids.add(profile.id);
           }
@@ -178,14 +203,14 @@ public class SWIPrologIT {
           return ids.isEmpty();
 
         }, vertx, testContext).onComplete(testContext.succeeding(msg -> {
-          WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-            WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(SWIPrologIT.app.appId, testContext.succeeding(removed -> {
+            WeNetTaskManager.createProxy(vertx).retrieveTask(SWIPrologIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
 
               assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
               final var attributes = storedTask.attributes;
               final var unanswered = attributes.getJsonArray("unanswered");
               assertThat(unanswered).isNotNull().doesNotContain(createdTask.requesterId);
-              for (final WeNetUserProfile profile : HardcodedProtocolIT.users) {
+              for (final WeNetUserProfile profile : SWIPrologIT.users) {
 
                 if (!profile.id.equals(storedTask.requesterId)) {
 
@@ -193,7 +218,7 @@ public class SWIPrologIT {
 
                 }
               }
-              HardcodedProtocolIT.task = storedTask;
+              SWIPrologIT.task = storedTask;
               testContext.completeNow();
             })));
           }));
@@ -212,52 +237,118 @@ public class SWIPrologIT {
   @Timeout(value = 1, timeUnit = TimeUnit.MINUTES)
   @Test
   @Order(4)
-  public void shouldDeclineTask(final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldCreateTaskWithNorms(final Vertx vertx, final VertxTestContext testContext) {
 
-    assert HardcodedProtocolIT.task != null;
-    assert HardcodedProtocolIT.users != null;
-    assert HardcodedProtocolIT.app != null;
+    assert SWIPrologIT.task != null;
+    assert SWIPrologIT.users != null;
+    assert SWIPrologIT.app != null;
 
-    final var message = new Message();
-    message.type = Type.SWI_PROLOG;
-    message.appId = HardcodedProtocolIT.app.appId;
-    message.taskId = HardcodedProtocolIT.task.id;
-    message.senderId = HardcodedProtocolIT.users.get(1).id;
-    message.particle = "declined";
-    message.content = new JsonObject().put("task",this.toArray(HardcodedProtocolIT.task));
+    final var message = new ProtocolMessage();
+    message.appId = SWIPrologIT.app.appId;
+    message.communityId = SWIPrologIT.community.id;
+    message.taskId = SWIPrologIT.task.id;
+    message.sender = new ProtocolAddress();
+    message.sender.component = Component.TASK_MANAGER;
+    message.sender.userId = SWIPrologIT.users.get(0).id;
+    message.receiver = new ProtocolAddress();
+    message.receiver.component = Component.INTERACTION_PROTOCOL_ENGINE;
+    message.receiver.userId = task.requesterId;
+    message.particle = "createTask";
+    message.content = new JsonObject();
     WeNetInteractionProtocolEngine.createProxy(vertx).sendMessage(message, testContext.succeeding(sentMessage -> {
 
-      waitUntilTask(HardcodedProtocolIT.task.id, task -> {
+      waitUntilCallbacks(SWIPrologIT.app.appId, callbacks -> {
 
-        return task.attributes instanceof JsonObject && task.attributes.getJsonArray("declined", new JsonArray()).contains(message.senderId);
+        final Set<String> ids = new HashSet<>();
+        for (final WeNetUserProfile profile : SWIPrologIT.users) {
 
-      }, vertx, testContext).onComplete(testContext.succeeding(task -> testContext.verify(() -> {
+          ids.add(profile.id);
+        }
+        ids.remove(SWIPrologIT.task.requesterId);
 
-        assertThat(task.attributes).isNotNull().isInstanceOf(JsonObject.class);
-        final var attributes = task.attributes;
-        final var unanswered = attributes.getJsonArray("unanswered");
-        assertThat(unanswered).isNotNull().doesNotContain(task.requesterId, message.senderId);
-        final var declined = attributes.getJsonArray("declined");
-        assertThat(declined).isNotNull().hasSize(1).contains(message.senderId);
-        testContext.completeNow();
+        for (var i = 0; i < callbacks.size(); i++) {
 
-      })));
+          final var proposal = Model.fromJsonObject(callbacks.getJsonObject(i), TaskProposalNotification.class);
+          if (proposal != null && SWIPrologIT.task.id.equals(proposal.taskId)) {
+
+            ids.remove(proposal.recipientId);
+
+          }
+        }
+        return ids.isEmpty();
+
+      }, vertx, testContext).onComplete(testContext.succeeding(msg -> {
+        WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(SWIPrologIT.app.appId, testContext.succeeding(removed -> {
+          WeNetTaskManager.createProxy(vertx).retrieveTask(SWIPrologIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+
+            assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
+            final var attributes = storedTask.attributes;
+            final var unanswered = attributes.getJsonArray("unanswered");
+            assertThat(unanswered).isNotNull().doesNotContain(SWIPrologIT.task.requesterId);
+            for (final WeNetUserProfile profile : SWIPrologIT.users) {
+
+              if (!profile.id.equals(storedTask.requesterId)) {
+
+                assertThat(unanswered).contains(profile.id);
+
+              }
+            }
+            SWIPrologIT.task = storedTask;
+            testContext.completeNow();
+          })));
+        }));
+      }));
 
     }));
 
   }
 
   /**
-   * Convert a task to the List that can be used on the norm engine.
+   * Check that an user decline to do a task.
    *
-   * @param task to convert.
-   *
-   * @return the array that represents the task.
+   * @param vertx       event bus to use.
+   * @param testContext context to do the test.
    */
-  private JsonArray toArray(final Task task) {
+  @Timeout(value = 1, timeUnit = TimeUnit.MINUTES)
+  @Test
+  @Order(5)
+  public void shouldDeclineTask(final Vertx vertx, final VertxTestContext testContext) {
 
-    return new JsonArray().add(task.id).add(task.goal.name).add(new JsonArray().add(task.goal.description)).add(task.deadlineTs).add(task.attributes.getJsonArray("unanswered", new JsonArray()))
-        .add(task.attributes.getJsonArray("declined", new JsonArray())).add(task.attributes.getJsonArray("volunteers", new JsonArray())).add(task.attributes.getJsonArray("accepted", new JsonArray()));
+    assert SWIPrologIT.task != null;
+    assert SWIPrologIT.users != null;
+    assert SWIPrologIT.app != null;
+
+    final var message = new ProtocolMessage();
+    message.appId = SWIPrologIT.app.appId;
+    message.communityId = SWIPrologIT.community.id;
+    message.taskId = SWIPrologIT.task.id;
+    final var userId = SWIPrologIT.users.get(1).id;
+    message.sender = new ProtocolAddress();
+    message.sender.component = Component.TASK_MANAGER;
+    message.receiver = new ProtocolAddress();
+    message.receiver.component = Component.INTERACTION_PROTOCOL_ENGINE;
+    message.receiver.userId = userId;
+    message.particle = "declined";
+    message.content = new JsonObject();
+    WeNetInteractionProtocolEngine.createProxy(vertx).sendMessage(message, testContext.succeeding(sentMessage -> {
+
+      waitUntilTask(SWIPrologIT.task.id, task -> {
+
+        return task.attributes instanceof JsonObject && task.attributes.getJsonArray("declined", new JsonArray()).contains(userId);
+
+      }, vertx, testContext).onComplete(testContext.succeeding(task -> testContext.verify(() -> {
+
+        assertThat(task.attributes).isNotNull().isInstanceOf(JsonObject.class);
+        final var attributes = task.attributes;
+        final var unanswered = attributes.getJsonArray("unanswered");
+        assertThat(unanswered).isNotNull().doesNotContain(task.requesterId, userId);
+        final var declined = attributes.getJsonArray("declined");
+        assertThat(declined).isNotNull().hasSize(1).contains(userId);
+        testContext.completeNow();
+
+      })));
+
+    }));
 
   }
 

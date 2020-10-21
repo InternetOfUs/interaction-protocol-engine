@@ -28,7 +28,7 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
 import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
 import static io.vertx.junit5.web.TestRequest.queryParam;
-import static io.vertx.junit5.web.TestRequest.testRequest;
+import static io.reactiverse.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;

@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,8 +32,9 @@ import org.tinylog.Logger;
 
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.incentive_server.Incentive;
-import eu.internetofus.common.components.interaction_protocol_engine.Message;
-import eu.internetofus.common.components.interaction_protocol_engine.Message.Type;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAddress;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAddress.Component;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
 import eu.internetofus.common.vertx.OperationReponseHandlers;
 import io.vertx.core.AsyncResult;
@@ -90,9 +91,14 @@ public class IncentivesResource implements Incentives {
 
         } else {
 
-          final var message = new Message();
+          final var message = new ProtocolMessage();
           message.appId = incentive.AppID;
-          message.type = Type.INCENTIVE;
+          message.sender = new ProtocolAddress();
+          message.sender.component = Component.INCENTIVE_SERVER;
+          message.receiver = new ProtocolAddress();
+          message.receiver.component = Component.INTERACTION_PROTOCOL_ENGINE;
+          message.receiver.userId = incentive.UserId;
+          message.particle = "INCENTIVE";
           message.content = incentive.toJsonObject();
           WeNetInteractionProtocolEngine.createProxy(this.vertx).sendMessage(message, send -> {
 

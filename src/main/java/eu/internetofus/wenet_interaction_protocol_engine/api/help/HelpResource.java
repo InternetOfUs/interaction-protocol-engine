@@ -26,6 +26,8 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.help;
 
+import java.nio.charset.Charset;
+
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
@@ -100,7 +102,7 @@ public class HelpResource implements Help {
       try {
 
         final var in = this.getClass().getClassLoader().getResourceAsStream(OPENA_API_RESOURCE);
-        final var openapi = IOUtils.toString(in);
+        final var openapi = IOUtils.toString(in, Charset.defaultCharset());
         promise.complete(openapi);
 
       } catch (final Throwable cause) {
