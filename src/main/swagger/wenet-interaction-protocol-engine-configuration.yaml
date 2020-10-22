@@ -61,5 +61,7 @@ openAPI:
       description: WeNet production server
     - url: https://wenet.u-hopper.com/dev/interaction_protocol_engine
       description: WeNet development server server
-    - url: http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.11/
+    - url: http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/prod/
+      description: IIIA production server
+    - url: http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/dev/
       description: IIIA development server
