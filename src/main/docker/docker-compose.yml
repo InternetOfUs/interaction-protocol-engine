@@ -14,7 +14,7 @@ services:
       wenet_network:
 
   wenet_interaction_protocol_engine_api:
-    image: wenet/interaction_protocol_engine:latest
+    image: internetofus/interaction_protocol_engine:latest
     restart: always
     depends_on:
       - wenet_interaction_protocol_engine_database
