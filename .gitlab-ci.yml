@@ -27,6 +27,14 @@ build_development_environment:
     - DOCKER_BUILDKIT=1 docker build -f src/dev/docker/Dockerfile --cache-from $CI_REGISTRY_IMAGE:dev -t $CI_REGISTRY/$COMPONENT_NAME:dev .
     - docker push $CI_REGISTRY_IMAGE:dev
 
+build_component_docker:
+  stage: build
+  script:
+    - COMPONENT_VERSION=$(grep -m1 '<version>' pom.xml |cut -d '<' -f2  |cut -d '>' -f2)
+    - docker pull $CI_REGISTRY/$COMPONENT_NAME:$COMPONENT_VERSION  || true
+    - DOCKER_BUILDKIT=1 docker build -f src/dev/docker/Dockerfile --cache-from $CI_REGISTRY/$COMPONENT_NAME:$COMPONENT_VERSION -t $CI_REGISTRY/$COMPONENT_NAME:$COMPONENT_VERSION .
+    - docker push $CI_REGISTRY/$COMPONENT_NAME:$COMPONENT_VERSION
+
 buil_test_site:
   stage: test
   script:
