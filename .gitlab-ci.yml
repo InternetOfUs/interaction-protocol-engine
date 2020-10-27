@@ -12,6 +12,7 @@ variables:
   TASK_MANAGER_IMAGE: "internetofus/task-manager:0.6.0"
 
 cache:
+  key: "maven-cache"
   paths:
     - .m2/repository
 
