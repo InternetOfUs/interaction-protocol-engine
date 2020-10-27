@@ -10,7 +10,11 @@ variables:
   MONGO_IMAGE: "mongo:4.4.1"
   PROFILE_MANAGER_IMAGE: "internetofus/profile-manager:0.15.0"
   TASK_MANAGER_IMAGE: "internetofus/task-manager:0.6.0"
-  
+
+cache:
+  paths:
+    - .m2/repository
+
 before_script:
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   - docker pull docker.io/$MONGO_IMAGE
@@ -38,7 +42,7 @@ build_component_docker:
 buil_test_site:
   stage: test
   script:
-    - docker run -v /var/run/docker.sock:/var/run/docker.sock -v ${PWD}:/app $CI_REGISTRY_IMAGE:dev mvn -B -fn clean compile test-compile javadoc:javadoc javadoc:test-javadoc verify site post-site
+    - docker run -v /var/run/docker.sock:/var/run/docker.sock -v $CI_PROJECT_DIR:/app -v $CI_PROJECT_DIR/.m2/repository:/root/.m2/repository $CI_REGISTRY_IMAGE:dev mvn -B -fn clean compile test-compile javadoc:javadoc javadoc:test-javadoc verify site post-site
     - awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, "instructions covered"; print 100*covered/instructions, "% covered" }' target/site/jacoco/jacoco.csv
     - cp -r target/site public
   artifacts:
