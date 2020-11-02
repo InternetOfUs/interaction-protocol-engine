@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,7 +36,6 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import eu.internetofus.common.TimeManager;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNorm;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNormTest;
@@ -176,13 +175,14 @@ public class NormsRepositoryIT {
   public void shouldStorePublishedNorm(final Vertx vertx, final VertxTestContext testContext) {
 
     final var norm = new PublishedNorm();
-    final var now = TimeManager.now();
+    norm._creationTs = 0;
+    norm._lastUpdateTs = 1;
     NormsRepository.createProxy(vertx).storePublishedNorm(norm, testContext.succeeding(storedNorm -> testContext.verify(() -> {
 
       assertThat(storedNorm).isNotNull();
       assertThat(storedNorm.id).isNotEmpty();
-      assertThat(storedNorm._creationTs).isGreaterThanOrEqualTo(now);
-      assertThat(storedNorm._lastUpdateTs).isGreaterThanOrEqualTo(now);
+      assertThat(storedNorm._creationTs).isEqualTo(0);
+      assertThat(storedNorm._lastUpdateTs).isEqualTo(1);
       testContext.completeNow();
     })));
 
@@ -199,14 +199,13 @@ public class NormsRepositoryIT {
   @Test
   public void shouldStorePublishedNormObject(final Vertx vertx, final VertxTestContext testContext) {
 
-    final var now = TimeManager.now();
     NormsRepository.createProxy(vertx).storePublishedNorm(new JsonObject(), testContext.succeeding(storedNorm -> testContext.verify(() -> {
 
       assertThat(storedNorm).isNotNull();
       final var id = storedNorm.getString("id");
       assertThat(id).isNotEmpty();
-      assertThat(storedNorm.getLong("_creationTs", 0l)).isNotEqualTo(0).isGreaterThanOrEqualTo(now);
-      assertThat(storedNorm.getLong("_lastUpdateTs", 0l)).isNotEqualTo(0).isGreaterThanOrEqualTo(now);
+      assertThat(storedNorm.containsKey("_creationTs")).isFalse();
+      assertThat(storedNorm.containsKey("_lastUpdateTs")).isFalse();
       testContext.completeNow();
     })));
 
@@ -290,19 +289,17 @@ public class NormsRepositoryIT {
   public void shouldUpdatePublishedNorm(final Vertx vertx, final VertxTestContext testContext) {
 
     final var norm = new PublishedNorm();
-
     NormsRepository.createProxy(vertx).storePublishedNorm(norm, testContext.succeeding(stored -> testContext.verify(() -> {
 
       final var update = new PublishedNormTest().createModelExample(23);
       update.id = stored.id;
       Thread.sleep(1000);
-      final var now = TimeManager.now();
       NormsRepository.createProxy(vertx).updatePublishedNorm(update, testContext.succeeding(empty -> {
 
         NormsRepository.createProxy(vertx).searchPublishedNorm(stored.id, testContext.succeeding(foundNorm -> testContext.verify(() -> {
 
           assertThat(foundNorm._creationTs).isEqualTo(stored._creationTs);
-          assertThat(foundNorm._lastUpdateTs).isGreaterThanOrEqualTo(now);
+          assertThat(foundNorm._lastUpdateTs).isGreaterThanOrEqualTo(stored._lastUpdateTs);
           update._creationTs = stored._creationTs;
           update._lastUpdateTs = foundNorm._lastUpdateTs;
           assertThat(foundNorm).isEqualTo(update);

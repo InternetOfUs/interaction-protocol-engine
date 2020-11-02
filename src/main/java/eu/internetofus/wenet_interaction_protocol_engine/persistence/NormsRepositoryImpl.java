@@ -26,7 +26,6 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.vertx.Repository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -50,7 +49,7 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
   /**
    * Create a new service.
    *
-   * @param pool to create the connections.
+   * @param pool    to create the connections.
    * @param version of the schemas.
    */
   public NormsRepositoryImpl(final MongoClient pool, final String version) {
@@ -84,9 +83,6 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 
       norm.put("_id", id);
     }
-    final var now = TimeManager.now();
-    norm.put("_creationTs", now);
-    norm.put("_lastUpdateTs", now);
     this.storeOneDocument(PUBLISHED_NORMS_COLLECTION, norm, stored -> {
 
       final var _id = (String) stored.remove("_id");
@@ -102,10 +98,7 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
   public void updatePublishedNorm(final JsonObject norm, final Handler<AsyncResult<Void>> updateHandler) {
 
     final var id = norm.remove("id");
-    norm.remove("_creationTs");
     final var query = new JsonObject().put("_id", id);
-    final var now = TimeManager.now();
-    norm.put("_lastUpdateTs", now);
     this.updateOneDocument(PUBLISHED_NORMS_COLLECTION, query, norm, updateHandler);
   }
 
@@ -144,6 +137,5 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
     return this.updateSchemaVersionOnCollection(PUBLISHED_NORMS_COLLECTION);
 
   }
-
 
 }

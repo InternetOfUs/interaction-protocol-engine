@@ -56,7 +56,7 @@ import io.vertx.ext.mongo.UpdateOptions;
 public class Repository {
 
   /**
-   * Name of the filed to store the version of the schemas.
+   * Name of the field to store the version of the schemas.
    */
   public static final String SCHEMA_VERSION = "schema_version";
 
@@ -181,6 +181,10 @@ public class Repository {
 
     } else {
 
+      // NO modify the _creationTs.
+      updateModel.remove("_creationTs");
+
+      // Create the query to update the model.
       final var setFields = new JsonObject().put(SCHEMA_VERSION, this.schemaVersion);
       final var updateQuery = new JsonObject();
       updateQuery.put("$set", setFields);
