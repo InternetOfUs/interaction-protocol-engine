@@ -27,6 +27,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.spy;
@@ -273,12 +274,22 @@ public class NormsRepositoryTest {
     params.add("name");
     params.add("+description");
     params.add("-keywords");
-    params.add("+description");
     params.add("publisherId");
-    params.add("+publish");
-    params.add("publishTime");
     params.add("-publishedTime");
     assertThat(NormsRepository.createPublishedNormsPageSort(params)).isEqualTo(sort);
+
+  }
+
+  /**
+   * Should fail create a sort query because duplicated property.
+   */
+  @Test
+  public void shouldFailCreatePublishedNormsPageSort() {
+
+    final var params = new ArrayList<String>();
+    params.add("+publish");
+    params.add("-publishTime");
+    assertThatExceptionOfType(ValidationErrorException.class).isThrownBy(() -> NormsRepository.createPublishedNormsPageSort(params));
 
   }
 
