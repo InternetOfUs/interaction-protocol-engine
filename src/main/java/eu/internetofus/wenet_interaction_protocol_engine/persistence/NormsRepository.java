@@ -227,17 +227,6 @@ public interface NormsRepository {
   void deletePublishedNorm(String id, Handler<AsyncResult<Void>> deleteHandler);
 
   /**
-   * Search for the published norms that satisfy the query.
-   *
-   * @param query         that has to match the published norms to search.
-   * @param sort          order to sort the norms.
-   * @param offset        index of the first norm to return.
-   * @param limit         number maximum of norms to return.
-   * @param searchHandler handler to manage the search.
-   */
-  void retrievePublishedNormsPageObject(JsonObject query, JsonObject sort, int offset, int limit, Handler<AsyncResult<JsonObject>> searchHandler);
-
-  /**
    * Create a query to obtain the norms that has the specified parameters.
    *
    * @param name        of the norms to return.
@@ -286,18 +275,43 @@ public interface NormsRepository {
   }
 
   /**
-   * Obtain the tasks that satisfies a query.
+   * Retrieve the norms defined on the context.
    *
-   * @param query         that define the tasks to add into the page.
-   * @param order         in witch has to return the tasks.
-   * @param offset        index of the first task to return.
-   * @param limit         number maximum of tasks to return.
-   * @param searchHandler handler to manage the search.
+   * @param context that describe witch page want to obtain.
+   * @param handler for the obtained page.
    */
   @GenIgnore
-  default void retrievePublishedNormsPage(final JsonObject query, final JsonObject order, final int offset, final int limit, final Handler<AsyncResult<PublishedNormsPage>> searchHandler) {
+  default void retrievePublishedNormsPageObject(final ModelsPageContext context, final Handler<AsyncResult<JsonObject>> handler) {
 
-    this.retrievePublishedNormsPageObject(query, order, offset, limit, search -> {
+    this.retrievePublishedNormsPageObject(context.query, context.sort, context.offset, context.limit, handler);
+  }
+
+  /**
+   * Retrieve the norms defined on the context.
+   *
+   * @param context       that describe witch page want to obtain.
+   * @param searchHandler for the obtained page.
+   */
+  @GenIgnore
+  default void retrievePublishedNormsPage(final ModelsPageContext context, final Handler<AsyncResult<PublishedNormsPage>> searchHandler) {
+
+    this.retrievePublishedNormsPage(context.query, context.sort, context.offset, context.limit, searchHandler);
+
+  }
+
+  /**
+   * Retrieve the norms defined on the context.
+   *
+   * @param query         to obtain the required norms.
+   * @param sort          describe how has to be ordered the obtained norms.
+   * @param offset        the index of the first community to return.
+   * @param limit         the number maximum of norms to return.
+   * @param searchHandler for the obtained page.
+   */
+  @GenIgnore
+  default void retrievePublishedNormsPage(final JsonObject query, final JsonObject sort, final int offset, final int limit, final Handler<AsyncResult<PublishedNormsPage>> searchHandler) {
+
+    this.retrievePublishedNormsPageObject(query, sort, offset, limit, search -> {
 
       if (search.failed()) {
 
@@ -309,7 +323,7 @@ public interface NormsRepository {
         final var page = Model.fromJsonObject(value, PublishedNormsPage.class);
         if (page == null) {
 
-          searchHandler.handle(Future.failedFuture("The stored published norms page is not valid."));
+          searchHandler.handle(Future.failedFuture("The stored norms page is not valid."));
 
         } else {
 
@@ -317,18 +331,18 @@ public interface NormsRepository {
         }
       }
     });
+
   }
 
   /**
-   * Retrieve the norms defined on the context.
+   * Retrieve a page with some norms.
    *
-   * @param context that describe witch page want to obtain.
-   * @param handler for the obtained page.
+   * @param query   to obtain the required norms.
+   * @param sort    describe how has to be ordered the obtained norms.
+   * @param offset  the index of the first community to return.
+   * @param limit   the number maximum of norms to return.
+   * @param handler to inform of the found norms.
    */
-  @GenIgnore
-  default void retrievePublishedNormsPageObject(final ModelsPageContext context, final Handler<AsyncResult<JsonObject>> handler) {
-
-    this.retrievePublishedNormsPageObject(context.query, context.sort, context.offset, context.limit, handler);
-  }
+  void retrievePublishedNormsPageObject(JsonObject query, JsonObject sort, int offset, int limit, Handler<AsyncResult<JsonObject>> handler);
 
 }

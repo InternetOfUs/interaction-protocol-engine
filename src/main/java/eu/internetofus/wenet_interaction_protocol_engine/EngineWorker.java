@@ -86,7 +86,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
   /**
    * The name of the files of the prolog files to copy.
    */
-  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "profile_manager.pl", "task_manager.pl", "service.pl", "ontology.pl", "Norm_interpreter.pl", "engine.pl" };
+  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "profile_manager.pl", "task_manager.pl", "service.pl", "ontology.pl", "Norm_Interpreter.pl", "engine.pl" };
 
   /**
    * The component that will consume the messages.
@@ -140,7 +140,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
         if (engineStream == null) {
 
           Logger.error("Not found {}", resource);
-          promise.fail("Not found prolog file");
+          promise.fail("Not found " + resource);
           return;
 
         } else {
