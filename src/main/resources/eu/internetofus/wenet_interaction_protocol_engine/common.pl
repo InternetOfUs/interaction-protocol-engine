@@ -150,7 +150,7 @@ do_actions([A|O]) :-
 do_action(put(msg_to(X,C))) :-
 	get_language(Lang),
 	message(C,Lang,Text),
-	put_callback(message{type:"textualMessage",recipientId:X,title:"Title",text:Text},_)
+	put_callback(message{type:"textualMessage",recipientId:X,title:'',text:Text},_)
 	.
 	
 do_action(A) :-

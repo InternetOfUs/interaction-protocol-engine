@@ -78,7 +78,8 @@ get_app_users(Users,Id) :-
 	get_service_url_to(Url,["/app/",Id,"/users"]),
 	get_dict_from_json_url(Url,Users),
 	asserta(get_app_users(Users,Id)),
-	log_trace(string(format('Loaded users of the application ~w',[Id])),Users)
+	format(string(Log_Text),'Loaded users of the application ~w',[Id]),
+	log_trace(Log_Text,Users)
 	.
 
 
@@ -105,7 +106,8 @@ get_app_users(Users) :-
 put_callback(App,Message,Result) :-
 	atom_json_term(Atom, Message, []),
 	http_post(App.messageCallbackUrl, atom(Atom), Result, []),
-	log_trace(string(format('Post to the app ~w the callback message ~w',[App.id,Message])),Result)
+	format(string(Log_Text),'Post to the app ~w the callback message ~w',[App.appId,Atom]),
+	log_trace(Log_Text,Result)
 	.
 	
 %!	put_callback(+Message,-Result)
