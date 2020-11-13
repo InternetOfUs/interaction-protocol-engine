@@ -86,7 +86,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
   /**
    * The name of the files of the prolog files to copy.
    */
-  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "profile_manager.pl", "task_manager.pl", "service.pl", "ontology.pl", "Norm_Interpreter.pl", "engine.pl" };
+  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "profile_manager.pl", "task_manager.pl", "service.pl", "ontology.pl", "engine.pl" };
 
   /**
    * The component that will consume the messages.

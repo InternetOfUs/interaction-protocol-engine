@@ -2,10 +2,10 @@
 
 ## Introduction
 
-The interaction protocol engine component is the one responsible for guaranteeing that interactions
-between WeNet users follow the norms.
+The interaction protocol engine component is the one responsible for guaranteeing interactions
+between WeNet users to follow the norms.
 
-The interaction between users is modeled as an exchange of messages.
+The interaction between users is modelled as an exchange of messages.
 When a user sends a message through the API, the message is sent to the norm interpreter of the user.
 This interpreter needs to first verify that the message does not violate any of the norms,
 this includes the community norms, the task norms, the sender’s individual norms, as well as the context-dependent
@@ -16,7 +16,7 @@ the community, individual and context-dependent norms, and takes the user’s pr
 into account as needed. If the message is sent to the interpreter of another user. As in the previous case,
 the norm interpreter of this new user needs to first verify that the message does not violate any of the community norms.
 This re-checking upon receipt ensures that the sender’s norm engine has not been manipulated to cheat.
-If the message violates any of the community norms, then it may either be discarded, or if the community norms
+If the message violates any of the community norms, then it may either be discarded or if the community norms
 require sanctioning, then the appropriate sanctions should be executed. However, if the action obeys the community norms,
 then the norm interpreter needs to decide what to do next, which is usually translated into sending messages
 to other peers and/or sending messages to its user. This decision takes into consideration the community norms,
@@ -34,7 +34,7 @@ Given the above, this means that norms will be attached to users, tasks and comm
 
 ## Setup and configuration
 
-First of all, you must to install the next software.
+First of all, you must install the next software.
 
  - [docker](https://docs.docker.com/install/)
  - [docker compose](https://docs.docker.com/compose/install/)
@@ -44,9 +44,31 @@ First of all, you must to install the next software.
 The interaction protocol engine component requires:
 
  - [MongoDB](https://docs.mongodb.com/manual/installation/)
- - [WeNet - Profile manager](https://bitbucket.org/wenet/profile-manager/)
+ - [WeNet - Profile manager](https://bitbucket.org/wenet/interaction-protocol-engine/)
  - [WeNet - Interaction protocol engine](https://bitbucket.org/wenet/wenet-interaction-protocol-engine/)
  - [WeNet - Service API](https://bitbucket.org/wenet/wenet-service-api/)
+ - [WeNet - Social context builder](https://bitbucket.org/wenet/wenet-social-context-builder/)
+ - [WeNet - Incentive server](https://bitbucket.org/wenet/wenet-incentive-server/)
+
+### Development
+
+The development is done using a docker image that can be created and started with the script `./startDevelopmentEnvironment.sh`.
+The scrip start the next services:
+
+ - [Mongo express](http://localhost:8081)
+ - [Swagger editor](http://localhost:8080)
+ - [Shish](http://localhost:3050)
+ 
+And also start a bash console where you can compile and test the project. The project uses the [Apache maven](https://maven.apache.org/)
+to solve the dependencies, generate the Open API documentation, compile the component and run the test.
+
+ - Use `mvn dependency:list` to show the component dependencies.
+ - Use `mvn compile` to compile and generate the Open API documentation (**target/classes/wenet-interaction_protocol_engine-openapi.yml**).
+ - Use `mvn test` to run the test.
+ - Use `mvn -Dmaven.surefire.debug="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=0.0.0.0:5005 -Xnoagent -Djava.compiler=NONE" test` to run the test on debug mode.
+ - Use `mvn site` to generate a HTML page (**target/site/index.html**) with all the reports (test, javadoc, PMD,CPD and coverage).
+
+Finally, you can stop the development exiting the bash and executing the script `./stopDevelopmentEnvironment.sh`.
 
 ### Create docker image
 
@@ -56,11 +78,11 @@ If you want to create an image execute the next command.
 ./buildDockerImage.sh
 ```
 
-This create the generic docker image, but you can create a different wit the **docker build** command and using the next arguments:
+This creates the generic docker image, but you can create a different wit the **docker build** command and using the next arguments:
 
  - **DEFAULT_API_HOST** to define the default host where API will be bind. By default is **0.0.0.0**.
  - **DEFAULT_API_PORT** to define the default port where API will be bind. By default is **8080**.
- - **DEFAULT_DB_HOST** to define the default mongo database server host name. By default is **localhost**.
+ - **DEFAULT_DB_HOST** to define the default mongo database server hostname. By default is **localhost**.
  - **DEFAULT_DB_PORT** to define the default mongo database server port. By default is **27017**.
  - **DEFAULT_DB_NAME** to define the default mongo database name. By default is **wenetTaskManagerDB**.
  - **DEFAULT_DB_USER_NAME** to define the default mongo database user name. By default is **wenetTaskManager**.
@@ -71,38 +93,39 @@ This create the generic docker image, but you can create a different wit the **d
  - **DEFAULT_WENET_INCENTIVE_SERVER_APII** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
  - **DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
 
-This arguments are used to create a configurations files at **/usr/wenet/interaction-protocol-engine/etc**.
-So you can mount a volume to this if you want to modify any configuration property at runtime.
-
-
-### Run and configure alone
-
-To run a the created docker image, run the next command:
-
-```
-docker run -t -i -p 8080:8080 --name wenet_interaction_protocol_engine_api wenet/interaction-protocol-engine
-```
-
-You can modify use the next environment properties to modify some parameters of the server:
-
- - **API_HOST** to define the host where the API has to bind. By default is **0.0.0.0**.
- - **API_PORT** to define the port where the API has to bind. By default is **8080**.
- - **DB_HOST** to define the mongo database server host name. By default is **localhost**.
- - **DB_PORT** to define the mongo database server port. By default is **27017**.
- - **DB_NAME** to define the mongo database name. By default is **wenetTaskManagerDB**.
- - **DB_USER_NAME** to define the mongo database user name. By default is **wenetTaskManager**.
- - **DB_USER_PASSWORD** to define the mongo database user password. By default is **password**.
- - **WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **"https://wenet.u-hopper.com/prod/profile_manager**.
- - **WENET_SERVICE_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/service**.
- - **WENET_INCENTIVE_SERVER_API** to define the path to the incentive server component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
- - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the social context builder component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
-
-Also you can define your own configuration that modify this properties and mount to  **/usr/wenet/interaction-protocol-engine/etc**.
+Also, you can define your configuration that modifies these properties and mount to  **/usr/wenet/interaction-protocol-engine/etc**.
 
 
 ### Run, configure and link with a MongoDB
 
-If you want to start also a database and link both you can use the docker compose (`docker-compose -f src/main/docker/docker-compose.yml up -d`). To modify the component to links or the port to deploy use the next variables:
+You can start this component starting the [latest docker image upload to docker hub](https://hub.docker.com/r/internetofus/interaction-protocol-engine).
+
+```
+docker run internetofus/interaction-protocol-engine:latest 
+```
+
+On this container, you can use the next environment variables:
+
+ - **API_HOST** to define the default host where API will be bind. By default is **0.0.0.0**.
+ - **API_PORT** to define the default port where API will be bind. By default is **8080**.
+ - **DB_HOST** to define the default mongo database server hostname. By default is **localhost**.
+ - **DB_PORT** to define the default mongo database server port. By default is **27017**.
+ - **DB_NAME** to define the default mongo database name. By default is **wenetTaskManagerDB**.
+ - **DB_USER_NAME** to define the default mongo database user name. By default is **wenetTaskManager**.
+ - **DB_USER_PASSWORD** to define the default mongo database user password. By default is **password**.
+ - **WENET_PROFILE_MANAGER_API** to define the path to the profile manager component to use. By default is **"https://wenet.u-hopper.com/prod/profile_manager**.
+ - **WENET_TASK_MANAGER_API** to define the path to the task manager component to use. By default is **"https://wenet.u-hopper.com/prod/task_manager**.
+ - **WENET_SERVICE_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/service**.
+ - **WENET_INCENTIVE_SERVER_APII** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
+ - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
+
+If you want to start also a database and link both you can use the defined docker compose configuration. 
+
+```
+docker-compose -f src/main/docker/docker-compose.yml up -d
+```
+
+This docker compose has the next variables:
 
  - **INTERACTION_PROTOCOL_ENGINE_API_PORT** to define the port to listen for the API calls. By default is **8083**.
  - **MONGO_ROOT_USER** to define the root user for the MongoDB. By default is **root**.
@@ -121,54 +144,16 @@ When the container is ready you can access the logs of the component, following 
  - Open a shell to the container of the component (`docker exec -it c82f8f4a136c /bin/bash`).
  - The logs are on the directory **/usr/wenet/interaction-protocol-engine/var/log**.
 
+### Run performance test
 
-## Usage
+This component provides a performance test using [K6](https://k6.io/). To run this test use the script `./runPerformanceTest.sh`.
+By default, it is run over the development server, if you want to test another server pass the environment property **INTERACTION_PROTOCOL_ENGINE_API**,
+and also you can pass any parameter to configure **k6**. For example to run the test over the production one with 10 virtual users 
+during 30 seconds execute:
 
-First of all, you must to install the next software.
-
- - [docker](https://docs.docker.com/install/)
- - [docker compose](https://docs.docker.com/compose/install/)
-
-### Development environment
-
-To start the development environment run the script `./startDevelopmentEnvironment.sh`.
-This script will finish with a bash shell of the created a docker image where has been installed
-all the necessary components for the development. Also start the next services:
-
- - [Mongo express](http://localhost:8081)
- - [Swagger editor](http://localhost:8080)
- - [Shish](http://localhost:3050)
-  
-To finish the development environment run the script `./stopDevelopmentEnvironment.sh`.
-
-
-### Compile and testing
-
-The project use the [Apache maven](https://maven.apache.org/) tool to solve the dependencies,
-generate the Open API documentation, compile the component and run the test.
-
- - Use `mvn dependency:list` to show the component dependencies.
- - Use `mvn compile` to compile and generate the Open API documentation (**target/classes/wenet-interaction_protocol_engine-openapi.yml**).
- - Use `mvn test` to run the test.
- - Use `mvn -Dmaven.surefire.debug="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=0.0.0.0:5005 -Xnoagent -Djava.compiler=NONE" test` to run the test on debug mode.
- - Use `mvn site` to generate a HTML page (**target/site/index.html**) with all the reports (test, javadoc, PMD,CPD and coverage).
-
-
-### Run and configure
-
-We encourage you to use the docker image of this component instead the next commands, because it is easier to use.
-
-If you want to run this component you must to follow the next steps:
-
- - Compile the project (`./mvnw clean install`)
- - On the directory where you want to install the component (for example **~/interaction-protocol-engine**) create the directories **etc** and **lib**.
- - Copy the compiled jar (`cp target/wenet-interaction-protocol-engine-VERSION.jar ~/interaction-protocol-engine/.`).
- - Copy the jar dependencies (`cp target/lib/* ~/interaction-protocol-engine/lib/.`).
- - Copy the default logging configuration (`cp src/main/resources/tinylog.properties ~/interaction-protocol-engine/etc/log_configuration.properties.`).
- - Copy the default component configuration (`cp src/main/resources/wenet-interaction-protocol-engine.configuration.json ~/interaction-protocol-engine/etc/configuration.conf.`).
- - Edit the component configuration to fix the URL of the other components and the database connection.
- - Go to the install directory and execute the command `java -jar -Dtinylog.configuration=etc/log_configuration.properties wenet-interaction-protocol-engine-VERSION.jar -c etc`.
-
+```
+./runPerformanceTest.sh -e INTERACTION_PROTOCOL_ENGINE_API="https://wenet.u-hopper.com/prod/interaction_protocol_engine" --vus 10 --duration 30s
+```
 
 ## Documentation
 
@@ -179,13 +164,10 @@ The latest APIs documentation is available [here](http://swagger.u-hopper.com/?u
 
 The interaction protocol engine has the next available instances:
 
- - WeNet production interaction protocol engine API is available at [https://wenet.u-hopper.com/prod/interaction_protocol_engine](https://wenet.u-hopper.com/prod/interaction_protocol_engine).
- - WeNet development interaction protocol engine API is available at [https://wenet.u-hopper.com/dev/interaction_protocol_engine](https://wenet.u-hopper.com/dev/interaction_protocol_engine).
- - The IIIA stable interaction protocol engine API is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/latest](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/latest).
- - The IIIA development interaction protocol engine API is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/dev](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/dev).
- - The interaction protocol engine API 0.11.X is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.11/](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.11/).
- - The interaction protocol engine API 0.10.X is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.10/](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.10/).
- - The interaction protocol engine API 0.9.0 is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.9.0/](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/0.9.0/).
+ - WeNet production interaction protocol engine API is available at [https://wenet.u-hopper.com/prod/interaction_protocol_engine](https://wenet.u-hopper.com/prod/interaction_protocol_engine/help/info).
+ - WeNet development interaction protocol engine API is available at [https://wenet.u-hopper.com/dev/interaction_protocol_engine](https://wenet.u-hopper.com/dev/interaction_protocol_engine/help/info).
+ - The IIIA stable interaction protocol engine API is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/prod](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/prod/help/info).
+ - The IIIA development interaction protocol engine API is available at [http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/dev](http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/dev/help/info).
 
 
 ## License

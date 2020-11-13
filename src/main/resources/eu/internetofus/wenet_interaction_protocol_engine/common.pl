@@ -117,8 +117,8 @@ get_language("en",_).
 %	@param Lang string the language of the current user.
 % 
 get_language(Lang) :-
-        get_environment(Environment),
-        catch(get_language(Lang,Environment.user),_,Lang="en"),
+        get_profile(Profile),
+        catch(get_language(Lang,Profile),_,Lang="en"),
         asserta(get_language(Lang))
         .
         
@@ -132,4 +132,27 @@ get_language(Lang) :-
 log_trace(Text,Term) :-
 	format(string(Lines),'~w~n~w~n',[Text,Term]),
     print_message_lines(current_output,kind(trace),[Lines])
+	.
+	
+%!	do_actions(+Actions)
+%
+%	Do the specified actions.
+%
+%	@param Actions to execute.
+%
+do_actions([]).
+do_actions([A|O]) :-
+	log_trace("Do action",A),
+	(do_action(A);true),
+	do_actions(O)
+	.
+
+do_action(put(msg_to(X,C))) :-
+	get_language(Lang),
+	message(C,Lang,Text),
+	put_callback(message{type:"textualMessage",recipientId:X,title:"Title",text:Text},_)
+	.
+	
+do_action(A) :-
+	log_trace("Action not defined",A)
 	.

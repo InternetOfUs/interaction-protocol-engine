@@ -94,3 +94,29 @@ get_app_users(Users) :-
 	asserta(get_app_users(Users)) 
 	.
 	
+%!	put_callback(+App,+Message,-Result)
+%
+%	Do a callback into an application.
+%
+%	@param App to do the callback.
+%	@param Message to post.
+%	@param Result of teh callback.
+%
+put_callback(App,Message,Result) :-
+	atom_json_term(Atom, Message, []),
+	http_post(App.messageCallbackUrl, atom(Atom), Result, []),
+	log_trace(string(format('Post to the app ~w the callback message ~w',[App.id,Message])),Result)
+	.
+	
+%!	put_callback(+Message,-Result)
+%
+%	Do a callback into the curretn application.
+%
+%	@param Message to post.
+%	@param Result of teh callback.
+%
+put_callback(Message,Result) :-
+	get_app(App),
+	put_callback(App,Message,Result)
+	.
+	
