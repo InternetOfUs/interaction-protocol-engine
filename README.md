@@ -177,14 +177,13 @@ This software is under the [MIT license](LICENSE)
 
 ## Interaction with other WeNet components
 
-
-### Task manager
+### [Task manager](https://hub.docker.com/r/internetofus/task-manager)
 
  - Get task status associated to the message to process (GET {{task_manager_api}}/tasks/{{taskId}})
  - Update the task every time a transaction message is process (PUT {{task_manager_api}}/tasks/{{taskId}})
 
 
-### Service
+### [Service](https://hub.docker.com/r/internetofus/service-api)
 
  - Get all the users of an application to rank them and ask for help when a task is created (GET {{service_api}}/app/{{appId}}/users)
  - Get application information associated to the message to process (GET {{service_api}}/app/{{appId}})
