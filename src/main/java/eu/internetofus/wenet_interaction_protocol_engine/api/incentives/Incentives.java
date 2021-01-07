@@ -26,12 +26,6 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.incentives;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
 import eu.internetofus.common.components.ErrorMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -43,9 +37,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.api.OperationRequest;
-import io.vertx.ext.web.api.OperationResponse;
-import io.vertx.ext.web.api.generator.WebApiServiceGen;
+import io.vertx.ext.web.api.service.ServiceRequest;
+import io.vertx.ext.web.api.service.ServiceResponse;
+import io.vertx.ext.web.api.service.WebApiServiceGen;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 /**
  * The definition of the web services for manage the incentives.
@@ -68,9 +67,11 @@ public interface Incentives {
   String ADDRESS = "wenet_interaction_protocol_engine.api.incentives";
 
   /**
-   * Called when want to send a incentive to an user that participate on an interaction protocol.
+   * Called when want to send a incentive to an user that participate on an
+   * interaction protocol.
    *
-   * @param body          the incentive to send to the user that plays on the protocol.
+   * @param body          the incentive to send to the user that plays on the
+   *                      protocol.
    * @param context       of the request.
    * @param resultHandler to inform of the response.
    */
@@ -78,10 +79,11 @@ public interface Incentives {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Send a incentive to an user that is involved in a protocol.", description = "Publish a incentive to encourage an user to participate on a protocol.")
-  @RequestBody(description = "The incentive to send to the user", required = true, content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/master/sources/wenet-models-openapi.yaml#/components/schemas/Incentive")))
+  @RequestBody(description = "The incentive to send to the user", required = true, content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/src/8274df3a93ed6047714f66dbec3a62e9bc54e10c/sources/wenet-models-openapi.yaml#/components/schemas/Incentive")))
   @ApiResponse(responseCode = "202", description = "If the accepted to be processed")
   @ApiResponse(responseCode = "400", description = "Bad incentive", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-  void sendIncentive(@Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) OperationRequest context,
-      @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+  void sendIncentive(@Parameter(hidden = true, required = false) JsonObject body,
+      @Parameter(hidden = true, required = false) ServiceRequest context,
+      @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
 }

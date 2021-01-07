@@ -27,8 +27,8 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
 import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
-import static io.vertx.junit5.web.TestRequest.queryParam;
-import static io.reactiverse.junit5.web.TestRequest.testRequest;
+import static eu.internetofus.common.vertx.ext.TestRequest.queryParam;
+import static eu.internetofus.common.vertx.ext.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
@@ -128,7 +128,7 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param testContext context to test.
    *
    * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
   public void shouldFoundNormsByName(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
@@ -163,7 +163,7 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param testContext context to test.
    *
    * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
   public void shouldFoundNormsByDescription(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
@@ -198,7 +198,7 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param testContext context to test.
    *
    * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
   public void shouldFoundNormsByAKeyword(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
@@ -233,7 +233,7 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param testContext context to test.
    *
    * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
   public void shouldFoundNormsBySomeKeyword(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
@@ -274,7 +274,7 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param testContext context to test.
    *
    * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
   public void shouldFoundNormsByPublisherId(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
@@ -309,7 +309,7 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param testContext context to test.
    *
    * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
   public void shouldNotFoundNormsBecausePatternIsNotValid(final WebClient client, final VertxTestContext testContext) {
@@ -331,7 +331,7 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param testContext context to test.
    *
    * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.OperationRequest, io.vertx.core.Handler)
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
   public void shouldEmptyPageIfAnyPublishedNormMatch(final WebClient client, final VertxTestContext testContext) {

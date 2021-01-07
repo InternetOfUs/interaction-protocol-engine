@@ -30,16 +30,14 @@ import java.util.List;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import eu.internetofus.common.components.HumanDescriptionWithCreateUpdateTsDetails;
 import eu.internetofus.common.components.JsonObjectDeserializer;
 import eu.internetofus.common.components.Mergeable;
-import eu.internetofus.common.components.Merges;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.Updateable;
 import eu.internetofus.common.components.Validable;
 import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.components.Validations;
-import eu.internetofus.common.components.profile_manager.CreateUpdateTsDetails;
-import eu.internetofus.common.components.profile_manager.Norm;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Future;
@@ -52,57 +50,42 @@ import io.vertx.core.json.JsonObject;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@Schema(hidden = true, name = "TaskType", description = "Describe a type of task that can be done by the users.")
-public class TaskType extends CreateUpdateTsDetails implements Model, Validable, Mergeable<TaskType>, Updateable<TaskType> {
+@Schema(hidden = true, name = "TaskType", description = "The component that describe a possible task.")
+public class TaskType extends HumanDescriptionWithCreateUpdateTsDetails
+    implements Model, Validable, Mergeable<TaskType>, Updateable<TaskType> {
 
   /**
    * The identifier of the profile.
    */
-  @Schema(description = "The unique identifier of the task type.", example = "4a559aafceb8464")
+  @Schema(description = "The unique identifier of the task type.", example = "b129e5509c9bb79")
   public String id;
 
   /**
-   * A name that identify the type.
+   * The attributes that describe a task of this type.
    */
-  @Schema(description = "A name that identify the type.", example = "Eat together task")
-  public String name;
-
-  /**
-   * A human readable description of the task type.
-   */
-  @Schema(description = "A human readable description of the task type.", example = "A task for organizing social dinners")
-  public String description;
-
-  /**
-   * A name that identify the type.
-   */
-  @ArraySchema(schema = @Schema(implementation = String.class), arraySchema = @Schema(description = "The keywords that describe the task type", example = "[\"social interaction\",\"eat\"]"))
-  public List<String> keywords;
-
-  /**
-   * The individual norms of the user
-   */
-  @ArraySchema(schema = @Schema(implementation = Norm.class), arraySchema = @Schema(description = "The norms that describe the interaction of the users to do the tasks of this type."))
-  public List<Norm> norms;
-
-  /**
-   * The attribute that has to be instantiated when create the task of this type.
-   */
-  @ArraySchema(schema = @Schema(implementation = TaskAttributeType.class), arraySchema = @Schema(description = "The attribute that has to be instantiated when create the task of this type."))
-  public List<TaskAttributeType> attributes;
-
-  /**
-   * The supported transaction types for the task.
-   */
-  @ArraySchema(schema = @Schema(implementation = TaskTransactionType.class), arraySchema = @Schema(description = "The supported transaction types for the task."))
-  public List<TaskTransactionType> transactions;
-
-  /**
-   * The individual norms of the user
-   */
-  @Schema(type = "object", description = "The attribute with a fixed value.")
+  @Schema(type = "object", description = "OpenAPI description of the attributes that can have a task.")
   @JsonDeserialize(using = JsonObjectDeserializer.class)
-  public JsonObject constants;
+  public JsonObject attributes;
+
+  /**
+   * The transaction that can be done in a task of this type.
+   */
+  @Schema(type = "object", description = "OpenAPI description of the transaction actions that can be done on the task.")
+  @JsonDeserialize(using = JsonObjectDeserializer.class)
+  public JsonObject transactions;
+
+  /**
+   * The callbacks messages that the user that plays in this task can receive.
+   */
+  @Schema(type = "object", description = "OpenAPI description of the callbacks messages that can be send to the participants of the task.")
+  @JsonDeserialize(using = JsonObjectDeserializer.class)
+  public JsonObject callbacks;
+
+  /**
+   * The individual norms of the user
+   */
+  @ArraySchema(schema = @Schema(implementation = ProtocolNorm.class), arraySchema = @Schema(description = "The norms that describe the protocol to follow the task of this type."))
+  public List<ProtocolNorm> norms;
 
   /**
    * {@inheritDoc}
@@ -117,35 +100,20 @@ public class TaskType extends CreateUpdateTsDetails implements Model, Validable,
       this.id = Validations.validateNullableStringField(codePrefix, "id", 255, this.id);
       if (this.id != null) {
 
-        future = future.compose(mapper -> {
-
-          final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
-          WeNetTaskManager.createProxy(vertx).retrieveTaskType(this.id, profile -> {
-
-            if (profile.failed()) {
-
-              verifyNotRepeatedIdPromise.complete();
-
-            } else {
-
-              verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".id", "The '" + this.id + "' is already used by a task type."));
-            }
-          });
-          return verifyNotRepeatedIdPromise.future();
-        });
+        future = Validations.composeValidateId(future, codePrefix, "id", this.id, false,
+            WeNetTaskManager.createProxy(vertx)::retrieveTaskType);
       }
 
       this.name = Validations.validateStringField(codePrefix, "name", 255, this.name);
       this.description = Validations.validateNullableStringField(codePrefix, "description", 1023, this.description);
       this.keywords = Validations.validateNullableListStringField(codePrefix, "keywords", 255, this.keywords);
       future = future.compose(Validations.validate(this.norms, (a, b) -> a.equals(b), codePrefix + ".norms", vertx));
-      future = future.compose(Validations.validate(this.attributes, (a, b) -> a.name.equals(b.name), codePrefix + ".attributes", vertx));
-      future = future.compose(Validations.validate(this.transactions, (a, b) -> a.label.equals(b.label), codePrefix + ".transactions", vertx));
       future = future.compose(mapper -> {
 
         if (this.transactions == null || this.transactions.isEmpty()) {
 
-          return Future.failedFuture(new ValidationErrorException(codePrefix + ".transactions", "You must to define at least one transaction."));
+          return Future.failedFuture(new ValidationErrorException(codePrefix + ".transactions",
+              "You must to define at least one transaction."));
 
         } else {
 
@@ -174,44 +142,47 @@ public class TaskType extends CreateUpdateTsDetails implements Model, Validable,
     if (source != null) {
 
       final var merged = new TaskType();
-      future = future.compose(Merges.mergeTaskTransactionTypes(this.transactions, source.transactions, codePrefix + ".transactions", vertx, (model, mergedTransactions) -> {
-        model.transactions = mergedTransactions;
-      })).map(model -> {
+      merged.name = source.name;
+      if (merged.name == null) {
 
-        model.name = source.name;
-        if (model.name == null) {
+        merged.name = this.name;
+      }
+      merged.description = source.description;
+      if (merged.description == null) {
 
-          model.name = this.name;
-        }
-        model.description = source.description;
-        if (model.description == null) {
+        merged.description = this.description;
+      }
 
-          model.description = this.description;
-        }
+      merged.keywords = source.keywords;
+      if (merged.keywords == null) {
 
-        model.keywords = source.keywords;
-        if (model.keywords == null) {
+        merged.keywords = this.keywords;
+      }
 
-          model.keywords = this.keywords;
-        }
+      merged.attributes = source.attributes;
+      if (merged.attributes == null) {
 
-        model.constants = source.constants;
-        if (model.constants == null) {
+        merged.attributes = this.attributes;
+      }
 
-          model.constants = this.constants;
-        }
+      merged.transactions = source.transactions;
+      if (merged.transactions == null) {
 
-        return model;
-      });
+        merged.transactions = this.transactions;
+      }
 
+      merged.callbacks = source.callbacks;
+      if (merged.callbacks == null) {
+
+        merged.callbacks = this.callbacks;
+      }
+
+      merged.norms = source.norms;
+      if (merged.norms == null) {
+
+        merged.norms = this.norms;
+      }
       future = future.compose(Validations.validateChain(codePrefix, vertx));
-      future = future.compose(Merges.mergeNorms(this.norms, source.norms, codePrefix + ".norms", vertx, (model, mergedNorms) -> {
-        model.norms = mergedNorms;
-      }));
-      future = future.compose(Merges.mergeTaskAttributeTypes(this.attributes, source.attributes, codePrefix + ".attributes", vertx, (model, mergedAttributes) -> {
-        model.attributes = mergedAttributes;
-      }));
-
       promise.complete(merged);
       future = future.map(mergedValidatedModel -> {
 
@@ -237,13 +208,13 @@ public class TaskType extends CreateUpdateTsDetails implements Model, Validable,
     if (source != null) {
 
       final var updated = new TaskType();
-      updated.attributes = source.attributes;
-      updated.constants = source.constants;
+      updated.name = source.name;
       updated.description = source.description;
       updated.keywords = source.keywords;
-      updated.name = source.name;
-      updated.norms = source.norms;
+      updated.attributes = source.attributes;
       updated.transactions = source.transactions;
+      updated.callbacks = source.callbacks;
+      updated.norms = source.norms;
 
       future = future.compose(Validations.validateChain(codePrefix, vertx));
       future = future.map(updatedValidatedModel -> {

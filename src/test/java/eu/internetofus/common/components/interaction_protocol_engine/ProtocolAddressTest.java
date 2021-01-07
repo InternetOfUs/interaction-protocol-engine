@@ -43,9 +43,7 @@ import eu.internetofus.common.components.ValidationsTest;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManagerMocker;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
@@ -81,7 +79,7 @@ public class ProtocolAddressTest extends ModelTestCase<ProtocolAddress> {
   @AfterAll
   public static void stopMockers() {
 
-    profileManagerMocker.stop();
+    profileManagerMocker.stopServer();
   }
 
   /**
@@ -112,22 +110,26 @@ public class ProtocolAddressTest extends ModelTestCase<ProtocolAddress> {
   }
 
   /**
-   * Create an example model that has the specified index that create any required component.
+   * Create an example model that has the specified index that create any required
+   * component.
    *
-   * @param index         to use in the example.
-   * @param vertx         event bus to use.
-   * @param testContext   context to test.
-   * @param createHandler the component that will manage the created model.
+   * @param index       to use in the example.
+   * @param vertx       event bus to use.
+   * @param testContext context to test.
+   *
+   * @return the created protocol address.
    */
-  public void createModelExample(final int index, final Vertx vertx, final VertxTestContext testContext, final Handler<AsyncResult<ProtocolAddress>> createHandler) {
+  public Future<ProtocolAddress> createModelExample(final int index, final Vertx vertx,
+      final VertxTestContext testContext) {
 
-    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext, testContext.succeeding(profile -> {
+    return testContext
+        .assertComplete(StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).compose(profile -> {
 
-      final var model = this.createModelExample(index);
-      model.userId = profile.id;
-      createHandler.handle(Future.succeededFuture(model));
+          final var model = this.createModelExample(index);
+          model.userId = profile.id;
+          return Future.succeededFuture(model);
 
-    }));
+        }));
 
   }
 
@@ -150,7 +152,8 @@ public class ProtocolAddressTest extends ModelTestCase<ProtocolAddress> {
   }
 
   /**
-   * Check that the {@link #createModelExample(int, Vertx, VertxTestContext, Handler)} is valid.
+   * Check that the {@link #createModelExample(int, Vertx, VertxTestContext)} is
+   * valid.
    *
    * @param index       to verify
    * @param vertx       event bus to use.
@@ -162,7 +165,7 @@ public class ProtocolAddressTest extends ModelTestCase<ProtocolAddress> {
   @ValueSource(ints = { 0, 1, 2, 3, 4, 5, 6 })
   public void shouldExampleBeValid(final int index, final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(index, vertx, testContext, testContext.succeeding(model -> assertIsValid(model, vertx, testContext)));
+    this.createModelExample(index, vertx, testContext).onSuccess(model -> assertIsValid(model, vertx, testContext));
 
   }
 

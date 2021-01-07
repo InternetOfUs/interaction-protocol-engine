@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,6 +25,8 @@
  */
 
 package eu.internetofus.common.components.interaction_protocol_engine;
+
+import javax.validation.constraints.NotNull;
 
 import eu.internetofus.common.vertx.ComponentClient;
 import io.vertx.core.AsyncResult;
@@ -67,9 +69,9 @@ public class WeNetInteractionProtocolEngineClient extends ComponentClient implem
    * {@inheritDoc}
    */
   @Override
-  public void sendMessage(final JsonObject message, final Handler<AsyncResult<JsonObject>> sendHandler) {
+  public void sendMessage(final JsonObject message, final Handler<AsyncResult<JsonObject>> handler) {
 
-    this.post(message, sendHandler, "/messages");
+    this.post(message, "/messages").onComplete(handler);
 
   }
 
@@ -77,9 +79,28 @@ public class WeNetInteractionProtocolEngineClient extends ComponentClient implem
    * {@inheritDoc}
    */
   @Override
-  public void sendIncentive(final JsonObject incentive, final Handler<AsyncResult<JsonObject>> sendHandler) {
+  public void sendIncentive(final JsonObject incentive, final Handler<AsyncResult<JsonObject>> handler) {
 
-    this.post(incentive, sendHandler, "/incentives");
+    this.post(incentive, "/incentives").onComplete(handler);
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void createdTask(@NotNull final JsonObject task, final Handler<AsyncResult<JsonObject>> handler) {
+
+    this.post(task, "/tasks/created").onComplete(handler);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void doTransaction(@NotNull final JsonObject transaction, final Handler<AsyncResult<JsonObject>> handler) {
+
+    this.post(transaction, "/tasks/transactions").onComplete(handler);
 
   }
 

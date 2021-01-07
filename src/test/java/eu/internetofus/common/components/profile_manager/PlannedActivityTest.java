@@ -45,14 +45,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.ModelTestCase;
+import eu.internetofus.common.components.StoreServices;
 import eu.internetofus.common.components.ValidationsTest;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -87,7 +84,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @AfterAll
   public static void stopMockers() {
 
-    profileManagerMocker.stop();
+    profileManagerMocker.stopServer();
   }
 
   /**
@@ -126,49 +123,22 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
    * @param index       to use in the example.
    * @param vertx       event bus to use.
    * @param testContext test context to use.
-   * @param creation    handler to manage the created planned activity.
-   */
-  public void createModelExample(final int index, final Vertx vertx, final VertxTestContext testContext, final Handler<AsyncResult<PlannedActivity>> creation) {
-
-    this.createNewEmptyProfile(vertx, testContext.succeeding(profile -> {
-
-      final var activity = this.createModelExample(index);
-      activity.attendees = new ArrayList<>();
-      activity.attendees.add(profile.id);
-      creation.handle(Future.succeededFuture(activity));
-
-    }));
-
-  }
-
-  /**
-   * Create a new empty user profile. It has to be stored into the repository.
    *
-   * @param vertx    event bus to use.
-   * @param creation handler to manage the created user profile.
+   * @return the created planned activity.
    */
-  protected void createNewEmptyProfile(final Vertx vertx, final Handler<AsyncResult<WeNetUserProfile>> creation) {
+  public Future<PlannedActivity> createModelExample(final int index, final Vertx vertx,
+      final VertxTestContext testContext) {
 
-    WeNetProfileManager.createProxy(vertx).createProfile(new JsonObject(), (creationResult) -> {
+    return testContext
+        .assertComplete(StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).compose(profile -> {
 
-      if (creationResult.failed()) {
+          final var activity = this.createModelExample(index);
+          activity.attendees = new ArrayList<>();
+          activity.attendees.add(profile.id);
+          return Future.succeededFuture(activity);
 
-        creation.handle(Future.failedFuture(creationResult.cause()));
+        }));
 
-      } else {
-
-        final var profile = Model.fromJsonObject(creationResult.result(), WeNetUserProfile.class);
-        if (profile == null) {
-
-          creation.handle(Future.failedFuture("Can not obtain a profile form the JSON result"));
-
-        } else {
-
-          creation.handle(Future.succeededFuture(profile));
-        }
-
-      }
-    });
   }
 
   /**
@@ -206,7 +176,8 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   }
 
   /**
-   * Check that the {@link #createModelExample(int, Vertx, VertxTestContext, Handler)} is valid.
+   * Check that the {@link #createModelExample(int, Vertx, VertxTestContext)} is
+   * valid.
    *
    * @param index       to verify
    * @param vertx       event bus to use.
@@ -216,9 +187,10 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
    */
   @ParameterizedTest(name = "The model example {0} has to be valid")
   @ValueSource(ints = { 0, 1, 2, 3, 4, 5 })
-  public void shouldExampleFromRepositoryBeValid(final int index, final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldExampleFromRepositoryBeValid(final int index, final Vertx vertx,
+      final VertxTestContext testContext) {
 
-    this.createModelExample(index, vertx, testContext, testContext.succeeding(model -> {
+    this.createModelExample(index, vertx, testContext).onSuccess(model -> {
 
       model.id = " ";
       final var originalStartTime = model.startTime;
@@ -240,7 +212,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         assertThat(model.description).isEqualTo(originalDescription);
         assertThat(model.attendees).isEqualTo(originalAttendees);
       });
-    }));
+    });
 
   }
 
@@ -272,7 +244,8 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
    */
   @ParameterizedTest(name = "Should not be valid with startTime = {0}")
   @ValueSource(strings = { "0", "tomorrow", "2019-23-10", "10:00", "2019-02-30T00:00:00Z" })
-  public void shouldNotBeValidWithABadStartTime(final String badTime, final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldNotBeValidWithABadStartTime(final String badTime, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     final var model = new PlannedActivity();
     model.startTime = badTime;
@@ -291,7 +264,8 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
    */
   @ParameterizedTest(name = "Should not be valid with endTime = {0}")
   @ValueSource(strings = { "0", "tomorrow", "2019-23-10", "10:00", "2019-02-30T00:00:00Z" })
-  public void shouldNotBeValidWithABadEndTime(final String badTime, final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldNotBeValidWithABadEndTime(final String badTime, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     final var model = new PlannedActivity();
     model.endTime = badTime;
@@ -362,9 +336,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldBeValidWithSomeAttenders(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createNewEmptyProfile(vertx, testContext.succeeding(stored -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
-      this.createNewEmptyProfile(vertx, testContext.succeeding(stored2 -> {
+      StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored2 -> {
 
         final var model = new PlannedActivity();
         model.attendees = new ArrayList<>();
@@ -372,9 +346,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         model.attendees.add(stored2.id);
         assertIsValid(model, vertx, testContext);
 
-      }));
+      });
 
-    }));
+    });
 
   }
 
@@ -389,9 +363,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldNotBeValidWithDuplicatedAttenders(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createNewEmptyProfile(vertx, testContext.succeeding(stored -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
-      this.createNewEmptyProfile(vertx, testContext.succeeding(stored2 -> {
+      StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored2 -> {
 
         final var model = new PlannedActivity();
         model.attendees = new ArrayList<>();
@@ -400,9 +374,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         model.attendees.add(stored.id);
         assertIsNotValid(model, "attendees[2]", vertx, testContext);
 
-      }));
+      });
 
-    }));
+    });
 
   }
 
@@ -444,7 +418,8 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
    */
   @ParameterizedTest(name = "Should not be valid with startTime = {0}")
   @ValueSource(strings = { "0", "tomorrow", "2019-23-10", "10:00", "2019-02-30T00:00:00Z" })
-  public void shouldNotMergeWithABadStartTime(final String badTime, final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldNotMergeWithABadStartTime(final String badTime, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     final var target = this.createModelExample(1);
     final var source = new PlannedActivity();
@@ -464,7 +439,8 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
    */
   @ParameterizedTest(name = "Should not be valid with endTime = {0}")
   @ValueSource(strings = { "0", "tomorrow", "2019-23-10", "10:00", "2019-02-30T00:00:00Z" })
-  public void shouldNotMergeWithABadEndTime(final String badTime, final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldNotMergeWithABadEndTime(final String badTime, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     final var target = this.createModelExample(1);
     final var source = new PlannedActivity();
@@ -539,9 +515,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldMergeWithSomeAttenders(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createNewEmptyProfile(vertx, testContext.succeeding(stored -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
-      this.createNewEmptyProfile(vertx, testContext.succeeding(stored2 -> {
+      StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored2 -> {
 
         final var target = this.createModelExample(1);
         final var source = new PlannedActivity();
@@ -550,9 +526,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         source.attendees.add(stored2.id);
         assertCanMerge(target, source, vertx, testContext);
 
-      }));
+      });
 
-    }));
+    });
 
   }
 
@@ -567,9 +543,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldNotMergeWithDuplicatedAttenders(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createNewEmptyProfile(vertx, testContext.succeeding(stored -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
-      this.createNewEmptyProfile(vertx, testContext.succeeding(stored2 -> {
+      StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored2 -> {
 
         final var target = this.createModelExample(1);
         final var source = new PlannedActivity();
@@ -579,9 +555,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         source.attendees.add(stored.id);
         assertCannotMerge(target, source, "attendees[2]", vertx, testContext);
 
-      }));
+      });
 
-    }));
+    });
 
   }
 
@@ -617,9 +593,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldMerge(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
-      this.createModelExample(1, vertx, testContext, testContext.succeeding(source -> {
+      this.createModelExample(1, vertx, testContext).onSuccess(source -> {
 
         target.id = "1";
         assertCanMerge(target, source, vertx, testContext, merged -> {
@@ -629,9 +605,8 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
           assertThat(merged).isEqualTo(source);
 
         });
-      }));
-
-    }));
+      });
+    });
 
   }
 
@@ -646,7 +621,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldMergeWithNull(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       assertCanMerge(target, null, vertx, testContext, merged -> {
 
@@ -655,7 +630,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
 
       });
 
-    }));
+    });
 
   }
 
@@ -670,7 +645,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldMergeOnlyStartTime(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
       target.id = "1";
       final var source = new PlannedActivity();
       source.startTime = "2000-02-19T16:18:00Z";
@@ -680,7 +655,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         assertThat(merged).isEqualTo(target);
         testContext.completeNow();
       });
-    }));
+    });
 
   }
 
@@ -695,7 +670,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldMergeOnlyEndTime(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       target.id = "1";
       final var source = new PlannedActivity();
@@ -706,7 +681,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         assertThat(merged).isEqualTo(target);
         testContext.completeNow();
       });
-    }));
+    });
 
   }
 
@@ -721,7 +696,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldMergeOnlyDescription(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
       target.id = "1";
       final var source = new PlannedActivity();
       source.description = "New description";
@@ -731,7 +706,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         assertThat(merged).isEqualTo(target);
         testContext.completeNow();
       });
-    }));
+    });
 
   }
 
@@ -746,7 +721,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldMergeOnlyStatus(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
       target.id = "1";
       final var source = new PlannedActivity();
       source.status = PlannedActivityStatus.tentative;
@@ -756,7 +731,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         assertThat(merged).isEqualTo(target);
         testContext.completeNow();
       });
-    }));
+    });
 
   }
 
@@ -771,7 +746,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldMergeRemoveAttenders(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
       target.id = "1";
       final var source = new PlannedActivity();
       source.attendees = new ArrayList<>();
@@ -781,7 +756,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         assertThat(merged).isEqualTo(target);
         testContext.completeNow();
       });
-    }));
+    });
 
   }
 
@@ -796,9 +771,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldMergeAddNewAttenders(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
       target.id = "1";
-      this.createNewEmptyProfile(vertx, testContext.succeeding(stored -> {
+      StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
         final var source = new PlannedActivity();
         source.attendees = new ArrayList<>();
@@ -811,8 +786,8 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
           assertThat(merged).isEqualTo(target);
           testContext.completeNow();
         });
-      }));
-    }));
+      });
+    });
   }
 
   /**
@@ -826,7 +801,8 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
    */
   @ParameterizedTest(name = "Should not be valid with startTime = {0}")
   @ValueSource(strings = { "0", "tomorrow", "2019-23-10", "10:00", "2019-02-30T00:00:00Z" })
-  public void shouldNotUpdateWithABadStartTime(final String badTime, final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldNotUpdateWithABadStartTime(final String badTime, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     final var target = this.createModelExample(1);
     final var source = new PlannedActivity();
@@ -846,7 +822,8 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
    */
   @ParameterizedTest(name = "Should not be valid with endTime = {0}")
   @ValueSource(strings = { "0", "tomorrow", "2019-23-10", "10:00", "2019-02-30T00:00:00Z" })
-  public void shouldNotUpdateWithABadEndTime(final String badTime, final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldNotUpdateWithABadEndTime(final String badTime, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     final var target = this.createModelExample(1);
     final var source = new PlannedActivity();
@@ -921,9 +898,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldUpdateWithSomeAttenders(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createNewEmptyProfile(vertx, testContext.succeeding(stored -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
-      this.createNewEmptyProfile(vertx, testContext.succeeding(stored2 -> {
+      StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored2 -> {
 
         final var target = this.createModelExample(1);
         final var source = new PlannedActivity();
@@ -932,9 +909,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         source.attendees.add(stored2.id);
         assertCanUpdate(target, source, vertx, testContext);
 
-      }));
+      });
 
-    }));
+    });
 
   }
 
@@ -949,9 +926,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldNotUpdateWithDuplicatedAttenders(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createNewEmptyProfile(vertx, testContext.succeeding(stored -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
-      this.createNewEmptyProfile(vertx, testContext.succeeding(stored2 -> {
+      StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored2 -> {
 
         final var target = this.createModelExample(1);
         final var source = new PlannedActivity();
@@ -961,9 +938,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         source.attendees.add(stored.id);
         assertCannotUpdate(target, source, "attendees[2]", vertx, testContext);
 
-      }));
+      });
 
-    }));
+    });
 
   }
 
@@ -999,9 +976,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldUpdate(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
-      this.createModelExample(1, vertx, testContext, testContext.succeeding(source -> {
+      this.createModelExample(1, vertx, testContext).onSuccess(source -> {
 
         target.id = "1";
         assertCanUpdate(target, source, vertx, testContext, updated -> {
@@ -1011,9 +988,8 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
           assertThat(updated).isEqualTo(source);
 
         });
-      }));
-
-    }));
+      });
+    });
 
   }
 
@@ -1028,7 +1004,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldUpdateWithNull(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       assertCanUpdate(target, null, vertx, testContext, updated -> {
 
@@ -1037,7 +1013,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
 
       });
 
-    }));
+    });
 
   }
 
@@ -1052,7 +1028,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldUpdateOnlyStartTime(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
       target.id = "1";
       final var source = new PlannedActivity();
       source.startTime = "2000-02-19T16:18:00Z";
@@ -1062,7 +1038,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         assertThat(updated).isEqualTo(source);
         testContext.completeNow();
       });
-    }));
+    });
 
   }
 
@@ -1077,7 +1053,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldUpdateOnlyEndTime(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       target.id = "1";
       final var source = new PlannedActivity();
@@ -1088,7 +1064,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         assertThat(updated).isEqualTo(source);
         testContext.completeNow();
       });
-    }));
+    });
 
   }
 
@@ -1103,7 +1079,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldUpdateOnlyDescription(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
       target.id = "1";
       final var source = new PlannedActivity();
       source.description = "New description";
@@ -1113,7 +1089,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         assertThat(updated).isEqualTo(source);
         testContext.completeNow();
       });
-    }));
+    });
 
   }
 
@@ -1128,7 +1104,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldUpdateOnlyStatus(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
       target.id = "1";
       final var source = new PlannedActivity();
       source.status = PlannedActivityStatus.tentative;
@@ -1138,7 +1114,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         assertThat(updated).isEqualTo(source);
         testContext.completeNow();
       });
-    }));
+    });
 
   }
 
@@ -1153,7 +1129,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldUpdateRemoveAttenders(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
       target.id = "1";
       final var source = new PlannedActivity();
       source.attendees = new ArrayList<>();
@@ -1163,7 +1139,7 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
         assertThat(updated).isEqualTo(source);
         testContext.completeNow();
       });
-    }));
+    });
 
   }
 
@@ -1178,9 +1154,9 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
   @Test
   public void shouldUpdateAddNewAttenders(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
       target.id = "1";
-      this.createNewEmptyProfile(vertx, testContext.succeeding(stored -> {
+      StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
         final var source = new PlannedActivity();
         source.attendees = new ArrayList<>();
@@ -1192,9 +1168,10 @@ public class PlannedActivityTest extends ModelTestCase<PlannedActivity> {
           source.id = target.id;
           assertThat(updated).isEqualTo(source);
           testContext.completeNow();
+
         });
-      }));
-    }));
+      });
+    });
   }
 
 }

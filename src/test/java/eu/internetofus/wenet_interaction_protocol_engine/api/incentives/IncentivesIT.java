@@ -27,13 +27,8 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api.incentives;
 
 import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
-import static io.reactiverse.junit5.web.TestRequest.testRequest;
+import static eu.internetofus.common.vertx.ext.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import javax.ws.rs.core.Response.Status;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.common.components.ErrorMessage;
 import eu.internetofus.common.components.incentive_server.Incentive;
@@ -43,6 +38,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxTestContext;
+import javax.ws.rs.core.Response.Status;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * The integration test over the {@link Incentives}.
@@ -61,8 +59,8 @@ public class IncentivesIT {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Incentives#sendIncentive(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
-   *      io.vertx.core.Handler)
+   * @see Incentives#sendIncentive(io.vertx.core.json.JsonObject,
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
   public void shouldNotSendBadIncentive(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
@@ -84,11 +82,12 @@ public class IncentivesIT {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Incentives#sendIncentive(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
-   *      io.vertx.core.Handler)
+   * @see Incentives#sendIncentive(io.vertx.core.json.JsonObject,
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
-  public void shouldNotSendInvalidIncentive(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+  public void shouldNotSendInvalidIncentive(final Vertx vertx, final WebClient client,
+      final VertxTestContext testContext) {
 
     final var incentive = new IncentiveTest().createModelExample(1);
     testRequest(client, HttpMethod.POST, Incentives.PATH).expect(res -> {
@@ -108,13 +107,13 @@ public class IncentivesIT {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Incentives#sendIncentive(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
-   *      io.vertx.core.Handler)
+   * @see Incentives#sendIncentive(io.vertx.core.json.JsonObject,
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
   public void shouldSendIncentive(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    new IncentiveTest().createModelExample(1, vertx, testContext, testContext.succeeding(incentive -> {
+    testContext.assertComplete(new IncentiveTest().createModelExample(1, vertx, testContext)).onSuccess(incentive -> {
 
       testRequest(client, HttpMethod.POST, Incentives.PATH).expect(res -> {
 
@@ -124,7 +123,7 @@ public class IncentivesIT {
 
       }).sendJson(incentive.toJsonObject(), testContext);
 
-    }));
+    });
   }
 
 }

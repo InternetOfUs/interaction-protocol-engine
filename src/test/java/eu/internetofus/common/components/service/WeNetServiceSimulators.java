@@ -26,9 +26,6 @@
 
 package eu.internetofus.common.components.service;
 
-import java.util.List;
-import java.util.function.Predicate;
-
 import eu.internetofus.common.components.StoreServices;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import io.vertx.core.Future;
@@ -36,6 +33,8 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.junit5.VertxTestContext;
+import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Utility methods to interact with the {@link WeNetServiceSimulator}.
@@ -55,18 +54,20 @@ public interface WeNetServiceSimulators {
    *
    * @return the future that will return the created users.
    */
-  static Future<App> createApp(final List<WeNetUserProfile> users, final Vertx vertx, final VertxTestContext testContext) {
+  static Future<App> createApp(final List<WeNetUserProfile> users, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     final Promise<App> promise = Promise.promise();
-    StoreServices.storeApp(new App(), vertx, testContext, testContext.succeeding(app -> {
+    StoreServices.storeApp(new App(), vertx, testContext).onSuccess(app -> {
 
       final var appUsers = new JsonArray();
       for (final WeNetUserProfile profile : users) {
 
         appUsers.add(profile.id);
       }
-      WeNetServiceSimulator.createProxy(vertx).addUsers(app.appId, appUsers, testContext.succeeding(added -> promise.complete(app)));
-    }));
+      WeNetServiceSimulator.createProxy(vertx).addUsers(app.appId, appUsers,
+          testContext.succeeding(added -> promise.complete(app)));
+    });
 
     return promise.future();
   }
@@ -75,13 +76,15 @@ public interface WeNetServiceSimulators {
    * Wait the App has received the specified call backs.
    *
    * @param appId          identifier of the application to get the call backs.
-   * @param checkCallbacks the function that has to be true to finish the get the callbacks.
+   * @param checkCallbacks the function that has to be true to finish the get the
+   *                       callbacks.
    * @param vertx          event bus to use.
    * @param testContext    context to do the test.
    *
    * @return the future that will return the callbacks that satisfy the predicate.
    */
-  static Future<JsonArray> waitUntilCallbacks(final String appId, final Predicate<JsonArray> checkCallbacks, final Vertx vertx, final VertxTestContext testContext) {
+  static Future<JsonArray> waitUntilCallbacks(final String appId, final Predicate<JsonArray> checkCallbacks,
+      final Vertx vertx, final VertxTestContext testContext) {
 
     final Promise<JsonArray> promise = Promise.promise();
     waitUntilCallbacks(appId, checkCallbacks, vertx, testContext, promise);
@@ -93,14 +96,16 @@ public interface WeNetServiceSimulators {
    * Wait the App has received the specified call backs.
    *
    * @param appId          identifier of the application to get the call backs.
-   * @param checkCallbacks the function that has to be true to finish the get the callbacks.
+   * @param checkCallbacks the function that has to be true to finish the get the
+   *                       callbacks.
    * @param vertx          event bus to use.
    * @param testContext    context to do the test.
    * @param promise        to inform of the callbacks.
    */
-  static void waitUntilCallbacks(final String appId, final Predicate<JsonArray> checkCallbacks, final Vertx vertx, final VertxTestContext testContext, final Promise<JsonArray> promise) {
+  static void waitUntilCallbacks(final String appId, final Predicate<JsonArray> checkCallbacks, final Vertx vertx,
+      final VertxTestContext testContext, final Promise<JsonArray> promise) {
 
-    WeNetServiceSimulator.createProxy(vertx).retrieveJsonCallbacks(appId, testContext.succeeding(callbacks -> {
+    WeNetServiceSimulator.createProxy(vertx).retrieveCallbacks(appId, testContext.succeeding(callbacks -> {
 
       if (checkCallbacks.test(callbacks)) {
 

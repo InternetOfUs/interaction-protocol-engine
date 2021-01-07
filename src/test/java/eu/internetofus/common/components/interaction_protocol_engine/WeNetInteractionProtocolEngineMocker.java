@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,6 +27,10 @@
 package eu.internetofus.common.components.interaction_protocol_engine;
 
 import eu.internetofus.common.components.AbstractComponentMocker;
+import io.vertx.core.Handler;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * The mocked server for the {@link WeNetInteractionProtocolEngine}.
@@ -58,7 +62,7 @@ public class WeNetInteractionProtocolEngineMocker extends AbstractComponentMocke
   public static WeNetInteractionProtocolEngineMocker start(final int port) {
 
     final var mocker = new WeNetInteractionProtocolEngineMocker();
-    mocker.start(port, null);
+    mocker.startServerAndWait(port);
     return mocker;
   }
 
@@ -69,6 +73,36 @@ public class WeNetInteractionProtocolEngineMocker extends AbstractComponentMocke
   protected String getComponentConfigurationName() {
 
     return WeNetInteractionProtocolEngineClient.INTERACTION_PROTOCOL_ENGINE_CONF_KEY;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void fillInRouterHandler(final Router router) {
+
+    router.post("/messages").handler(this.createEchoHandler());
+    router.post("/incentives").handler(this.createEchoHandler());
+    router.post("/tasks/created").handler(this.createEchoHandler());
+    router.post("/tasks/transactions").handler(this.createEchoHandler());
+
+  }
+
+  /**
+   * Handler that do echos.
+   *
+   * @return the echo handler.
+   */
+  private Handler<RoutingContext> createEchoHandler() {
+
+    return ctx -> {
+
+      final var value = ctx.getBodyAsJson();
+      final var response = ctx.response();
+      response.setStatusCode(Status.CREATED.getStatusCode());
+      response.end(value.toBuffer());
+
+    };
   }
 
 }

@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,9 +28,11 @@ package eu.internetofus.common.components.service;
 
 import javax.validation.constraints.NotNull;
 
-import eu.internetofus.common.vertx.ComponentClient;
+import eu.internetofus.common.components.Model;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
@@ -43,7 +45,7 @@ import io.vertx.ext.web.client.WebClient;
 public class WeNetServiceSimulatorClient extends WeNetServiceClient implements WeNetServiceSimulator, WeNetService {
 
   /**
-   * Create a new service to interact with the WeNet interaction protocol engine.
+   * Create a new service to interact with the WeNet service simulator.
    *
    * @param client to interact with the other modules.
    * @param conf   configuration.
@@ -58,33 +60,11 @@ public class WeNetServiceSimulatorClient extends WeNetServiceClient implements W
    * {@inheritDoc}
    */
   @Override
-  public void retrieveApp(@NotNull final String id, @NotNull final Handler<AsyncResult<App>> retrieveHandler) {
+  public Future<App> retrieveApp(@NotNull final String id) {
 
-    this.retrieveJsonApp(id, ComponentClient.handlerForModel(App.class, retrieveHandler));
-
-  }
-
-  /**
-   * Call the {@link WeNetServiceSimulator} to create an application.
-   *
-   * {@inheritDoc}
-   */
-  @Override
-  public void createApp(final JsonObject app, final Handler<AsyncResult<JsonObject>> createHandler) {
-
-    this.post(app, createHandler, "/app");
-
-  }
-
-  /**
-   * Call the {@link WeNetServiceSimulator} to delete an application.
-   *
-   * {@inheritDoc}
-   */
-  @Override
-  public void deleteApp(final String id, final Handler<AsyncResult<Void>> deleteHandler) {
-
-    this.delete(deleteHandler, "/app", id);
+    final Promise<JsonObject> promise = Promise.promise();
+    this.retrieveApp(id, promise);
+    return Model.fromFutureJsonObject(promise.future(), App.class);
 
   }
 
@@ -92,19 +72,11 @@ public class WeNetServiceSimulatorClient extends WeNetServiceClient implements W
    * {@inheritDoc}
    */
   @Override
-  public void retrieveJsonCallbacks(final String id, final Handler<AsyncResult<JsonArray>> retrieveHandler) {
+  public Future<JsonArray> retrieveAppUserIds(@NotNull final String appId) {
 
-    this.getJsonArray(retrieveHandler, "/callback", id);
-
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void addJsonCallBack(final String appId, final JsonObject message, final Handler<AsyncResult<JsonObject>> handler) {
-
-    this.post(message, handler, "/callback", appId);
+    final Promise<JsonArray> promise = Promise.promise();
+    this.retrieveAppUserIds(appId, promise);
+    return promise.future();
 
   }
 
@@ -112,28 +84,9 @@ public class WeNetServiceSimulatorClient extends WeNetServiceClient implements W
    * {@inheritDoc}
    */
   @Override
-  public void deleteCallbacks(final String appId, final Handler<AsyncResult<Void>> handler) {
+  public void createApp(@NotNull final JsonObject app, @NotNull final Handler<AsyncResult<JsonObject>> handler) {
 
-    this.delete(handler, "/callback", appId);
-
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void retrieveJsonArrayAppUserIds(final String id, final Handler<AsyncResult<JsonArray>> retrieveHandler) {
-
-    this.getJsonArray(retrieveHandler, "/app/" + id + "/users");
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void addUsers(final String appId, final JsonArray users, final Handler<AsyncResult<JsonArray>> handler) {
-
-    this.post(users, handler, "/app/" + appId + "/users");
+    this.post(app, "/app").onComplete(handler);
 
   }
 
@@ -141,9 +94,59 @@ public class WeNetServiceSimulatorClient extends WeNetServiceClient implements W
    * {@inheritDoc}
    */
   @Override
-  public void deleteUsers(final String appId, final Handler<AsyncResult<Void>> handler) {
+  public void deleteApp(@NotNull final String id, @NotNull final Handler<AsyncResult<Void>> handler) {
 
-    this.delete(handler, "/app/" + appId + "/users");
+    this.delete("/app", id).onComplete(handler);
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void retrieveCallbacks(@NotNull final String appId, @NotNull final Handler<AsyncResult<JsonArray>> handler) {
+
+    this.getJsonArray("/app", appId, "/callbacks").onComplete(handler);
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void addCallBack(final String appId, final JsonObject message, @NotNull final Handler<AsyncResult<JsonObject>> handler) {
+
+    this.post(message, "/app", appId, "/callbacks").onComplete(handler);
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void deleteCallbacks(final String appId, @NotNull final Handler<AsyncResult<Void>> handler) {
+
+    this.delete("/app", appId, "/callbacks").onComplete(handler);
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void addUsers(final String appId, final JsonArray users, @NotNull final Handler<AsyncResult<JsonArray>> handler) {
+
+    this.post(users, "/app", appId, "/users").onComplete(handler);
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void deleteUsers(final String appId, @NotNull final Handler<AsyncResult<Void>> handler) {
+
+    this.delete("/app/", appId, "/users").onComplete(handler);
 
   }
 

@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,38 +26,45 @@
 
 package eu.internetofus.common.components.service;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import eu.internetofus.common.components.JsonObjectDeserializer;
+import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.ReflectionModel;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.vertx.core.json.JsonObject;
 
 /**
  * A message to send to an {@link App}.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@Schema(hidden = true, name = "message", description = "A message that can be send into an application.")
-public class Message extends BaseMessage {
+@Schema(hidden = true, name = "Message", description = "A message that is send to the user of an application.")
+public class Message extends ReflectionModel implements Model {
 
   /**
-   * The identifier of the user to send the message.
+   * The identifier of the application to send the message.
    */
-  @Schema(description = "The WeNet identifier of the user the message is meant for", example = "a6822c47-f1b8-4c21-80bd-1d025266c3c7")
-  public String recipientId;
+  @Schema(description = "ID of the Wenet application related to the message", example = "822jhluNZP")
+  public String appId;
 
   /**
-   * The identifier of the user to send the message.
+   * The identifier of the user to receive the message.
    */
-  @Schema(description = "The title of the message", example = "Help me!")
-  public String title;
+  @Schema(description = "The Wenet user ID of the recipient of the message", example = "a6822c47-f1b8-4c21-80bd-1d025266c3c7")
+  public String receiverId;
 
   /**
-   * The identifier of the user to send the message.
+   * The identifier of the message type.
    */
-  @Schema(description = "The message for the user", example = "Can you help me with something?")
-  public String text;
+  @Schema(description = "The type of the message", example = "TaskVolunteerNotification")
+  public String label;
 
   /**
-   * Create a message.
+   * The attributes of the message.
    */
-  protected Message() {
+  @Schema(type = "object", description = "the attributes of the message, as key-value pairs.")
+  @JsonDeserialize(using = JsonObjectDeserializer.class)
+  public JsonObject attributes;
 
-  }
 }

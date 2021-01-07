@@ -32,7 +32,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
 
-import eu.internetofus.common.vertx.OperationReponseHandlers;
+import eu.internetofus.common.vertx.ServiceResponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.api.APIVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -42,8 +42,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.api.OperationRequest;
-import io.vertx.ext.web.api.OperationResponse;
+import io.vertx.ext.web.api.service.ServiceRequest;
+import io.vertx.ext.web.api.service.ServiceResponse;
 
 /**
  * Resource to provide the help about the API.
@@ -85,9 +85,9 @@ public class HelpResource implements Help {
    * {@inheritDoc}
    */
   @Override
-  public void getInfo(final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void getInfo(final ServiceRequest context, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
-    OperationReponseHandlers.responseOk(resultHandler, this.info);
+    ServiceResponseHandlers.responseOk(resultHandler, this.info);
 
   }
 
@@ -95,7 +95,7 @@ public class HelpResource implements Help {
    * {@inheritDoc}
    */
   @Override
-  public void getOpenApi(final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void getOpenApi(final ServiceRequest context, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     Vertx.vertx().executeBlocking((Handler<Promise<String>>) promise -> {
 
@@ -114,12 +114,12 @@ public class HelpResource implements Help {
 
       if (res.failed()) {
 
-        OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.INTERNAL_SERVER_ERROR, "no_read_openapi", "Cannot read the OpenAPI description.");
+        ServiceResponseHandlers.responseWithErrorMessage(resultHandler, Status.INTERNAL_SERVER_ERROR, "no_read_openapi", "Cannot read the OpenAPI description.");
 
       } else {
 
         final String openapi = res.result();
-        resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(Status.OK.getStatusCode()).putHeader(HttpHeaders.CONTENT_TYPE.toString(), "application/yaml").setPayload(Buffer.buffer(openapi))));
+        resultHandler.handle(Future.succeededFuture(new ServiceResponse().setStatusCode(Status.OK.getStatusCode()).putHeader(HttpHeaders.CONTENT_TYPE.toString(), "application/yaml").setPayload(Buffer.buffer(openapi))));
 
       }
     });

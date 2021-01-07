@@ -35,8 +35,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.common.components.service.WeNetService;
-import eu.internetofus.common.components.service.WeNetServiceMocker;
 import eu.internetofus.common.components.service.WeNetServiceSimulator;
+import eu.internetofus.common.components.service.WeNetServiceSimulatorMocker;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
@@ -62,7 +62,7 @@ public class WeNetProfileManagerTest extends WeNetProfileManagerTestCase {
   /**
    * The service mocked server.
    */
-  protected static WeNetServiceMocker serviceMocker;
+  protected static WeNetServiceSimulatorMocker serviceMocker;
 
   /**
    * Start the mocker server.
@@ -71,7 +71,7 @@ public class WeNetProfileManagerTest extends WeNetProfileManagerTestCase {
   public static void startMocker() {
 
     profileManagerMocker = WeNetProfileManagerMocker.start();
-    serviceMocker = WeNetServiceMocker.start();
+    serviceMocker = WeNetServiceSimulatorMocker.start();
   }
 
   /**
@@ -80,8 +80,8 @@ public class WeNetProfileManagerTest extends WeNetProfileManagerTestCase {
   @AfterAll
   public static void stopMockers() {
 
-    profileManagerMocker.stop();
-    serviceMocker.stop();
+    profileManagerMocker.stopServer();
+    serviceMocker.stopServer();
 
   }
 
@@ -97,9 +97,9 @@ public class WeNetProfileManagerTest extends WeNetProfileManagerTestCase {
     final var profileManagerConf = profileManagerMocker.getComponentConfiguration();
     WeNetProfileManager.register(vertx, client, profileManagerConf);
 
-    final var srviceConf = serviceMocker.getComponentConfiguration();
-    WeNetServiceSimulator.register(vertx, client, srviceConf);
-    WeNetService.register(vertx, client, srviceConf);
+    final var serviceConf = serviceMocker.getComponentConfiguration();
+    WeNetServiceSimulator.register(vertx, client, serviceConf);
+    WeNetService.register(vertx, client, serviceConf);
 
   }
 
@@ -112,20 +112,23 @@ public class WeNetProfileManagerTest extends WeNetProfileManagerTestCase {
   @Test
   public void shouldReturnEmptyCommunityProfilesPage(final Vertx vertx, final VertxTestContext testContext) {
 
-    WeNetProfileManager.createProxy(vertx).retrieveCommunityProfilesPage(null, null, null, null, null, null, 0, 100, testContext.succeeding(page -> testContext.verify(() -> {
+    testContext.assertComplete(WeNetProfileManager.createProxy(vertx).retrieveCommunityProfilesPage(null, null, null,
+        null, null, null, 0, 100)).onSuccess(page -> testContext.verify(() -> {
 
-      assertThat(page).isNotNull();
-      assertThat(page.offset).isEqualTo(0);
-      assertThat(page.total).isEqualTo(0);
-      assertThat(page.communities).isNull();
+          assertThat(page).isNotNull();
+          assertThat(page.offset).isEqualTo(0);
+          assertThat(page.total).isEqualTo(0);
+          assertThat(page.communities).isNull();
 
-      WeNetProfileManager.createProxy(vertx).retrieveCommunityProfilesPage("appId", "name", "description", "keywords", "members", "order", 0, 100, testContext.succeeding(page2 -> testContext.verify(() -> {
+          testContext.assertComplete(WeNetProfileManager.createProxy(vertx).retrieveCommunityProfilesPage("appId",
+              "name", "description", "keywords", "members", "order", 0, 100))
+              .onSuccess(page2 -> testContext.verify(() -> {
 
-        assertThat(page).isEqualTo(page2);
-        testContext.completeNow();
+                assertThat(page).isEqualTo(page2);
+                testContext.completeNow();
 
-      })));
-    })));
+              }));
+        }));
 
   }
 

@@ -34,14 +34,6 @@ import static eu.internetofus.common.components.ValidationsTest.assertIsNotValid
 import static eu.internetofus.common.components.ValidationsTest.assertIsValid;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.ArrayList;
-import java.util.UUID;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.ModelTestCase;
 import eu.internetofus.common.components.StoreServices;
@@ -55,6 +47,12 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxTestContext;
+import java.util.ArrayList;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Test the {@link PublishedNorm}
@@ -96,15 +94,16 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
    * @param testContext   test context to use.
    * @param createHandler the component that will manage the created model.
    */
-  public void createModelExample(final int index, final Vertx vertx, final VertxTestContext testContext, final Handler<AsyncResult<PublishedNorm>> createHandler) {
+  public void createModelExample(final int index, final Vertx vertx, final VertxTestContext testContext,
+      final Handler<AsyncResult<PublishedNorm>> createHandler) {
 
-    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext, testContext.succeeding(stored -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
       final var model = this.createModelExample(index);
       model.publisherId = stored.id;
       createHandler.handle(Future.succeededFuture(model));
 
-    }));
+    });
 
   }
 
@@ -127,7 +126,8 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   }
 
   /**
-   * Check that the {@link #createModelExample(int, Vertx, VertxTestContext, Handler)} is valid.
+   * Check that the
+   * {@link #createModelExample(int, Vertx, VertxTestContext, Handler)} is valid.
    *
    * @param index       to verify
    * @param vertx       event bus to use.
@@ -139,7 +139,8 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @ValueSource(ints = { 0, 1, 2, 3, 4, 5 })
   public void shouldExampleBeValid(final int index, final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(index, vertx, testContext, testContext.succeeding(model -> assertIsValid(model, vertx, testContext)));
+    this.createModelExample(index, vertx, testContext,
+        testContext.succeeding(model -> assertIsValid(model, vertx, testContext)));
 
   }
 

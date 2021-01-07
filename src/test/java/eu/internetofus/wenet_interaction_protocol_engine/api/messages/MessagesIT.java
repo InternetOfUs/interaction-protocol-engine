@@ -27,13 +27,8 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api.messages;
 
 import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
-import static io.reactiverse.junit5.web.TestRequest.testRequest;
+import static eu.internetofus.common.vertx.ext.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import javax.ws.rs.core.Response.Status;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import eu.internetofus.common.components.ErrorMessage;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
@@ -44,6 +39,9 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxTestContext;
+import javax.ws.rs.core.Response.Status;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * The integration test over the {@link Messages}.
@@ -62,24 +60,25 @@ public class MessagesIT {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Messages#sendMessage(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
-   *      io.vertx.core.Handler)
+   * @see Messages#sendMessage(io.vertx.core.json.JsonObject,
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
   public void shouldSendMessage(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
-    new ProtocolMessageTest().createModelExample(1, vertx, testContext, testContext.succeeding(message -> {
+    testContext.assertComplete(new ProtocolMessageTest().createModelExample(1, vertx, testContext))
+        .onSuccess(message -> {
 
-      message.norms = null;
-      testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {
+          message.norms = null;
+          testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {
 
-        assertThat(res.statusCode()).isEqualTo(Status.ACCEPTED.getStatusCode());
-        final var sent = assertThatBodyIs(ProtocolMessage.class, res);
-        assertThat(sent).isEqualTo(message);
+            assertThat(res.statusCode()).isEqualTo(Status.ACCEPTED.getStatusCode());
+            final var sent = assertThatBodyIs(ProtocolMessage.class, res);
+            assertThat(sent).isEqualTo(message);
 
-      }).sendJson(message.toJsonObject(), testContext);
+          }).sendJson(message.toJsonObject(), testContext);
 
-    }));
+        });
   }
 
   /**
@@ -89,8 +88,8 @@ public class MessagesIT {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Messages#sendMessage(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
-   *      io.vertx.core.Handler)
+   * @see Messages#sendMessage(io.vertx.core.json.JsonObject,
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
   public void shouldNotSendBadMessage(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
@@ -113,11 +112,12 @@ public class MessagesIT {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Messages#sendMessage(io.vertx.core.json.JsonObject, io.vertx.ext.web.api.OperationRequest,
-   *      io.vertx.core.Handler)
+   * @see Messages#sendMessage(io.vertx.core.json.JsonObject,
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
-  public void shouldNotSendInvalidMessage(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+  public void shouldNotSendInvalidMessage(final Vertx vertx, final WebClient client,
+      final VertxTestContext testContext) {
 
     final var message = new ProtocolMessageTest().createModelExample(1);
     testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {

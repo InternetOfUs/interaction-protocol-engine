@@ -101,7 +101,7 @@ public class ProtocolMessage extends ReflectionModel implements Model, Validable
    * The norms that has to be applied over the message.
    */
   @ArraySchema(
-      schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/master/sources/wenet-models-openapi.yaml#/components/schemas/Norm"),
+      schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/5c28427ce0c05596ef9001ffa8a08f8eb125611f/sources/wenet-models-openapi.yaml#/components/schemas/Norm"),
       arraySchema = @Schema(description = "The norms to apply over the message"))
   public List<Norm> norms;
 

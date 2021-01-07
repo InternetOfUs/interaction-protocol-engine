@@ -55,9 +55,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.api.OperationRequest;
-import io.vertx.ext.web.api.OperationResponse;
-import io.vertx.ext.web.api.generator.WebApiServiceGen;
+import io.vertx.ext.web.api.service.ServiceRequest;
+import io.vertx.ext.web.api.service.ServiceResponse;
+import io.vertx.ext.web.api.service.WebApiServiceGen;
 
 /**
  * The definition of the web services for manage the norms.
@@ -98,8 +98,8 @@ public interface Norms {
   @RequestBody(description = "The norm to publish", required = true, content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
   @ApiResponse(responseCode = "201", description = "The published norm", content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
   @ApiResponse(responseCode = "400", description = "Bad norm to publish", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-  void publishNorm(@Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) OperationRequest context,
-      @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+  void publishNorm(@Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) ServiceRequest context,
+      @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
   /**
    * Called when want to get some published norms.
@@ -131,8 +131,8 @@ public interface Norms {
       @QueryParam(value = "publishTo") @Parameter(description = "The difference, measured in seconds, between the maximum publish time stamp of the task and midnight, January 1, 1970 UTC.", example = "1571664406", required = false) Long publishTo,
       @QueryParam(value = "order") @Parameter(description = "The order in witch the norms has to be returned. For each field it has be separated by a ',' and each field can start with '+' (or without it) to order on ascending order, or with the prefix '-' to do on descendant order.", example = "name,-description,+publisherId", required = false, explode = Explode.FALSE) List<String> order,
       @DefaultValue("0") @QueryParam(value = "offset") @Parameter(description = "The index of the first norm to return.", example = "4", required = false) int offset,
-      @DefaultValue("10") @QueryParam(value = "limit") @Parameter(description = "The number maximum of norms to return", example = "100", required = false) int limit, @Parameter(hidden = true, required = false) OperationRequest context,
-      @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+      @DefaultValue("10") @QueryParam(value = "limit") @Parameter(description = "The number maximum of norms to return", example = "100", required = false) int limit, @Parameter(hidden = true, required = false) ServiceRequest context,
+      @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
   /**
    * Called when want to get a published norm.
@@ -148,7 +148,7 @@ public interface Norms {
   @ApiResponse(responseCode = "200", description = "The published norm associated to the identifier", content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
   @ApiResponse(responseCode = "404", description = "Not found published norm", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   void retrievePublishedNorm(@PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to get", example = "15837028-645a-4a55-9aaf-ceb846439eba") String publishedNormId,
-      @Parameter(hidden = true, required = false) OperationRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+      @Parameter(hidden = true, required = false) ServiceRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
   /**
    * Called when want to modify completly a published norm.
@@ -168,7 +168,7 @@ public interface Norms {
   @ApiResponse(responseCode = "400", description = "Bad published norm", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   @ApiResponse(responseCode = "404", description = "Not found published norm", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   void updatePublishedNorm(@PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to update", example = "15837028-645a-4a55-9aaf-ceb846439eba") String publishedNormId,
-      @Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) OperationRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+      @Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) ServiceRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
   /**
    * Called when want to modify partially a published norm.
@@ -188,7 +188,7 @@ public interface Norms {
   @ApiResponse(responseCode = "400", description = "Bad published norm to merge", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   @ApiResponse(responseCode = "404", description = "Not found published norm to merge", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   void mergePublishedNorm(@PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to merge", example = "15837028-645a-4a55-9aaf-ceb846439eba") String publishedNormId,
-      @Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) OperationRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+      @Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) ServiceRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
   /**
    * Called when want to delete a published norm.
@@ -203,7 +203,7 @@ public interface Norms {
   @Operation(summary = "Delete the published norm associated to the identifier", description = "Allow to delete a published norm associated to an identifier")
   @ApiResponse(responseCode = "204", description = "The published norm was deleted successfully")
   @ApiResponse(responseCode = "404", description = "Not found published norm", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-  void deletePublishedNorm(@PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to delete") String publishedNormId, @Parameter(hidden = true, required = false) OperationRequest context,
-      @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+  void deletePublishedNorm(@PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to delete") String publishedNormId, @Parameter(hidden = true, required = false) ServiceRequest context,
+      @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
 }

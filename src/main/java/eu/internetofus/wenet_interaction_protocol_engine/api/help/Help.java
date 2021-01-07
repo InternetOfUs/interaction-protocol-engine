@@ -39,9 +39,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.ext.web.api.OperationRequest;
-import io.vertx.ext.web.api.OperationResponse;
-import io.vertx.ext.web.api.generator.WebApiServiceGen;
+import io.vertx.ext.web.api.service.ServiceRequest;
+import io.vertx.ext.web.api.service.ServiceResponse;
+import io.vertx.ext.web.api.service.WebApiServiceGen;
 
 /**
  * Resource to provide help about the api.
@@ -84,7 +84,7 @@ public interface Help {
   @Operation(summary = "Get the information about the API", description = "Return the relevant information of the API implementation")
   @ApiResponse(responseCode = "200", description = "The API information", content = @Content(schema = @Schema(implementation = APIInfo.class)))
   @Produces(MediaType.APPLICATION_JSON)
-  void getInfo(@Parameter(hidden = true, required = false) OperationRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+  void getInfo(@Parameter(hidden = true, required = false) ServiceRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
   /**
    * The handler for the get open API description.
@@ -97,6 +97,6 @@ public interface Help {
   @Operation(summary = "Get the Open API description", description = "Return the Open API description of this API")
   @ApiResponse(responseCode = "200", description = "The API description")
   @Produces("application/yaml")
-  void getOpenApi(@Parameter(hidden = true, required = false) OperationRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+  void getOpenApi(@Parameter(hidden = true, required = false) ServiceRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
 }

@@ -26,15 +26,13 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
-import java.util.List;
-
+import eu.internetofus.common.components.CreateUpdateTsDetails;
 import eu.internetofus.common.components.Mergeable;
 import eu.internetofus.common.components.Merges;
 import eu.internetofus.common.components.Updateable;
 import eu.internetofus.common.components.Validable;
 import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.components.Validations;
-import eu.internetofus.common.components.profile_manager.CreateUpdateTsDetails;
 import eu.internetofus.common.components.profile_manager.Norm;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
@@ -43,6 +41,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import java.util.List;
 
 /**
  * A norm that has been published.
@@ -50,7 +49,8 @@ import io.vertx.core.Vertx;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(description = "A norm that is published to share with all the WeNet users.")
-public class PublishedNorm extends CreateUpdateTsDetails implements Validable, Mergeable<PublishedNorm>, Updateable<PublishedNorm> {
+public class PublishedNorm extends CreateUpdateTsDetails
+    implements Validable, Mergeable<PublishedNorm>, Updateable<PublishedNorm> {
 
   /**
    * The identifier of the published norm.
@@ -85,7 +85,7 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
   /**
    * The norm.
    */
-  @Schema(description = "The published norm.", ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/master/sources/wenet-models-openapi.yaml#/components/schemas/Norm")
+  @Schema(description = "The published norm.", ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/5c28427ce0c05596ef9001ffa8a08f8eb125611f/sources/wenet-models-openapi.yaml#/components/schemas/Norm")
   public Norm norm;
 
   /**
@@ -112,7 +112,8 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
 
             } else {
 
-              verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".id", "The '" + this.id + "' is already used by a published norm."));
+              verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".id",
+                  "The '" + this.id + "' is already used by a published norm."));
             }
           });
           return verifyNotRepeatedIdPromise.future();
@@ -132,7 +133,8 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
 
             if (profile.failed()) {
 
-              verifyPublishedExistPromise.fail(new ValidationErrorException(codePrefix + ".publisherId", "The '" + this.publisherId + "' is not defined as an user."));
+              verifyPublishedExistPromise.fail(new ValidationErrorException(codePrefix + ".publisherId",
+                  "The '" + this.publisherId + "' is not defined as an user."));
 
             } else {
               verifyPublishedExistPromise.complete();
@@ -200,7 +202,8 @@ public class PublishedNorm extends CreateUpdateTsDetails implements Validable, M
       }
 
       future = future.compose(Validations.validateChain(codePrefix, vertx));
-      future = future.compose(Merges.mergeField(this.norm, source.norm, codePrefix + ".norm", vertx, (model, mergedNorm) -> model.norm = mergedNorm));
+      future = future.compose(Merges.mergeField(this.norm, source.norm, codePrefix + ".norm", vertx,
+          (model, mergedNorm) -> model.norm = mergedNorm));
 
       promise.complete(merged);
       future = future.map(mergedValidatedModel -> {

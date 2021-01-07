@@ -50,11 +50,8 @@ import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.ModelTestCase;
 import eu.internetofus.common.components.StoreServices;
 import eu.internetofus.common.components.ValidationsTest;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -89,7 +86,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @AfterAll
   public static void stopMockers() {
 
-    profileManagerMocker.stop();
+    profileManagerMocker.stopServer();
   }
 
   /**
@@ -163,36 +160,38 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   /**
    * Create an example model that has the specified index.
    *
-   * @param index         to use in the example.
-   * @param vertx         event bus to use.
-   * @param testContext   test context to use.
-   * @param createHandler the component that will manage the created model.
+   * @param index       to use in the example.
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @return the created profile.
    */
-  public void createModelExample(final int index, final Vertx vertx, final VertxTestContext testContext, final Handler<AsyncResult<WeNetUserProfile>> createHandler) {
+  public Future<WeNetUserProfile> createModelExample(final int index, final Vertx vertx,
+      final VertxTestContext testContext) {
 
-    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext, testContext.succeeding(stored1 -> {
+    return testContext
+        .assertComplete(StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).compose(stored1 ->
 
-      StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext, testContext.succeeding(stored2 -> {
+        StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).compose(stored2 -> {
 
-        final var profile = this.createModelExample(index);
+          final var profile = this.createModelExample(index);
 
-        final var activity = new PlannedActivityTest().createModelExample(3);
-        activity.attendees = new ArrayList<>();
-        activity.attendees.add(stored1.id);
-        activity.attendees.add(stored2.id);
-        profile.plannedActivities.add(activity);
-        profile.relationships = new ArrayList<>();
-        profile.relationships.add(new SocialNetworkRelationshipTest().createModelExample(5));
-        profile.relationships.get(0).userId = stored1.id;
-        profile.relationships.add(new SocialNetworkRelationshipTest().createModelExample(6));
-        profile.relationships.get(1).userId = stored2.id;
-        profile.personalBehaviors = new ArrayList<>();
-        profile.personalBehaviors.add(new RoutineTest().createModelExample(index));
-        profile.personalBehaviors.get(0).user_id = stored2.id;
-        createHandler.handle(Future.succeededFuture(profile));
+          final var activity = new PlannedActivityTest().createModelExample(3);
+          activity.attendees = new ArrayList<>();
+          activity.attendees.add(stored1.id);
+          activity.attendees.add(stored2.id);
+          profile.plannedActivities.add(activity);
+          profile.relationships = new ArrayList<>();
+          profile.relationships.add(new SocialNetworkRelationshipTest().createModelExample(5));
+          profile.relationships.get(0).userId = stored1.id;
+          profile.relationships.add(new SocialNetworkRelationshipTest().createModelExample(6));
+          profile.relationships.get(1).userId = stored2.id;
+          profile.personalBehaviors = new ArrayList<>();
+          profile.personalBehaviors.add(new RoutineTest().createModelExample(index));
+          profile.personalBehaviors.get(0).user_id = stored2.id;
+          return Future.succeededFuture(profile);
 
-      }));
-    }));
+        })));
 
   }
 
@@ -231,7 +230,8 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   }
 
   /**
-   * Check that the {@link #createModelExample(int, Vertx, VertxTestContext, Handler)} is valid.
+   * Check that the {@link #createModelExample(int, Vertx, VertxTestContext)} is
+   * valid.
    *
    * @param index       to verify
    * @param vertx       event bus to use.
@@ -241,13 +241,11 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
    */
   @ParameterizedTest(name = "The model example {0} has to be valid")
   @ValueSource(ints = { 0, 1, 2, 3, 4, 5 })
-  public void shouldExampleFromRepositoryBeValid(final int index, final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldExampleFromRepositoryBeValid(final int index, final Vertx vertx,
+      final VertxTestContext testContext) {
 
-    this.createModelExample(index, vertx, testContext, testContext.succeeding(model -> {
-
-      assertIsValid(model, vertx, testContext);
-
-    }));
+    testContext.assertComplete(this.createModelExample(index, vertx, testContext))
+        .onSuccess(model -> assertIsValid(model, vertx, testContext));
 
   }
 
@@ -262,13 +260,13 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldNotBeValidWithAnExistingId(final Vertx vertx, final VertxTestContext testContext) {
 
-    WeNetProfileManager.createProxy(vertx).createProfile(new JsonObject(), testContext.succeeding(created -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(created -> {
 
       final var model = new WeNetUserProfile();
-      model.id = created.getString("id");
+      model.id = created.id;
       assertIsNotValid(model, "id", vertx, testContext);
 
-    }));
+    });
 
   }
 
@@ -355,7 +353,8 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
    * @see WeNetUserProfile#validate(String, Vertx)
    */
   @Test
-  public void shouldNotBeValidWithABirthDateBeforeTheBirthDateOldestPersonOnWorld(final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldNotBeValidWithABirthDateBeforeTheBirthDateOldestPersonOnWorld(final Vertx vertx,
+      final VertxTestContext testContext) {
 
     final var model = new WeNetUserProfile();
     model.dateOfBirth = new AliveBirthDate();
@@ -558,7 +557,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldNotBeValidWithADuplicatedRelationships(final Vertx vertx, final VertxTestContext testContext) {
 
-    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext, testContext.succeeding(stored -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
       final var model = new WeNetUserProfile();
       model.relationships = new ArrayList<>();
@@ -570,7 +569,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
       model.relationships.get(1).type = SocialNetworkRelationshipType.friend;
       assertIsNotValid(model, "relationships[1]", vertx, testContext);
 
-    }));
+    });
 
   }
 
@@ -585,7 +584,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldBeValidWithSomeRelationships(final Vertx vertx, final VertxTestContext testContext) {
 
-    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext, testContext.succeeding(stored -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
       final var model = new WeNetUserProfile();
       model.relationships = new ArrayList<>();
@@ -597,7 +596,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
       model.relationships.get(1).type = SocialNetworkRelationshipType.friend;
       assertIsValid(model, vertx, testContext);
 
-    }));
+    });
 
   }
 
@@ -744,7 +743,8 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
    * @see WeNetUserProfile#merge(WeNetUserProfile, String, Vertx)
    */
   @Test
-  public void shouldNotMergeWithABirthDateBeforeTheBirthDateOldestPersonOnWorld(final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldNotMergeWithABirthDateBeforeTheBirthDateOldestPersonOnWorld(final Vertx vertx,
+      final VertxTestContext testContext) {
 
     final var source = new WeNetUserProfile();
     source.dateOfBirth = new AliveBirthDate();
@@ -1139,7 +1139,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldNotMergeWithDuplicatedRelationships(final Vertx vertx, final VertxTestContext testContext) {
 
-    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext, testContext.succeeding(stored -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
       final var source = new WeNetUserProfile();
       source.relationships = new ArrayList<>();
@@ -1151,7 +1151,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
       source.relationships.get(1).type = SocialNetworkRelationshipType.friend;
       assertCannotMerge(new WeNetUserProfile(), source, "relationships[1]", vertx, testContext);
 
-    }));
+    });
 
   }
 
@@ -1166,7 +1166,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldMergeRelationships(final Vertx vertx, final VertxTestContext testContext) {
 
-    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext, testContext.succeeding(stored -> {
+    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
 
       final var target = new WeNetUserProfile();
       target.relationships = new ArrayList<>();
@@ -1188,7 +1188,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
 
       });
 
-    }));
+    });
 
   }
 
@@ -1295,27 +1295,19 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldMergeStoredModels(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(targetToStore -> {
+    this.createModelExample(1, vertx, testContext)
+        .compose(targetToStore -> StoreServices.storeProfile(targetToStore, vertx, testContext)
+            .compose(target -> this.createModelExample(2, vertx, testContext).compose(
+                sourceToStore -> StoreServices.storeProfile(sourceToStore, vertx, testContext).onSuccess(source ->
 
-      StoreServices.storeProfile(targetToStore, vertx, testContext, testContext.succeeding(target -> {
+                assertCanMerge(target, source, vertx, testContext, merged -> {
 
-        this.createModelExample(2, vertx, testContext, testContext.succeeding(sourceToStore -> {
+                  source.id = target.id;
+                  source._creationTs = target._creationTs;
+                  source._lastUpdateTs = target._lastUpdateTs;
+                  assertThat(merged).isNotEqualTo(target).isEqualTo(source);
 
-          StoreServices.storeProfile(sourceToStore, vertx, testContext, testContext.succeeding(source -> {
-
-            assertCanMerge(target, source, vertx, testContext, merged -> {
-
-              source.id = target.id;
-              source._creationTs = target._creationTs;
-              source._lastUpdateTs = target._lastUpdateTs;
-              assertThat(merged).isNotEqualTo(target).isEqualTo(source);
-
-            });
-          }));
-        }));
-
-      }));
-    }));
+                })))));
 
   }
 
@@ -1636,27 +1628,24 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldMergeRemovePlannedActivities(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+    this.createModelExample(1, vertx, testContext)
+        .onSuccess(created -> assertIsValid(created, vertx, testContext, () -> {
 
-      assertIsValid(created, vertx, testContext, () -> {
+          StoreServices.storeProfile(created, vertx, testContext).onSuccess(target -> {
 
-        StoreServices.storeProfile(created, vertx, testContext, testContext.succeeding(target -> {
+            final var source = new WeNetUserProfile();
+            source.plannedActivities = new ArrayList<>();
+            assertCanMerge(target, source, vertx, testContext, merged -> {
 
-          final var source = new WeNetUserProfile();
-          source.plannedActivities = new ArrayList<>();
-          assertCanMerge(target, source, vertx, testContext, merged -> {
+              assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
+              target.plannedActivities.clear();
+              assertThat(merged).isEqualTo(target);
 
-            assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
-            target.plannedActivities.clear();
-            assertThat(merged).isEqualTo(target);
+            });
 
           });
 
         }));
-
-      });
-
-    }));
 
   }
 
@@ -1671,11 +1660,8 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldFailMergeBadPlannedActivities(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
-
-      assertIsValid(created, vertx, testContext, () -> {
-
-        StoreServices.storeProfile(created, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(created -> assertIsValid(created, vertx, testContext,
+        () -> StoreServices.storeProfile(created, vertx, testContext).onSuccess(target -> {
 
           final var source = new WeNetUserProfile();
           source.plannedActivities = new ArrayList<>();
@@ -1684,11 +1670,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
           source.plannedActivities.get(0).description = ValidationsTest.STRING_256;
           assertCannotMerge(target, source, "plannedActivities[0].description", vertx, testContext);
 
-        }));
-
-      });
-
-    }));
+        })));
 
   }
 
@@ -1703,11 +1685,11 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldFailMergeBadNewPlannedActivities(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(created -> {
 
       assertIsValid(created, vertx, testContext, () -> {
 
-        StoreServices.storeProfile(created, vertx, testContext, testContext.succeeding(target -> {
+        StoreServices.storeProfile(created, vertx, testContext).onSuccess(target -> {
 
           final var source = new WeNetUserProfile();
           source.plannedActivities = new ArrayList<>();
@@ -1715,11 +1697,11 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
           source.plannedActivities.get(0).description = ValidationsTest.STRING_256;
           assertCannotMerge(target, source, "plannedActivities[0].description", vertx, testContext);
 
-        }));
+        });
 
       });
 
-    }));
+    });
   }
 
   /**
@@ -1733,11 +1715,11 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldMergeAddmodifyPlannedActivities(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(created -> {
 
       assertIsValid(created, vertx, testContext, () -> {
 
-        StoreServices.storeProfile(created, vertx, testContext, testContext.succeeding(target -> {
+        StoreServices.storeProfile(created, vertx, testContext).onSuccess(target -> {
 
           final var source = new WeNetUserProfile();
           source.plannedActivities = new ArrayList<>();
@@ -1756,9 +1738,9 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
 
           });
 
-        }));
+        });
       });
-    }));
+    });
 
   }
 
@@ -1773,11 +1755,11 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldMergeRemoveRelevantLocations(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(created -> {
 
       assertIsValid(created, vertx, testContext, () -> {
 
-        StoreServices.storeProfile(created, vertx, testContext, testContext.succeeding(target -> {
+        StoreServices.storeProfile(created, vertx, testContext).onSuccess(target -> {
 
           final var source = new WeNetUserProfile();
           source.relevantLocations = new ArrayList<>();
@@ -1787,9 +1769,9 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
             assertThat(merged).isEqualTo(target);
           });
 
-        }));
+        });
       });
-    }));
+    });
   }
 
   /**
@@ -1802,11 +1784,11 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
    */
   public void shouldFailMergeBadRelevantLocations(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(created -> {
 
       assertIsValid(created, vertx, testContext, () -> {
 
-        StoreServices.storeProfile(created, vertx, testContext, testContext.succeeding(target -> {
+        StoreServices.storeProfile(created, vertx, testContext).onSuccess(target -> {
 
           final var source = new WeNetUserProfile();
           source.relevantLocations = new ArrayList<>();
@@ -1814,9 +1796,9 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
           source.relevantLocations.get(0).id = target.relevantLocations.get(0).id;
           source.relevantLocations.get(0).label = ValidationsTest.STRING_256;
           assertCannotMerge(target, source, "relevantLocations[0].label", vertx, testContext);
-        }));
+        });
       });
-    }));
+    });
   }
 
   /**
@@ -1829,11 +1811,11 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
    */
   public void shouldFailMergeBadNewRelevantLocations(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(created -> {
 
       assertIsValid(created, vertx, testContext, () -> {
 
-        StoreServices.storeProfile(created, vertx, testContext, testContext.succeeding(target -> {
+        StoreServices.storeProfile(created, vertx, testContext).onSuccess(target -> {
 
           final var source = new WeNetUserProfile();
           source.relevantLocations = new ArrayList<>();
@@ -1841,9 +1823,9 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
           source.relevantLocations.get(0).label = ValidationsTest.STRING_256;
           assertCannotMerge(target, source, "relevantLocations[0].label", vertx, testContext);
 
-        }));
+        });
       });
-    }));
+    });
   }
 
   /**
@@ -1857,11 +1839,11 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldMergeAddModifyRelevantLocations(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(created -> {
 
       assertIsValid(created, vertx, testContext, () -> {
 
-        StoreServices.storeProfile(created, vertx, testContext, testContext.succeeding(target -> {
+        StoreServices.storeProfile(created, vertx, testContext).onSuccess(target -> {
 
           final var source = new WeNetUserProfile();
           source.relevantLocations = new ArrayList<>();
@@ -1878,9 +1860,9 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
             assertThat(merged).isEqualTo(target);
 
           });
-        }));
+        });
       });
-    }));
+    });
   }
 
   /**
@@ -1894,11 +1876,11 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldMergeRemovePersonalBehaviors(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(created -> {
 
       assertIsValid(created, vertx, testContext, () -> {
 
-        StoreServices.storeProfile(created, vertx, testContext, testContext.succeeding(target -> {
+        StoreServices.storeProfile(created, vertx, testContext).onSuccess(target -> {
 
           final var source = new WeNetUserProfile();
           source.personalBehaviors = new ArrayList<>();
@@ -1909,9 +1891,9 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
             assertThat(merged).isEqualTo(target);
             testContext.completeNow();
           });
-        }));
+        });
       });
-    }));
+    });
   }
 
   /**
@@ -1925,19 +1907,19 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldFailMergeBadNewPersonalBehaviors(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(created -> {
 
       assertIsValid(created, vertx, testContext, () -> {
 
-        StoreServices.storeProfile(created, vertx, testContext, testContext.succeeding(target -> {
+        StoreServices.storeProfile(created, vertx, testContext).onSuccess(target -> {
 
           final var source = new WeNetUserProfile();
           source.personalBehaviors = new ArrayList<>();
           source.personalBehaviors.add(new Routine());
           assertCannotMerge(target, source, "personalBehaviors[0].user_id", vertx, testContext);
-        }));
+        });
       });
-    }));
+    });
   }
 
   /**
@@ -1951,30 +1933,26 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldMergeAddModifyPersonalBehaviors(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(created -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
-      assertIsValid(created, vertx, testContext, () -> {
+      new RoutineTest().createModelExample(1, vertx, testContext).onSuccess(createdRoutine -> {
 
-        StoreServices.storeProfile(created, vertx, testContext, testContext.succeeding(target -> {
+        final var source = new WeNetUserProfile();
+        source.personalBehaviors = new ArrayList<>();
+        source.personalBehaviors.add(createdRoutine);
+        source.personalBehaviors.addAll(target.personalBehaviors);
+        source.personalBehaviors.get(1).confidence = 0.0;
+        assertCanMerge(target, source, vertx, testContext, merged -> {
 
-          new RoutineTest().createModelExample(1, vertx, testContext, testContext.succeeding(createdRoutine -> {
+          assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
+          target.personalBehaviors.add(0, createdRoutine);
+          target.personalBehaviors.get(1).confidence = 0.0;
+          assertThat(merged).isEqualTo(target);
+        });
 
-            final var source = new WeNetUserProfile();
-            source.personalBehaviors = new ArrayList<>();
-            source.personalBehaviors.add(createdRoutine);
-            source.personalBehaviors.addAll(created.personalBehaviors);
-            source.personalBehaviors.get(1).confidence = 0.0;
-            assertCanMerge(target, source, vertx, testContext, merged -> {
-
-              assertThat(merged).isNotEqualTo(target).isNotEqualTo(source);
-              target.personalBehaviors.add(0, createdRoutine);
-              target.personalBehaviors.get(1).confidence = 0.0;
-              assertThat(merged).isEqualTo(target);
-            });
-          }));
-        }));
       });
-    }));
+
+    });
   }
 
   /**
@@ -2263,14 +2241,10 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
    * @see CommunityProfile#merge(CommunityProfile, String, Vertx)
    */
   @Test
-  public void shoudMergeWithNull(final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldMergeWithNull(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
-
-      assertCanMerge(target, null, vertx, testContext, merged -> {
-        assertThat(merged).isSameAs(target);
-      });
-    }));
+    this.createModelExample(1, vertx, testContext).onSuccess(
+        target -> assertCanMerge(target, null, vertx, testContext, merged -> assertThat(merged).isSameAs(target)));
 
   }
 
@@ -2297,7 +2271,8 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   }
 
   /**
-   * Check that the model is not valid it has two relevant locations with the same identifier.
+   * Check that the model is not valid it has two relevant locations with the same
+   * identifier.
    *
    * @param vertx       event bus to use.
    * @param testContext context to test.
@@ -2319,7 +2294,8 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   }
 
   /**
-   * Check that the model is not valid it has two relevant locations with the same identifier.
+   * Check that the model is not valid it has two relevant locations with the same
+   * identifier.
    *
    * @param vertx       event bus to use.
    * @param testContext context to test.
@@ -2329,7 +2305,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldNotValidWithDuplicatedPersonalBehaviors(final Vertx vertx, final VertxTestContext testContext) {
 
-    new RoutineTest().createModelExample(1, vertx, testContext, testContext.succeeding(routine -> {
+    new RoutineTest().createModelExample(1, vertx, testContext).onSuccess(routine -> {
 
       final var model = new WeNetUserProfile();
       model.personalBehaviors = new ArrayList<>();
@@ -2337,7 +2313,7 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
       model.personalBehaviors.add(Model.fromJsonObject(routine.toJsonObject(), Routine.class));
       assertIsNotValid(model, "personalBehaviors[1]", vertx, testContext);
 
-    }));
+    });
 
   }
 
@@ -2350,14 +2326,10 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
    * @see CommunityProfile#update(CommunityProfile, String, Vertx)
    */
   @Test
-  public void shoudUpdateWithNull(final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldUpdateWithNull(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
-
-      assertCanUpdate(target, null, vertx, testContext, updated -> {
-        assertThat(updated).isSameAs(target);
-      });
-    }));
+    this.createModelExample(1, vertx, testContext).onSuccess(
+        target -> assertCanUpdate(target, null, vertx, testContext, updated -> assertThat(updated).isSameAs(target)));
 
   }
 
@@ -2464,27 +2436,18 @@ public class WeNetUserProfileTest extends ModelTestCase<WeNetUserProfile> {
   @Test
   public void shouldUpdateStoredModels(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(targetToStore -> {
+    this.createModelExample(1, vertx, testContext)
+        .compose(targetToStore -> StoreServices.storeProfile(targetToStore, vertx, testContext)
+            .compose(target -> this.createModelExample(2, vertx, testContext)
+                .compose(sourceToStore -> StoreServices.storeProfile(sourceToStore, vertx, testContext)
+                    .onSuccess(source -> assertCanUpdate(target, source, vertx, testContext, updated -> {
 
-      StoreServices.storeProfile(targetToStore, vertx, testContext, testContext.succeeding(target -> {
+                      source.id = target.id;
+                      source._creationTs = target._creationTs;
+                      source._lastUpdateTs = target._lastUpdateTs;
+                      assertThat(updated).isNotEqualTo(target).isEqualTo(source);
 
-        this.createModelExample(2, vertx, testContext, testContext.succeeding(sourceToStore -> {
-
-          StoreServices.storeProfile(sourceToStore, vertx, testContext, testContext.succeeding(source -> {
-
-            assertCanUpdate(target, source, vertx, testContext, updated -> {
-
-              source.id = target.id;
-              source._creationTs = target._creationTs;
-              source._lastUpdateTs = target._lastUpdateTs;
-              assertThat(updated).isNotEqualTo(target).isEqualTo(source);
-
-            });
-          }));
-        }));
-
-      }));
-    }));
+                    })))));
 
   }
 }

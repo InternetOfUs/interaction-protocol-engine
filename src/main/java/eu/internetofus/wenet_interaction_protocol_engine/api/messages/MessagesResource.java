@@ -32,14 +32,14 @@ import org.tinylog.Logger;
 
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
-import eu.internetofus.common.vertx.OperationReponseHandlers;
+import eu.internetofus.common.vertx.ServiceResponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.api.OperationRequest;
-import io.vertx.ext.web.api.OperationResponse;
+import io.vertx.ext.web.api.service.ServiceRequest;
+import io.vertx.ext.web.api.service.ServiceResponse;
 
 /**
  * Implementation of the {@link Messages} services.
@@ -68,13 +68,13 @@ public class MessagesResource implements Messages {
    * {@inheritDoc}
    */
   @Override
-  public void sendMessage(final JsonObject body, final OperationRequest context, final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void sendMessage(final JsonObject body, final ServiceRequest context, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var message = Model.fromJsonObject(body, ProtocolMessage.class);
     if (message == null) {
 
       Logger.trace("Fail sendMessage: {} is not a valid JSON.", body);
-      OperationReponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "bad_message", "The message is not right.");
+      ServiceResponseHandlers.responseWithErrorMessage(resultHandler, Status.BAD_REQUEST, "bad_message", "The message is not right.");
 
     } else {
 
@@ -84,13 +84,13 @@ public class MessagesResource implements Messages {
 
           final var cause = validation.cause();
           Logger.trace(cause, "Fail sendMessage: {} is not valid.", message);
-          OperationReponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
+          ServiceResponseHandlers.responseFailedWith(resultHandler, Status.BAD_REQUEST, cause);
 
         } else {
 
           this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message.toJsonObject());
           Logger.trace("Accepted sendMessage {}", message);
-          OperationReponseHandlers.responseWith(resultHandler, Status.ACCEPTED, message);
+          ServiceResponseHandlers.responseWith(resultHandler, Status.ACCEPTED, message);
 
         }
 

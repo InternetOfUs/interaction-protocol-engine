@@ -32,14 +32,14 @@ import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.vertx.ModelContext;
 import eu.internetofus.common.vertx.ModelResources;
-import eu.internetofus.common.vertx.OperationContext;
+import eu.internetofus.common.vertx.ServiceContext;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.api.OperationRequest;
-import io.vertx.ext.web.api.OperationResponse;
+import io.vertx.ext.web.api.service.ServiceRequest;
+import io.vertx.ext.web.api.service.ServiceResponse;
 
 /**
  * Implements the services defined in the {@link Norms}.
@@ -93,10 +93,10 @@ public class NormsResource implements Norms {
    * {@inheritDoc}
    */
   @Override
-  public void publishNorm(final JsonObject body, final OperationRequest request, final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void publishNorm(final JsonObject body, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createPublishedNormContext();
-    final var context = new OperationContext(request, resultHandler);
+    final var context = new ServiceContext(request, resultHandler);
     ModelResources.createModel(this.vertx, body, model, this.repository::storePublishedNorm, context);
 
   }
@@ -106,9 +106,9 @@ public class NormsResource implements Norms {
    */
   @Override
   public void retrievePublishedNormsPage(final String name, final String description, final List<String> keywords, final String publisherId, final Long publishFrom, final Long publishTo, final List<String> order, final int offset,
-      final int limit, final OperationRequest request, final Handler<AsyncResult<OperationResponse>> resultHandler) {
+      final int limit, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
-    final var context = new OperationContext(request, resultHandler);
+    final var context = new ServiceContext(request, resultHandler);
     ModelResources.retrieveModelsPage(offset, limit, (page, promise) -> {
 
       page.query = NormsRepository.createPublishedNormsPageQuery(name, description, keywords, publisherId, publishFrom, publishTo);
@@ -122,11 +122,11 @@ public class NormsResource implements Norms {
    * {@inheritDoc}
    */
   @Override
-  public void retrievePublishedNorm(final String publishedNormId, final OperationRequest request, final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void retrievePublishedNorm(final String publishedNormId, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createPublishedNormContext();
     model.id = publishedNormId;
-    final var context = new OperationContext(request, resultHandler);
+    final var context = new ServiceContext(request, resultHandler);
     ModelResources.retrieveModel(model, this.repository::searchPublishedNorm, context);
 
   }
@@ -135,11 +135,11 @@ public class NormsResource implements Norms {
    * {@inheritDoc}
    */
   @Override
-  public void updatePublishedNorm(final String publishedNormId, final JsonObject body, final OperationRequest request, final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void updatePublishedNorm(final String publishedNormId, final JsonObject body, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createPublishedNormContext();
     model.id = publishedNormId;
-    final var context = new OperationContext(request, resultHandler);
+    final var context = new ServiceContext(request, resultHandler);
     ModelResources.updateModel(this.vertx, body, model, this.repository::searchPublishedNorm, this.repository::updatePublishedNorm, context);
 
   }
@@ -148,11 +148,11 @@ public class NormsResource implements Norms {
    * {@inheritDoc}
    */
   @Override
-  public void deletePublishedNorm(final String publishedNormId, final OperationRequest request, final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void deletePublishedNorm(final String publishedNormId, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createPublishedNormContext();
     model.id = publishedNormId;
-    final var context = new OperationContext(request, resultHandler);
+    final var context = new ServiceContext(request, resultHandler);
     ModelResources.deleteModel(model, this.repository::deletePublishedNorm, context);
 
   }
@@ -161,11 +161,11 @@ public class NormsResource implements Norms {
    * {@inheritDoc}
    */
   @Override
-  public void mergePublishedNorm(final String publishedNormId, final JsonObject body, final OperationRequest request, final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void mergePublishedNorm(final String publishedNormId, final JsonObject body, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createPublishedNormContext();
     model.id = publishedNormId;
-    final var context = new OperationContext(request, resultHandler);
+    final var context = new ServiceContext(request, resultHandler);
     ModelResources.mergeModel(this.vertx, body, model, this.repository::searchPublishedNorm, this.repository::updatePublishedNorm, context);
 
   }

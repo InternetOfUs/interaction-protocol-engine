@@ -32,33 +32,15 @@ import static eu.internetofus.common.components.service.WeNetServiceSimulators.w
 import static eu.internetofus.common.components.task_manager.WeNetTaskManagers.waitUntilTask;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.ValueSource;
-
 import eu.internetofus.common.TimeManager;
+import eu.internetofus.common.components.HumanDescription;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.StoreServices;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.components.service.App;
-import eu.internetofus.common.components.service.TaskConcludedNotification;
-import eu.internetofus.common.components.service.TaskProposalNotification;
-import eu.internetofus.common.components.service.TaskSelectionNotification;
-import eu.internetofus.common.components.service.TaskVolunteerNotification;
-import eu.internetofus.common.components.service.TextualMessage;
+import eu.internetofus.common.components.service.Message;
 import eu.internetofus.common.components.service.WeNetServiceSimulator;
 import eu.internetofus.common.components.task_manager.Task;
-import eu.internetofus.common.components.task_manager.TaskGoal;
 import eu.internetofus.common.components.task_manager.TaskTransaction;
 import eu.internetofus.common.components.task_manager.TaskType;
 import eu.internetofus.common.components.task_manager.WeNetTaskManager;
@@ -69,10 +51,22 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxTestContext;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
- * Integration test over the hard coded protocol. ATTENTION: This test is sequential and maintains the state between
- * methods. In other words, you must to run the entire test methods on the specified order to work.
+ * Integration test over the hard coded protocol. ATTENTION: This test is
+ * sequential and maintains the state between methods. In other words, you must
+ * to run the entire test methods on the specified order to work.
  *
  * @author UDT-IA, IIIA-CSIC
  */
@@ -150,19 +144,20 @@ public class HardcodedProtocolIT {
 
     assert HardcodedProtocolIT.users != null;
     assert HardcodedProtocolIT.app != null;
-    StoreServices.storeTaskTypeExample(1, vertx, testContext, testContext.succeeding(taskType -> {
+    StoreServices.storeTaskTypeExample(1, vertx, testContext).onSuccess(taskType -> {
 
       HardcodedProtocolIT.taskType = taskType;
       final var task = new Task();
       task.appId = HardcodedProtocolIT.app.appId;
-      task.deadlineTs = TimeManager.now() + 120;
-      task.startTs = task.deadlineTs + 30;
-      task.endTs = task.startTs + 300;
+      var deadlineTs = TimeManager.now() + 120;
+      var startTs = deadlineTs + 30;
+      var endTs = startTs + 300;
+      task.attributes = new JsonObject().put("deadlineTs", deadlineTs).put("startTs", startTs).put("endTs", endTs);
       task.taskTypeId = taskType.id;
-      task.goal = new TaskGoal();
+      task.goal = new HumanDescription();
       task.goal.name = "Test create task";
       task.requesterId = HardcodedProtocolIT.users.get(0).id;
-      WeNetTaskManager.createProxy(vertx).createTask(task, testContext.succeeding(createdTask -> {
+      testContext.assertComplete(WeNetTaskManager.createProxy(vertx).createTask(task)).onSuccess(createdTask -> {
 
         HardcodedProtocolIT.task = createdTask;
         waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
@@ -176,39 +171,42 @@ public class HardcodedProtocolIT {
 
           for (var i = 0; i < callbacks.size(); i++) {
 
-            final var proposal = Model.fromJsonObject(callbacks.getJsonObject(i), TaskProposalNotification.class);
-            if (proposal != null && createdTask.id.equals(proposal.taskId)) {
+            final var proposal = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+            if (proposal != null && "TaskProposalNotification".equals(proposal.label)
+                && createdTask.id.equals(proposal.attributes.getString("taskId"))) {
 
-              ids.remove(proposal.recipientId);
+              ids.remove(proposal.receiverId);
 
             }
           }
           return ids.isEmpty();
 
         }, vertx, testContext).onComplete(testContext.succeeding(msg -> {
-          WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-            WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+              testContext.succeeding(removed -> {
+                testContext
+                    .assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id))
+                    .onSuccess(storedTask -> testContext.verify(() -> {
 
-              assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
-              final var attributes = storedTask.attributes;
-              final var unanswered = attributes.getJsonArray("unanswered");
-              assertThat(unanswered).isNotNull().doesNotContain(createdTask.requesterId);
-              for (final WeNetUserProfile profile : HardcodedProtocolIT.users) {
+                      assertThat(storedTask.attributes).isNotNull();
+                      final var unanswered = storedTask.attributes.getJsonArray("unanswered");
+                      assertThat(unanswered).isNotNull().doesNotContain(createdTask.requesterId);
+                      for (final WeNetUserProfile profile : HardcodedProtocolIT.users) {
 
-                if (!profile.id.equals(storedTask.requesterId)) {
+                        if (!profile.id.equals(storedTask.requesterId)) {
 
-                  assertThat(unanswered).contains(profile.id);
+                          assertThat(unanswered).contains(profile.id);
 
-                }
-              }
-              HardcodedProtocolIT.task = storedTask;
-              testContext.completeNow();
-            })));
-          }));
+                        }
+                      }
+                      HardcodedProtocolIT.task = storedTask;
+                      testContext.completeNow();
+                    }));
+              }));
         }));
 
-      }));
-    }));
+      });
+    });
   }
 
   /**
@@ -230,25 +228,27 @@ public class HardcodedProtocolIT {
     taskTransaction.label = "refuseTask";
     final var volunteerId = HardcodedProtocolIT.users.get(1).id;
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
-    WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
+        .onSuccess(done -> {
 
-      waitUntilTask(HardcodedProtocolIT.task.id, task -> {
+          waitUntilTask(HardcodedProtocolIT.task.id, task -> {
 
-        return task.attributes instanceof JsonObject && task.attributes.getJsonArray("declined", new JsonArray()).contains(volunteerId);
+            return task.attributes instanceof JsonObject
+                && task.attributes.getJsonArray("declined", new JsonArray()).contains(volunteerId);
 
-      }, vertx, testContext).onComplete(testContext.succeeding(task -> testContext.verify(() -> {
+          }, vertx, testContext).onComplete(testContext.succeeding(task -> testContext.verify(() -> {
 
-        assertThat(task.attributes).isNotNull().isInstanceOf(JsonObject.class);
-        final var attributes = task.attributes;
-        final var unanswered = attributes.getJsonArray("unanswered");
-        assertThat(unanswered).isNotNull().doesNotContain(task.requesterId, volunteerId);
-        final var declined = attributes.getJsonArray("declined");
-        assertThat(declined).isNotNull().hasSize(1).contains(volunteerId);
-        testContext.completeNow();
+            assertThat(task.attributes).isNotNull();
+            final var attributes = task.attributes;
+            final var unanswered = attributes.getJsonArray("unanswered");
+            assertThat(unanswered).isNotNull().doesNotContain(task.requesterId, volunteerId);
+            final var declined = attributes.getJsonArray("declined");
+            assertThat(declined).isNotNull().hasSize(1).contains(volunteerId);
+            testContext.completeNow();
 
-      })));
+          })));
 
-    }));
+        });
 
   }
 
@@ -271,39 +271,42 @@ public class HardcodedProtocolIT {
     taskTransaction.label = "volunteerForTask";
     final var volunteerId = HardcodedProtocolIT.users.get(1).id;
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
-    WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
+        .onSuccess(done -> {
 
-      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+          waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
-        for (var i = 0; i < callbacks.size(); i++) {
+            for (var i = 0; i < callbacks.size(); i++) {
 
-          final var message = Model.fromJsonObject(callbacks.getJsonObject(i), TextualMessage.class);
-          if (message != null && volunteerId.equals(message.recipientId)) {
+              final var message = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+              if (message != null && "TextualMessage".equals(message.label) && volunteerId.equals(message.receiverId)) {
 
-            return true;
+                return true;
 
-          }
-        }
+              }
+            }
 
-        return false;
+            return false;
 
-      }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
-        WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-          WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
+            WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+                testContext.succeeding(removed -> {
+                  testContext
+                      .assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id))
+                      .onSuccess(storedTask -> testContext.verify(() -> {
 
-            assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
-            final var attributes = storedTask.attributes;
-            final var unanswered = attributes.getJsonArray("unanswered");
-            assertThat(unanswered).isNotNull().doesNotContain(storedTask.requesterId, volunteerId);
-            final var declined = attributes.getJsonArray("declined");
-            assertThat(declined).isNotNull().hasSize(1).contains(volunteerId);
-            HardcodedProtocolIT.task = storedTask;
-            testContext.completeNow();
+                        assertThat(storedTask.attributes).isNotNull();
+                        final var unanswered = storedTask.attributes.getJsonArray("unanswered");
+                        assertThat(unanswered).isNotNull().doesNotContain(storedTask.requesterId, volunteerId);
+                        final var declined = storedTask.attributes.getJsonArray("declined");
+                        assertThat(declined).isNotNull().hasSize(1).contains(volunteerId);
+                        HardcodedProtocolIT.task = storedTask;
+                        testContext.completeNow();
 
-          })));
-        }));
-      }));
-    }));
+                      }));
+                }));
+          }));
+        });
 
   }
 
@@ -345,48 +348,55 @@ public class HardcodedProtocolIT {
    * @param vertx       event bus to use.
    * @param testContext context to do the test.
    *
-   * @return a future that inform if the task transaction to be a volunteer success or not.
+   * @return a future that inform if the task transaction to be a volunteer
+   *         success or not.
    */
-  protected Future<Void> doTaskTransactionVolunteerForTask(final String volunteerId, final Vertx vertx, final VertxTestContext testContext) {
+  protected Future<Void> doTaskTransactionVolunteerForTask(final String volunteerId, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     final Promise<Void> promise = Promise.promise();
     final var taskTransaction = new TaskTransaction();
     taskTransaction.taskId = HardcodedProtocolIT.task.id;
     taskTransaction.label = "volunteerForTask";
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
-    WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
+        .onSuccess(done -> {
 
-      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+          waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
-        for (var i = 0; i < callbacks.size(); i++) {
+            for (var i = 0; i < callbacks.size(); i++) {
 
-          final var notification = Model.fromJsonObject(callbacks.getJsonObject(i), TaskVolunteerNotification.class);
-          if (notification != null && notification.volunteerId != null && notification.volunteerId.equals(volunteerId) && HardcodedProtocolIT.task.requesterId.equals(notification.recipientId)) {
+              final var notification = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+              if (notification != null && "TaskVolunteerNotification".equals(notification.label)
+                  && volunteerId.equals(notification.attributes.getString("volunteerId"))
+                  && HardcodedProtocolIT.task.requesterId.equals(notification.receiverId)) {
 
-            return true;
+                return true;
 
-          }
-        }
+              }
+            }
 
-        return false;
+            return false;
 
-      }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
-        WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-          WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
+            WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+                testContext.succeeding(removed -> {
+                  testContext
+                      .assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id))
+                      .onSuccess(storedTask -> testContext.verify(() -> {
 
-            assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
-            final var attributes = storedTask.attributes;
-            final var unanswered = attributes.getJsonArray("unanswered");
-            assertThat(unanswered).isNotNull().doesNotContain(task.requesterId, volunteerId);
-            final var volunteers = attributes.getJsonArray("volunteers");
-            assertThat(volunteers).isNotNull().contains(volunteerId);
-            HardcodedProtocolIT.task = storedTask;
-            promise.complete();
+                        assertThat(storedTask.attributes).isNotNull();
+                        final var unanswered = storedTask.attributes.getJsonArray("unanswered");
+                        assertThat(unanswered).isNotNull().doesNotContain(task.requesterId, volunteerId);
+                        final var volunteers = storedTask.attributes.getJsonArray("volunteers");
+                        assertThat(volunteers).isNotNull().contains(volunteerId);
+                        HardcodedProtocolIT.task = storedTask;
+                        promise.complete();
 
-          })));
-        }));
-      }));
-    }));
+                      }));
+                }));
+          }));
+        });
 
     return promise.future();
 
@@ -411,39 +421,42 @@ public class HardcodedProtocolIT {
     taskTransaction.label = "refuseTask";
     final var volunteerId = HardcodedProtocolIT.users.get(2).id;
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
-    WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
+        .onSuccess(done -> {
 
-      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+          waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
-        for (var i = 0; i < callbacks.size(); i++) {
+            for (var i = 0; i < callbacks.size(); i++) {
 
-          final var message = Model.fromJsonObject(callbacks.getJsonObject(i), TextualMessage.class);
-          if (message != null && volunteerId.equals(message.recipientId)) {
+              final var message = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+              if (message != null && "TextualMessage".equals(message.label) && volunteerId.equals(message.receiverId)) {
 
-            return true;
+                return true;
 
-          }
-        }
+              }
+            }
 
-        return false;
+            return false;
 
-      }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
-        WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-          WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
+            WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+                testContext.succeeding(removed -> {
+                  testContext
+                      .assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id))
+                      .onSuccess(storedTask -> testContext.verify(() -> {
 
-            assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
-            final var attributes = storedTask.attributes;
-            final var unanswered = attributes.getJsonArray("unanswered");
-            assertThat(unanswered).isNotNull().doesNotContain(storedTask.requesterId, volunteerId);
-            final var volunteers = attributes.getJsonArray("volunteers");
-            assertThat(volunteers).isNotNull().contains(volunteerId);
-            HardcodedProtocolIT.task = storedTask;
-            testContext.completeNow();
+                        assertThat(storedTask.attributes).isNotNull();
+                        final var unanswered = storedTask.attributes.getJsonArray("unanswered");
+                        assertThat(unanswered).isNotNull().doesNotContain(storedTask.requesterId, volunteerId);
+                        final var volunteers = storedTask.attributes.getJsonArray("volunteers");
+                        assertThat(volunteers).isNotNull().contains(volunteerId);
+                        HardcodedProtocolIT.task = storedTask;
+                        testContext.completeNow();
 
-          })));
-        }));
-      }));
-    }));
+                      }));
+                }));
+          }));
+        });
 
   }
 
@@ -466,39 +479,43 @@ public class HardcodedProtocolIT {
     taskTransaction.label = "acceptVolunteer";
     final var volunteerId = HardcodedProtocolIT.users.get(2).id;
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
-    WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
+        .onSuccess(done -> {
 
-      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+          waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
-        for (var i = 0; i < callbacks.size(); i++) {
+            for (var i = 0; i < callbacks.size(); i++) {
 
-          final var notification = Model.fromJsonObject(callbacks.getJsonObject(i), TaskSelectionNotification.class);
-          if (notification != null && volunteerId.equals(notification.recipientId)) {
+              final var notification = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+              if (notification != null && "TaskSelectionNotification".equals(notification.label)
+                  && volunteerId.equals(notification.receiverId)) {
 
-            return true;
+                return true;
 
-          }
-        }
+              }
+            }
 
-        return false;
+            return false;
 
-      }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
-        WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-          WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
+            WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+                testContext.succeeding(removed -> {
+                  testContext
+                      .assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id))
+                      .onSuccess(storedTask -> testContext.verify(() -> {
 
-            assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
-            final var attributes = storedTask.attributes;
-            final var volunteers = attributes.getJsonArray("volunteers");
-            assertThat(volunteers).isNotNull().doesNotContain(storedTask.requesterId, volunteerId);
-            final var accepted = attributes.getJsonArray("accepted");
-            assertThat(accepted).isNotNull().hasSize(1).contains(volunteerId);
-            HardcodedProtocolIT.task = storedTask;
-            testContext.completeNow();
+                        assertThat(storedTask.attributes).isNotNull();
+                        final var volunteers = storedTask.attributes.getJsonArray("volunteers");
+                        assertThat(volunteers).isNotNull().doesNotContain(storedTask.requesterId, volunteerId);
+                        final var accepted = storedTask.attributes.getJsonArray("accepted");
+                        assertThat(accepted).isNotNull().hasSize(1).contains(volunteerId);
+                        HardcodedProtocolIT.task = storedTask;
+                        testContext.completeNow();
 
-          })));
-        }));
-      }));
-    }));
+                      }));
+                }));
+          }));
+        });
 
   }
 
@@ -521,39 +538,43 @@ public class HardcodedProtocolIT {
     taskTransaction.label = "acceptVolunteer";
     final var volunteerId = HardcodedProtocolIT.users.get(1).id;
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
-    WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
+        .onSuccess(done -> {
 
-      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+          waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
-        for (var i = 0; i < callbacks.size(); i++) {
+            for (var i = 0; i < callbacks.size(); i++) {
 
-          final var message = Model.fromJsonObject(callbacks.getJsonObject(i), TextualMessage.class);
-          if (message != null && HardcodedProtocolIT.task.requesterId.equals(message.recipientId)) {
+              final var message = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+              if (message != null && "TextualMessage".equals(message.label)
+                  && HardcodedProtocolIT.task.requesterId.equals(message.receiverId)) {
 
-            return true;
+                return true;
 
-          }
-        }
+              }
+            }
 
-        return false;
+            return false;
 
-      }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
-        WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-          WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
+            WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+                testContext.succeeding(removed -> {
+                  testContext
+                      .assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id))
+                      .onSuccess(storedTask -> testContext.verify(() -> {
 
-            assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
-            final var attributes = storedTask.attributes;
-            final var volunteers = attributes.getJsonArray("volunteers");
-            assertThat(volunteers).isNotNull().doesNotContain(storedTask.requesterId, volunteerId);
-            final var accepted = attributes.getJsonArray("accepted");
-            assertThat(accepted).isNotNull().doesNotContain(volunteerId);
-            HardcodedProtocolIT.task = storedTask;
-            testContext.completeNow();
+                        assertThat(storedTask.attributes).isNotNull();
+                        final var volunteers = storedTask.attributes.getJsonArray("volunteers");
+                        assertThat(volunteers).isNotNull().doesNotContain(storedTask.requesterId, volunteerId);
+                        final var accepted = storedTask.attributes.getJsonArray("accepted");
+                        assertThat(accepted).isNotNull().doesNotContain(volunteerId);
+                        HardcodedProtocolIT.task = storedTask;
+                        testContext.completeNow();
 
-          })));
-        }));
-      }));
-    }));
+                      }));
+                }));
+          }));
+        });
 
   }
 
@@ -576,39 +597,43 @@ public class HardcodedProtocolIT {
     taskTransaction.label = "refuseVolunteer";
     final var volunteerId = HardcodedProtocolIT.users.get(3).id;
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
-    WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
+        .onSuccess(done -> {
 
-      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+          waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
-        for (var i = 0; i < callbacks.size(); i++) {
+            for (var i = 0; i < callbacks.size(); i++) {
 
-          final var notification = Model.fromJsonObject(callbacks.getJsonObject(i), TaskSelectionNotification.class);
-          if (notification != null && volunteerId.equals(notification.recipientId)) {
+              final var notification = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+              if (notification != null && "TaskSelectionNotification".equals(notification.label)
+                  && volunteerId.equals(notification.receiverId)) {
 
-            return true;
+                return true;
 
-          }
-        }
+              }
+            }
 
-        return false;
+            return false;
 
-      }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
-        WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-          WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
+            WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+                testContext.succeeding(removed -> {
+                  testContext
+                      .assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id))
+                      .onSuccess(storedTask -> testContext.verify(() -> {
 
-            assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
-            final var attributes = storedTask.attributes;
-            final var volunteers = attributes.getJsonArray("volunteers");
-            assertThat(volunteers).isNotNull().doesNotContain(storedTask.requesterId, volunteerId);
-            final var refused = attributes.getJsonArray("refused");
-            assertThat(refused).isNotNull().hasSize(1).contains(volunteerId);
-            HardcodedProtocolIT.task = storedTask;
-            testContext.completeNow();
+                        assertThat(storedTask.attributes).isNotNull();
+                        final var volunteers = storedTask.attributes.getJsonArray("volunteers");
+                        assertThat(volunteers).isNotNull().doesNotContain(storedTask.requesterId, volunteerId);
+                        final var refused = storedTask.attributes.getJsonArray("refused");
+                        assertThat(refused).isNotNull().hasSize(1).contains(volunteerId);
+                        HardcodedProtocolIT.task = storedTask;
+                        testContext.completeNow();
 
-          })));
-        }));
-      }));
-    }));
+                      }));
+                }));
+          }));
+        });
 
   }
 
@@ -631,39 +656,43 @@ public class HardcodedProtocolIT {
     taskTransaction.label = "refuseVolunteer";
     final var volunteerId = HardcodedProtocolIT.users.get(1).id;
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
-    WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
+        .onSuccess(done -> {
 
-      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+          waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
-        for (var i = 0; i < callbacks.size(); i++) {
+            for (var i = 0; i < callbacks.size(); i++) {
 
-          final var message = Model.fromJsonObject(callbacks.getJsonObject(i), TextualMessage.class);
-          if (message != null && HardcodedProtocolIT.task.requesterId.equals(message.recipientId)) {
+              final var message = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+              if (message != null && "TextualMessage".equals(message.label)
+                  && HardcodedProtocolIT.task.requesterId.equals(message.receiverId)) {
 
-            return true;
+                return true;
 
-          }
-        }
+              }
+            }
 
-        return false;
+            return false;
 
-      }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
-        WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-          WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
+            WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+                testContext.succeeding(removed -> {
+                  testContext
+                      .assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id))
+                      .onSuccess(storedTask -> testContext.verify(() -> {
 
-            assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
-            final var attributes = storedTask.attributes;
-            final var volunteers = attributes.getJsonArray("volunteers");
-            assertThat(volunteers).isNotNull().doesNotContain(storedTask.requesterId, volunteerId);
-            final var refused = attributes.getJsonArray("refused");
-            assertThat(refused).isNotNull().doesNotContain(volunteerId);
-            HardcodedProtocolIT.task = storedTask;
-            testContext.completeNow();
+                        assertThat(storedTask.attributes).isNotNull();
+                        final var volunteers = storedTask.attributes.getJsonArray("volunteers");
+                        assertThat(volunteers).isNotNull().doesNotContain(storedTask.requesterId, volunteerId);
+                        final var refused = storedTask.attributes.getJsonArray("refused");
+                        assertThat(refused).isNotNull().doesNotContain(volunteerId);
+                        HardcodedProtocolIT.task = storedTask;
+                        testContext.completeNow();
 
-          })));
-        }));
-      }));
-    }));
+                      }));
+                }));
+          }));
+        });
 
   }
 
@@ -684,52 +713,56 @@ public class HardcodedProtocolIT {
     final var taskTransaction = new TaskTransaction();
     taskTransaction.taskId = HardcodedProtocolIT.task.id;
     taskTransaction.label = "taskCompleted";
-    final var outcome = TaskConcludedNotification.Outcome.completed;
+    final var outcome = "completed";
     taskTransaction.attributes = new JsonObject().put("outcome", outcome);
-    WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
+        .onSuccess(done -> {
 
-      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+          waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
-        final Set<String> ids = new HashSet<>();
-        ids.add(HardcodedProtocolIT.users.get(2).id);
-        ids.add(HardcodedProtocolIT.users.get(4).id);
-        ids.add(HardcodedProtocolIT.users.get(5).id);
+            final Set<String> ids = new HashSet<>();
+            ids.add(HardcodedProtocolIT.users.get(2).id);
+            ids.add(HardcodedProtocolIT.users.get(4).id);
+            ids.add(HardcodedProtocolIT.users.get(5).id);
 
-        for (var i = 0; i < callbacks.size(); i++) {
+            for (var i = 0; i < callbacks.size(); i++) {
 
-          final var notification = Model.fromJsonObject(callbacks.getJsonObject(i), TaskConcludedNotification.class);
-          if (notification != null && notification.outcome == outcome) {
+              final var notification = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+              if (notification != null && "TaskConcludedNotification".equals(notification.label)
+                  && outcome.equals(notification.attributes.getString("outcome"))) {
 
-            ids.remove(notification.recipientId);
+                ids.remove(notification.receiverId);
 
-          }
-        }
-        return ids.isEmpty();
+              }
+            }
+            return ids.isEmpty();
 
-      }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
-        WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-          WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
+            WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+                testContext.succeeding(removed -> {
+                  testContext
+                      .assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id))
+                      .onSuccess(storedTask -> testContext.verify(() -> {
 
-            assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
-            final var attributes = storedTask.attributes;
-            assertThat(attributes.getString("outcome")).isNotNull().isEqualTo(outcome.name());
-            final var declined = attributes.getJsonArray("declined");
-            assertThat(declined).isNotNull().hasSize(1).contains(users.get(1).id);
-            final var accepted = attributes.getJsonArray("accepted");
-            assertThat(accepted).isNotNull().hasSize(1).contains(users.get(2).id);
-            final var refused = attributes.getJsonArray("refused");
-            assertThat(refused).isNotNull().hasSize(1).contains(users.get(3).id);
-            final var volunteers = attributes.getJsonArray("volunteers");
-            assertThat(volunteers).isNotNull().hasSize(1).contains(users.get(4).id);
-            final var unanswered = attributes.getJsonArray("unanswered");
-            assertThat(unanswered).isNotNull().hasSize(1).contains(users.get(5).id);
-            HardcodedProtocolIT.task = storedTask;
-            testContext.completeNow();
+                        assertThat(storedTask.attributes).isNotNull();
+                        assertThat(storedTask.attributes.getString("outcome")).isNotNull().isEqualTo(outcome);
+                        final var declined = storedTask.attributes.getJsonArray("declined");
+                        assertThat(declined).isNotNull().hasSize(1).contains(users.get(1).id);
+                        final var accepted = storedTask.attributes.getJsonArray("accepted");
+                        assertThat(accepted).isNotNull().hasSize(1).contains(users.get(2).id);
+                        final var refused = storedTask.attributes.getJsonArray("refused");
+                        assertThat(refused).isNotNull().hasSize(1).contains(users.get(3).id);
+                        final var volunteers = storedTask.attributes.getJsonArray("volunteers");
+                        assertThat(volunteers).isNotNull().hasSize(1).contains(users.get(4).id);
+                        final var unanswered = storedTask.attributes.getJsonArray("unanswered");
+                        assertThat(unanswered).isNotNull().hasSize(1).contains(users.get(5).id);
+                        HardcodedProtocolIT.task = storedTask;
+                        testContext.completeNow();
 
-          })));
-        }));
-      }));
-    }));
+                      }));
+                }));
+          }));
+        });
 
   }
 
@@ -742,9 +775,10 @@ public class HardcodedProtocolIT {
    */
   @Timeout(value = 1, timeUnit = TimeUnit.MINUTES)
   @ParameterizedTest(name = "Should not complete a task with the outcome {0}")
-  @EnumSource(TaskConcludedNotification.Outcome.class)
+  @ValueSource(strings = { "cancelled", "completed", "failed" })
   @Order(13)
-  public void shouldNotChangeCompletedAClosedTask(final TaskConcludedNotification.Outcome outcome, final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldNotChangeCompletedAClosedTask(final String outcome, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     assert HardcodedProtocolIT.task != null;
     assert HardcodedProtocolIT.users != null;
@@ -753,45 +787,49 @@ public class HardcodedProtocolIT {
     taskTransaction.taskId = HardcodedProtocolIT.task.id;
     taskTransaction.label = "taskCompleted";
     taskTransaction.attributes = new JsonObject().put("outcome", outcome);
-    WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
+        .onSuccess(done -> {
 
-      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+          waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
-        for (var i = 0; i < callbacks.size(); i++) {
+            for (var i = 0; i < callbacks.size(); i++) {
 
-          final var message = Model.fromJsonObject(callbacks.getJsonObject(i), TextualMessage.class);
-          if (message != null && HardcodedProtocolIT.task.requesterId.equals(message.recipientId)) {
+              final var message = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+              if (message != null && "TextualMessage".equals(message.label)
+                  && HardcodedProtocolIT.task.requesterId.equals(message.receiverId)) {
 
-            return true;
+                return true;
 
-          }
-        }
-        return false;
+              }
+            }
+            return false;
 
-      }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
-        WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-          WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
+            WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+                testContext.succeeding(removed -> {
+                  testContext
+                      .assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id))
+                      .onSuccess(storedTask -> testContext.verify(() -> {
 
-            assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
-            final var attributes = storedTask.attributes;
-            assertThat(attributes.getString("outcome")).isNotNull().isEqualTo(TaskConcludedNotification.Outcome.completed.name());
-            final var declined = attributes.getJsonArray("declined");
-            assertThat(declined).isNotNull().hasSize(1).contains(users.get(1).id);
-            final var accepted = attributes.getJsonArray("accepted");
-            assertThat(accepted).isNotNull().hasSize(1).contains(users.get(2).id);
-            final var refused = attributes.getJsonArray("refused");
-            assertThat(refused).isNotNull().hasSize(1).contains(users.get(3).id);
-            final var volunteers = attributes.getJsonArray("volunteers");
-            assertThat(volunteers).isNotNull().hasSize(1).contains(users.get(4).id);
-            final var unanswered = attributes.getJsonArray("unanswered");
-            assertThat(unanswered).isNotNull().hasSize(1).contains(users.get(5).id);
-            HardcodedProtocolIT.task = storedTask;
-            testContext.completeNow();
+                        assertThat(storedTask.attributes).isNotNull();
+                        assertThat(storedTask.attributes.getString("outcome")).isNotNull().isEqualTo("completed");
+                        final var declined = storedTask.attributes.getJsonArray("declined");
+                        assertThat(declined).isNotNull().hasSize(1).contains(users.get(1).id);
+                        final var accepted = storedTask.attributes.getJsonArray("accepted");
+                        assertThat(accepted).isNotNull().hasSize(1).contains(users.get(2).id);
+                        final var refused = storedTask.attributes.getJsonArray("refused");
+                        assertThat(refused).isNotNull().hasSize(1).contains(users.get(3).id);
+                        final var volunteers = storedTask.attributes.getJsonArray("volunteers");
+                        assertThat(volunteers).isNotNull().hasSize(1).contains(users.get(4).id);
+                        final var unanswered = storedTask.attributes.getJsonArray("unanswered");
+                        assertThat(unanswered).isNotNull().hasSize(1).contains(users.get(5).id);
+                        HardcodedProtocolIT.task = storedTask;
+                        testContext.completeNow();
 
-          })));
-        }));
-      }));
-    }));
+                      }));
+                }));
+          }));
+        });
 
   }
 
@@ -806,7 +844,8 @@ public class HardcodedProtocolIT {
   @ParameterizedTest(name = "Should not do the task transaction {0}")
   @ValueSource(strings = { "volunteerForTask", "refuseTask", "acceptVolunteer", "refuseVolunteer" })
   @Order(14)
-  public void shouldNotChangeVolunteerStatesWhenTaskIsClosed(final String label, final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldNotChangeVolunteerStatesWhenTaskIsClosed(final String label, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     assert HardcodedProtocolIT.task != null;
     assert HardcodedProtocolIT.users != null;
@@ -816,45 +855,48 @@ public class HardcodedProtocolIT {
     taskTransaction.label = label;
     final var volunteerId = HardcodedProtocolIT.users.get(5).id;
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
-    WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
+        .onSuccess(done -> {
 
-      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+          waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
-        for (var i = 0; i < callbacks.size(); i++) {
+            for (var i = 0; i < callbacks.size(); i++) {
 
-          final var message = Model.fromJsonObject(callbacks.getJsonObject(i), TextualMessage.class);
-          if (message != null && volunteerId.equals(message.recipientId)) {
+              final var message = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+              if (message != null && "TextualMessage".equals(message.label) && volunteerId.equals(message.receiverId)) {
 
-            return true;
+                return true;
 
-          }
-        }
-        return false;
+              }
+            }
+            return false;
 
-      }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
-        WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-          WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
+            WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+                testContext.succeeding(removed -> {
+                  testContext
+                      .assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id))
+                      .onSuccess(storedTask -> testContext.verify(() -> {
 
-            assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
-            final var attributes = storedTask.attributes;
-            assertThat(attributes.getString("outcome")).isNotNull().isEqualTo(TaskConcludedNotification.Outcome.completed.name());
-            final var declined = attributes.getJsonArray("declined");
-            assertThat(declined).isNotNull().hasSize(1).contains(users.get(1).id);
-            final var accepted = attributes.getJsonArray("accepted");
-            assertThat(accepted).isNotNull().hasSize(1).contains(users.get(2).id);
-            final var refused = attributes.getJsonArray("refused");
-            assertThat(refused).isNotNull().hasSize(1).contains(users.get(3).id);
-            final var volunteers = attributes.getJsonArray("volunteers");
-            assertThat(volunteers).isNotNull().hasSize(1).contains(users.get(4).id);
-            final var unanswered = attributes.getJsonArray("unanswered");
-            assertThat(unanswered).isNotNull().hasSize(1).contains(users.get(5).id);
-            HardcodedProtocolIT.task = storedTask;
-            testContext.completeNow();
+                        assertThat(storedTask.attributes).isNotNull();
+                        assertThat(storedTask.attributes.getString("outcome")).isNotNull().isEqualTo("completed");
+                        final var declined = storedTask.attributes.getJsonArray("declined");
+                        assertThat(declined).isNotNull().hasSize(1).contains(users.get(1).id);
+                        final var accepted = storedTask.attributes.getJsonArray("accepted");
+                        assertThat(accepted).isNotNull().hasSize(1).contains(users.get(2).id);
+                        final var refused = storedTask.attributes.getJsonArray("refused");
+                        assertThat(refused).isNotNull().hasSize(1).contains(users.get(3).id);
+                        final var volunteers = storedTask.attributes.getJsonArray("volunteers");
+                        assertThat(volunteers).isNotNull().hasSize(1).contains(users.get(4).id);
+                        final var unanswered = storedTask.attributes.getJsonArray("unanswered");
+                        assertThat(unanswered).isNotNull().hasSize(1).contains(users.get(5).id);
+                        HardcodedProtocolIT.task = storedTask;
+                        testContext.completeNow();
 
-          })));
-        }));
-      }));
-    }));
+                      }));
+                }));
+          }));
+        });
 
   }
 
@@ -871,19 +913,20 @@ public class HardcodedProtocolIT {
 
     assert HardcodedProtocolIT.users != null;
     assert HardcodedProtocolIT.app != null;
-    StoreServices.storeTaskTypeExample(1, vertx, testContext, testContext.succeeding(taskType -> {
+    StoreServices.storeTaskTypeExample(1, vertx, testContext).onSuccess(taskType -> {
 
       HardcodedProtocolIT.taskType = taskType;
       final var task = new Task();
       task.appId = HardcodedProtocolIT.app.appId;
-      task.deadlineTs = TimeManager.now() + 10;
-      task.startTs = task.deadlineTs + 30;
-      task.endTs = task.startTs + 300;
+      var deadlineTs = TimeManager.now() + 10;
+      var startTs = deadlineTs + 30;
+      var endTs = startTs + 300;
+      task.attributes = new JsonObject().put("deadlineTs", deadlineTs).put("startTs", startTs).put("endTs", endTs);
       task.taskTypeId = taskType.id;
-      task.goal = new TaskGoal();
+      task.goal = new HumanDescription();
       task.goal.name = "Test create task";
       task.requesterId = HardcodedProtocolIT.users.get(5).id;
-      WeNetTaskManager.createProxy(vertx).createTask(task, testContext.succeeding(createdTask -> {
+      testContext.assertComplete(WeNetTaskManager.createProxy(vertx).createTask(task)).onSuccess(createdTask -> {
 
         HardcodedProtocolIT.task = createdTask;
         waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
@@ -897,45 +940,49 @@ public class HardcodedProtocolIT {
 
           for (var i = 0; i < callbacks.size(); i++) {
 
-            final var proposal = Model.fromJsonObject(callbacks.getJsonObject(i), TaskProposalNotification.class);
-            if (proposal != null && createdTask.id.equals(proposal.taskId)) {
+            final var proposal = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+            if (proposal != null && "TaskProposalNotification".equals(proposal.label)
+                && createdTask.id.equals(proposal.attributes.getString("taskId"))) {
 
-              ids.remove(proposal.recipientId);
+              ids.remove(proposal.receiverId);
 
             }
           }
           return ids.isEmpty();
 
         }, vertx, testContext).onComplete(testContext.succeeding(msg -> {
-          WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> {
-            WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id, testContext.succeeding(storedTask -> testContext.verify(() -> {
+          WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+              testContext.succeeding(removed -> {
+                testContext
+                    .assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(HardcodedProtocolIT.task.id))
+                    .onSuccess(storedTask -> testContext.verify(() -> {
 
-              assertThat(storedTask.attributes).isNotNull().isInstanceOf(JsonObject.class);
-              final var attributes = storedTask.attributes;
-              final var unanswered = attributes.getJsonArray("unanswered");
-              assertThat(unanswered).isNotNull().doesNotContain(createdTask.requesterId);
-              for (final WeNetUserProfile profile : HardcodedProtocolIT.users) {
+                      assertThat(storedTask.attributes).isNotNull();
+                      final var unanswered = storedTask.attributes.getJsonArray("unanswered");
+                      assertThat(unanswered).isNotNull().doesNotContain(createdTask.requesterId);
+                      for (final WeNetUserProfile profile : HardcodedProtocolIT.users) {
 
-                if (!profile.id.equals(storedTask.requesterId)) {
+                        if (!profile.id.equals(storedTask.requesterId)) {
 
-                  assertThat(unanswered).contains(profile.id);
+                          assertThat(unanswered).contains(profile.id);
 
-                }
-              }
-              HardcodedProtocolIT.task = storedTask;
-              testContext.completeNow();
-            })));
-          }));
+                        }
+                      }
+                      HardcodedProtocolIT.task = storedTask;
+                      testContext.completeNow();
+                    }));
+              }));
         }));
 
-      }));
-    }));
+      });
+    });
   }
 
   /**
    * Check that not do a transaction if the deadline has reached.
    *
-   * @param label       of the task transaction that can not be done after deadline has reached.
+   * @param label       of the task transaction that can not be done after
+   *                    deadline has reached.
    * @param vertx       event bus to use.
    * @param testContext context to do the test.
    */
@@ -943,12 +990,14 @@ public class HardcodedProtocolIT {
   @ParameterizedTest(name = "Should not do the task transaction {0} because deadline is reached")
   @ValueSource(strings = { "volunteerForTask", "refuseTask" })
   @Order(16)
-  public void shouldNotDoTranasctionAfterDeadline(final String label, final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldNotDoTranasctionAfterDeadline(final String label, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     assert HardcodedProtocolIT.users != null;
     assert HardcodedProtocolIT.task != null;
 
-    while (TimeManager.now() <= HardcodedProtocolIT.task.deadlineTs) {
+    var deadlineTs = HardcodedProtocolIT.task.attributes.getLong("deadlineTs", 0l);
+    while (TimeManager.now() <= deadlineTs) {
       // Wait until deadline is reached
     }
 
@@ -957,25 +1006,27 @@ public class HardcodedProtocolIT {
     taskTransaction.label = label;
     final var volunteerId = HardcodedProtocolIT.users.get(0).id;
     taskTransaction.attributes = new JsonObject().put("volunteerId", volunteerId);
-    WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction, testContext.succeeding(done -> {
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
+        .onSuccess(done -> {
 
-      waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
+          waitUntilCallbacks(HardcodedProtocolIT.app.appId, callbacks -> {
 
-        for (var i = 0; i < callbacks.size(); i++) {
+            for (var i = 0; i < callbacks.size(); i++) {
 
-          final var message = Model.fromJsonObject(callbacks.getJsonObject(i), TextualMessage.class);
-          if (message != null && volunteerId.equals(message.recipientId)) {
+              final var message = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+              if (message != null && "TextualMessage".equals(message.label) && volunteerId.equals(message.receiverId)) {
 
-            return true;
+                return true;
 
-          }
-        }
-        return false;
+              }
+            }
+            return false;
 
-      }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
-        WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId, testContext.succeeding(removed -> testContext.completeNow()));
-      }));
+          }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
+            WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(HardcodedProtocolIT.app.appId,
+                testContext.succeeding(removed -> testContext.completeNow()));
+          }));
 
-    }));
+        });
   }
 }

@@ -26,15 +26,10 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -46,28 +41,7 @@ import io.vertx.core.json.JsonObject;
  */
 public class EngineWorkerTest {
 
-  /**
-   * Should for the task attributes.
-   */
-  @Test
-  public void shouldFixTaskAttributes() {
 
-    final var worker = new EngineWorker();
-
-    final var message = new ProtocolMessage();
-    message.taskId = UUID.randomUUID().toString();
-    final var env = new EngineEnvironment();
-    worker.fixTaskAttributes(env, message);
-    assertThat(env.task).isNotNull();
-    assertThat(env.task.id).isEqualTo(message.taskId);
-    assertThat(env.task.attributes).isNotNull();
-    assertThat(env.task.attributes.getJsonArray("unanswered")).isEqualTo(new JsonArray());
-    assertThat(env.task.attributes.getJsonArray("volunteers")).isEqualTo(new JsonArray());
-    assertThat(env.task.attributes.getJsonArray("declined")).isEqualTo(new JsonArray());
-    assertThat(env.task.attributes.getJsonArray("accepted")).isEqualTo(new JsonArray());
-    assertThat(env.task.attributes.getJsonArray("refused")).isEqualTo(new JsonArray());
-
-  }
 
   /**
    * Should capture error when handle {@code null} event.

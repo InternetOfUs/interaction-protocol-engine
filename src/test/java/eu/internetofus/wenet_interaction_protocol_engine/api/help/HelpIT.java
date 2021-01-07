@@ -27,7 +27,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api.help;
 
 import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
-import static io.reactiverse.junit5.web.TestRequest.testRequest;
+import static eu.internetofus.common.vertx.ext.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.ws.rs.core.Response.Status;

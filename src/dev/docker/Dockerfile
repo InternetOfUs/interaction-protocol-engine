@@ -17,11 +17,10 @@ RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -
 # Install utilities
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install less
 
+RUN echo "PS1='\[\033[01;32m\]WeNet@Interaction-Protocol-Engine-Dev\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\] \$ '" >> /root/.bashrc
+
 WORKDIR /app
 
-COPY pom.xml .
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn dependency:go-offline
-
 
 CMD ["bash"]

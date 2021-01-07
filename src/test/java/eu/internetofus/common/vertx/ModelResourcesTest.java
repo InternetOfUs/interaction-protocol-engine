@@ -38,8 +38,6 @@ import java.util.Collections;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 
-import javax.ws.rs.core.Response.Status;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -59,8 +57,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.api.OperationRequest;
-import io.vertx.ext.web.api.OperationResponse;
+import io.vertx.ext.web.api.service.ServiceRequest;
+import io.vertx.ext.web.api.service.ServiceResponse;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * Test the {@link ModelResources}
@@ -93,9 +92,9 @@ public class ModelResourcesTest {
    *
    * @return the created context.
    */
-  protected OperationContext createOperationContext(final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  protected ServiceContext createServiceContext(final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
-    return new OperationContext(new OperationRequest(), resultHandler);
+    return new ServiceContext(new ServiceRequest(), resultHandler);
 
   }
 
@@ -105,13 +104,13 @@ public class ModelResourcesTest {
    * @param searcher      the function that will search the model.
    * @param resultHandler handler to manage the HTTP result.
    *
-   * @see ModelResources#retrieveModel(ModelContext, BiConsumer, OperationContext)
+   * @see ModelResources#retrieveModel(ModelContext, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotRetrieveModelIfNotFound(@Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher, @Mock final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void shouldNotRetrieveModelIfNotFound(@Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher, @Mock final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModel(model, searcher, context);
 
     @SuppressWarnings("unchecked")
@@ -120,7 +119,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.failedFuture("Not found"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -139,13 +138,13 @@ public class ModelResourcesTest {
    * @param searcher      the function that will search the model.
    * @param resultHandler handler to manage the HTTP result.
    *
-   * @see ModelResources#retrieveModel(ModelContext, BiConsumer, OperationContext)
+   * @see ModelResources#retrieveModel(ModelContext, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotRetrieveModelIfFoundModelIsNull(@Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher, @Mock final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void shouldNotRetrieveModelIfFoundModelIsNull(@Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher, @Mock final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModel(model, searcher, context);
 
     @SuppressWarnings("unchecked")
@@ -154,7 +153,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture());
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -173,13 +172,13 @@ public class ModelResourcesTest {
    * @param searcher      the function that will search the model.
    * @param resultHandler handler to manage the HTTP result.
    *
-   * @see ModelResources#retrieveModel(ModelContext, BiConsumer, OperationContext)
+   * @see ModelResources#retrieveModel(ModelContext, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldRetrieveModel(@Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher, @Mock final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void shouldRetrieveModel(@Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher, @Mock final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModel(model, searcher, context);
 
     @SuppressWarnings("unchecked")
@@ -189,7 +188,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture(expectedModel));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -206,13 +205,13 @@ public class ModelResourcesTest {
    * @param deleter       the function that will delete the model.
    * @param resultHandler handler to manage the HTTP result.
    *
-   * @see ModelResources#deleteModel(ModelContext, BiConsumer, OperationContext)
+   * @see ModelResources#deleteModel(ModelContext, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotDeleteModelIfNotFound(@Mock final BiConsumer<String, Handler<AsyncResult<Void>>> deleter, @Mock final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void shouldNotDeleteModelIfNotFound(@Mock final BiConsumer<String, Handler<AsyncResult<Void>>> deleter, @Mock final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.deleteModel(model, deleter, context);
 
     @SuppressWarnings("unchecked")
@@ -221,7 +220,7 @@ public class ModelResourcesTest {
     deleteHandler.getValue().handle(Future.failedFuture("Not found"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -240,13 +239,13 @@ public class ModelResourcesTest {
    * @param deleter       the function that will delete the model.
    * @param resultHandler handler to manage the HTTP result.
    *
-   * @see ModelResources#deleteModel(ModelContext, BiConsumer, OperationContext)
+   * @see ModelResources#deleteModel(ModelContext, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldDeleteModel(@Mock final BiConsumer<String, Handler<AsyncResult<Void>>> deleter, @Mock final Handler<AsyncResult<OperationResponse>> resultHandler) {
+  public void shouldDeleteModel(@Mock final BiConsumer<String, Handler<AsyncResult<Void>>> deleter, @Mock final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.deleteModel(model, deleter, context);
 
     @SuppressWarnings("unchecked")
@@ -255,7 +254,7 @@ public class ModelResourcesTest {
     deleteHandler.getValue().handle(Future.succeededFuture());
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -271,20 +270,20 @@ public class ModelResourcesTest {
    * @param resultHandler handler to manage the HTTP result.
    * @param success       function to call when the validation success.
    *
-   * @see ModelResources#validate(Vertx, ModelContext, OperationContext, Runnable)
+   * @see ModelResources#validate(Vertx, ModelContext, ServiceContext, Runnable)
    */
   @Test
-  public void shouldNotValidateIfModelIsNotValid(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final Runnable success) {
+  public void shouldNotValidateIfModelIsNotValid(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final Runnable success) {
 
     final var model = this.createModelContext();
     model.source = new DummyComplexModelTest().createModelExample(2);
     model.source.id = ValidationsTest.STRING_256;
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     ModelResources.validate(vertx, model, context, success);
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -303,15 +302,15 @@ public class ModelResourcesTest {
    * @param resultHandler handler to manage the HTTP result.
    * @param success       function to call when the validation success.
    *
-   * @see ModelResources#validate(Vertx, ModelContext, OperationContext, Runnable)
+   * @see ModelResources#validate(Vertx, ModelContext, ServiceContext, Runnable)
    */
   @Test
-  public void shouldValidateModel(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final Runnable success) {
+  public void shouldValidateModel(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final Runnable success) {
 
     final var model = this.createModelContext();
     final var expected = new DummyComplexModelTest().createModelExample(2);
     model.source = expected;
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
 
     ModelResources.validate(vertx, model, context, success);
@@ -326,19 +325,19 @@ public class ModelResourcesTest {
    * @param resultHandler handler to manage the HTTP result.
    * @param storer        the function used to store the model.
    *
-   * @see ModelResources#createModel(Vertx, JsonObject, ModelContext, BiConsumer, OperationContext)
+   * @see ModelResources#createModel(Vertx, JsonObject, ModelContext, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotCreateModelBecauseItIsNotNotValid(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<DummyComplexModel>>> storer) {
+  public void shouldNotCreateModelBecauseItIsNotNotValid(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<DummyComplexModel>>> storer) {
 
     final var model = this.createModelContext();
     final var expected = new DummyComplexModelTest().createModelExample(2);
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     ModelResources.createModel(vertx, expected.toJsonObject().put("id", ValidationsTest.STRING_256), model, storer, context);
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -357,14 +356,14 @@ public class ModelResourcesTest {
    * @param resultHandler handler to manage the HTTP result.
    * @param storer        the function used to store the model.
    *
-   * @see ModelResources#createModel(Vertx, JsonObject, ModelContext, BiConsumer, OperationContext)
+   * @see ModelResources#createModel(Vertx, JsonObject, ModelContext, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotCreateModelBecauseCanNotBeStored(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<DummyComplexModel>>> storer) {
+  public void shouldNotCreateModelBecauseCanNotBeStored(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<DummyComplexModel>>> storer) {
 
     final var model = this.createModelContext();
     final var expected = new DummyComplexModelTest().createModelExample(2);
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     ModelResources.createModel(vertx, expected.toJsonObject(), model, storer, context);
 
@@ -375,7 +374,7 @@ public class ModelResourcesTest {
     storeCaptor.getValue().handle(Future.failedFuture(cause));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -393,14 +392,14 @@ public class ModelResourcesTest {
    * @param resultHandler handler to manage the HTTP result.
    * @param storer        the function used to store the model.
    *
-   * @see ModelResources#createModel(Vertx, JsonObject, ModelContext, BiConsumer, OperationContext)
+   * @see ModelResources#createModel(Vertx, JsonObject, ModelContext, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldCreateModel(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<DummyComplexModel>>> storer) {
+  public void shouldCreateModel(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<DummyComplexModel>>> storer) {
 
     final var model = this.createModelContext();
     final var expected = new DummyComplexModelTest().createModelExample(1);
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     ModelResources.createModel(vertx, expected.toJsonObject(), model, storer, context);
 
@@ -411,7 +410,7 @@ public class ModelResourcesTest {
     storeCaptor.getValue().handle(Future.succeededFuture(stored));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -429,19 +428,19 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    * @param updater       the function used to update a model.
    *
-   * @see ModelResources#mergeModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, OperationContext)
+   * @see ModelResources#mergeModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotMergeModelBecauseNoMatchType(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotMergeModelBecauseNoMatchType(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> updater) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     ModelResources.mergeModel(vertx, new JsonObject().put("undefined_key", "value"), model, searcher, updater, context);
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -461,14 +460,14 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    * @param updater       the function used to update a model.
    *
-   * @see ModelResources#mergeModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, OperationContext)
+   * @see ModelResources#mergeModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotMergeModelBecauseNotFound(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotMergeModelBecauseNotFound(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> updater) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var value = new DummyComplexModelTest().createModelExample(1).toJsonObject();
     ModelResources.mergeModel(vertx, value, model, searcher, updater, context);
@@ -479,7 +478,7 @@ public class ModelResourcesTest {
     storeCaptor.getValue().handle(Future.failedFuture("Not found"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -499,14 +498,14 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    * @param updater       the function used to update a model.
    *
-   * @see ModelResources#mergeModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, OperationContext)
+   * @see ModelResources#mergeModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotMergeModelBecauseNotValid(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotMergeModelBecauseNotValid(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> updater) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(1);
     source.siblings = new ArrayList<>();
@@ -522,7 +521,7 @@ public class ModelResourcesTest {
     storeCaptor.getValue().handle(Future.succeededFuture(target));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -542,14 +541,14 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    * @param updater       the function used to update a model.
    *
-   * @see ModelResources#mergeModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, OperationContext)
+   * @see ModelResources#mergeModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotMergeModelBecauseNoChanges(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotMergeModelBecauseNoChanges(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> updater) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(2);
     final var value = source.toJsonObject();
@@ -561,7 +560,7 @@ public class ModelResourcesTest {
     storeCaptor.getValue().handle(Future.succeededFuture(source));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -581,14 +580,14 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    * @param updater       the function used to update a model.
    *
-   * @see ModelResources#mergeModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, OperationContext)
+   * @see ModelResources#mergeModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotMergeModelBecauseUpdateFails(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotMergeModelBecauseUpdateFails(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> updater) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(2);
     final var value = source.toJsonObject();
@@ -606,7 +605,7 @@ public class ModelResourcesTest {
     updateCaptor.getValue().handle(Future.failedFuture("Can not be updated"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -625,14 +624,14 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    * @param updater       the function used to update a model.
    *
-   * @see ModelResources#mergeModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, OperationContext)
+   * @see ModelResources#mergeModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldMergeModel(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldMergeModel(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> updater) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(2);
     final var value = source.toJsonObject();
@@ -650,7 +649,7 @@ public class ModelResourcesTest {
     updateCaptor.getValue().handle(Future.succeededFuture());
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -671,19 +670,19 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    * @param updater       the function used to update a model.
    *
-   * @see ModelResources#updateModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, OperationContext)
+   * @see ModelResources#updateModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotUpdateModelBecauseNoMatchType(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotUpdateModelBecauseNoMatchType(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> updater) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     ModelResources.updateModel(vertx, new JsonObject().put("undefined_key", "value"), model, searcher, updater, context);
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -703,14 +702,14 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    * @param updater       the function used to update a model.
    *
-   * @see ModelResources#updateModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, OperationContext)
+   * @see ModelResources#updateModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotUpdateModelBecauseNotFound(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotUpdateModelBecauseNotFound(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> updater) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var value = new DummyComplexModelTest().createModelExample(1).toJsonObject();
     ModelResources.updateModel(vertx, value, model, searcher, updater, context);
@@ -721,7 +720,7 @@ public class ModelResourcesTest {
     storeCaptor.getValue().handle(Future.failedFuture("Not found"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -741,14 +740,14 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    * @param updater       the function used to update a model.
    *
-   * @see ModelResources#updateModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, OperationContext)
+   * @see ModelResources#updateModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotUpdateModelBecauseNotValid(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotUpdateModelBecauseNotValid(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> updater) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(1);
     source.siblings = new ArrayList<>();
@@ -764,7 +763,7 @@ public class ModelResourcesTest {
     storeCaptor.getValue().handle(Future.succeededFuture(target));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -784,14 +783,14 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    * @param updater       the function used to update a model.
    *
-   * @see ModelResources#updateModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, OperationContext)
+   * @see ModelResources#updateModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotUpdateModelBecauseNoChanges(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotUpdateModelBecauseNoChanges(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> updater) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(2);
     final var value = source.toJsonObject();
@@ -803,7 +802,7 @@ public class ModelResourcesTest {
     storeCaptor.getValue().handle(Future.succeededFuture(source));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -823,14 +822,14 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    * @param updater       the function used to update a model.
    *
-   * @see ModelResources#updateModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, OperationContext)
+   * @see ModelResources#updateModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotUpdateModelBecauseUpdateFails(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotUpdateModelBecauseUpdateFails(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> updater) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(2);
     final var value = source.toJsonObject();
@@ -848,7 +847,7 @@ public class ModelResourcesTest {
     updateCaptor.getValue().handle(Future.failedFuture("Can not be updated"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -867,14 +866,14 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    * @param updater       the function used to update a model.
    *
-   * @see ModelResources#updateModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, OperationContext)
+   * @see ModelResources#updateModel(Vertx, JsonObject, ModelContext, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldUpdateModel(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldUpdateModel(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> updater) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(2);
     final var value = source.toJsonObject();
@@ -892,7 +891,7 @@ public class ModelResourcesTest {
     updateCaptor.getValue().handle(Future.succeededFuture());
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -912,13 +911,13 @@ public class ModelResourcesTest {
    * @param resultHandler handler to manage the HTTP result.
    * @param searcher      the function used to search a model.
    *
-   * @see ModelResources#retrieveModelField(ModelContext, BiConsumer, java.util.function.Function, OperationContext)
+   * @see ModelResources#retrieveModelField(ModelContext, BiConsumer, java.util.function.Function, ServiceContext)
    */
   @Test
-  public void shouldNotRetrieveModelFieldBecauseNotFouncModel(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
+  public void shouldNotRetrieveModelFieldBecauseNotFouncModel(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModelField(model, searcher, dummy -> dummy.siblings, context);
 
     @SuppressWarnings("unchecked")
@@ -927,7 +926,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.failedFuture("Not found"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -945,13 +944,13 @@ public class ModelResourcesTest {
    * @param resultHandler handler to manage the HTTP result.
    * @param searcher      the function used to search a model.
    *
-   * @see ModelResources#retrieveModelField(ModelContext, BiConsumer, java.util.function.Function, OperationContext)
+   * @see ModelResources#retrieveModelField(ModelContext, BiConsumer, java.util.function.Function, ServiceContext)
    */
   @Test
-  public void shouldRetrieveEmptyModelField(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
+  public void shouldRetrieveEmptyModelField(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModelField(model, searcher, dummy -> dummy.siblings, context);
 
     @SuppressWarnings("unchecked")
@@ -960,7 +959,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture(new DummyComplexModel()));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -977,13 +976,13 @@ public class ModelResourcesTest {
    * @param resultHandler handler to manage the HTTP result.
    * @param searcher      the function used to search a model.
    *
-   * @see ModelResources#retrieveModelField(ModelContext, BiConsumer, java.util.function.Function, OperationContext)
+   * @see ModelResources#retrieveModelField(ModelContext, BiConsumer, java.util.function.Function, ServiceContext)
    */
   @Test
-  public void shouldRetrieveModelField(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
+  public void shouldRetrieveModelField(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModelField(model, searcher, dummy -> dummy.siblings, context);
 
     @SuppressWarnings("unchecked")
@@ -993,7 +992,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture(target));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1026,13 +1025,13 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    *
    * @see ModelResources#retrieveModelFieldElement(ModelFieldContext, BiConsumer, java.util.function.Function,
-   *      java.util.function.BiFunction, OperationContext)
+   *      java.util.function.BiFunction, ServiceContext)
    */
   @Test
-  public void shouldNotRetrieveModelFieldElementBecauseNotFoundModel(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
+  public void shouldNotRetrieveModelFieldElementBecauseNotFoundModel(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModelFieldElement(element, searcher, dummy -> dummy.siblings, ModelResources.searchElementById((dummy, id) -> id != null && id.equals(dummy.id)), context);
 
     @SuppressWarnings("unchecked")
@@ -1041,7 +1040,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.failedFuture("Not found"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1060,13 +1059,13 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    *
    * @see ModelResources#retrieveModelFieldElement(ModelFieldContext, BiConsumer, java.util.function.Function,
-   *      java.util.function.BiFunction, OperationContext)
+   *      java.util.function.BiFunction, ServiceContext)
    */
   @Test
-  public void shouldNotRetrieveModelFieldElementBecauseFieldIsNull(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
+  public void shouldNotRetrieveModelFieldElementBecauseFieldIsNull(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModelFieldElement(element, searcher, dummy -> dummy.siblings, ModelResources.searchElementById((dummy, id) -> id != null && id.equals(dummy.id)), context);
 
     @SuppressWarnings("unchecked")
@@ -1075,7 +1074,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture(new DummyComplexModel()));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1094,13 +1093,13 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    *
    * @see ModelResources#retrieveModelFieldElement(ModelFieldContext, BiConsumer, java.util.function.Function,
-   *      java.util.function.BiFunction, OperationContext)
+   *      java.util.function.BiFunction, ServiceContext)
    */
   @Test
-  public void shouldNotRetrieveModelFieldElementBecauseElementNotFound(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
+  public void shouldNotRetrieveModelFieldElementBecauseElementNotFound(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModelFieldElement(element, searcher, dummy -> dummy.siblings, ModelResources.searchElementById((dummy, id) -> id != null && id.equals(dummy.id)), context);
 
     @SuppressWarnings("unchecked")
@@ -1109,7 +1108,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture(new DummyComplexModelTest().createModelExample(2)));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1128,15 +1127,15 @@ public class ModelResourcesTest {
    * @param searcher      the function used to search a model.
    *
    * @see ModelResources#retrieveModelFieldElement(ModelFieldContext, BiConsumer, java.util.function.Function,
-   *      java.util.function.BiFunction, OperationContext)
+   *      java.util.function.BiFunction, ServiceContext)
    */
   @Test
-  public void shouldRetrieveModelFieldElement(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
+  public void shouldRetrieveModelFieldElement(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher) {
 
     final var element = this.createModelFieldContextById();
     final var target = new DummyComplexModelTest().createModelExample(2);
     element.id = target.siblings.get(1).id;
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModelFieldElement(element, searcher, dummy -> dummy.siblings, ModelResources.searchElementById((dummy, id) -> id != null && id.equals(dummy.id)), context);
 
     @SuppressWarnings("unchecked")
@@ -1145,7 +1144,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture(target));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1163,20 +1162,20 @@ public class ModelResourcesTest {
    * @param storerUpdateModel the function to update the model.
    *
    * @see ModelResources#updateModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotUpdateModelFieldElementBecauseBadValue(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotUpdateModelFieldElementBecauseBadValue(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerUpdateModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var valueToUpdate = new JsonObject().put("undefined", "value");
     ModelResources.updateModelFieldElement(vertx, valueToUpdate, element, searcher, dummy -> dummy.siblings, ModelResources.searchElementById((dummy, id) -> id != null && id.equals(dummy.id)), storerUpdateModel, context);
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1196,14 +1195,14 @@ public class ModelResourcesTest {
    * @param storerUpdateModel the function to update the model.
    *
    * @see ModelResources#updateModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotUpdateModelFieldElementBecauseNotFoundModel(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotUpdateModelFieldElementBecauseNotFoundModel(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerUpdateModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(1);
     final var valueToUpdate = source.toJsonObject();
@@ -1215,7 +1214,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.failedFuture("Not found"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1235,14 +1234,14 @@ public class ModelResourcesTest {
    * @param storerUpdateModel the function to update the model.
    *
    * @see ModelResources#updateModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotUpdateModelFieldElementBecauseNotFoundElement(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotUpdateModelFieldElementBecauseNotFoundElement(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerUpdateModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(1);
     final var valueToUpdate = source.toJsonObject();
@@ -1255,7 +1254,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture(target));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1275,14 +1274,14 @@ public class ModelResourcesTest {
    * @param storerUpdateModel the function to update the model.
    *
    * @see ModelResources#updateModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotUpdateModelFieldElementBecauseCanNotUpdateElement(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotUpdateModelFieldElementBecauseCanNotUpdateElement(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerUpdateModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var target = new DummyComplexModelTest().createModelExample(2);
     final var source = target.siblings.get(1);
@@ -1296,7 +1295,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture(target));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1316,14 +1315,14 @@ public class ModelResourcesTest {
    * @param storerUpdateModel the function to update the model.
    *
    * @see ModelResources#updateModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotUpdateModelFieldElementBecauseCanNotStoreUpdated(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotUpdateModelFieldElementBecauseCanNotStoreUpdated(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerUpdateModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var target = new DummyComplexModelTest().createModelExample(2);
     final var source = new DummyComplexModel();
@@ -1342,7 +1341,7 @@ public class ModelResourcesTest {
     storerHandler.getValue().handle(Future.failedFuture("Can not store"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1362,14 +1361,14 @@ public class ModelResourcesTest {
    * @param storerUpdateModel the function to update the model.
    *
    * @see ModelResources#updateModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldUpdateModelFieldElement(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldUpdateModelFieldElement(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerUpdateModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var target = new DummyComplexModelTest().createModelExample(2);
     final var source = new DummyComplexModel();
@@ -1388,7 +1387,7 @@ public class ModelResourcesTest {
     storerHandler.getValue().handle(Future.succeededFuture());
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1408,20 +1407,20 @@ public class ModelResourcesTest {
    * @param storerMergeModel the function to merge the model.
    *
    * @see ModelResources#mergeModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotMergeModelFieldElementBecauseBadValue(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotMergeModelFieldElementBecauseBadValue(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerMergeModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var valueToMerge = new JsonObject().put("undefined", "value");
     ModelResources.mergeModelFieldElement(vertx, valueToMerge, element, searcher, dummy -> dummy.siblings, ModelResources.searchElementById((dummy, id) -> id != null && id.equals(dummy.id)), storerMergeModel, context);
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1441,14 +1440,14 @@ public class ModelResourcesTest {
    * @param storerMergeModel the function to merge the model.
    *
    * @see ModelResources#mergeModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotMergeModelFieldElementBecauseNotFoundModel(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotMergeModelFieldElementBecauseNotFoundModel(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerMergeModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(1);
     final var valueToMerge = source.toJsonObject();
@@ -1460,7 +1459,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.failedFuture("Not found"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1480,14 +1479,14 @@ public class ModelResourcesTest {
    * @param storerMergeModel the function to merge the model.
    *
    * @see ModelResources#mergeModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotMergeModelFieldElementBecauseNotFoundElement(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotMergeModelFieldElementBecauseNotFoundElement(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerMergeModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(1);
     final var valueToMerge = source.toJsonObject();
@@ -1500,7 +1499,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture(target));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1520,14 +1519,14 @@ public class ModelResourcesTest {
    * @param storerMergeModel the function to merge the model.
    *
    * @see ModelResources#mergeModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotMergeModelFieldElementBecauseCanNotMergeElement(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotMergeModelFieldElementBecauseCanNotMergeElement(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerMergeModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var target = new DummyComplexModelTest().createModelExample(2);
     final var source = target.siblings.get(1);
@@ -1541,7 +1540,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture(target));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1561,14 +1560,14 @@ public class ModelResourcesTest {
    * @param storerMergeModel the function to merge the model.
    *
    * @see ModelResources#mergeModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotMergeModelFieldElementBecauseCanNotStoreMerged(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotMergeModelFieldElementBecauseCanNotStoreMerged(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerMergeModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var target = new DummyComplexModelTest().createModelExample(2);
     final var source = new DummyComplexModel();
@@ -1587,7 +1586,7 @@ public class ModelResourcesTest {
     storerHandler.getValue().handle(Future.failedFuture("Can not store"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1607,14 +1606,14 @@ public class ModelResourcesTest {
    * @param storerMergeModel the function to merge the model.
    *
    * @see ModelResources#mergeModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.Function, java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldMergeModelFieldElement(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldMergeModelFieldElement(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerMergeModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var target = new DummyComplexModelTest().createModelExample(2);
     final var source = new DummyComplexModel();
@@ -1633,7 +1632,7 @@ public class ModelResourcesTest {
     storerHandler.getValue().handle(Future.succeededFuture());
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1653,14 +1652,14 @@ public class ModelResourcesTest {
    * @param storerDeleteModel the function to delete the model.
    *
    * @see ModelResources#deleteModelFieldElement( ModelFieldContext, BiConsumer, java.util.function.Function,
-   *      java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotDeleteModelFieldElementBecauseNotFoundModel(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotDeleteModelFieldElementBecauseNotFoundModel(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerDeleteModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.deleteModelFieldElement(element, searcher, dummy -> dummy.siblings, ModelResources.searchElementById((dummy, id) -> id != null && id.equals(dummy.id)), storerDeleteModel, context);
 
     @SuppressWarnings("unchecked")
@@ -1669,7 +1668,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.failedFuture("Not found"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1689,14 +1688,14 @@ public class ModelResourcesTest {
    * @param storerDeleteModel the function to delete the model.
    *
    * @see ModelResources#deleteModelFieldElement( ModelFieldContext, BiConsumer, java.util.function.Function,
-   *      java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotDeleteModelFieldElementBecauseNotFoundElement(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotDeleteModelFieldElementBecauseNotFoundElement(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerDeleteModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.deleteModelFieldElement(element, searcher, dummy -> dummy.siblings, ModelResources.searchElementById((dummy, id) -> id != null && id.equals(dummy.id)), storerDeleteModel, context);
 
     @SuppressWarnings("unchecked")
@@ -1706,7 +1705,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture(target));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1726,16 +1725,16 @@ public class ModelResourcesTest {
    * @param storerDeleteModel the function to delete the model.
    *
    * @see ModelResources#deleteModelFieldElement( ModelFieldContext, BiConsumer, java.util.function.Function,
-   *      java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotDeleteModelFieldElementBecauseCanNotStoreDeleted(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotDeleteModelFieldElementBecauseCanNotStoreDeleted(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerDeleteModel) {
 
     final var element = this.createModelFieldContextById();
     final var target = new DummyComplexModelTest().createModelExample(2);
     element.id = target.siblings.get(0).id;
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.deleteModelFieldElement(element, searcher, dummy -> dummy.siblings, ModelResources.searchElementById((dummy, id) -> id != null && id.equals(dummy.id)), storerDeleteModel, context);
 
     @SuppressWarnings("unchecked")
@@ -1749,7 +1748,7 @@ public class ModelResourcesTest {
     storerHandler.getValue().handle(Future.failedFuture("Can not store"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1769,16 +1768,16 @@ public class ModelResourcesTest {
    * @param storerDeleteModel the function to delete the model.
    *
    * @see ModelResources#deleteModelFieldElement( ModelFieldContext, BiConsumer, java.util.function.Function,
-   *      java.util.function.BiFunction, BiConsumer, OperationContext)
+   *      java.util.function.BiFunction, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldDeleteModelFieldElement(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldDeleteModelFieldElement(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerDeleteModel) {
 
     final var element = this.createModelFieldContextById();
     final var target = new DummyComplexModelTest().createModelExample(2);
     element.id = target.siblings.get(0).id;
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.deleteModelFieldElement(element, searcher, dummy -> dummy.siblings, ModelResources.searchElementById((dummy, id) -> id != null && id.equals(dummy.id)), storerDeleteModel, context);
 
     @SuppressWarnings("unchecked")
@@ -1792,7 +1791,7 @@ public class ModelResourcesTest {
     storerHandler.getValue().handle(Future.succeededFuture());
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1810,20 +1809,20 @@ public class ModelResourcesTest {
    * @param storerCreateModel the function to create the model.
    *
    * @see ModelResources#createModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, BiConsumer, BiConsumer, OperationContext)
+   *      java.util.function.Function, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotCreateModelFieldElementBecauseBadValue(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotCreateModelFieldElementBecauseBadValue(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerCreateModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var valueToCreate = new JsonObject().put("undefined", "value");
     ModelResources.createModelFieldElement(vertx, valueToCreate, element, searcher, dummy -> dummy.siblings, (dummy, siblings) -> dummy.siblings = siblings, storerCreateModel, context);
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1843,14 +1842,14 @@ public class ModelResourcesTest {
    * @param storerCreateModel the function to create the model.
    *
    * @see ModelResources#createModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, BiConsumer, BiConsumer, OperationContext)
+   *      java.util.function.Function, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotCreateModelFieldElementBecauseNotFoundModel(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotCreateModelFieldElementBecauseNotFoundModel(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerCreateModel) {
 
     final var element = this.createModelFieldContextById();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(1);
     final var valueToCreate = source.toJsonObject();
@@ -1862,7 +1861,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.failedFuture("Not found"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1882,16 +1881,16 @@ public class ModelResourcesTest {
    * @param storerCreateModel the function to create the model.
    *
    * @see ModelResources#createModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, BiConsumer, BiConsumer, OperationContext)
+   *      java.util.function.Function, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotCreateModelFieldElementBecauseElementIsNotValid(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotCreateModelFieldElementBecauseElementIsNotValid(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerCreateModel) {
 
     final var element = this.createModelFieldContextById();
     final var target = new DummyComplexModelTest().createModelExample(2);
     element.model.id = target.id;
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModelTest().createModelExample(3);
     source.id = ValidationsTest.STRING_256;
@@ -1904,7 +1903,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().handle(Future.succeededFuture(target));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1924,16 +1923,16 @@ public class ModelResourcesTest {
    * @param storerCreateModel the function to create the model.
    *
    * @see ModelResources#createModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, BiConsumer, BiConsumer, OperationContext)
+   *      java.util.function.Function, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldNotCreateModelFieldElementBecauseCanNotStoreCreated(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldNotCreateModelFieldElementBecauseCanNotStoreCreated(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerCreateModel) {
 
     final var element = this.createModelFieldContextById();
     final var target = new DummyComplexModelTest().createModelExample(2);
     element.model.id = target.id;
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModel();
     final var valueToCreate = source.toJsonObject();
@@ -1950,7 +1949,7 @@ public class ModelResourcesTest {
     storerHandler.getValue().handle(Future.failedFuture("Can not store"));
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -1970,16 +1969,16 @@ public class ModelResourcesTest {
    * @param storerCreateModel the function to create the model.
    *
    * @see ModelResources#createModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, BiConsumer, BiConsumer, OperationContext)
+   *      java.util.function.Function, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldCreateModelFieldElement(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldCreateModelFieldElement(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerCreateModel) {
 
     final var element = this.createModelFieldContextById();
     final var target = new DummyComplexModelTest().createModelExample(2);
     element.model.id = target.id;
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModel();
     final var valueToCreate = source.toJsonObject();
@@ -1996,7 +1995,7 @@ public class ModelResourcesTest {
     storerHandler.getValue().handle(Future.succeededFuture());
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -2018,16 +2017,16 @@ public class ModelResourcesTest {
    * @param storerCreateModel the function to create the model.
    *
    * @see ModelResources#createModelFieldElement(Vertx, JsonObject, ModelFieldContext, BiConsumer,
-   *      java.util.function.Function, BiConsumer, BiConsumer, OperationContext)
+   *      java.util.function.Function, BiConsumer, BiConsumer, ServiceContext)
    */
   @Test
-  public void shouldCreateModelFieldElementWehnFieldIsNull(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
+  public void shouldCreateModelFieldElementWehnFieldIsNull(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<String, Handler<AsyncResult<DummyComplexModel>>> searcher,
       @Mock final BiConsumer<DummyComplexModel, Handler<AsyncResult<Void>>> storerCreateModel) {
 
     final var element = this.createModelFieldContextById();
     final var target = new DummyComplexModelTest().createModelExample(1);
     element.model.id = target.id;
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     final var vertx = Vertx.vertx();
     final var source = new DummyComplexModel();
     final var valueToCreate = source.toJsonObject();
@@ -2044,7 +2043,7 @@ public class ModelResourcesTest {
     storerHandler.getValue().handle(Future.succeededFuture());
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -2098,7 +2097,7 @@ public class ModelResourcesTest {
    * Check found element by id.
    */
   @Test
-  public void shoudFoundElementWithId() {
+  public void shouldFoundElementWithId() {
 
     final var models = new ArrayList<DummyComplexModel>();
     final BiPredicate<DummyComplexModel, String> idComparator = (dummy, id) -> id != null && id.equals(dummy.id);
@@ -2150,7 +2149,7 @@ public class ModelResourcesTest {
    * Check found element by index.
    */
   @Test
-  public void shoudFoundElementWithIndex() {
+  public void shouldFoundElementWithIndex() {
 
     final var models = new ArrayList<>();
     for (var i = 0; i < 10; i++) {
@@ -2167,17 +2166,17 @@ public class ModelResourcesTest {
    * @param resultHandler handler to manage the HTTP result.
    * @param success       the function to call if the conversion was a success.
    *
-   * @see ModelResources#toModel(JsonObject, ModelContext, OperationContext, Runnable)
+   * @see ModelResources#toModel(JsonObject, ModelContext, ServiceContext, Runnable)
    */
   @Test
-  public void shouldNotConvertANullJsonObject(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final Runnable success) {
+  public void shouldNotConvertANullJsonObject(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final Runnable success) {
 
     final var model = this.createModelContext();
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.toModel(null, model, context, success);
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -2197,17 +2196,17 @@ public class ModelResourcesTest {
    * @param resultHandler handler to manage the HTTP result.
    * @param searcher      the function to obtain the page.
    *
-   * @see ModelResources#toModel(JsonObject, ModelContext, OperationContext, Runnable)
+   * @see ModelResources#toModel(JsonObject, ModelContext, ServiceContext, Runnable)
    */
   @Test
-  public void shouldNotRetrieveModelsPageWhenSearchThrowsException(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<ModelsPageContext, Promise<JsonObject>> searcher) {
+  public void shouldNotRetrieveModelsPageWhenSearchThrowsException(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<ModelsPageContext, Promise<JsonObject>> searcher) {
 
     doThrow(new RuntimeException("Error")).when(searcher).accept(any(), any());
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModelsPage(0, 100, searcher, context);
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -2225,12 +2224,12 @@ public class ModelResourcesTest {
    * @param resultHandler handler to manage the HTTP result.
    * @param searcher      the function to obtain the page.
    *
-   * @see ModelResources#toModel(JsonObject, ModelContext, OperationContext, Runnable)
+   * @see ModelResources#toModel(JsonObject, ModelContext, ServiceContext, Runnable)
    */
   @Test
-  public void shouldNotRetrieveModelsPageWhenSearchFailed(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<ModelsPageContext, Promise<JsonObject>> searcher) {
+  public void shouldNotRetrieveModelsPageWhenSearchFailed(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<ModelsPageContext, Promise<JsonObject>> searcher) {
 
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModelsPage(0, 100, searcher, context);
 
     @SuppressWarnings("unchecked")
@@ -2239,7 +2238,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().fail("Not found");
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();
@@ -2257,12 +2256,12 @@ public class ModelResourcesTest {
    * @param resultHandler handler to manage the HTTP result.
    * @param searcher      the function to obtain the page.
    *
-   * @see ModelResources#toModel(JsonObject, ModelContext, OperationContext, Runnable)
+   * @see ModelResources#toModel(JsonObject, ModelContext, ServiceContext, Runnable)
    */
   @Test
-  public void shouldRetrieveModelsPage(@Mock final Handler<AsyncResult<OperationResponse>> resultHandler, @Mock final BiConsumer<ModelsPageContext, Promise<JsonObject>> searcher) {
+  public void shouldRetrieveModelsPage(@Mock final Handler<AsyncResult<ServiceResponse>> resultHandler, @Mock final BiConsumer<ModelsPageContext, Promise<JsonObject>> searcher) {
 
-    final var context = this.createOperationContext(resultHandler);
+    final var context = this.createServiceContext(resultHandler);
     ModelResources.retrieveModelsPage(0, 100, searcher, context);
 
     @SuppressWarnings("unchecked")
@@ -2272,7 +2271,7 @@ public class ModelResourcesTest {
     searchHandler.getValue().complete(expectedPage);
 
     @SuppressWarnings("unchecked")
-    final ArgumentCaptor<AsyncResult<OperationResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
+    final ArgumentCaptor<AsyncResult<ServiceResponse>> resultCaptor = ArgumentCaptor.forClass(AsyncResult.class);
     verify(resultHandler, timeout(30000).times(1)).handle(resultCaptor.capture());
     final var asyncResult = resultCaptor.getValue();
     assertThat(asyncResult.failed()).isFalse();

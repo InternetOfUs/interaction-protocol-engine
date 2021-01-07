@@ -30,7 +30,6 @@ import java.net.ServerSocket;
 import java.nio.file.FileSystems;
 
 import org.testcontainers.Testcontainers;
-import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -38,9 +37,9 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 import org.tinylog.Logger;
 
-import eu.internetofus.common.components.incentive_server.WeNetIncentiveServerMocker;
-import eu.internetofus.common.components.service.WeNetServiceMocker;
-import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilderMocker;
+import eu.internetofus.common.components.incentive_server.WeNetIncentiveServerSimulatorMocker;
+import eu.internetofus.common.components.service.WeNetServiceSimulatorMocker;
+import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilderSimulatorMocker;
 import eu.internetofus.common.vertx.AbstractMain;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
@@ -120,17 +119,17 @@ public class Containers {
   /**
    * The mocker of the service module.
    */
-  public WeNetServiceMocker service;
+  public WeNetServiceSimulatorMocker service;
 
   /**
    * The mocker of the social context builder module.
    */
-  public WeNetSocialContextBuilderMocker socialContextBuilder;
+  public WeNetSocialContextBuilderSimulatorMocker socialContextBuilder;
 
   /**
    * The mocker of the incentive server module.
    */
-  public WeNetIncentiveServerMocker incentiveServer;
+  public WeNetIncentiveServerSimulatorMocker incentiveServer;
 
   /**
    * The port where the profile manager is exposed.
@@ -150,17 +149,17 @@ public class Containers {
   /**
    * The container with a profile manager component.
    */
-  public FixedHostPortGenericContainer<?> profileManagerContainer;
+  public WeNetComponentContainer<?> profileManagerContainer;
 
   /**
    * The container with a task manager component.
    */
-  public FixedHostPortGenericContainer<?> taskManagerContainer;
+  public WeNetComponentContainer<?> taskManagerContainer;
 
   /**
    * The container with a interaction protocol engine component.
    */
-  public FixedHostPortGenericContainer<?> interactionProtocolEngineContainer;
+  public WeNetComponentContainer<?> interactionProtocolEngineContainer;
 
   /**
    * Create a new instance of the containers.
@@ -251,7 +250,7 @@ public class Containers {
     if (this.service == null) {
 
       Logger.trace("Starting Service Mocker");
-      this.service = WeNetServiceMocker.start();
+      this.service = WeNetServiceSimulatorMocker.start();
       Logger.trace("Started Service Mocker");
 
     }
@@ -268,7 +267,7 @@ public class Containers {
     if (this.socialContextBuilder == null) {
 
       Logger.trace("Starting Social Context Mocker");
-      this.socialContextBuilder = WeNetSocialContextBuilderMocker.start();
+      this.socialContextBuilder = WeNetSocialContextBuilderSimulatorMocker.start();
       Logger.trace("Started Social Context Mocker");
 
     }
@@ -285,7 +284,7 @@ public class Containers {
     if (this.incentiveServer == null) {
 
       Logger.trace("Starting Incentive server Mocker");
-      this.incentiveServer = WeNetIncentiveServerMocker.start();
+      this.incentiveServer = WeNetIncentiveServerSimulatorMocker.start();
       Logger.trace("Started Incentive server Mocker");
 
     }
@@ -335,7 +334,7 @@ public class Containers {
    *
    * @return the URL to the module API.
    */
-  protected String createApiFor(final FixedHostPortGenericContainer<?> container, final int port) {
+  protected String createApiFor(final WeNetComponentContainer<?> container, final int port) {
 
     final StringBuilder builder = new StringBuilder();
     builder.append("http://");
@@ -386,21 +385,6 @@ public class Containers {
   }
 
   /**
-   * Create a container for a module.
-   *
-   * @param name of the docker container.
-   * @param port exposed fixed port.
-   *
-   * @return the container
-   */
-  @SuppressWarnings("resource")
-  protected FixedHostPortGenericContainer<?> createContainerFor(final String name, final int port) {
-
-    return new FixedHostPortGenericContainer<>(name).withStartupAttempts(1).withEnv("DB_HOST", this.getMongoDBHost()).withEnv("DB_PORT", String.valueOf(this.getMongoDBPort())).withEnv("DB_NAME", MONGODB_NAME)
-        .withEnv("DB_USER_NAME", MONGODB_USER).withEnv("DB_USER_PASSWORD", MONGODB_PASSWORD).withNetwork(this.network).withFixedExposedPort(port, EXPORT_API_PORT);
-  }
-
-  /**
    * Start the profile manager container if it is not started yet.
    *
    * @return this containers instance.
@@ -417,6 +401,20 @@ public class Containers {
     }
 
     return this;
+  }
+
+  /**
+   * Create the container for the specified component with the specified port.
+   *
+   * @param name of the container.
+   * @param port to export the API.
+   *
+   * @return the container for the component.
+   */
+  @SuppressWarnings("resource")
+  private WeNetComponentContainer<?> createContainerFor(final String name, final int port) {
+
+    return new WeNetComponentContainer<>(name, port).with(this);
   }
 
   /**

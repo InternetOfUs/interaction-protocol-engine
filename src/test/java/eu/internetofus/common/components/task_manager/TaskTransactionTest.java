@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,6 +29,8 @@ package eu.internetofus.common.components.task_manager;
 import static eu.internetofus.common.components.ValidationsTest.assertIsNotValid;
 import static eu.internetofus.common.components.ValidationsTest.assertIsValid;
 
+import java.util.ArrayList;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,15 +39,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.ModelTestCase;
 import eu.internetofus.common.components.StoreServices;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManagerMocker;
+import eu.internetofus.common.components.service.MessageTest;
 import eu.internetofus.common.components.service.WeNetService;
-import eu.internetofus.common.components.service.WeNetServiceMocker;
 import eu.internetofus.common.components.service.WeNetServiceSimulator;
+import eu.internetofus.common.components.service.WeNetServiceSimulatorMocker;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
@@ -75,7 +78,7 @@ public class TaskTransactionTest extends ModelTestCase<TaskTransaction> {
   /**
    * The service mocked server.
    */
-  protected static WeNetServiceMocker serviceMocker;
+  protected static WeNetServiceSimulatorMocker serviceMocker;
 
   /**
    * Start the mocker server.
@@ -85,7 +88,7 @@ public class TaskTransactionTest extends ModelTestCase<TaskTransaction> {
 
     profileManagerMocker = WeNetProfileManagerMocker.start();
     taskManagerMocker = WeNetTaskManagerMocker.start();
-    serviceMocker = WeNetServiceMocker.start();
+    serviceMocker = WeNetServiceSimulatorMocker.start();
   }
 
   /**
@@ -94,9 +97,9 @@ public class TaskTransactionTest extends ModelTestCase<TaskTransaction> {
   @AfterAll
   public static void stopMockers() {
 
-    profileManagerMocker.stop();
-    taskManagerMocker.stop();
-    serviceMocker.stop();
+    profileManagerMocker.stopServer();
+    taskManagerMocker.stopServer();
+    serviceMocker.stopServer();
   }
 
   /**
@@ -128,9 +131,15 @@ public class TaskTransactionTest extends ModelTestCase<TaskTransaction> {
 
     assert index >= 0;
     final var model = new TaskTransaction();
-    model.taskId = "taskId" + index;
-    model.label = "label" + index;
+    model._creationTs = index;
+    model._lastUpdateTs = TimeManager.now() - index;
+    model.actioneerId = "actioneerId_" + index;
     model.attributes = new JsonObject().put("index", index);
+    model.id = "id_" + index;
+    model.label = "label_" + index;
+    model.messages = new ArrayList<>();
+    model.messages.add(new MessageTest().createModelExample(index));
+    model.taskId = "taskId_" + index;
     return model;
 
   }
@@ -145,20 +154,17 @@ public class TaskTransactionTest extends ModelTestCase<TaskTransaction> {
    * @return a future with the created task transaction.
    *
    */
-  public Future<TaskTransaction> createModelExample(final int index, final Vertx vertx, final VertxTestContext testContext) {
+  public Future<TaskTransaction> createModelExample(final int index, final Vertx vertx,
+      final VertxTestContext testContext) {
 
-    final Promise<TaskTransaction> promise = Promise.promise();
-    StoreServices.storeTaskExample(index, vertx, testContext, testContext.succeeding(task -> {
+    return StoreServices.storeTaskExample(index, vertx, testContext).compose(task -> {
 
       final var model = this.createModelExample(index);
       model.taskId = task.id;
-      promise.complete(model);
-    }
+      model.actioneerId = task.requesterId;
+      return Future.succeededFuture(model);
 
-    ));
-
-    return promise.future();
-
+    });
   }
 
   /**
@@ -180,7 +186,8 @@ public class TaskTransactionTest extends ModelTestCase<TaskTransaction> {
   }
 
   /**
-   * Check that the {@link #createModelExample(int,Vertx,VertxTestContext)} is valid.
+   * Check that the {@link #createModelExample(int,Vertx,VertxTestContext)} is
+   * valid.
    *
    * @param index       to verify.
    * @param vertx       event bus to use.
@@ -192,7 +199,8 @@ public class TaskTransactionTest extends ModelTestCase<TaskTransaction> {
   @ValueSource(ints = { 0, 1, 2, 3, 4, 5 })
   public void shouldExampleBeValid(final int index, final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(index, vertx, testContext).onComplete(testContext.succeeding(model -> assertIsValid(model, vertx, testContext)));
+    this.createModelExample(index, vertx, testContext)
+        .onComplete(testContext.succeeding(model -> assertIsValid(model, vertx, testContext)));
 
   }
 

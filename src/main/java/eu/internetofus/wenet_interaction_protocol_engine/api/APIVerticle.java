@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,13 +38,16 @@ import eu.internetofus.wenet_interaction_protocol_engine.api.messages.Messages;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.MessagesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.NormsResource;
+import eu.internetofus.wenet_interaction_protocol_engine.api.tasks.Tasks;
+import eu.internetofus.wenet_interaction_protocol_engine.api.tasks.TasksResource;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.serviceproxy.ServiceBinder;
 
 /**
- * The verticle that provide the manage the WeNet interaction protocol engine API.
+ * The verticle that provide the manage the WeNet interaction protocol engine
+ * API.
  *
  * @author UDT-IA, IIIA-CSIC
  */
@@ -63,7 +66,7 @@ public class APIVerticle extends AbstractAPIVerticle {
    * {@inheritDoc}
    */
   @Override
-  protected void mountServiceInterfaces(final OpenAPI3RouterFactory routerFactory) {
+  protected void mountServiceInterfaces(final RouterBuilder routerFactory) {
 
     routerFactory.mountServiceInterface(Help.class, Help.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Help.ADDRESS).register(Help.class, new HelpResource(this));
@@ -72,10 +75,15 @@ public class APIVerticle extends AbstractAPIVerticle {
     new ServiceBinder(this.vertx).setAddress(Norms.ADDRESS).register(Norms.class, new NormsResource(this.vertx));
 
     routerFactory.mountServiceInterface(Messages.class, Messages.ADDRESS);
-    new ServiceBinder(this.vertx).setAddress(Messages.ADDRESS).register(Messages.class, new MessagesResource(this.vertx));
+    new ServiceBinder(this.vertx).setAddress(Messages.ADDRESS).register(Messages.class,
+        new MessagesResource(this.vertx));
 
     routerFactory.mountServiceInterface(Incentives.class, Incentives.ADDRESS);
-    new ServiceBinder(this.vertx).setAddress(Incentives.ADDRESS).register(Incentives.class, new IncentivesResource(this.vertx));
+    new ServiceBinder(this.vertx).setAddress(Incentives.ADDRESS).register(Incentives.class,
+        new IncentivesResource(this.vertx));
+
+    routerFactory.mountServiceInterface(Tasks.class, Tasks.ADDRESS);
+    new ServiceBinder(this.vertx).setAddress(Tasks.ADDRESS).register(Tasks.class, new TasksResource(this.vertx));
 
   }
 

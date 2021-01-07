@@ -44,9 +44,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.api.OperationRequest;
-import io.vertx.ext.web.api.OperationResponse;
-import io.vertx.ext.web.api.generator.WebApiServiceGen;
+import io.vertx.ext.web.api.service.ServiceRequest;
+import io.vertx.ext.web.api.service.ServiceResponse;
+import io.vertx.ext.web.api.service.WebApiServiceGen;
 
 /**
  * The definition of the web services for manage the messages.
@@ -82,7 +82,7 @@ public interface Messages {
   @RequestBody(description = "The message to publish", required = true, content = @Content(schema = @Schema(implementation = ProtocolMessage.class)))
   @ApiResponse(responseCode = "202", description = "If the message is accepted to be processed", content = @Content(schema = @Schema(implementation = ProtocolMessage.class)))
   @ApiResponse(responseCode = "400", description = "Bad message", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-  void sendMessage(@Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) OperationRequest context,
-      @Parameter(hidden = true, required = false) Handler<AsyncResult<OperationResponse>> resultHandler);
+  void sendMessage(@Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) ServiceRequest context,
+      @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
 }

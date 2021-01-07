@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,6 +31,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import eu.internetofus.common.components.incentive_server.IncentiveTest;
+import eu.internetofus.common.components.task_manager.TaskTest;
+import eu.internetofus.common.components.task_manager.TaskTransactionTest;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxTestContext;
 
@@ -52,17 +54,17 @@ public abstract class WeNetInteractionProtocolEngineTestCase {
   @Test
   public void shouldSendMessage(final Vertx vertx, final VertxTestContext testContext) {
 
-    new ProtocolMessageTest().createModelExample(1, vertx, testContext, testContext.succeeding(message -> {
+    new ProtocolMessageTest().createModelExample(1, vertx, testContext).onSuccess(message -> {
 
       message.norms = null;
-      WeNetInteractionProtocolEngine.createProxy(vertx).sendMessage(message, testContext.succeeding(sent -> testContext.verify(() -> {
+      testContext.assertComplete(WeNetInteractionProtocolEngine.createProxy(vertx).sendMessage(message)).onSuccess(sent -> testContext.verify(() -> {
 
         assertThat(message).isEqualTo(sent);
         testContext.completeNow();
 
-      })));
+      }));
 
-    }));
+    });
 
   }
 
@@ -75,16 +77,60 @@ public abstract class WeNetInteractionProtocolEngineTestCase {
   @Test
   public void shouldSendIncentive(final Vertx vertx, final VertxTestContext testContext) {
 
-    new IncentiveTest().createModelExample(1, vertx, testContext, testContext.succeeding(incentive -> {
+    new IncentiveTest().createModelExample(1, vertx, testContext).onSuccess(incentive -> {
 
-      WeNetInteractionProtocolEngine.createProxy(vertx).sendIncentive(incentive, testContext.succeeding(sent -> testContext.verify(() -> {
+      testContext.assertComplete(WeNetInteractionProtocolEngine.createProxy(vertx).sendIncentive(incentive)).onSuccess(sent -> testContext.verify(() -> {
 
         assertThat(incentive).isEqualTo(sent);
         testContext.completeNow();
 
-      })));
+      }));
 
-    }));
+    });
+
+  }
+
+  /**
+   * Should inform that a task is created.
+   *
+   * @param vertx       that contains the event bus to use.
+   * @param testContext context over the tests.
+   */
+  @Test
+  public void shouldCreatedTask(final Vertx vertx, final VertxTestContext testContext) {
+
+    new TaskTest().createModelExample(1, vertx, testContext).onSuccess(task -> {
+
+      testContext.assertComplete(WeNetInteractionProtocolEngine.createProxy(vertx).createdTask(task)).onSuccess(created -> testContext.verify(() -> {
+
+        assertThat(task).isEqualTo(created);
+        testContext.completeNow();
+
+      }));
+
+    });
+
+  }
+
+  /**
+   * Should do a task transaction.
+   *
+   * @param vertx       that contains the event bus to use.
+   * @param testContext context over the tests.
+   */
+  @Test
+  public void shouldDoTaskTransaction(final Vertx vertx, final VertxTestContext testContext) {
+
+    testContext.assertComplete(new TaskTransactionTest().createModelExample(1, vertx, testContext)).onSuccess(taskTransaction -> {
+
+      testContext.assertComplete(WeNetInteractionProtocolEngine.createProxy(vertx).doTransaction(taskTransaction)).onSuccess(done -> testContext.verify(() -> {
+
+        assertThat(taskTransaction).isEqualTo(done);
+        testContext.completeNow();
+
+      }));
+
+    });
 
   }
 
