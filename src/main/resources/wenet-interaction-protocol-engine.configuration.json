@@ -26,7 +26,6 @@
 	"wenetComponents": {
 		"profileManager": "https://wenet.u-hopper.com/prod/profile_manager",
 		"taskManager": "https://wenet.u-hopper.com/prod/task_manager",
-		"service": "https://wenet.u-hopper.com/prod/service",
-		"socialContextBuilder": "https://wenet.u-hopper.com/prod/social_context_builder"
+		"service": "https://wenet.u-hopper.com/prod/service"
 	}
 }
