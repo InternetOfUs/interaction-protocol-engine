@@ -26,8 +26,6 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
-import java.util.List;
-
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.vertx.ModelContext;
@@ -35,11 +33,13 @@ import eu.internetofus.common.vertx.ModelResources;
 import eu.internetofus.common.vertx.ServiceContext;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.service.ServiceRequest;
 import io.vertx.ext.web.api.service.ServiceResponse;
+import java.util.List;
 
 /**
  * Implements the services defined in the {@link Norms}.
@@ -93,11 +93,13 @@ public class NormsResource implements Norms {
    * {@inheritDoc}
    */
   @Override
-  public void publishNorm(final JsonObject body, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+  public void publishNorm(final JsonObject body, final ServiceRequest request,
+      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createPublishedNormContext();
     final var context = new ServiceContext(request, resultHandler);
-    ModelResources.createModel(this.vertx, body, model, this.repository::storePublishedNorm, context);
+    ModelResources.createModel(this.vertx, body, model,
+        (norm, handler) -> this.repository.storePublishedNorm(norm).onComplete(handler), context);
 
   }
 
@@ -105,15 +107,19 @@ public class NormsResource implements Norms {
    * {@inheritDoc}
    */
   @Override
-  public void retrievePublishedNormsPage(final String name, final String description, final List<String> keywords, final String publisherId, final Long publishFrom, final Long publishTo, final List<String> order, final int offset,
-      final int limit, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+  public void retrievePublishedNormsPage(final String name, final String description, final List<String> keywords,
+      final String publisherId, final Long publishFrom, final Long publishTo, final List<String> order,
+      final int offset, final int limit, final ServiceRequest request,
+      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var context = new ServiceContext(request, resultHandler);
     ModelResources.retrieveModelsPage(offset, limit, (page, promise) -> {
 
-      page.query = NormsRepository.createPublishedNormsPageQuery(name, description, keywords, publisherId, publishFrom, publishTo);
+      page.query = NormsRepository.createPublishedNormsPageQuery(name, description, keywords, publisherId, publishFrom,
+          publishTo);
       page.sort = NormsRepository.createPublishedNormsPageSort(order);
-      this.repository.retrievePublishedNormsPageObject(page, search -> promise.handle(search));
+      this.repository.retrievePublishedNormsPage(page).compose(found -> Future.succeededFuture(found.toJsonObject()))
+          .onComplete(promise);
 
     }, context);
   }
@@ -122,12 +128,14 @@ public class NormsResource implements Norms {
    * {@inheritDoc}
    */
   @Override
-  public void retrievePublishedNorm(final String publishedNormId, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+  public void retrievePublishedNorm(final String publishedNormId, final ServiceRequest request,
+      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createPublishedNormContext();
     model.id = publishedNormId;
     final var context = new ServiceContext(request, resultHandler);
-    ModelResources.retrieveModel(model, this.repository::searchPublishedNorm, context);
+    ModelResources.retrieveModel(model, (id, handler) -> this.repository.searchPublishedNorm(id).onComplete(handler),
+        context);
 
   }
 
@@ -135,12 +143,15 @@ public class NormsResource implements Norms {
    * {@inheritDoc}
    */
   @Override
-  public void updatePublishedNorm(final String publishedNormId, final JsonObject body, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+  public void updatePublishedNorm(final String publishedNormId, final JsonObject body, final ServiceRequest request,
+      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createPublishedNormContext();
     model.id = publishedNormId;
     final var context = new ServiceContext(request, resultHandler);
-    ModelResources.updateModel(this.vertx, body, model, this.repository::searchPublishedNorm, this.repository::updatePublishedNorm, context);
+    ModelResources.updateModel(this.vertx, body, model,
+        (id, handler) -> this.repository.searchPublishedNorm(id).onComplete(handler),
+        (norm, handler) -> this.repository.updatePublishedNorm(norm).onComplete(handler), context);
 
   }
 
@@ -148,12 +159,14 @@ public class NormsResource implements Norms {
    * {@inheritDoc}
    */
   @Override
-  public void deletePublishedNorm(final String publishedNormId, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+  public void deletePublishedNorm(final String publishedNormId, final ServiceRequest request,
+      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createPublishedNormContext();
     model.id = publishedNormId;
     final var context = new ServiceContext(request, resultHandler);
-    ModelResources.deleteModel(model, this.repository::deletePublishedNorm, context);
+    ModelResources.deleteModel(model, (id, handler) -> this.repository.deletePublishedNorm(id).onComplete(handler),
+        context);
 
   }
 
@@ -161,12 +174,15 @@ public class NormsResource implements Norms {
    * {@inheritDoc}
    */
   @Override
-  public void mergePublishedNorm(final String publishedNormId, final JsonObject body, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+  public void mergePublishedNorm(final String publishedNormId, final JsonObject body, final ServiceRequest request,
+      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = this.createPublishedNormContext();
     model.id = publishedNormId;
     final var context = new ServiceContext(request, resultHandler);
-    ModelResources.mergeModel(this.vertx, body, model, this.repository::searchPublishedNorm, this.repository::updatePublishedNorm, context);
+    ModelResources.mergeModel(this.vertx, body, model,
+        (id, handler) -> this.repository.searchPublishedNorm(id).onComplete(handler),
+        (norm, handler) -> this.repository.updatePublishedNorm(norm).onComplete(handler), context);
 
   }
 

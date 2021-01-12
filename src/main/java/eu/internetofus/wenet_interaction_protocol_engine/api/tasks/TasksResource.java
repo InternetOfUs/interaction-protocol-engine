@@ -100,7 +100,7 @@ public class TasksResource implements Tasks {
         final var result = retrieve.result();
         if (result != null) {
 
-          promise.handle(this.getTypeOf(result));
+          this.getTypeOf(result).onComplete(promise);
 
         } else {
 

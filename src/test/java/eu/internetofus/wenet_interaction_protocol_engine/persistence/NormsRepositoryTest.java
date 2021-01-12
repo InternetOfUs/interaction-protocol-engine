@@ -34,14 +34,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-
 import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.vertx.ModelsPageContext;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNorm;
@@ -51,6 +43,12 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 
 /**
  * Unit test to increases coverage of the {@link NormsRepository}
@@ -63,7 +61,8 @@ import io.vertx.junit5.VertxTestContext;
 public class NormsRepositoryTest {
 
   /**
-   * Verify that can not found a published norm because that returned by repository is not right.
+   * Verify that can not found a published norm because that returned by
+   * repository is not right.
    *
    * @param testContext context that executes the test.
    *
@@ -75,7 +74,7 @@ public class NormsRepositoryTest {
     final NormsRepository repository = new NormsRepositoryImpl(null, null) {
 
       @Override
-      public void searchPublishedNormObject(final String id, final Handler<AsyncResult<JsonObject>> searchHandler) {
+      public void searchPublishedNorm(final String id, final Handler<AsyncResult<JsonObject>> searchHandler) {
 
         searchHandler.handle(Future.succeededFuture(new JsonObject().put("key", "value")));
 
@@ -89,11 +88,12 @@ public class NormsRepositoryTest {
   }
 
   /**
-   * Verify that can not store a published norm because that returned by repository is not right.
+   * Verify that can not store a published norm because that returned by
+   * repository is not right.
    *
    * @param testContext context that executes the test.
    *
-   * @see NormsRepository#storePublishedNorm(PublishedNorm, Handler)
+   * @see NormsRepository#storePublishedNorm(PublishedNorm)
    */
   @Test
   public void shouldNotStorePublishedNormBecauseReturnedJsonObjectIsNotRight(final VertxTestContext testContext) {
@@ -101,24 +101,25 @@ public class NormsRepositoryTest {
     final NormsRepository repository = new NormsRepositoryImpl(null, null) {
 
       @Override
-      public void storePublishedNorm(final JsonObject publishednorm, final Handler<AsyncResult<JsonObject>> storeHandler) {
+      public void storePublishedNorm(final JsonObject publishednorm,
+          final Handler<AsyncResult<JsonObject>> storeHandler) {
 
         storeHandler.handle(Future.succeededFuture(new JsonObject().put("key", "value")));
       }
     };
 
-    repository.storePublishedNorm(new PublishedNorm(), testContext.failing(fail -> {
-      testContext.completeNow();
-    }));
+    testContext.assertFailure(repository.storePublishedNorm(new PublishedNorm()))
+        .onFailure(fail -> testContext.completeNow());
 
   }
 
   /**
-   * Verify that can not store a published norm because that returned by repository is not right.
+   * Verify that can not store a published norm because that returned by
+   * repository is not right.
    *
    * @param testContext context that executes the test.
    *
-   * @see NormsRepository#storePublishedNorm(PublishedNorm, Handler)
+   * @see NormsRepository#storePublishedNorm(PublishedNorm)
    */
   @Test
   public void shouldNotStorePublishedNormBecauseStoreFailed(final VertxTestContext testContext) {
@@ -127,26 +128,29 @@ public class NormsRepositoryTest {
     final NormsRepository repository = new NormsRepositoryImpl(null, null) {
 
       @Override
-      public void storePublishedNorm(final JsonObject publishednorm, final Handler<AsyncResult<JsonObject>> storeHandler) {
+      public void storePublishedNorm(final JsonObject publishednorm,
+          final Handler<AsyncResult<JsonObject>> storeHandler) {
 
         storeHandler.handle(Future.failedFuture(cause));
       }
 
     };
 
-    repository.storePublishedNorm(new PublishedNorm(), testContext.failing(fail -> {
-      assertThat(fail).isEqualTo(cause);
-      testContext.completeNow();
-    }));
+    testContext.assertFailure(repository.storePublishedNorm(new PublishedNorm()))
+        .onFailure(fail -> testContext.verify(() -> {
+          assertThat(fail).isEqualTo(cause);
+          testContext.completeNow();
+        }));
 
   }
 
   /**
-   * Verify that can not update a published norm because that returned by repository is not right.
+   * Verify that can not update a published norm because that returned by
+   * repository is not right.
    *
    * @param testContext context that executes the test.
    *
-   * @see NormsRepository#searchPublishedNorm(String, io.vertx.core.Handler)
+   * @see NormsRepository#updatePublishedNorm(PublishedNorm)
    */
   @Test
   public void shouldNotUpdatePublishedNormBecauseUpdateFailed(final VertxTestContext testContext) {
@@ -161,11 +165,12 @@ public class NormsRepositoryTest {
       }
     };
 
-    repository.updatePublishedNorm(new PublishedNorm(), testContext.failing(fail -> {
+    testContext.assertFailure(repository.updatePublishedNorm(new PublishedNorm()))
+        .onFailure(fail -> testContext.verify(() -> {
 
-      assertThat(fail).isEqualTo(cause);
-      testContext.completeNow();
-    }));
+          assertThat(fail).isEqualTo(cause);
+          testContext.completeNow();
+        }));
 
   }
 
@@ -174,10 +179,10 @@ public class NormsRepositoryTest {
    *
    * @param testContext context that executes the test.
    *
-   * @see NormsRepository#retrievePublishedNormsPageObject(eu.internetofus.common.vertx.ModelsPageContext, Handler)
+   * @see NormsRepository#retrievePublishedNormsPage(eu.internetofus.common.vertx.ModelsPageContext)
    */
   @Test
-  public void shouldFailRetrievePublishedNormsPageObjectWhenSearchFail(final VertxTestContext testContext) {
+  public void shouldFailretrievePublishedNormsPageWhenSearchFail(final VertxTestContext testContext) {
 
     final DummyNormsRepository repository = spy(new DummyNormsRepository());
     final var context = new ModelsPageContext();
@@ -185,11 +190,13 @@ public class NormsRepositoryTest {
     context.sort = NormsRepository.createPublishedNormsPageSort(Arrays.asList("name", "-description"));
     context.offset = 3;
     context.limit = 11;
-    repository.retrievePublishedNormsPageObject(context, testContext.failing(error -> testContext.completeNow()));
+    testContext.assertFailure(repository.retrievePublishedNormsPage(context))
+        .onFailure(error -> testContext.completeNow());
 
     @SuppressWarnings("unchecked")
     final ArgumentCaptor<Handler<AsyncResult<JsonObject>>> searchHandler = ArgumentCaptor.forClass(Handler.class);
-    verify(repository, timeout(30000).times(1)).retrievePublishedNormsPageObject(eq(context.query), eq(context.sort), eq(context.offset), eq(context.limit), searchHandler.capture());
+    verify(repository, timeout(30000).times(1)).retrievePublishedNormsPage(eq(context.query), eq(context.sort),
+        eq(context.offset), eq(context.limit), searchHandler.capture());
     searchHandler.getValue().handle(Future.failedFuture("Not found"));
 
   }
@@ -199,22 +206,25 @@ public class NormsRepositoryTest {
    *
    * @param testContext context that executes the test.
    *
-   * @see NormsRepository#retrievePublishedNormsPage(ModelsPageContext, Handler)
+   * @see NormsRepository#retrievePublishedNormsPage(ModelsPageContext)
    */
   @Test
   public void shouldFailRetrievePublishedNormsPageWhenObjectNotMatch(final VertxTestContext testContext) {
 
     final DummyNormsRepository repository = spy(new DummyNormsRepository());
     final var context = new ModelsPageContext();
-    context.query = NormsRepository.createPublishedNormsPageQuery("name", "description", List.of("Keywords"), "publisherId", 0l, Long.MAX_VALUE);
+    context.query = NormsRepository.createPublishedNormsPageQuery("name", "description", List.of("Keywords"),
+        "publisherId", 0l, Long.MAX_VALUE);
     context.sort = NormsRepository.createPublishedNormsPageSort(Arrays.asList("-name", "description"));
     context.offset = 23;
     context.limit = 100;
-    repository.retrievePublishedNormsPage(context, testContext.failing(error -> testContext.completeNow()));
+    testContext.assertFailure(repository.retrievePublishedNormsPage(context))
+        .onFailure(error -> testContext.completeNow());
 
     @SuppressWarnings("unchecked")
     final ArgumentCaptor<Handler<AsyncResult<JsonObject>>> searchHandler = ArgumentCaptor.forClass(Handler.class);
-    verify(repository, timeout(30000).times(1)).retrievePublishedNormsPageObject(eq(context.query), eq(context.sort), eq(context.offset), eq(context.limit), searchHandler.capture());
+    verify(repository, timeout(30000).times(1)).retrievePublishedNormsPage(eq(context.query), eq(context.sort),
+        eq(context.offset), eq(context.limit), searchHandler.capture());
     searchHandler.getValue().handle(Future.succeededFuture(new JsonObject().put("udefinedKey", "value")));
 
   }
@@ -224,22 +234,25 @@ public class NormsRepositoryTest {
    *
    * @param testContext context that executes the test.
    *
-   * @see NormsRepository#retrievePublishedNormsPage(ModelsPageContext, Handler)
+   * @see NormsRepository#retrievePublishedNormsPage(ModelsPageContext)
    */
   @Test
   public void shouldFailRetrievePublishedNormsPageWhenObjectNotFound(final VertxTestContext testContext) {
 
     final DummyNormsRepository repository = spy(new DummyNormsRepository());
     final var context = new ModelsPageContext();
-    context.query = NormsRepository.createPublishedNormsPageQuery("name", "description", List.of("Keywords"), "publisherId", null, Long.MAX_VALUE);
+    context.query = NormsRepository.createPublishedNormsPageQuery("name", "description", List.of("Keywords"),
+        "publisherId", null, Long.MAX_VALUE);
     context.sort = NormsRepository.createPublishedNormsPageSort(Arrays.asList("-name", "description"));
     context.offset = 23;
     context.limit = 100;
-    repository.retrievePublishedNormsPage(context, testContext.failing(error -> testContext.completeNow()));
+    testContext.assertFailure(repository.retrievePublishedNormsPage(context))
+        .onFailure(error -> testContext.completeNow());
 
     @SuppressWarnings("unchecked")
     final ArgumentCaptor<Handler<AsyncResult<JsonObject>>> searchHandler = ArgumentCaptor.forClass(Handler.class);
-    verify(repository, timeout(30000).times(1)).retrievePublishedNormsPageObject(eq(context.query), eq(context.sort), eq(context.offset), eq(context.limit), searchHandler.capture());
+    verify(repository, timeout(30000).times(1)).retrievePublishedNormsPage(eq(context.query), eq(context.sort),
+        eq(context.offset), eq(context.limit), searchHandler.capture());
     searchHandler.getValue().handle(Future.failedFuture("Not found"));
 
   }
@@ -269,7 +282,8 @@ public class NormsRepositoryTest {
   @Test
   public void shouldCreatePublishedNormsPageSort() throws ValidationErrorException {
 
-    final var sort = new JsonObject().put("name", 1).put("description", 1).put("keywords", -1).put("publisherId", 1).put("_lastUpdateTs", -1);
+    final var sort = new JsonObject().put("name", 1).put("description", 1).put("keywords", -1).put("publisherId", 1)
+        .put("_lastUpdateTs", -1);
     final var params = new ArrayList<String>();
     params.add("name");
     params.add("+description");
@@ -289,7 +303,8 @@ public class NormsRepositoryTest {
     final var params = new ArrayList<String>();
     params.add("+publish");
     params.add("-publishTime");
-    assertThatExceptionOfType(ValidationErrorException.class).isThrownBy(() -> NormsRepository.createPublishedNormsPageSort(params));
+    assertThatExceptionOfType(ValidationErrorException.class)
+        .isThrownBy(() -> NormsRepository.createPublishedNormsPageSort(params));
 
   }
 

@@ -26,8 +26,6 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import java.util.List;
-
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.ValidationErrorException;
 import eu.internetofus.common.vertx.ModelsPageContext;
@@ -40,10 +38,12 @@ import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.serviceproxy.ServiceBinder;
+import java.util.List;
 
 /**
  * The service to manage the {@link PublishedNorm} on the database.
@@ -90,32 +90,16 @@ public interface NormsRepository {
   /**
    * Search for the published norm with the specified identifier.
    *
-   * @param id            identifier of the norm to search.
-   * @param searchHandler handler to manage the search.
+   * @param id identifier of the norm to search.
+   * @return the future search model.
    */
   @GenIgnore
-  default void searchPublishedNorm(final String id, final Handler<AsyncResult<PublishedNorm>> searchHandler) {
+  default Future<PublishedNorm> searchPublishedNorm(final String id) {
 
-    this.searchPublishedNormObject(id, search -> {
+    Promise<JsonObject> promise = Promise.promise();
+    this.searchPublishedNorm(id, promise);
+    return Model.fromFutureJsonObject(promise.future(), PublishedNorm.class);
 
-      if (search.failed()) {
-
-        searchHandler.handle(Future.failedFuture(search.cause()));
-
-      } else {
-
-        final var value = search.result();
-        final var norm = Model.fromJsonObject(value, PublishedNorm.class);
-        if (norm == null) {
-
-          searchHandler.handle(Future.failedFuture("The stored published norm is not valid."));
-
-        } else {
-
-          searchHandler.handle(Future.succeededFuture(norm));
-        }
-      }
-    });
   }
 
   /**
@@ -124,61 +108,31 @@ public interface NormsRepository {
    * @param id            identifier of the norm to search.
    * @param searchHandler handler to manage the search.
    */
-  void searchPublishedNormObject(String id, Handler<AsyncResult<JsonObject>> searchHandler);
+  void searchPublishedNorm(String id, Handler<AsyncResult<JsonObject>> searchHandler);
 
   /**
    * Store a published norm.
    *
-   * @param norm         to store.
-   * @param storeHandler handler to manage the store.
+   * @param norm to store.
+   *
+   * @return the future stored norm.
    */
   @GenIgnore
-  default void storePublishedNorm(final PublishedNorm norm, final Handler<AsyncResult<PublishedNorm>> storeHandler) {
+  default Future<PublishedNorm> storePublishedNorm(final PublishedNorm norm) {
 
+    Promise<JsonObject> promise = Promise.promise();
     final var object = norm.toJsonObject();
     if (object == null) {
 
-      storeHandler.handle(Future.failedFuture("The published norm can not converted to JSON."));
+      return Future.failedFuture("The published norm can not converted to JSON.");
 
     } else {
 
-      this.storePublishedNorm(object, this.createHandlerMapJsonObjectToPublichedNorm(storeHandler));
+      this.storePublishedNorm(object, promise);
 
     }
-  }
 
-  /**
-   * Create a map to convert a {@link JsonObject} that responds an action to the respective norm.
-   *
-   * @param handler that will receive the result of the action.
-   *
-   * @return the handler that convert the {@link JsonObject} result
-   *
-   */
-  private Handler<AsyncResult<JsonObject>> createHandlerMapJsonObjectToPublichedNorm(final Handler<AsyncResult<PublishedNorm>> handler) {
-
-    return action -> {
-
-      if (action.failed()) {
-
-        handler.handle(Future.failedFuture(action.cause()));
-
-      } else {
-
-        final var value = action.result();
-        final var storedNorm = Model.fromJsonObject(value, PublishedNorm.class);
-        if (storedNorm == null) {
-
-          handler.handle(Future.failedFuture("The stored published norm is not valid."));
-
-        } else {
-
-          handler.handle(Future.succeededFuture(storedNorm));
-        }
-
-      }
-
-    };
+    return Model.fromFutureJsonObject(promise.future(), PublishedNorm.class);
   }
 
   /**
@@ -192,22 +146,25 @@ public interface NormsRepository {
   /**
    * Update a published norm.
    *
-   * @param norm          to update.
-   * @param updateHandler handler to manage the update.
+   * @param norm to update.
+   *
+   * @return the future update norm.
    */
   @GenIgnore
-  default void updatePublishedNorm(final PublishedNorm norm, final Handler<AsyncResult<Void>> updateHandler) {
+  default Future<Void> updatePublishedNorm(final PublishedNorm norm) {
 
+    Promise<Void> promise = Promise.promise();
     final var object = norm.toJsonObject();
     if (object == null) {
 
-      updateHandler.handle(Future.failedFuture("The published norm can not converted to JSON."));
+      return Future.failedFuture("The published norm can not converted to JSON.");
 
     } else {
 
-      this.updatePublishedNorm(object, updateHandler);
+      this.updatePublishedNorm(object, promise);
 
     }
+    return promise.future();
   }
 
   /**
@@ -227,6 +184,22 @@ public interface NormsRepository {
   void deletePublishedNorm(String id, Handler<AsyncResult<Void>> deleteHandler);
 
   /**
+   * Delete a published norm.
+   *
+   * @param id identifier of the norm to delete.
+   *
+   * @return the future status of the delete action.
+   */
+  @GenIgnore
+  default Future<Void> deletePublishedNorm(String id) {
+
+    Promise<Void> promise = Promise.promise();
+    this.deletePublishedNorm(id, promise);
+    return promise.future();
+
+  }
+
+  /**
    * Create a query to obtain the norms that has the specified parameters.
    *
    * @param name        of the norms to return.
@@ -238,9 +211,12 @@ public interface NormsRepository {
    *
    * @return the query that will return the required norms.
    */
-  static JsonObject createPublishedNormsPageQuery(final String name, final String description, final List<String> keywords, final String publisherId, final Long publishFrom, final Long publishTo) {
+  static JsonObject createPublishedNormsPageQuery(final String name, final String description,
+      final List<String> keywords, final String publisherId, final Long publishFrom, final Long publishTo) {
 
-    return new QueryBuilder().withEqOrRegex("name", name).withEqOrRegex("description", description).withEqOrRegex("keywords", keywords).withEqOrRegex("publisherId", publisherId).withRange("_lastUpdateTs", publishFrom, publishTo).build();
+    return new QueryBuilder().withEqOrRegex("name", name).withEqOrRegex("description", description)
+        .withEqOrRegex("keywords", keywords).withEqOrRegex("publisherId", publisherId)
+        .withRange("_lastUpdateTs", publishFrom, publishTo).build();
   }
 
   /**
@@ -278,59 +254,33 @@ public interface NormsRepository {
    * Retrieve the norms defined on the context.
    *
    * @param context that describe witch page want to obtain.
-   * @param handler for the obtained page.
-   */
-  @GenIgnore
-  default void retrievePublishedNormsPageObject(final ModelsPageContext context, final Handler<AsyncResult<JsonObject>> handler) {
-
-    this.retrievePublishedNormsPageObject(context.query, context.sort, context.offset, context.limit, handler);
-  }
-
-  /**
-   * Retrieve the norms defined on the context.
    *
-   * @param context       that describe witch page want to obtain.
-   * @param searchHandler for the obtained page.
+   * @return the future search handler.
    */
   @GenIgnore
-  default void retrievePublishedNormsPage(final ModelsPageContext context, final Handler<AsyncResult<PublishedNormsPage>> searchHandler) {
+  default Future<PublishedNormsPage> retrievePublishedNormsPage(final ModelsPageContext context) {
 
-    this.retrievePublishedNormsPage(context.query, context.sort, context.offset, context.limit, searchHandler);
+    return this.retrievePublishedNormsPage(context.query, context.sort, context.offset, context.limit);
 
   }
 
   /**
    * Retrieve the norms defined on the context.
    *
-   * @param query         to obtain the required norms.
-   * @param sort          describe how has to be ordered the obtained norms.
-   * @param offset        the index of the first community to return.
-   * @param limit         the number maximum of norms to return.
-   * @param searchHandler for the obtained page.
+   * @param query  to obtain the required norms.
+   * @param sort   describe how has to be ordered the obtained norms.
+   * @param offset the index of the first community to return.
+   * @param limit  the number maximum of norms to return.
+   *
+   * @return the future search handler.
    */
   @GenIgnore
-  default void retrievePublishedNormsPage(final JsonObject query, final JsonObject sort, final int offset, final int limit, final Handler<AsyncResult<PublishedNormsPage>> searchHandler) {
+  default Future<PublishedNormsPage> retrievePublishedNormsPage(final JsonObject query, final JsonObject sort,
+      final int offset, final int limit) {
 
-    this.retrievePublishedNormsPageObject(query, sort, offset, limit, search -> {
-
-      if (search.failed()) {
-
-        searchHandler.handle(Future.failedFuture(search.cause()));
-
-      } else {
-
-        final var value = search.result();
-        final var page = Model.fromJsonObject(value, PublishedNormsPage.class);
-        if (page == null) {
-
-          searchHandler.handle(Future.failedFuture("The stored norms page is not valid."));
-
-        } else {
-
-          searchHandler.handle(Future.succeededFuture(page));
-        }
-      }
-    });
+    Promise<JsonObject> promise = Promise.promise();
+    this.retrievePublishedNormsPage(query, sort, offset, limit, promise);
+    return Model.fromFutureJsonObject(promise.future(), PublishedNormsPage.class);
 
   }
 
@@ -343,6 +293,7 @@ public interface NormsRepository {
    * @param limit   the number maximum of norms to return.
    * @param handler to inform of the found norms.
    */
-  void retrievePublishedNormsPageObject(JsonObject query, JsonObject sort, int offset, int limit, Handler<AsyncResult<JsonObject>> handler);
+  void retrievePublishedNormsPage(JsonObject query, JsonObject sort, int offset, int limit,
+      Handler<AsyncResult<JsonObject>> handler);
 
 }

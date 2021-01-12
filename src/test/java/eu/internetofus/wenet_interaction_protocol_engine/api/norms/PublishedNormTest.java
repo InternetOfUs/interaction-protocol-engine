@@ -42,9 +42,7 @@ import eu.internetofus.common.components.profile_manager.NormTest;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxTestContext;
 import java.util.ArrayList;
@@ -89,21 +87,23 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   /**
    * Create an example model that has the specified index.
    *
-   * @param index         to use in the example.
-   * @param vertx         event bus to use.
-   * @param testContext   test context to use.
-   * @param createHandler the component that will manage the created model.
+   * @param index       to use in the example.
+   * @param vertx       event bus to use.
+   * @param testContext test context to use.
+   *
+   * @return the future created model.
    */
-  public void createModelExample(final int index, final Vertx vertx, final VertxTestContext testContext,
-      final Handler<AsyncResult<PublishedNorm>> createHandler) {
+  public Future<PublishedNorm> createModelExample(final int index, final Vertx vertx,
+      final VertxTestContext testContext) {
 
-    StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).onSuccess(stored -> {
+    return testContext
+        .assertComplete(StoreServices.storeProfile(new WeNetUserProfile(), vertx, testContext).compose(stored -> {
 
-      final var model = this.createModelExample(index);
-      model.publisherId = stored.id;
-      createHandler.handle(Future.succeededFuture(model));
+          final var model = this.createModelExample(index);
+          model.publisherId = stored.id;
+          return Future.succeededFuture(model);
 
-    });
+        }));
 
   }
 
@@ -126,8 +126,8 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   }
 
   /**
-   * Check that the
-   * {@link #createModelExample(int, Vertx, VertxTestContext, Handler)} is valid.
+   * Check that the {@link #createModelExample(int, Vertx, VertxTestContext)} is
+   * valid.
    *
    * @param index       to verify
    * @param vertx       event bus to use.
@@ -139,8 +139,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @ValueSource(ints = { 0, 1, 2, 3, 4, 5 })
   public void shouldExampleBeValid(final int index, final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(index, vertx, testContext,
-        testContext.succeeding(model -> assertIsValid(model, vertx, testContext)));
+    this.createModelExample(index, vertx, testContext).onSuccess(model -> assertIsValid(model, vertx, testContext));
 
   }
 
@@ -155,12 +154,12 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldBeValidWithId(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(model -> {
 
       model.id = UUID.randomUUID().toString();
       assertIsValid(model, vertx, testContext);
 
-    }));
+    });
 
   }
 
@@ -175,16 +174,13 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldMotBeValidWithDuplicatedId(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+    testContext.assertComplete(this.createModelExample(1, vertx, testContext)).onSuccess(model -> testContext
+        .assertComplete(NormsRepository.createProxy(vertx).storePublishedNorm(model)).onSuccess(stored -> {
 
-      NormsRepository.createProxy(vertx).storePublishedNorm(model, testContext.succeeding(stored -> {
+          model.id = stored.id;
+          assertIsNotValid(model, "id", vertx, testContext);
 
-        model.id = stored.id;
-        assertIsNotValid(model, "id", vertx, testContext);
-
-      }));
-
-    }));
+        }));
 
   }
 
@@ -199,11 +195,11 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldModelWithLargeNameNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(model -> {
 
       model.name = ValidationsTest.STRING_256;
       assertIsNotValid(model, "name", vertx, testContext);
-    }));
+    });
 
   }
 
@@ -218,11 +214,11 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldModelWithLargeDescriptionNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(model -> {
 
       model.description = ValidationsTest.STRING_1024;
       assertIsNotValid(model, "description", vertx, testContext);
-    }));
+    });
 
   }
 
@@ -237,11 +233,11 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldModelWithLargeKeywordNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(model -> {
 
       model.keywords.add(3, ValidationsTest.STRING_256);
       assertIsNotValid(model, "keywords[3]", vertx, testContext);
-    }));
+    });
 
   }
 
@@ -256,11 +252,11 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldModelWithLargeNormNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(model -> {
 
       model.norm = null;
       assertIsNotValid(model, "norm", vertx, testContext);
-    }));
+    });
 
   }
 
@@ -275,11 +271,11 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldModelWithUndefinedPublishedNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(model -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(model -> {
 
       model.publisherId = "undefined";
       assertIsNotValid(model, "publisherId", vertx, testContext);
-    }));
+    });
 
   }
 
@@ -294,14 +290,14 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldMergeNullValue(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       assertCanMerge(target, null, vertx, testContext, merged -> testContext.verify(() -> {
 
         assertThat(merged).isSameAs(target);
 
       }));
-    }));
+    });
 
   }
 
@@ -316,9 +312,9 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldMergeExamples(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
-      this.createModelExample(2, vertx, testContext, testContext.succeeding(source -> {
+      this.createModelExample(2, vertx, testContext).onSuccess(source -> {
 
         assertCanMerge(target, source, vertx, testContext, merged -> testContext.verify(() -> {
 
@@ -329,8 +325,8 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
           assertThat(merged).isEqualTo(source);
 
         }));
-      }));
-    }));
+      });
+    });
 
   }
 
@@ -345,12 +341,12 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldNotMergeWithABadName(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       final var source = new PublishedNorm();
       source.name = ValidationsTest.STRING_256;
       assertCannotMerge(target, source, "name", vertx, testContext);
-    }));
+    });
 
   }
 
@@ -365,12 +361,12 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldNotMergeWithABadDescription(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       final var source = new PublishedNorm();
       source.description = ValidationsTest.STRING_1024;
       assertCannotMerge(target, source, "description", vertx, testContext);
-    }));
+    });
 
   }
 
@@ -385,7 +381,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldNotMergeWithABadKeyword(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       final var source = new PublishedNorm();
       source.keywords = new ArrayList<>();
@@ -394,7 +390,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
       source.keywords.add("");
       source.keywords.add(ValidationsTest.STRING_256);
       assertCannotMerge(target, source, "keywords[3]", vertx, testContext);
-    }));
+    });
 
   }
 
@@ -409,12 +405,12 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldNotMergeWithAnUndefinedPublishedId(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       final var source = new PublishedNorm();
       source.publisherId = "undefined";
       assertCannotMerge(target, source, "publisherId", vertx, testContext);
-    }));
+    });
 
   }
 
@@ -429,14 +425,14 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldUpdateNullValue(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       assertCanUpdate(target, null, vertx, testContext, updated -> testContext.verify(() -> {
 
         assertThat(updated).isSameAs(target);
 
       }));
-    }));
+    });
 
   }
 
@@ -451,9 +447,9 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldUpdateExamples(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
-      this.createModelExample(2, vertx, testContext, testContext.succeeding(source -> {
+      this.createModelExample(2, vertx, testContext).onSuccess(source -> {
 
         assertCanUpdate(target, source, vertx, testContext, updated -> testContext.verify(() -> {
 
@@ -464,8 +460,8 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
           assertThat(updated).isEqualTo(source);
 
         }));
-      }));
-    }));
+      });
+    });
 
   }
 
@@ -480,12 +476,12 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldNotUpdateWithABadName(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       final var source = Model.fromJsonObject(target.toJsonObject(), PublishedNorm.class);
       source.name = ValidationsTest.STRING_256;
       assertCannotUpdate(target, source, "name", vertx, testContext);
-    }));
+    });
 
   }
 
@@ -500,12 +496,12 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldNotUpdateWithABadDescription(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       final var source = Model.fromJsonObject(target.toJsonObject(), PublishedNorm.class);
       source.description = ValidationsTest.STRING_1024;
       assertCannotUpdate(target, source, "description", vertx, testContext);
-    }));
+    });
 
   }
 
@@ -520,7 +516,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldNotUpdateWithABadKeyword(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       final var source = Model.fromJsonObject(target.toJsonObject(), PublishedNorm.class);
       source.keywords = new ArrayList<>();
@@ -529,7 +525,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
       source.keywords.add("");
       source.keywords.add(ValidationsTest.STRING_256);
       assertCannotUpdate(target, source, "keywords[3]", vertx, testContext);
-    }));
+    });
 
   }
 
@@ -544,12 +540,12 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   @Test
   public void shouldNotUpdateWithAnUndefinedPublishedId(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.createModelExample(1, vertx, testContext, testContext.succeeding(target -> {
+    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
 
       final var source = Model.fromJsonObject(target.toJsonObject(), PublishedNorm.class);
       source.publisherId = "undefined";
       assertCannotUpdate(target, source, "publisherId", vertx, testContext);
-    }));
+    });
 
   }
 }

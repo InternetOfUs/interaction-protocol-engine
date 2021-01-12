@@ -62,13 +62,13 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
    * {@inheritDoc}
    */
   @Override
-  public void searchPublishedNormObject(final String id, final Handler<AsyncResult<JsonObject>> searchHandler) {
+  public void searchPublishedNorm(final String id, final Handler<AsyncResult<JsonObject>> searchHandler) {
 
     final var query = new JsonObject().put("_id", id);
     this.findOneDocument(PUBLISHED_NORMS_COLLECTION, query, null, found -> {
       final var _id = (String) found.remove("_id");
       return found.put("id", _id);
-    }, searchHandler);
+    }).onComplete(searchHandler);
 
   }
 
@@ -88,7 +88,7 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
       final var _id = (String) stored.remove("_id");
       return stored.put("id", _id);
 
-    }, storeHandler);
+    }).onComplete(storeHandler);
   }
 
   /**
@@ -99,7 +99,7 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
 
     final var id = norm.remove("id");
     final var query = new JsonObject().put("_id", id);
-    this.updateOneDocument(PUBLISHED_NORMS_COLLECTION, query, norm, updateHandler);
+    this.updateOneDocument(PUBLISHED_NORMS_COLLECTION, query, norm).onComplete(updateHandler);
   }
 
   /**
@@ -109,7 +109,7 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
   public void deletePublishedNorm(final String id, final Handler<AsyncResult<Void>> deleteHandler) {
 
     final var query = new JsonObject().put("_id", id);
-    this.deleteOneDocument(PUBLISHED_NORMS_COLLECTION, query, deleteHandler);
+    this.deleteOneDocument(PUBLISHED_NORMS_COLLECTION, query).onComplete(deleteHandler);
 
   }
 
@@ -117,13 +117,15 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
    * {@inheritDoc}
    */
   @Override
-  public void retrievePublishedNormsPageObject(final JsonObject query, final JsonObject sort, final int offset, final int limit, final Handler<AsyncResult<JsonObject>> searchHandler) {
+  public void retrievePublishedNormsPage(final JsonObject query, final JsonObject sort, final int offset,
+      final int limit, final Handler<AsyncResult<JsonObject>> searchHandler) {
 
     final var options = new FindOptions();
     options.setSort(sort);
     options.setSkip(offset);
     options.setLimit(limit);
-    this.searchPageObject(PUBLISHED_NORMS_COLLECTION, query, options, "norms", norm -> norm.put("id", norm.remove("_id")), searchHandler);
+    this.searchPageObject(PUBLISHED_NORMS_COLLECTION, query, options, "norms",
+        norm -> norm.put("id", norm.remove("_id"))).onComplete(searchHandler);
 
   }
 

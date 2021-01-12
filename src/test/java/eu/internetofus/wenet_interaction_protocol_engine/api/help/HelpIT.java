@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,15 +30,14 @@ import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
 import static eu.internetofus.common.vertx.ext.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.ws.rs.core.Response.Status;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxTestContext;
+import javax.ws.rs.core.Response.Status;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * The integration test over the {@link Help}.
@@ -53,11 +52,12 @@ public class HelpIT {
   /**
    * Verify that return the api information.
    *
+   * @param vertx       event bus to use.
    * @param client      to connect to the server.
    * @param testContext context to test.
    */
   @Test
-  public void shouldReturnApiInfo(final WebClient client, final VertxTestContext testContext) {
+  public void shouldReturnApiInfo(Vertx vertx, final WebClient client, final VertxTestContext testContext) {
 
     testRequest(client, HttpMethod.GET, Help.PATH + Help.INFO_PATH).expect(res -> {
       assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());

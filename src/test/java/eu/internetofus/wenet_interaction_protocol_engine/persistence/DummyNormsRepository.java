@@ -41,7 +41,7 @@ public class DummyNormsRepository implements NormsRepository {
    * {@inheritDoc}
    */
   @Override
-  public void searchPublishedNormObject(final String id, final Handler<AsyncResult<JsonObject>> searchHandler) {
+  public void searchPublishedNorm(final String id, final Handler<AsyncResult<JsonObject>> searchHandler) {
 
   }
 
@@ -73,7 +73,8 @@ public class DummyNormsRepository implements NormsRepository {
    * {@inheritDoc}
    */
   @Override
-  public void retrievePublishedNormsPageObject(final JsonObject query, final JsonObject sort, final int offset, final int limit, final Handler<AsyncResult<JsonObject>> searchHandler) {
+  public void retrievePublishedNormsPage(final JsonObject query, final JsonObject sort, final int offset,
+      final int limit, final Handler<AsyncResult<JsonObject>> searchHandler) {
 
   }
 

@@ -31,23 +31,19 @@ import static eu.internetofus.common.vertx.ext.TestRequest.queryParam;
 import static eu.internetofus.common.vertx.ext.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.UUID;
-
-import javax.ws.rs.core.Response.Status;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 import eu.internetofus.common.components.ErrorMessage;
 import eu.internetofus.common.vertx.AbstractModelResourcesIT;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxTestContext;
+import java.util.UUID;
+import javax.ws.rs.core.Response.Status;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * The integration test over the {@link Norms}.
@@ -81,9 +77,10 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * {@inheritDoc}
    */
   @Override
-  protected void createValidModelExample(final int index, final Vertx vertx, final VertxTestContext testContext, final Handler<AsyncResult<PublishedNorm>> createHandler) {
+  protected Future<PublishedNorm> createValidModelExample(final int index, final Vertx vertx,
+      final VertxTestContext testContext) {
 
-    new PublishedNormTest().createModelExample(index, vertx, testContext, createHandler);
+    return testContext.assertComplete(new PublishedNormTest().createModelExample(index, vertx, testContext));
 
   }
 
@@ -91,9 +88,10 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * {@inheritDoc}
    */
   @Override
-  protected void storeModel(final PublishedNorm source, final Vertx vertx, final VertxTestContext testContext, final Handler<AsyncResult<PublishedNorm>> succeeding) {
+  protected Future<PublishedNorm> storeModel(final PublishedNorm source, final Vertx vertx,
+      final VertxTestContext testContext) {
 
-    NormsRepository.createProxy(vertx).storePublishedNorm(source, succeeding);
+    return NormsRepository.createProxy(vertx).storePublishedNorm(source);
 
   }
 
@@ -127,7 +125,8 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
+   *      Long, Long, java.util.List, int, int,
    *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
@@ -136,23 +135,26 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
     final var publishedNorm1 = new PublishedNormTest().createModelExample(1);
     final var name = UUID.randomUUID().toString();
     publishedNorm1.name = name + " 1";
-    NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
+    testContext.assertComplete(NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm1))
+        .onSuccess(storedPublishedNorm1 -> {
 
-      final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
-      publishedNorm2.name += " " + name + " 2";
-      NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
+          final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
+          publishedNorm2.name += " " + name + " 2";
+          testContext.assertComplete(NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm2))
+              .onSuccess(storedPublishedNorm2 -> {
 
-        testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("name", "/.*" + name + ".*/")).expect(res -> {
+                testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("name", "/.*" + name + ".*/"))
+                    .expect(res -> {
 
-          assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-          final var page = assertThatBodyIs(PublishedNormsPage.class, res);
-          assertThat(page.offset).isEqualTo(0);
-          assertThat(page.total).isEqualTo(2);
-          assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
+                      assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+                      final var page = assertThatBodyIs(PublishedNormsPage.class, res);
+                      assertThat(page.offset).isEqualTo(0);
+                      assertThat(page.total).isEqualTo(2);
+                      assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
 
-        }).send(testContext);
-      }));
-    }));
+                    }).send(testContext);
+              });
+        });
   }
 
   /**
@@ -162,32 +164,37 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
+   *      Long, Long, java.util.List, int, int,
    *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
-  public void shouldFoundNormsByDescription(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+  public void shouldFoundNormsByDescription(final Vertx vertx, final WebClient client,
+      final VertxTestContext testContext) {
 
     final var publishedNorm1 = new PublishedNormTest().createModelExample(1);
     final var description = UUID.randomUUID().toString();
     publishedNorm1.description = description;
-    NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
+    testContext.assertComplete(NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm1))
+        .onSuccess(storedPublishedNorm1 -> {
 
-      final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
-      publishedNorm2.description = description;
-      NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
+          final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
+          publishedNorm2.description = description;
+          testContext.assertComplete(NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm2))
+              .onSuccess(storedPublishedNorm2 -> {
 
-        testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("description", description), queryParam("offset", "1")).expect(res -> {
+                testRequest(client, HttpMethod.GET, Norms.PATH)
+                    .with(queryParam("description", description), queryParam("offset", "1")).expect(res -> {
 
-          assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-          final var page = assertThatBodyIs(PublishedNormsPage.class, res);
-          assertThat(page.offset).isEqualTo(1);
-          assertThat(page.total).isEqualTo(2);
-          assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm2);
+                      assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+                      final var page = assertThatBodyIs(PublishedNormsPage.class, res);
+                      assertThat(page.offset).isEqualTo(1);
+                      assertThat(page.total).isEqualTo(2);
+                      assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm2);
 
-        }).send(testContext);
-      }));
-    }));
+                    }).send(testContext);
+              });
+        });
   }
 
   /**
@@ -197,32 +204,37 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
+   *      Long, Long, java.util.List, int, int,
    *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
-  public void shouldFoundNormsByAKeyword(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+  public void shouldFoundNormsByAKeyword(final Vertx vertx, final WebClient client,
+      final VertxTestContext testContext) {
 
     final var publishedNorm1 = new PublishedNormTest().createModelExample(1);
     final var keyword = UUID.randomUUID().toString();
     publishedNorm1.keywords.add(keyword);
-    NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
+    testContext.assertComplete(NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm1))
+        .onSuccess(storedPublishedNorm1 -> {
 
-      final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
-      publishedNorm2.keywords.add(keyword);
-      NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
+          final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
+          publishedNorm2.keywords.add(keyword);
+          testContext.assertComplete(NormsRepository.createProxy(vertx).storePublishedNorm(publishedNorm2))
+              .onSuccess(storedPublishedNorm2 -> {
 
-        testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("keywords", keyword), queryParam("limit", "1")).expect(res -> {
+                testRequest(client, HttpMethod.GET, Norms.PATH)
+                    .with(queryParam("keywords", keyword), queryParam("limit", "1")).expect(res -> {
 
-          assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-          final var page = assertThatBodyIs(PublishedNormsPage.class, res);
-          assertThat(page.offset).isEqualTo(0);
-          assertThat(page.total).isEqualTo(2);
-          assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1);
+                      assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+                      final var page = assertThatBodyIs(PublishedNormsPage.class, res);
+                      assertThat(page.offset).isEqualTo(0);
+                      assertThat(page.total).isEqualTo(2);
+                      assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1);
 
-        }).send(testContext);
-      }));
-    }));
+                    }).send(testContext);
+              });
+        });
   }
 
   /**
@@ -232,38 +244,41 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
+   *      Long, Long, java.util.List, int, int,
    *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
-  public void shouldFoundNormsBySomeKeyword(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+  public void shouldFoundNormsBySomeKeyword(final Vertx vertx, final WebClient client,
+      final VertxTestContext testContext) {
 
     final var publishedNorm1 = new PublishedNormTest().createModelExample(1);
     final var keyword = UUID.randomUUID().toString();
     publishedNorm1.keywords.add(keyword);
     final var repository = NormsRepository.createProxy(vertx);
-    repository.storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
+    testContext.assertComplete(repository.storePublishedNorm(publishedNorm1)).onSuccess(storedPublishedNorm1 -> {
 
       final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
       publishedNorm2.keywords.add(1, keyword);
-      repository.storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
+      testContext.assertComplete(repository.storePublishedNorm(publishedNorm2)).onSuccess(storedPublishedNorm2 -> {
 
         final var publishedNorm3 = new PublishedNormTest().createModelExample(30);
         publishedNorm3.keywords.add(0, keyword);
-        repository.storePublishedNorm(publishedNorm3, testContext.succeeding(storedPublishedNorm3 -> {
+        testContext.assertComplete(repository.storePublishedNorm(publishedNorm3)).onSuccess(storedPublishedNorm3 -> {
 
-          testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("keywords", keyword + ",keyword 1")).expect(res -> {
+          testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("keywords", keyword + ",keyword 1"))
+              .expect(res -> {
 
-            assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-            final var page = assertThatBodyIs(PublishedNormsPage.class, res);
-            assertThat(page.offset).isEqualTo(0);
-            assertThat(page.total).isEqualTo(2);
-            assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
+                assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+                final var page = assertThatBodyIs(PublishedNormsPage.class, res);
+                assertThat(page.offset).isEqualTo(0);
+                assertThat(page.total).isEqualTo(2);
+                assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
 
-          }).send(testContext);
-        }));
-      }));
-    }));
+              }).send(testContext);
+        });
+      });
+    });
   }
 
   /**
@@ -273,21 +288,23 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
+   *      Long, Long, java.util.List, int, int,
    *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
-  public void shouldFoundNormsByPublisherId(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+  public void shouldFoundNormsByPublisherId(final Vertx vertx, final WebClient client,
+      final VertxTestContext testContext) {
 
     final var publishedNorm1 = new PublishedNormTest().createModelExample(1);
     final var publisherId = "http://host.com/publisherId_" + UUID.randomUUID().toString() + ".png";
     publishedNorm1.publisherId = publisherId;
     final var repository = NormsRepository.createProxy(vertx);
-    repository.storePublishedNorm(publishedNorm1, testContext.succeeding(storedPublishedNorm1 -> {
+    testContext.assertComplete(repository.storePublishedNorm(publishedNorm1)).onSuccess(storedPublishedNorm1 -> {
 
       final var publishedNorm2 = new PublishedNormTest().createModelExample(2);
       publishedNorm2.publisherId = publisherId;
-      repository.storePublishedNorm(publishedNorm2, testContext.succeeding(storedPublishedNorm2 -> {
+      testContext.assertComplete(repository.storePublishedNorm(publishedNorm2)).onSuccess(storedPublishedNorm2 -> {
 
         testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("publisherId", publisherId)).expect(res -> {
 
@@ -298,8 +315,8 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
           assertThat(page.norms).isNotEmpty().containsExactly(storedPublishedNorm1, storedPublishedNorm2);
 
         }).send(testContext);
-      }));
-    }));
+      });
+    });
   }
 
   /**
@@ -308,7 +325,8 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
+   *      Long, Long, java.util.List, int, int,
    *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
@@ -330,21 +348,23 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String, Long, Long, java.util.List, int, int,
+   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
+   *      Long, Long, java.util.List, int, int,
    *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
    */
   @Test
   public void shouldEmptyPageIfAnyPublishedNormMatch(final WebClient client, final VertxTestContext testContext) {
 
-    testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("name", UUID.randomUUID().toString())).expect(res -> {
+    testRequest(client, HttpMethod.GET, Norms.PATH).with(queryParam("name", UUID.randomUUID().toString()))
+        .expect(res -> {
 
-      assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-      final var page = assertThatBodyIs(PublishedNormsPage.class, res);
-      assertThat(page.offset).isEqualTo(0);
-      assertThat(page.total).isEqualTo(0);
-      assertThat(page.norms).isNull();
+          assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
+          final var page = assertThatBodyIs(PublishedNormsPage.class, res);
+          assertThat(page.offset).isEqualTo(0);
+          assertThat(page.total).isEqualTo(0);
+          assertThat(page.norms).isNull();
 
-    }).send(testContext);
+        }).send(testContext);
   }
 
 }
