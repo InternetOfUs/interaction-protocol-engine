@@ -26,17 +26,6 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-
-import org.apache.commons.io.FileUtils;
-import org.tinylog.Level;
-import org.tinylog.Logger;
-import org.tinylog.provider.InternalLogger;
-
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
 import eu.internetofus.common.vertx.Worker;
@@ -46,9 +35,19 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import org.apache.commons.io.FileUtils;
+import org.tinylog.Level;
+import org.tinylog.Logger;
+import org.tinylog.provider.InternalLogger;
 
 /**
- * The worker verticle that is used to process the messages for an interaction protocol.
+ * The worker verticle that is used to process the messages for an interaction
+ * protocol.
  *
  * @author UDT-IA, IIIA-CSIC
  */
@@ -68,7 +67,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
   /**
    * The name of the files of the prolog files to copy.
    */
-  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "profile_manager.pl", "task_manager.pl", "service.pl", "ontology.pl", "norms.pl", "engine.pl", "main.pl" };
+  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "profile_manager.pl", "task_manager.pl", "service.pl",
+      "ontology.pl", "norms.pl", "engine.pl", "main.pl" };
 
   /**
    * The type that define the the received event of the type incentive.
@@ -127,7 +127,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
     try {
 
-      final var prologConf = this.config().getJsonObject("engine", new JsonObject()).getJsonObject("prolog", new JsonObject());
+      final var prologConf = this.config().getJsonObject("engine", new JsonObject()).getJsonObject("prolog",
+          new JsonObject());
       this.prologDir = Paths.get(prologConf.getString("workDir", "var/prolog"));
       this.prologDir.toFile().mkdirs();
       for (final String prologFileName : PROLOG_FILE_NAMES) {
@@ -166,7 +167,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
     try {
 
       final var body = event.body();
-      final var type = MessageForWorkerBuilder.Type.valueOf(body.getString("type", MessageForWorkerBuilder.Type.DO_TASK_TRANSACTION.name()));
+      final var type = MessageForWorkerBuilder.Type
+          .valueOf(body.getString("type", MessageForWorkerBuilder.Type.DO_TASK_TRANSACTION.name()));
       if (SEND_INCENTIVE_TYPE.equals(type)) {
         // send incentive
 
@@ -200,11 +202,13 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
     Logger.trace("Received message to process {}", message);
 
     // final var params = new ModelsPageContext();
-    // params.sort = ProtocolsRepository.createProtocolsPageQuery(message.appId, message.communityId, message.taskTypeId,
+    // params.sort = ProtocolsRepository.createProtocolsPageQuery(message.appId,
+    // message.communityId, message.taskTypeId,
     // message.taskId);
     // params.offset = 0;
     // params.limit = 1;
-    // ProtocolsRepository.createProxy(this.vertx).retrieveProtocolsPage(params, search -> {
+    // ProtocolsRepository.createProxy(this.vertx).retrieveProtocolsPage(params,
+    // search -> {
     //
     // final var page = search.result();
     // final var protocol = page.protocols.get(0);
@@ -280,7 +284,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
       final var initPath = tmp.resolve(Paths.get("init.pl"));
       Files.writeString(initPath, init.toString());
 
-      final var processBuilder = new ProcessBuilder("swipl", "--debug", "-O", "-s", initPath.toAbsolutePath().toString(), "-g", "go", "-t", "halt");
+      final var processBuilder = new ProcessBuilder("swipl", "--debug", "-O", "-s",
+          initPath.toAbsolutePath().toString(), "-g", "go", "-t", "halt");
       processBuilder.directory(tmp.toFile());
       processBuilder.redirectError(error.toFile());
       processBuilder.redirectOutput(output.toFile());
@@ -291,11 +296,13 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
       InternalLogger.log(Level.DEBUG, readQuietly(output));
       if (status == 0) {
 
-        Logger.trace("Finished process {} successfully.\nThe error stream is:\n{}\nThe output stream is:\n{}", () -> process.pid(), () -> readQuietly(error), () -> readQuietly(output));
+        Logger.trace("Finished process {} successfully.\nThe error stream is:\n{}\nThe output stream is:\n{}",
+            () -> process.pid(), () -> readQuietly(error), () -> readQuietly(output));
 
       } else {
 
-        Logger.error("Finished process {} with error code {}.\nThe error stream is:\n{}\nThe output stream is:\n{}", () -> process.pid(), () -> status, () -> readQuietly(error), () -> readQuietly(output));
+        Logger.error("Finished process {} with error code {}.\nThe error stream is:\n{}\nThe output stream is:\n{}",
+            () -> process.pid(), () -> status, () -> readQuietly(error), () -> readQuietly(output));
       }
 
     } catch (final Throwable processError) {

@@ -20,9 +20,6 @@
 % SOFTWARE.
 %
 
-:- use_module(library(http/json)).
-:- use_module(library(http/http_open)).
-:- use_module(library(http/http_client)).
 
 :- dynamic fact/1.
 :- dynamic todo/1.
@@ -32,17 +29,6 @@
 :- op(700, xfx, thenceforth).
 :- op(300, xfy, or).
 :- op(200, xfy, and).
-
-go() :-
-	get_profile(Profile),
-	asserta(myuser(Profile.id)),
-	get_message(Message),
-	asserta(msg_from(Message.sender.userId,Message.content)),
-	normengine(Output),
-	flatten(Output,Actions),
-	!,
-	do_actions(Actions)
-	.
 
 
 normengine(Output) :-
@@ -60,7 +46,7 @@ normengine(Output) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %recursive_norm_check(Output1,AllNorms,Output) :-
-%    assert_todo_actions(Output1),
+%    assert_towenet_do_actions(Output1),
 %    check_norms(AllNorms,Output2),
 %    need_to_repeat(Output1,Output2,X),
 %    remove_duplicates(Output1,Output2,Output3),
@@ -69,14 +55,14 @@ normengine(Output) :-
 
 recursive_norm_check(_Output1,AllNorms,Output) :- check_norms(AllNorms,Output).
 
-assert_todo_actions([]).
-assert_todo_actions([todo(X)|T]) :-
+assert_towenet_do_actions([]).
+assert_towenet_do_actions([todo(X)|T]) :-
     (   (   todo(X),!	)	;		   % NARDINE: what about variables??
     	(   assertz(todo(X))	)	),
-    assert_todo_actions(T).
-assert_todo_actions([H|T]) :-			% NARDINE: should we raise an error if not of type tod?
+    assert_towenet_do_actions(T).
+assert_towenet_do_actions([H|T]) :-			% NARDINE: should we raise an error if not of type tod?
     \+functor(H, todo, _),
-    assert_todo_actions(T).
+    assert_towenet_do_actions(T).
 
 need_to_repeat(_List,[],0).
 need_to_repeat(List,[H|T],X) :-

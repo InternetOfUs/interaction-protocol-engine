@@ -21,5 +21,5 @@
 %
 
 %
-% General ontology operators
+% General norms
 % 

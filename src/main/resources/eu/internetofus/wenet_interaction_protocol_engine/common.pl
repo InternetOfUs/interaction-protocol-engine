@@ -24,135 +24,148 @@
 :- use_module(library(http/http_open)).
 :- use_module(library(http/http_client)).
 :- dynamic
-	get_configuration/1,
-	get_message/1,
-	get_language/2,
-	get_language/1
+	wenet_configuration/1,
+	wenet_message/1,
+	wenet_user_language/2,
+	wenet_user_language/1
 	.
 
 
-%!  get_dict_from_json_file(+FilePath, -JsonDictionary)
+%!  wenet_read_json_from_file(+FilePath, -JsonDictionary)
 %
 %	Read a json file and convert into a dictionary.
 %
 %	@param FilePath string with the path to the JSON file. 
 %	@param JsonDictionary dictionary with the data on the JSON file.
 %
-get_dict_from_json_file(FilePath, JsonDictionary) :-
+wenet_read_json_from_file(FilePath, JsonDictionary) :-
 	open(FilePath, read, Stream), 
 	json_read_dict(Stream, JsonDictionary), 
 	close(Stream)
 	.
 
-%!  get_dict_from_json_url(+Url, -JsonDictionary)
+%!  wenet_read_json_from_url(+Url, -JsonDictionary)
 %
 %	Read a json from an URL and convert into a dictionary.
 %
 %	@param Url string to the resource with the JSON model.
 %	@param JsonDictionary dictionary with the data on the JSON resource.
 %
-get_dict_from_json_url(Url, JsonDictionary) :-
+wenet_read_json_from_url(Url, JsonDictionary) :-
 	http_open(Url,Stream,[]),
 	json_read_dict(Stream, JsonDictionary), 
   	close(Stream)
   	.
 
-%!	get_configuration(+Configuration)
+%!	wenet_configuration(+Configuration)
 %
 %	Return the configuration of the interaction protocol engine.
 %
 %	@param Configuration dictionary of the interaction protocol engine.
 %
-get_configuration(Configuration) :-
-	configuration_file(File),
-	get_dict_from_json_file(File,Configuration),
-	asserta(get_configuration(Configuration)),
-	log_trace("Loaded configuration",Configuration)
+wenet_configuration(Configuration) :-
+	wenet_configuration_file(File),
+	wenet_read_json_from_file(File,Configuration),
+	asserta(wenet_configuration(Configuration)),
+	wenet_log_trace("Loaded configuration",Configuration)
 	.
 
-%!	get_message(+Message)
+%!	wenet_message(+Message)
 %
 %	Return the message of the current engine.
 %
 %	@param Message dictionary with the message of the current session.
 %
-get_message(Message) :-
-	message_file(File),
-	get_dict_from_json_file(File,Message),
-	asserta(get_message(Message)),
-	log_trace("Loaded message",Message)
+wenet_message(Message) :-
+	wenet_message_file(File),
+	wenet_read_json_from_file(File,Message),
+	asserta(wenet_message(Message)),
+	wenet_log_trace("Loaded message",Message)
 	.
 
-%!	create_url(+Url,-Strings)
+%!	wenet_build_url(+Url,-Strings)
 %
 %	Create the URL from a list of strings.
 % 
 %	@param Url string the created URL.
 %	@param Strings list of string to create the url. 
 % 
-create_url("",[]).
-create_url(Url,[H|T]) :-
-	create_url(Partial,T),
+wenet_build_url("",[]).
+wenet_build_url(Url,[H|T]) :-
+	wenet_build_url(Partial,T),
 	string_concat(H,Partial,Url)
 	.
 
-%!	get_language(+Lang,-Profile)
+%!	wenet_user_language(+Lang,-Profile)
 %
 %	Return the language to use for a profile.
 %
 %	@param Lang string the language to use for the profile.
 %	@param Profile dict to get the language to use.
 % 
-get_language(Lang,Profile) :-
+wenet_user_language(Lang,Profile) :-
         catch(sub_atom(Profile.locale,0,2,_,Lang),_,Lang="en"),
-        asserta(get_language(Lang,Profile))
+        asserta(wenet_user_language(Lang,Profile))
         .
-get_language("en",_).
+wenet_user_language("en",_).
 
 
-%!	get_language(+Lang)
+%!	wenet_user_language(+Lang)
 %
 %	Return the language to use for the current user.
 %
 %	@param Lang string the language of the current user.
 % 
-get_language(Lang) :-
+wenet_user_language(Lang) :-
         get_profile(Profile),
-        catch(get_language(Lang,Profile),_,Lang="en"),
-        asserta(get_language(Lang))
+        catch(wenet_user_language(Lang,Profile),_,Lang="en"),
+        asserta(wenet_user_language(Lang))
         .
         
-%!	log_trace(-Text,-Term)
+%!	wenet_log_trace(-Text,-Term)
 %
 %	Write a trace log message into the output console.
 %
 %	@param Text string message of the log.
 %	@param Term Term to show into the log message.
 %        
-log_trace(Text,Term) :-
+wenet_log_trace(Text,Term) :-
 	format(string(Lines),'~w~n~w~n',[Text,Term]),
     print_message_lines(current_output,kind(trace),[Lines])
 	.
 	
-%!	do_actions(+Actions)
+%!	wenet_do_actions(+Actions)
 %
 %	Do the specified actions.
 %
 %	@param Actions to execute.
 %
-do_actions([]).
-do_actions([A|O]) :-
-	log_trace("Do action",A),
-	(do_action(A);true),
-	do_actions(O)
+wenet_do_actions([]).
+wenet_do_actions([A|O]) :-
+	wenet_log_trace("Try to do action",A),
+	(wenet_do_action(A),wenet_log_trace("Done action",A);wenet_log_trace("Cannot do action",A)),
+	wenet_do_actions(O)
 	.
 
-do_action(put(msg_to(X,C))) :-
-	get_language(Lang),
+wenet_do_action(put(msg_to(X,C))) :-
+	wenet_user_language(Lang),
 	message(C,Lang,Text),
 	put_callback(message{type:"textualMessage",recipientId:X,title:'',text:Text},_)
 	.
 	
-do_action(A) :-
-	log_trace("Action not defined",A)
+wenet_do_action(A) :-
+	wenet_log_trace("Action not defined",A)
+	.
+	
+%!	wenet_protocol(+Protocol)
+%
+%	Return the protocol of the interaction protocol engine.
+%
+%	@param Protocol dictionary of the interaction protocol engine.
+%
+wenet_protocol(Protocol) :-
+	wenet_protocol_file(File),
+	wenet_read_json_from_file(File,Protocol),
+	asserta(wenet_protocol(Protocol)),
+	wenet_log_trace("Loaded protocol",Protocol)
 	.

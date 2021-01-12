@@ -33,7 +33,8 @@ import eu.internetofus.wenet_interaction_protocol_engine.services.ServicesVertic
 import io.vertx.core.AbstractVerticle;
 
 /**
- * The Main verticle that deploy the necessary verticles for the WeNet interactiomn protocol engine.
+ * The Main verticle that deploy the necessary verticles for the WeNet
+ * interactiomn protocol engine.
  *
  * @author UDT-IA, IIIA-CSIC
  */
@@ -46,7 +47,10 @@ public class MainVerticle extends AbstractMainVerticle {
   @Override
   protected Class<? extends AbstractVerticle>[] getVerticleClassesToDeploy() {
 
-    return new Class[] { ServicesVerticle.class, PersistenceVerticle.class, EngineWorker.class, HardCodedProtocolWorker.class, APIVerticle.class };
+//    return new Class[] { ServicesVerticle.class, PersistenceVerticle.class, EngineWorker.class,
+//        HardCodedProtocolWorker.class, APIVerticle.class };
+
+    return new Class[] { ServicesVerticle.class, PersistenceVerticle.class, APIVerticle.class };
   }
 
 }

@@ -34,8 +34,8 @@
 %	Calculate the URL from a path	
 %
 get_profile_manager_url_to(Url,Paths) :-
-	get_configuration(Configuration),
-	create_url(Url,[Configuration.wenetComponents.profileManager|Paths])
+	wenet_configuration(Configuration),
+	wenet_build_url(Url,[Configuration.wenetComponents.profileManager|Paths])
 	.
 
 
@@ -48,9 +48,9 @@ get_profile_manager_url_to(Url,Paths) :-
 %
 get_profile(Profile,Id) :-
 	get_profile_manager_url_to(Url,["/profiles/",Id]),
-	get_dict_from_json_url(Url,Profile),
+	wenet_read_json_from_url(Url,Profile),
 	asserta(get_profile(Profile,Id)),
-	log_trace("Loaded profile",Profile)
+	wenet_log_trace("Loaded profile",Profile)
 	.
 
 
@@ -61,7 +61,7 @@ get_profile(Profile,Id) :-
 %	@param Profile dictionary with the profile information.
 %
 get_profile(Profile) :-
-	get_message(Message),
+	wenet_message(Message),
 	(Message.sender.component == "USER_APP" -> get_profile(Profile,Message.sender.userId); get_profile(Profile,Message.receiver.userId)),
 	asserta(get_profile(Profile))
 	.
@@ -76,9 +76,9 @@ get_profile(Profile) :-
 %
 get_community(Community,Id) :-
 	get_profile_manager_url_to(Url,["/communities/",Id]),
-	get_dict_from_json_url(Url,Community),
+	wenet_read_json_from_url(Url,Community),
 	asserta(get_community(Community,Id)),
-	log_trace("Loaded community",Community)
+	wenet_log_trace("Loaded community",Community)
 	.
 
 
@@ -89,7 +89,7 @@ get_community(Community,Id) :-
 %	@param Community dictionary with the community information.
 %
 get_community(Community) :-
-	get_message(Message),
+	wenet_message(Message),
 	get_community(Community,Message.communityId),
 	asserta(get_community(Community)) 
 	.

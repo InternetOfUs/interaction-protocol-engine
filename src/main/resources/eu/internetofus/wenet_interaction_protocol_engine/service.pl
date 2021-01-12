@@ -29,13 +29,13 @@
 	get_app_users/1,
 	get_app_users/2.
 
-%!	get_service_url_to(+Url,-Paths)
+%!	wenet_service_url(+Url,-Paths)
 %
 %	Calculate the URL from a path	
 %
-get_service_url_to(Url,Paths) :-
-	get_configuration(Configuration),
-	create_url(Url,[Configuration.wenetComponents.service|Paths])
+wenet_service_url(Url,Paths) :-
+	wenet_configuration(Configuration),
+	wenet_build_url(Url,[Configuration.wenetComponents.service|Paths])
 	.
 	
 
@@ -47,10 +47,10 @@ get_service_url_to(Url,Paths) :-
 %	@param Id string identifeir of the app to obtain.
 %
 get_app(App,Id) :-
-	get_service_url_to(Url,["/app/",Id]),
-	get_dict_from_json_url(Url,App),
+	wenet_service_url(Url,["/app/",Id]),
+	wenet_read_json_from_url(Url,App),
 	asserta(get_app(App,Id)),
-	log_trace("Loaded application",App)
+	wenet_log_trace("Loaded application",App)
 	.
 
 
@@ -61,7 +61,7 @@ get_app(App,Id) :-
 %	@param App dictionary with the app information.
 %
 get_app(App) :-
-	get_message(Message),
+	wenet_message(Message),
 	get_app(App,Message.appId),
 	asserta(get_app(App)) 
 	.
@@ -75,11 +75,11 @@ get_app(App) :-
 %	@param Id string identifeir of the application to obtain.
 %
 get_app_users(Users,Id) :-
-	get_service_url_to(Url,["/app/",Id,"/users"]),
-	get_dict_from_json_url(Url,Users),
+	wenet_service_url(Url,["/app/",Id,"/users"]),
+	wenet_read_json_from_url(Url,Users),
 	asserta(get_app_users(Users,Id)),
 	format(string(Log_Text),'Loaded users of the application ~w',[Id]),
-	log_trace(Log_Text,Users)
+	wenet_log_trace(Log_Text,Users)
 	.
 
 
@@ -90,7 +90,7 @@ get_app_users(Users,Id) :-
 %	@param App dictionary with the app information.
 %
 get_app_users(Users) :-
-	get_message(Message),
+	wenet_message(Message),
 	get_app_users(Users,Message.appId),
 	asserta(get_app_users(Users)) 
 	.
@@ -107,7 +107,7 @@ put_callback(App,Message,Result) :-
 	atom_json_term(Atom, Message, []),
 	http_post(App.messageCallbackUrl, atom(Atom), Result, []),
 	format(string(Log_Text),'Post to the app ~w the callback message ~w',[App.appId,Atom]),
-	log_trace(Log_Text,Result)
+	wenet_log_trace(Log_Text,Result)
 	.
 	
 %!	put_callback(+Message,-Result)
@@ -120,5 +120,17 @@ put_callback(App,Message,Result) :-
 put_callback(Message,Result) :-
 	get_app(App),
 	put_callback(App,Message,Result)
+	.
+	
+
+%!	wenet_service_get_app(+AppId,-App)
+%
+%	Obtain the information of an application.
+%
+%	@param AppId identifier of teh application to obtain the information.
+%	@param App the dictionary wit the information of the application.
+%
+wenet_service_get_app(AppId,App) :-
+	
 	.
 	

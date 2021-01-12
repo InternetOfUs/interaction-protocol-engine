@@ -32,8 +32,8 @@
 %	Calculate the URL from a path	
 %
 get_task_manager_url_to(Url,Paths) :-
-	get_configuration(Configuration),
-	create_url(Url,[Configuration.wenetComponents.taskManager|Paths])
+	wenet_configuration(Configuration),
+	wenet_build_url(Url,[Configuration.wenetComponents.taskManager|Paths])
 	.
 
 
@@ -46,9 +46,9 @@ get_task_manager_url_to(Url,Paths) :-
 %
 get_task(Task,Id) :-
 	get_task_manager_url_to(Url,["/tasks/",Id]),
-	get_dict_from_json_url(Url,Task),
+	wenet_read_json_from_url(Url,Task),
 	asserta(get_task(Task,Id)),
-	log_trace("Loaded task",Task)
+	wenet_log_trace("Loaded task",Task)
 	.
 
 
@@ -59,7 +59,7 @@ get_task(Task,Id) :-
 %	@param Task dictionary with the task information.
 %
 get_task(Task) :-
-	get_message(Message),
+	wenet_message(Message),
 	get_task(Task,Message.taskId),
 	asserta(get_task(Task)) 
 	.
