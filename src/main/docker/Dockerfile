@@ -12,7 +12,7 @@ COPY src/ /build/src/
 RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn -DfinalName=wenet-interaction-protocol-engine -DskipTests install
 
 # --- Run the code
-FROM openjdk:11.0.5-jre
+FROM ubuntu:latest
 ARG DEFAULT_API_HOST=0.0.0.0
 ARG DEFAULT_API_PORT=8080
 ARG DEFAULT_DB_HOST=localhost
@@ -38,6 +38,17 @@ ENV WENET_SERVICE_API=${DEFAULT_WENET_SERVICE_API}
 ENV WENET_INCENTIVE_SERVER_API=${DEFAULT_WENET_INCENTIVE_SERVER_API}
 ENV WENET_SOCIAL_CONTEXT_BUILDER_API=${DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API}
 ENV RUN_ARGS=""
+
+# Install JRE
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y update
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install openjdk-11-jre
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+
+# Install swi prolog
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install software-properties-common
+RUN apt-add-repository ppa:swi-prolog/stable
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y update
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install swi-prolog
 
 # Create running dierectories
 RUN mkdir -p /usr/wenet/interaction-protocol-engine/lib
