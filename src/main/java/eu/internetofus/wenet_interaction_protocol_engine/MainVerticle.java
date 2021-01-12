@@ -47,10 +47,9 @@ public class MainVerticle extends AbstractMainVerticle {
   @Override
   protected Class<? extends AbstractVerticle>[] getVerticleClassesToDeploy() {
 
-//    return new Class[] { ServicesVerticle.class, PersistenceVerticle.class, EngineWorker.class,
-//        HardCodedProtocolWorker.class, APIVerticle.class };
+    return new Class[] { ServicesVerticle.class, PersistenceVerticle.class, EngineWorker.class,
+        HardCodedProtocolWorker.class, APIVerticle.class };
 
-    return new Class[] { ServicesVerticle.class, PersistenceVerticle.class, APIVerticle.class };
   }
 
 }
