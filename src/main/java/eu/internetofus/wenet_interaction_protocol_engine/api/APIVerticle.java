@@ -66,23 +66,23 @@ public class APIVerticle extends AbstractAPIVerticle {
    * {@inheritDoc}
    */
   @Override
-  protected void mountServiceInterfaces(final RouterBuilder routerFactory) {
+  protected void mountServiceInterfaces(final RouterBuilder routerBuilder) {
 
-    routerFactory.mountServiceInterface(Help.class, Help.ADDRESS);
+    routerBuilder.mountServiceInterface(Help.class, Help.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Help.ADDRESS).register(Help.class, new HelpResource(this));
 
-    routerFactory.mountServiceInterface(Norms.class, Norms.ADDRESS);
+    routerBuilder.mountServiceInterface(Norms.class, Norms.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Norms.ADDRESS).register(Norms.class, new NormsResource(this.vertx));
 
-    routerFactory.mountServiceInterface(Messages.class, Messages.ADDRESS);
+    routerBuilder.mountServiceInterface(Messages.class, Messages.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Messages.ADDRESS).register(Messages.class,
         new MessagesResource(this.vertx));
 
-    routerFactory.mountServiceInterface(Incentives.class, Incentives.ADDRESS);
+    routerBuilder.mountServiceInterface(Incentives.class, Incentives.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Incentives.ADDRESS).register(Incentives.class,
         new IncentivesResource(this.vertx));
 
-    routerFactory.mountServiceInterface(Tasks.class, Tasks.ADDRESS);
+    routerBuilder.mountServiceInterface(Tasks.class, Tasks.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Tasks.ADDRESS).register(Tasks.class, new TasksResource(this.vertx));
 
   }
