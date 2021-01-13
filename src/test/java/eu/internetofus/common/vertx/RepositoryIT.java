@@ -628,7 +628,7 @@ public class RepositoryIT {
        * {@inheritDoc}
        */
       @Override
-      protected JsonObject createQueryToReturnDocumentsThatNotMatchSchemaVersion() {
+      protected JsonObject createQueryToReturnDocumentsWithAVersionLessThan(String version) {
 
         return new JsonObject().put(Repository.SCHEMA_VERSION, new JsonObject().put("$undefinedOperator", "value"));
       }
@@ -897,7 +897,7 @@ public class RepositoryIT {
 
       this.createAndInsertDummyModelsWithSchemaVersionsTo(collection, 100, testContext, () -> {
 
-        final var version = UUID.randomUUID().toString();
+        final var version = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz";
         final Repository repository = new Repository(pool, version);
         repository.updateSchemaVersionOnCollection(collection).onComplete(testContext.succeeding(empty -> {
 
@@ -945,7 +945,7 @@ public class RepositoryIT {
        * {@inheritDoc}
        */
       @Override
-      protected JsonObject createQueryToReturnDocumentsThatNotMatchSchemaVersion() {
+      protected JsonObject createQueryToReturnDocumentsWithAVersionLessThan(String version) {
 
         return new JsonObject().put(Repository.SCHEMA_VERSION, new JsonObject().put("$undefinedOperator", "value"));
       }
