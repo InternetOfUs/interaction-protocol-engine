@@ -172,7 +172,6 @@ public class TasksResource implements Tasks {
         final var type = get.result();
         if (type == null || type.norms == null || type.norms.isEmpty()) {
           // it is a hard-coded protocol
-
           this.vertx.eventBus().publish(HardCodedProtocolWorker.ADDRESSS, message);
 
         } else {

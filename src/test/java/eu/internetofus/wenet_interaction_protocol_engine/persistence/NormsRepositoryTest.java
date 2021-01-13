@@ -81,9 +81,8 @@ public class NormsRepositoryTest {
       }
     };
 
-    repository.searchPublishedNorm("any identifier", testContext.failing(fail -> {
-      testContext.completeNow();
-    }));
+    testContext.assertFailure(repository.searchPublishedNorm("any identifier"))
+        .onFailure(fail -> testContext.completeNow());
 
   }
 

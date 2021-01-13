@@ -31,6 +31,7 @@ import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.vertx.ModelContext;
 import eu.internetofus.common.vertx.ModelResources;
 import eu.internetofus.common.vertx.ServiceContext;
+import eu.internetofus.common.vertx.ServiceRequests;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -39,7 +40,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.service.ServiceRequest;
 import io.vertx.ext.web.api.service.ServiceResponse;
-import java.util.List;
 
 /**
  * Implements the services defined in the {@link Norms}.
@@ -107,11 +107,12 @@ public class NormsResource implements Norms {
    * {@inheritDoc}
    */
   @Override
-  public void retrievePublishedNormsPage(final String name, final String description, final List<String> keywords,
-      final String publisherId, final Long publishFrom, final Long publishTo, final List<String> order,
-      final int offset, final int limit, final ServiceRequest request,
-      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+  public void retrievePublishedNormsPage(final String name, final String description, final String keywordsValue,
+      final String publisherId, final Long publishFrom, final Long publishTo, final String orderValue, final int offset,
+      final int limit, final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
+    var keywords = ServiceRequests.extractQueryArray(keywordsValue);
+    var order = ServiceRequests.extractQueryArray(orderValue);
     final var context = new ServiceContext(request, resultHandler);
     ModelResources.retrieveModelsPage(offset, limit, (page, promise) -> {
 

@@ -844,56 +844,42 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
       } else {
 
-        WeNetService.createProxy(this.vertx).retrieveAppUserIds(incentive.AppID, retrieveUsers -> {
+        final var app = retrieveApp.result();
+        final var options = new WebClientOptions();
+        final var client = WebClient.create(this.vertx, options);
 
-          if (retrieveUsers.failed()) {
+        final var notification = new Message();
+        notification.label = "IncentiveMessage";
+        notification.appId = incentive.AppID;
+        notification.receiverId = incentive.UserId;
+        notification.attributes = new JsonObject().put("issuer", incentive.Issuer);
+        if (incentive.Message != null) {
 
-            Logger.trace(retrieveUsers.cause(), "No found users to inform of the incentive {}", incentive);
+          notification.attributes.put("content", incentive.Message.content);
+
+        } else {
+
+          notification.attributes.put("content", incentive.Badge.Message);
+
+        }
+
+        final var body = notification.toJsonObject();
+        client.postAbs(app.messageCallbackUrl).sendJsonObject(body, send -> {
+
+          if (send.failed()) {
+
+            Logger.trace(send.cause(), "App[{}]: POST {} with {} failed", () -> app.appId, () -> app.messageCallbackUrl,
+                () -> body);
 
           } else {
 
-            final var app = retrieveApp.result();
-            final var appUsers = retrieveUsers.result();
-            final var options = new WebClientOptions();
-            final var client = WebClient.create(this.vertx, options);
-
-            final var notification = new Message();
-            notification.appId = incentive.AppID;
-            notification.receiverId = incentive.UserId;
-            notification.attributes = new JsonObject().put("issuer", incentive.Issuer);
-            if (incentive.Message != null) {
-
-              notification.attributes.put("content", incentive.Message.content);
-
-            } else {
-
-              notification.attributes.put("content", incentive.Badge.Message);
-
-            }
-            final var max = appUsers.size();
-            for (int i = 0; i < max; i++) {
-
-              notification.receiverId = appUsers.getString(i);
-              final var body = notification.toJsonObject();
-              client.postAbs(app.messageCallbackUrl).sendJsonObject(body, send -> {
-
-                if (send.failed()) {
-
-                  Logger.trace(send.cause(), "App[{}]: POST {} with {} failed", () -> app.appId,
-                      () -> app.messageCallbackUrl, () -> body);
-
-                } else {
-
-                  final var response = send.result();
-                  Logger.trace("App[{}]: POST {} with {} responds with code {} and body {}", () -> app.appId,
-                      () -> app.messageCallbackUrl, () -> body, () -> response.statusCode(),
-                      () -> response.bodyAsString());
-                }
-
-              });
-            }
+            final var response = send.result();
+            Logger.trace("App[{}]: POST {} with {} responds with code {} and body {}", () -> app.appId,
+                () -> app.messageCallbackUrl, () -> body, () -> response.statusCode(), () -> response.bodyAsString());
           }
+
         });
+
       }
     });
   }

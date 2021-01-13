@@ -26,26 +26,12 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.PATCH;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
 import eu.internetofus.common.components.ErrorMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.enums.ParameterStyle;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -58,6 +44,18 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.service.ServiceRequest;
 import io.vertx.ext.web.api.service.ServiceResponse;
 import io.vertx.ext.web.api.service.WebApiServiceGen;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.PATCH;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 /**
  * The definition of the web services for manage the norms.
@@ -98,7 +96,8 @@ public interface Norms {
   @RequestBody(description = "The norm to publish", required = true, content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
   @ApiResponse(responseCode = "201", description = "The published norm", content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
   @ApiResponse(responseCode = "400", description = "Bad norm to publish", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-  void publishNorm(@Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) ServiceRequest context,
+  void publishNorm(@Parameter(hidden = true, required = false) JsonObject body,
+      @Parameter(hidden = true, required = false) ServiceRequest context,
       @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
   /**
@@ -125,13 +124,14 @@ public interface Norms {
   void retrievePublishedNormsPage(
       @QueryParam(value = "name") @Parameter(description = "A name to be equals on the published norms to return. You can use a Perl compatible regular expressions (PCRE) that has to match the name of the published norms to return if you write between '/'. For example to get the published norms with a name with the word 'eat' you must pass as 'name' '/.*eat.*/'", example = "/.*eat.*/", required = false) String name,
       @QueryParam(value = "description") @Parameter(description = "A description to be equals on the published norms to return. You can use a Perl compatible regular expressions (PCRE) that has to match the description of the published norms to return if you write between '/'. For example to get the published norms with a description with the word 'eat' you must pass as 'description' '/.*eat.*/'", example = "/.*eat.*/", required = false) String description,
-      @QueryParam(value = "keywords") @Parameter(description = "A set of keywords to be defined on the published norms to be returned. For each keyword is separated by a ',' and each field keyword can be between '/' to use a Perl compatible regular expressions (PCRE) instead the exact value.", example = "key1,/.*eat.*/,key3", required = false, explode = Explode.FALSE) List<String> keywords,
+      @QueryParam(value = "keywords") @Parameter(description = "A set of keywords to be defined on the published norms to be returned. For each keyword is separated by a ',' and each field keyword can be between '/' to use a Perl compatible regular expressions (PCRE) instead the exact value.", example = "key1,/.*eat.*/,key3", required = false, style = ParameterStyle.FORM, explode = Explode.FALSE) String keywords,
       @QueryParam(value = "publisherId") @Parameter(description = "An user identifier to be equals on the publisher of the norm to return. You can use a Perl compatible regular expressions (PCRE) that has to match the publisher identifier of the norms to return if you write between '/'. For example to get the norms published by '1' and '2' you must pass as 'publisherId' '/^[1|2]$/'.", example = "1e346fd440", required = false) String publisherId,
       @QueryParam(value = "publishFrom") @Parameter(description = "The difference, measured in seconds, between the minimum publish time stamp of the task and midnight, January 1, 1970 UTC.", example = "1457166440", required = false) Long publishFrom,
       @QueryParam(value = "publishTo") @Parameter(description = "The difference, measured in seconds, between the maximum publish time stamp of the task and midnight, January 1, 1970 UTC.", example = "1571664406", required = false) Long publishTo,
-      @QueryParam(value = "order") @Parameter(description = "The order in witch the norms has to be returned. For each field it has be separated by a ',' and each field can start with '+' (or without it) to order on ascending order, or with the prefix '-' to do on descendant order.", example = "name,-description,+publisherId", required = false, explode = Explode.FALSE) List<String> order,
+      @QueryParam(value = "order") @Parameter(description = "The order in witch the norms has to be returned. For each field it has be separated by a ',' and each field can start with '+' (or without it) to order on ascending order, or with the prefix '-' to do on descendant order.", example = "name,-description,+publisherId", required = false, style = ParameterStyle.FORM, explode = Explode.FALSE) String order,
       @DefaultValue("0") @QueryParam(value = "offset") @Parameter(description = "The index of the first norm to return.", example = "4", required = false) int offset,
-      @DefaultValue("10") @QueryParam(value = "limit") @Parameter(description = "The number maximum of norms to return", example = "100", required = false) int limit, @Parameter(hidden = true, required = false) ServiceRequest context,
+      @DefaultValue("10") @QueryParam(value = "limit") @Parameter(description = "The number maximum of norms to return", example = "100", required = false) int limit,
+      @Parameter(hidden = true, required = false) ServiceRequest context,
       @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
   /**
@@ -147,8 +147,10 @@ public interface Norms {
   @Operation(summary = "Return a published norm associated to the identifier", description = "Allow to get a published norm associated to an identifier")
   @ApiResponse(responseCode = "200", description = "The published norm associated to the identifier", content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
   @ApiResponse(responseCode = "404", description = "Not found published norm", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-  void retrievePublishedNorm(@PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to get", example = "15837028-645a-4a55-9aaf-ceb846439eba") String publishedNormId,
-      @Parameter(hidden = true, required = false) ServiceRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
+  void retrievePublishedNorm(
+      @PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to get", example = "15837028-645a-4a55-9aaf-ceb846439eba") String publishedNormId,
+      @Parameter(hidden = true, required = false) ServiceRequest context,
+      @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
   /**
    * Called when want to modify completly a published norm.
@@ -167,8 +169,11 @@ public interface Norms {
   @ApiResponse(responseCode = "200", description = "The updated published norm", content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
   @ApiResponse(responseCode = "400", description = "Bad published norm", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   @ApiResponse(responseCode = "404", description = "Not found published norm", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-  void updatePublishedNorm(@PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to update", example = "15837028-645a-4a55-9aaf-ceb846439eba") String publishedNormId,
-      @Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) ServiceRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
+  void updatePublishedNorm(
+      @PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to update", example = "15837028-645a-4a55-9aaf-ceb846439eba") String publishedNormId,
+      @Parameter(hidden = true, required = false) JsonObject body,
+      @Parameter(hidden = true, required = false) ServiceRequest context,
+      @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
   /**
    * Called when want to modify partially a published norm.
@@ -187,8 +192,11 @@ public interface Norms {
   @ApiResponse(responseCode = "200", description = "The merged published norm", content = @Content(schema = @Schema(implementation = PublishedNorm.class)))
   @ApiResponse(responseCode = "400", description = "Bad published norm to merge", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   @ApiResponse(responseCode = "404", description = "Not found published norm to merge", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-  void mergePublishedNorm(@PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to merge", example = "15837028-645a-4a55-9aaf-ceb846439eba") String publishedNormId,
-      @Parameter(hidden = true, required = false) JsonObject body, @Parameter(hidden = true, required = false) ServiceRequest context, @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
+  void mergePublishedNorm(
+      @PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to merge", example = "15837028-645a-4a55-9aaf-ceb846439eba") String publishedNormId,
+      @Parameter(hidden = true, required = false) JsonObject body,
+      @Parameter(hidden = true, required = false) ServiceRequest context,
+      @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
   /**
    * Called when want to delete a published norm.
@@ -203,7 +211,9 @@ public interface Norms {
   @Operation(summary = "Delete the published norm associated to the identifier", description = "Allow to delete a published norm associated to an identifier")
   @ApiResponse(responseCode = "204", description = "The published norm was deleted successfully")
   @ApiResponse(responseCode = "404", description = "Not found published norm", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-  void deletePublishedNorm(@PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to delete") String publishedNormId, @Parameter(hidden = true, required = false) ServiceRequest context,
+  void deletePublishedNorm(
+      @PathParam("publishedNormId") @Parameter(description = "The identifier of the published norm to delete") String publishedNormId,
+      @Parameter(hidden = true, required = false) ServiceRequest context,
       @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
 }

@@ -43,7 +43,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class HarcodedSendIncentivesIT {
+public class HardcodedSendIncentivesIT {
 
   /**
    * Check that an incentive message is send to the user.
@@ -58,8 +58,8 @@ public class HarcodedSendIncentivesIT {
 
       incentive.IncentiveType = "Message";
       incentive.Badge = null;
-      WeNetInteractionProtocolEngine.createProxy(vertx).sendIncentive(incentive)
-          .onComplete(testContext.succeeding(sent -> {
+      testContext.assertComplete(WeNetInteractionProtocolEngine.createProxy(vertx).sendIncentive(incentive))
+          .onSuccess(sent -> {
 
             waitUntilCallbacks(incentive.AppID, callbacks -> {
 
@@ -79,7 +79,7 @@ public class HarcodedSendIncentivesIT {
 
             }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> testContext.completeNow()));
 
-          }));
+          });
 
     });
 
@@ -106,7 +106,7 @@ public class HarcodedSendIncentivesIT {
               for (var i = 0; i < callbacks.size(); i++) {
 
                 final var message = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
-                if (message != null && "TextualMessage".equals(message.label)
+                if (message != null && "IncentiveMessage".equals(message.label)
                     && incentive.UserId.equals(message.receiverId)
                     && incentive.Badge.Message.equals(message.attributes.getString("content"))) {
 
