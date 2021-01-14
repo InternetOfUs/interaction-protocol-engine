@@ -2,6 +2,12 @@
 
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
+
+## Version 0.13.0 (2021-01-14)
+
+ * Adapt to the new task models.
+
+
 ## Version 0.12.0 (2020-08-13)
 
  * Integrate engine with SWIProlog.
@@ -15,12 +21,12 @@ All notable changes to `wenet-interaction-protocol-engine` will be documented in
 ## Version 0.10.1 (2020-07-08)
 
  * Add title to the textual message.
- 
+
 
 ## Version 0.10.0 (2020-06-29)
 
  * Add point to receive incentives to notify to the user.
- * Split update norm method to put for update all the norm and patch to update only some elements. 
+ * Split update norm method to put for update all the norm and patch to update only some elements.
 
 
 ## Version 0.9.0 (2020-06-15)
