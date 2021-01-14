@@ -242,6 +242,11 @@ public class HardCodedProtocolWorker extends AbstractVerticle
     public Task task;
 
     /**
+     * The transaction that is realizing.
+     */
+    public TaskTransaction transaction;
+
+    /**
      * The url to send callbacks.
      */
     public String callbackUrl;
@@ -340,13 +345,92 @@ public class HardCodedProtocolWorker extends AbstractVerticle
             final var response = send.result();
             Logger.trace("App[{}]: POST {} with {} responds with code {} and body {}", () -> this.task.appId,
                 () -> this.callbackUrl, () -> body, () -> response.statusCode(), () -> response.bodyAsString());
+            if (this.transaction != null) {
+
+              var msg = Model.fromJsonObject(body, Message.class);
+              WeNetTaskManager.createProxy(HardCodedProtocolWorker.this.vertx)
+                  .addMessageIntoTransaction(this.task.id, this.transaction.id, msg).onComplete(added -> {
+
+                    if (added.failed()) {
+
+                      Logger.trace(added.cause(), "App[{}]: Can not add {} into the transaction  {} of the task {}",
+                          this.task.appId, msg, this.transaction.id, this.task.id);
+
+                    } else {
+
+                      Logger.trace("App[{}]: Added {} into the transaction  {} of the task {}", this.task.appId, msg,
+                          this.transaction.id, this.task.id);
+                    }
+
+                  });
+
+            }
           }
 
         });
       }
     }
 
-  }
+    /**
+     * Set the transaction to use on the environment.
+     *
+     * @param transaction to add.
+     *
+     * @return the future added transaction.
+     */
+    public Future<Void> addTransaction(TaskTransaction transaction) {
+
+      Promise<Void> promise = Promise.promise();
+      transaction.taskId = this.task.id;
+      WeNetTaskManager.createProxy(HardCodedProtocolWorker.this.vertx).addTransactionIntoTask(this.task.id, transaction)
+          .onComplete(added -> {
+
+            if (added.failed()) {
+
+              Logger.trace(added.cause(), "App[{}]: Can not add {} into the task {}", this.task.appId, transaction,
+                  this.task.id);
+
+            } else {
+
+              this.transaction = added.result();
+            }
+            promise.complete();
+
+          });
+
+      return promise.future();
+
+    }
+
+    /**
+     * Update the task.
+     *
+     * @return the future update transaction.
+     */
+    public Future<Void> updateTask() {
+
+      Promise<Void> promise = Promise.promise();
+      this.transaction.taskId = this.task.id;
+      WeNetTaskManager.createProxy(HardCodedProtocolWorker.this.vertx).mergeTask(this.task.id, this.task)
+          .onComplete(merged -> {
+
+            if (merged.failed()) {
+
+              Logger.trace(merged.cause(), "App[{}]: Can not update {}", this.task.appId, this.task);
+
+            } else {
+
+              this.task = merged.result();
+            }
+            promise.complete();
+
+          });
+
+      return promise.future();
+
+    }
+
+  } // End Class 'HardCodedProtocolEnvironment'
 
   /**
    * Create a new message.
@@ -413,38 +497,50 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       if ("volunteerForTask".equalsIgnoreCase(transaction.label)) {
 
         final var volunteerId = attr.getString("volunteerId", "0");
-        this.handleVolunteerForTask(volunteerId, env);
+        this.handleVolunteerForTask(volunteerId, env, transaction);
 
       } else if ("refuseTask".equalsIgnoreCase(transaction.label)) {
 
         final var volunteerId = attr.getString("volunteerId", "0");
-        this.handleRefuseTask(volunteerId, env);
+        this.handleRefuseTask(volunteerId, env, transaction);
 
       } else if ("acceptVolunteer".equalsIgnoreCase(transaction.label)) {
 
         final var volunteerId = attr.getString("volunteerId", "0");
-        this.handleAcceptVolunteer(volunteerId, env);
+        this.handleAcceptVolunteer(volunteerId, env, transaction);
 
       } else if ("refuseVolunteer".equalsIgnoreCase(transaction.label)) {
 
         final var volunteerId = attr.getString("volunteerId", "0");
-        this.handleRefuseVolunteer(volunteerId, env);
+        this.handleRefuseVolunteer(volunteerId, env, transaction);
 
       } else if ("taskCompleted".equalsIgnoreCase(transaction.label)) {
 
         final var outcome = attr.getString("outcome", "cancelled");
-        this.handleTaskCompleted(outcome, env);
+        this.handleTaskCompleted(outcome, env, transaction);
 
       } else {
 
         Logger.trace("Unexpected transaction {}", transaction);
+        final var msg = this.createTextualMessage(env, "Undefined transaction",
+            "The transaction that you try to do is not allowed on this protocol.");
+        msg.receiverId = transaction.actioneerId;
+        if (msg.receiverId == null) {
+
+          msg.receiverId = transaction.attributes.getString("volunteerId", env.task.requesterId);
+        }
+        env.sendTo(msg);
       }
 
     } else {
       // Error task closed
       final var msg = this.createTextualMessage(env, "Task already closed",
           "It's too late the task is already completed.");
-      msg.receiverId = transaction.attributes.getString("volunteerId", env.task.requesterId);
+      msg.receiverId = transaction.actioneerId;
+      if (msg.receiverId == null) {
+
+        msg.receiverId = transaction.attributes.getString("volunteerId", env.task.requesterId);
+      }
       env.sendTo(msg);
     }
 
@@ -457,49 +553,54 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    */
   private void handleTaskCreated(final HardCodedProtocolEnvironment env) {
 
-    WeNetService.createProxy(this.vertx).retrieveAppUserIds(env.task.appId, retrieve -> {
+    if (env.task.attributes == null || env.task.attributes.getLong("deadlineTs") == null
+        || env.task.attributes.getLong("deadlineTs") <= TimeManager.now()) {
 
-      if (retrieve.failed()) {
+      var notification = this.createTextualMessage(env, "Bad deadlineTs",
+          "A new task require a deadline time-stamp that has to be greater than now.");
+      notification.receiverId = env.task.requesterId;
+      env.sendTo(notification);
 
-        Logger.trace(retrieve.cause(), "No found users from {} to inform of the created task {}", () -> env.task.appId,
-            () -> env.task.id);
+    } else {
 
-      } else {
+      var transaction = new TaskTransaction();
+      transaction.taskId = env.task.id;
+      transaction.actioneerId = env.task.requesterId;
+      transaction.label = "CREATE_TASK";
+      env.addTransaction(transaction).onComplete(added -> {
 
-        final var appUsers = retrieve.result();
-        appUsers.remove(env.task.requesterId);
-        // TO DO RANKING users before ask them
-        final var taskWithUnanswered = new Task();
-        taskWithUnanswered.attributes = env.task.attributes;
-        if (taskWithUnanswered.attributes == null) {
+        WeNetService.createProxy(this.vertx).retrieveAppUserIds(env.task.appId, retrieve -> {
 
-          taskWithUnanswered.attributes = new JsonObject();
-        }
-        taskWithUnanswered.attributes.put("unanswered", appUsers);
-        WeNetTaskManager.createProxy(this.vertx).mergeTask(env.task.id, taskWithUnanswered).onComplete(update -> {
+          if (retrieve.failed()) {
 
-          if (update.failed()) {
-
-            Logger.trace(update.cause(), "Cannot update the task {} with the unanswered users", () -> env.task.id);
+            Logger.trace(retrieve.cause(), "No found users from {} to inform of the created task {}",
+                () -> env.task.appId, () -> env.task.id);
 
           } else {
 
-            final var notification = this.createMessageWithCommunityandTaskIds(env);
-            notification.label = "TaskProposalNotification";
-            env.sendTo(appUsers, notification);
+            final var appUsers = retrieve.result();
+            appUsers.remove(env.task.requesterId);
+            // TO DO RANKING users before ask them
+            env.task.attributes.put("unanswered", appUsers);
+            env.updateTask().onComplete(update -> {
 
-            final var status = new TaskStatus();
-            status.user_id = env.task.requesterId;
-            status.task_id = env.task.id;
-            status.Action = "taskCreated";
-            status.Message = "A task is created";
-            this.notifyIncentiveServerTaskStatusChanged(status);
+              final var notification = this.createMessageWithCommunityandTaskIds(env);
+              notification.label = "TaskProposalNotification";
+              env.sendTo(appUsers, notification);
+
+              final var status = new TaskStatus();
+              status.user_id = env.task.requesterId;
+              status.task_id = env.task.id;
+              status.Action = "taskCreated";
+              status.Message = "A task is created";
+              this.notifyIncentiveServerTaskStatusChanged(status);
+
+            });
           }
-
         });
-      }
-    });
+      });
 
+    }
   }
 
   /**
@@ -507,14 +608,14 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    *
    * @param volunteerId identifier of the user that has offer its help.
    * @param env         to get the data.
+   * @param transaction to do.
    */
-  private void handleVolunteerForTask(final String volunteerId, final HardCodedProtocolEnvironment env) {
+  private void handleVolunteerForTask(final String volunteerId, final HardCodedProtocolEnvironment env,
+      final TaskTransaction transaction) {
 
-    var deadlineTs = env.task.attributes.getLong("deadlineTs", null);
-    if (deadlineTs != null && deadlineTs > TimeManager.now()) {
+    var deadlineTs = env.task.attributes.getLong("deadlineTs", 0l);
+    if (deadlineTs > TimeManager.now()) {
 
-      final var taskWhithNewVolunteer = new Task();
-      taskWhithNewVolunteer.attributes = env.task.attributes;
       final var unanswered = env.task.attributes.getJsonArray("unanswered");
       if (!unanswered.remove(volunteerId)) {
 
@@ -525,16 +626,11 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
       } else {
 
-        final var volunteers = env.task.attributes.getJsonArray("volunteers");
-        volunteers.add(volunteerId);
-        WeNetTaskManager.createProxy(this.vertx).mergeTask(env.task.id, taskWhithNewVolunteer).onComplete(update -> {
+        env.addTransaction(transaction).onComplete(added -> {
 
-          if (update.failed()) {
-
-            Logger.trace(update.cause(), "Cannot update the task {} with the volunteer {}", () -> env.task.id,
-                () -> volunteerId);
-
-          } else {
+          var volunteers = env.task.attributes.getJsonArray("volunteers");
+          volunteers.add(volunteerId);
+          env.updateTask().onComplete(update -> {
 
             Logger.trace("Added volunteer {} into task {}", () -> volunteerId, () -> env.task.id);
             final var socialContextBuilder = WeNetSocialContextBuilder.createProxy(this.vertx);
@@ -587,9 +683,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
             });
 
-          }
+          });
         });
-
       }
 
     } else {
@@ -630,14 +725,14 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    *
    * @param volunteerId identifier of the volunteer to refuse to help.
    * @param env         to get the data.
+   * @param transaction to do.
    */
-  private void handleRefuseTask(final String volunteerId, final HardCodedProtocolEnvironment env) {
+  private void handleRefuseTask(final String volunteerId, final HardCodedProtocolEnvironment env,
+      final TaskTransaction transaction) {
 
     var deadlineTs = env.task.attributes.getLong("deadlineTs", null);
     if (deadlineTs != null && deadlineTs > TimeManager.now()) {
 
-      final var taskWhereDeclined = new Task();
-      taskWhereDeclined.attributes = env.task.attributes;
       final var unanswered = env.task.attributes.getJsonArray("unanswered");
       if (!unanswered.remove(volunteerId)) {
 
@@ -648,16 +743,10 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
       } else {
 
-        final var declined = env.task.attributes.getJsonArray("declined");
-        declined.add(volunteerId);
-        WeNetTaskManager.createProxy(this.vertx).mergeTask(env.task.id, taskWhereDeclined).onComplete(update -> {
-
-          if (update.failed()) {
-
-            Logger.trace(update.cause(), "Cannot update the task {} with the declined user {}", () -> env.task.id,
-                () -> volunteerId);
-
-          } else {
+        env.addTransaction(transaction).onComplete(added -> {
+          final var declined = env.task.attributes.getJsonArray("declined");
+          declined.add(volunteerId);
+          env.updateTask().onComplete(update -> {
 
             Logger.trace("Added declined users {} into task {}", () -> volunteerId, () -> env.task.id);
             final var status = new TaskStatus();
@@ -667,7 +756,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
             status.Message = "An user has declined to be a volunteer for a task.";
             this.notifyIncentiveServerTaskStatusChanged(status);
 
-          }
+          });
         });
       }
 
@@ -686,8 +775,10 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    * @param volunteerId identifier of the volunteer that is accepted to provide
    *                    help.
    * @param env         to get the data.
+   * @param transaction to do.
    */
-  private void handleAcceptVolunteer(final String volunteerId, final HardCodedProtocolEnvironment env) {
+  private void handleAcceptVolunteer(final String volunteerId, final HardCodedProtocolEnvironment env,
+      final TaskTransaction transaction) {
 
     final var volunteers = env.task.attributes.getJsonArray("volunteers");
     if (!volunteers.remove(volunteerId)) {
@@ -699,18 +790,11 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
     } else {
 
-      final var accepted = env.task.attributes.getJsonArray("accepted");
-      accepted.add(volunteerId);
-      final var taskWhereAccepted = new Task();
-      taskWhereAccepted.attributes = env.task.attributes;
-      WeNetTaskManager.createProxy(this.vertx).mergeTask(env.task.id, taskWhereAccepted).onComplete(update -> {
+      env.addTransaction(transaction).onComplete(added -> {
 
-        if (update.failed()) {
-
-          Logger.trace(update.cause(), "Cannot update the task {} with the accepted user {}", () -> env.task.id,
-              () -> volunteerId);
-
-        } else {
+        final var accepted = env.task.attributes.getJsonArray("accepted");
+        accepted.add(volunteerId);
+        env.updateTask().onComplete(update -> {
 
           Logger.trace("Added accepted users {} into task {}", () -> volunteerId, () -> env.task.id);
           final var notification = this.createMessageWithCommunityandTaskIds(env);
@@ -726,9 +810,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           status.Message = "An user is selected to provide help.";
           this.notifyIncentiveServerTaskStatusChanged(status);
 
-        }
+        });
       });
-
     }
   }
 
@@ -738,8 +821,10 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    * @param volunteerId identifier of the volunteer that is refused to provide
    *                    help.
    * @param env         to get the data.
+   * @param transaction to do.
    */
-  private void handleRefuseVolunteer(final String volunteerId, final HardCodedProtocolEnvironment env) {
+  private void handleRefuseVolunteer(final String volunteerId, final HardCodedProtocolEnvironment env,
+      final TaskTransaction transaction) {
 
     final var volunteers = env.task.attributes.getJsonArray("volunteers");
     if (!volunteers.remove(volunteerId)) {
@@ -751,18 +836,10 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
     } else {
 
-      final var refused = env.task.attributes.getJsonArray("refused");
-      refused.add(volunteerId);
-      final var taskWhereRefused = new Task();
-      taskWhereRefused.attributes = env.task.attributes;
-      WeNetTaskManager.createProxy(this.vertx).mergeTask(env.task.id, taskWhereRefused).onComplete(update -> {
-
-        if (update.failed()) {
-
-          Logger.trace(update.cause(), "Cannot update the task {} with the refused user {}", () -> env.task.id,
-              () -> volunteerId);
-
-        } else {
+      env.addTransaction(transaction).onComplete(added -> {
+        final var refused = env.task.attributes.getJsonArray("refused");
+        refused.add(volunteerId);
+        env.updateTask().onComplete(update -> {
 
           Logger.trace("Added refused users {} into task {}", () -> volunteerId, () -> env.task.id);
           final var notification = this.createMessageWithCommunityandTaskIds(env);
@@ -778,7 +855,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           status.Message = "An user is refused as volunteer.";
           this.notifyIncentiveServerTaskStatusChanged(status);
 
-        }
+        });
       });
 
     }
@@ -788,22 +865,17 @@ public class HardCodedProtocolWorker extends AbstractVerticle
   /**
    * Called when an user mark a task as completed.
    *
-   * @param outcome state of the completed task.
-   * @param env     to get the data.
+   * @param outcome     state of the completed task.
+   * @param env         to get the data.
+   * @param transaction to do.
    */
-  private void handleTaskCompleted(final String outcome, final HardCodedProtocolEnvironment env) {
+  private void handleTaskCompleted(final String outcome, final HardCodedProtocolEnvironment env,
+      final TaskTransaction transaction) {
 
-    final var closedTask = new Task();
-    closedTask.closeTs = TimeManager.now();
-    closedTask.attributes = env.task.attributes;
-    closedTask.attributes.put("outcome", outcome);
-    WeNetTaskManager.createProxy(this.vertx).mergeTask(env.task.id, closedTask).onComplete(update -> {
-
-      if (update.failed()) {
-
-        Logger.trace("Cannot mark the task {} as closed", () -> env.task.id);
-
-      } else {
+    env.addTransaction(transaction).onComplete(added -> {
+      env.task.closeTs = TimeManager.now();
+      env.task.attributes.put("outcome", outcome);
+      env.updateTask().onComplete(update -> {
 
         Logger.trace("Closed {} task", () -> env.task.id);
 
@@ -824,9 +896,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
         status.Message = "A task is completed with the outcome:" + outcome;
         this.notifyIncentiveServerTaskStatusChanged(status);
 
-      }
+      });
     });
-
   }
 
   /**
@@ -883,5 +954,4 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       }
     });
   }
-
 }
