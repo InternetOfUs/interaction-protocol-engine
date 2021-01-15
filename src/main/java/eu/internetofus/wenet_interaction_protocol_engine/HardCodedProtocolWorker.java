@@ -271,30 +271,34 @@ public class HardCodedProtocolWorker extends AbstractVerticle
         task.attributes = new JsonObject();
       }
 
-      final var unanswered = task.attributes.getJsonArray("unanswered", null);
-      if (unanswered == null) {
+      if (WeNetTaskManager.HARDCODED_DINNER_TASK_TYPE_ID.equals(task.taskTypeId)) {
 
-        task.attributes.put("unanswered", new JsonArray());
-      }
-      final var volunteers = task.attributes.getJsonArray("volunteers", null);
-      if (volunteers == null) {
+        final var unanswered = task.attributes.getJsonArray("unanswered", null);
+        if (unanswered == null) {
 
-        task.attributes.put("volunteers", new JsonArray());
-      }
-      final var declined = task.attributes.getJsonArray("declined", null);
-      if (declined == null) {
+          task.attributes.put("unanswered", new JsonArray());
+        }
+        final var volunteers = task.attributes.getJsonArray("volunteers", null);
+        if (volunteers == null) {
 
-        task.attributes.put("declined", new JsonArray());
-      }
-      final var accepted = task.attributes.getJsonArray("accepted", null);
-      if (accepted == null) {
+          task.attributes.put("volunteers", new JsonArray());
+        }
+        final var declined = task.attributes.getJsonArray("declined", null);
+        if (declined == null) {
 
-        task.attributes.put("accepted", new JsonArray());
-      }
-      final var refused = task.attributes.getJsonArray("refused", null);
-      if (refused == null) {
+          task.attributes.put("declined", new JsonArray());
+        }
+        final var accepted = task.attributes.getJsonArray("accepted", null);
+        if (accepted == null) {
 
-        task.attributes.put("refused", new JsonArray());
+          task.attributes.put("accepted", new JsonArray());
+        }
+        final var refused = task.attributes.getJsonArray("refused", null);
+        if (refused == null) {
+
+          task.attributes.put("refused", new JsonArray());
+        }
+
       }
 
       final var options = new WebClientOptions();
@@ -430,6 +434,45 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
     }
 
+    /**
+     * Return the identifiers of the app users except the requester.
+     *
+     * @return the application users.
+     */
+    protected Future<JsonArray> getAppUser() {
+
+      Promise<JsonArray> promise = Promise.promise();
+      WeNetService.createProxy(HardCodedProtocolWorker.this.vertx).retrieveAppUserIds(this.task.appId, retrieve -> {
+
+        if (retrieve.failed()) {
+
+          Logger.trace(retrieve.cause(), "No found users from {} to inform of the created task {}",
+              () -> this.task.appId, () -> this.task.id);
+          promise.complete(new JsonArray());
+
+        } else {
+
+          final var appUsers = retrieve.result();
+          promise.complete(appUsers);
+        }
+      });
+      return promise.future();
+    }
+
+    /**
+     * Return the identifiers of the app users except the requester.
+     *
+     * @return the application users.
+     */
+    protected Future<JsonArray> getAppUserExceptRequester() {
+
+      return this.getAppUser().compose(users -> {
+        users.remove(this.task.requesterId);
+        return Future.succeededFuture(users);
+      });
+
+    }
+
   } // End Class 'HardCodedProtocolEnvironment'
 
   /**
@@ -455,11 +498,26 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    *
    * @return the created message.
    */
+  protected Message createMessageWithTaskId(HardCodedProtocolEnvironment env) {
+
+    var msg = this.createMessage(env);
+    msg.attributes.put("taskId", env.task.id);
+    return msg;
+
+  }
+
+  /**
+   * Create a new message with the community and task identifiers.
+   *
+   * @param env where the message is said.
+   *
+   * @return the created message.
+   */
   protected Message createMessageWithCommunityandTaskIds(HardCodedProtocolEnvironment env) {
 
-    var msg = new Message();
+    var msg = this.createMessageWithTaskId(env);
     msg.appId = env.task.appId;
-    msg.attributes = new JsonObject().put("communityId", env.task.communityId).put("taskId", env.task.id);
+    msg.attributes.put("communityId", env.task.communityId);
     return msg;
 
   }
@@ -519,6 +577,38 @@ public class HardCodedProtocolWorker extends AbstractVerticle
         final var outcome = attr.getString("outcome", "cancelled");
         this.handleTaskCompleted(outcome, env, transaction);
 
+      } else if ("answerTransaction".equalsIgnoreCase(transaction.label)) {
+
+        final var answer = attr.getString("answer");
+        this.handleAnswerTransaction(answer, env, transaction);
+
+      } else if ("notAnswerTransaction".equalsIgnoreCase(transaction.label)) {
+
+        this.handleNotAnswerTransaction(env, transaction);
+
+      } else if ("bestAnswerTransaction".equalsIgnoreCase(transaction.label)) {
+
+        final var transactionId = attr.getString("transactionId");
+        final var reason = attr.getString("reason");
+        this.handleBestAnswerTransaction(transactionId, reason, env, transaction);
+
+      } else if ("moreAnswerTransaction".equalsIgnoreCase(transaction.label)) {
+
+        this.handleMoreAnswerTransaction(env, transaction);
+
+      } else if ("reportQuestionTransaction".equalsIgnoreCase(transaction.label)) {
+
+        final var reason = attr.getString("reason");
+        final var comment = attr.getString("comment");
+        this.handleReportQuestionTransaction(reason, comment, env, transaction);
+
+      } else if ("reportAnswerTransaction".equalsIgnoreCase(transaction.label)) {
+
+        final var transactionId = attr.getString("transactionId");
+        final var reason = attr.getString("reason");
+        final var comment = attr.getString("comment");
+        this.handleReportAnswerTransaction(transactionId, reason, comment, env, transaction);
+
       } else {
 
         Logger.trace("Unexpected transaction {}", transaction);
@@ -537,10 +627,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       final var msg = this.createTextualMessage(env, "Task already closed",
           "It's too late the task is already completed.");
       msg.receiverId = transaction.actioneerId;
-      if (msg.receiverId == null) {
-
-        msg.receiverId = transaction.attributes.getString("volunteerId", env.task.requesterId);
-      }
       env.sendTo(msg);
     }
 
@@ -553,6 +639,41 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    */
   private void handleTaskCreated(final HardCodedProtocolEnvironment env) {
 
+    if (WeNetTaskManager.HARDCODED_DINNER_TASK_TYPE_ID.equals(env.task.taskTypeId)) {
+
+      this.createdEatProtocol(env);
+
+    } else {
+
+      this.createdQuestionAndAnswerProtocol(env);
+    }
+
+  }
+
+  /**
+   * Build a new transaction for the created task.
+   *
+   * @param env to use.
+   *
+   * @return the create task transaction.
+   */
+  private TaskTransaction buildCreateTaskTransaction(HardCodedProtocolEnvironment env) {
+
+    var transaction = new TaskTransaction();
+    transaction.taskId = env.task.id;
+    transaction.actioneerId = env.task.requesterId;
+    transaction.label = "CREATE_TASK";
+    return transaction;
+
+  }
+
+  /**
+   * Handle the created eat protocol.
+   *
+   * @param env protocol environment.
+   */
+  private void createdEatProtocol(final HardCodedProtocolEnvironment env) {
+
     if (env.task.attributes == null || env.task.attributes.getLong("deadlineTs") == null
         || env.task.attributes.getLong("deadlineTs") <= TimeManager.now()) {
 
@@ -563,43 +684,20 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
     } else {
 
-      var transaction = new TaskTransaction();
-      transaction.taskId = env.task.id;
-      transaction.actioneerId = env.task.requesterId;
-      transaction.label = "CREATE_TASK";
-      env.addTransaction(transaction).onComplete(added -> {
+      var transaction = this.buildCreateTaskTransaction(env);
+      env.addTransaction(transaction).compose(added -> env.getAppUserExceptRequester()).onSuccess(appUsers -> {
+        appUsers.remove(env.task.requesterId);
+        // TO DO RANKING users before ask them
+        env.task.attributes.put("unanswered", appUsers);
+        env.updateTask().onComplete(update -> {
 
-        WeNetService.createProxy(this.vertx).retrieveAppUserIds(env.task.appId, retrieve -> {
+          final var notification = this.createMessageWithCommunityandTaskIds(env);
+          notification.label = "TaskProposalNotification";
+          env.sendTo(appUsers, notification);
+          this.notifyIncentiveServerTaskCreated(env);
 
-          if (retrieve.failed()) {
-
-            Logger.trace(retrieve.cause(), "No found users from {} to inform of the created task {}",
-                () -> env.task.appId, () -> env.task.id);
-
-          } else {
-
-            final var appUsers = retrieve.result();
-            appUsers.remove(env.task.requesterId);
-            // TO DO RANKING users before ask them
-            env.task.attributes.put("unanswered", appUsers);
-            env.updateTask().onComplete(update -> {
-
-              final var notification = this.createMessageWithCommunityandTaskIds(env);
-              notification.label = "TaskProposalNotification";
-              env.sendTo(appUsers, notification);
-
-              final var status = new TaskStatus();
-              status.user_id = env.task.requesterId;
-              status.task_id = env.task.id;
-              status.Action = "taskCreated";
-              status.Message = "A task is created";
-              this.notifyIncentiveServerTaskStatusChanged(status);
-
-            });
-          }
         });
       });
-
     }
   }
 
@@ -694,6 +792,22 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       env.sendTo(msg);
 
     }
+
+  }
+
+  /**
+   * Notify the incentive server that the task is created.
+   *
+   * @param env to use.
+   */
+  private void notifyIncentiveServerTaskCreated(HardCodedProtocolEnvironment env) {
+
+    final var status = new TaskStatus();
+    status.user_id = env.task.requesterId;
+    status.task_id = env.task.id;
+    status.Action = "taskCreated";
+    status.Message = "A task is created";
+    this.notifyIncentiveServerTaskStatusChanged(status);
 
   }
 
@@ -920,17 +1034,21 @@ public class HardCodedProtocolWorker extends AbstractVerticle
         final var client = WebClient.create(this.vertx, options);
 
         final var notification = new Message();
-        notification.label = "IncentiveMessage";
         notification.appId = incentive.AppID;
         notification.receiverId = incentive.UserId;
         notification.attributes = new JsonObject().put("issuer", incentive.Issuer);
         if (incentive.Message != null) {
 
+          notification.label = "IncentiveMessage";
           notification.attributes.put("content", incentive.Message.content);
 
         } else {
 
-          notification.attributes.put("content", incentive.Badge.Message);
+          notification.label = "IncentiveBadge";
+          notification.attributes.put("badgeClass", incentive.Badge.BadgeClass);
+          notification.attributes.put("imageUrl", incentive.Badge.ImgUrl);
+          notification.attributes.put("criteria", incentive.Badge.Criteria);
+          notification.attributes.put("message", incentive.Badge.Message);
 
         }
 
@@ -954,4 +1072,173 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       }
     });
   }
+
+  /**
+   * Handle the created question and answers protocol.
+   *
+   * @param env protocol environment.
+   */
+  private void createdQuestionAndAnswerProtocol(HardCodedProtocolEnvironment env) {
+
+    var transaction = this.buildCreateTaskTransaction(env);
+    env.addTransaction(transaction).compose(added -> env.getAppUserExceptRequester()).onSuccess(appUsers -> {
+
+      final var msg = this.createMessageWithTaskId(env);
+      msg.label = "QuestionToAnswerMessage";
+      msg.receiverId = env.task.requesterId;
+      msg.attributes.put("question", env.task.goal.name).put("userId", env.task.requesterId);
+
+      env.sendTo(appUsers, msg);
+
+      this.notifyIncentiveServerTaskCreated(env);
+
+    });
+
+  }
+
+  /**
+   * Answer to a question.
+   *
+   * @param answer      to the question
+   * @param env         to get the data.
+   * @param transaction to do.
+   */
+  private void handleAnswerTransaction(String answer, HardCodedProtocolEnvironment env, TaskTransaction transaction) {
+
+    env.addTransaction(transaction).onComplete(added -> {
+
+      final var msg = this.createMessageWithTaskId(env);
+      msg.label = "AnsweredQuestionMessage";
+      msg.receiverId = env.task.requesterId;
+      msg.attributes.put("answer", answer).put("transactionId", env.transaction.id).put("userId",
+          env.transaction.actioneerId);
+      env.sendTo(msg);
+
+    });
+
+  }
+
+  /**
+   * Ignore a question.
+   *
+   * @param env         to get the data.
+   * @param transaction to do.
+   */
+  private void handleNotAnswerTransaction(HardCodedProtocolEnvironment env, TaskTransaction transaction) {
+
+    env.addTransaction(transaction);
+
+  }
+
+  /**
+   * Check if an answer transaction is done on the task.
+   *
+   * @param transactionId the id of the picked answer transaction
+   * @param env           to get the data.
+   *
+   * @return {@code true} if exist the transaction.
+   */
+  private boolean checkAnswerTransactionDone(String transactionId, HardCodedProtocolEnvironment env) {
+
+    for (var doneTranssaction : env.task.transactions) {
+
+      if (doneTranssaction.id.equals(transactionId) && "answerTransaction".equals(doneTranssaction.label)) {
+
+        return true;
+      }
+
+    }
+
+    return false;
+  }
+
+  /**
+   * Pick the best answer.
+   *
+   * @param transactionId the id of the picked answer transaction
+   * @param reason        the reason why the specific answer was picked
+   * @param env           to get the data.
+   * @param transaction   to do.
+   */
+  private void handleBestAnswerTransaction(String transactionId, String reason, HardCodedProtocolEnvironment env,
+      TaskTransaction transaction) {
+
+    if (this.checkAnswerTransactionDone(transactionId, env)) {
+
+      env.addTransaction(transaction).compose(empty -> {
+
+        env.task.closeTs = TimeManager.now();
+        return env.updateTask();
+      }).onComplete(empty -> {
+
+        Logger.trace("Closed task {} because selected {}, because {}", env.task.id, transactionId, reason);
+
+      });
+
+    } else {
+
+      Logger.trace("No found transaction {} to select best answer into task {}", () -> transactionId,
+          () -> env.task.id);
+
+    }
+  }
+
+  /**
+   * Ask some more users.
+   *
+   * @param env         to get the data.
+   * @param transaction to do.
+   */
+  private void handleMoreAnswerTransaction(HardCodedProtocolEnvironment env, TaskTransaction transaction) {
+
+    env.addTransaction(transaction);
+  }
+
+  /**
+   * Report question.
+   *
+   * @param reason      why the specific answer was picked.
+   * @param comment     a specific comment by the reporting user.
+   * @param env         to get the data.
+   * @param transaction to do.
+   */
+  private void handleReportQuestionTransaction(String reason, String comment, HardCodedProtocolEnvironment env,
+      TaskTransaction transaction) {
+
+    env.addTransaction(transaction).onSuccess(updated -> {
+
+      Logger.trace("Report: {} ({})", reason, comment);
+
+    });
+
+  }
+
+  /**
+   * Answer to a question.
+   *
+   * @param transactionId the id of the picked answer transaction.
+   * @param reason        why the specific answer was picked.
+   * @param comment       a specific comment by the reporting user.
+   * @param env           to get the data.
+   * @param transaction   to do.
+   */
+  private void handleReportAnswerTransaction(String transactionId, String reason, String comment,
+      HardCodedProtocolEnvironment env, TaskTransaction transaction) {
+
+    if (this.checkAnswerTransactionDone(transactionId, env)) {
+
+      env.addTransaction(transaction).onSuccess(updated -> {
+
+        Logger.trace("Report[]: {} ({})", transactionId, reason, comment);
+
+      });
+
+    } else {
+
+      Logger.trace("No found transaction {} to report the answer into task {}", () -> transactionId, () -> env.task.id);
+
+    }
+
+  }
+
 }

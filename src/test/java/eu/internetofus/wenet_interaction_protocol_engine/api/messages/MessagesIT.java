@@ -69,7 +69,6 @@ public class MessagesIT {
     testContext.assertComplete(new ProtocolMessageTest().createModelExample(1, vertx, testContext))
         .onSuccess(message -> {
 
-          message.norms = null;
           testRequest(client, HttpMethod.POST, Messages.PATH).expect(res -> {
 
             assertThat(res.statusCode()).isEqualTo(Status.ACCEPTED.getStatusCode());

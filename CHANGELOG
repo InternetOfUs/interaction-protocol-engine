@@ -3,6 +3,11 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
+## Version 0.14.0 (2021-01-15)
+
+ * Add hardcoded manager of the Question and answer protocol.
+
+
 ## Version 0.13.0 (2021-01-14)
 
  * Adapt to the new task models.
