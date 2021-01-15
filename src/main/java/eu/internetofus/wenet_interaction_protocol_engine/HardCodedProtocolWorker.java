@@ -548,10 +548,28 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    */
   protected void handleTaskTransaction(final HardCodedProtocolEnvironment env, final TaskTransaction transaction) {
 
+    if (WeNetTaskManager.QUESTION_AND_ANSWER_TASK_TYPE_ID.equals(env.task.taskTypeId)) {
+
+      this.handleQuestionAndAnswerTaskTransaction(env, transaction);
+
+    } else {
+
+      this.handleEatTaskTransaction(env, transaction);
+    }
+
+  }
+
+  /**
+   * Handle a task transaction over the eat protocol.
+   *
+   * @param env         protocol environment.
+   * @param transaction to handle.
+   */
+  protected void handleEatTaskTransaction(final HardCodedProtocolEnvironment env, final TaskTransaction transaction) {
+
     if (env.task.closeTs == null) {
 
       final JsonObject attr = transaction.attributes;
-
       if ("volunteerForTask".equalsIgnoreCase(transaction.label)) {
 
         final var volunteerId = attr.getString("volunteerId", "0");
@@ -577,48 +595,12 @@ public class HardCodedProtocolWorker extends AbstractVerticle
         final var outcome = attr.getString("outcome", "cancelled");
         this.handleTaskCompleted(outcome, env, transaction);
 
-      } else if ("answerTransaction".equalsIgnoreCase(transaction.label)) {
-
-        final var answer = attr.getString("answer");
-        this.handleAnswerTransaction(answer, env, transaction);
-
-      } else if ("notAnswerTransaction".equalsIgnoreCase(transaction.label)) {
-
-        this.handleNotAnswerTransaction(env, transaction);
-
-      } else if ("bestAnswerTransaction".equalsIgnoreCase(transaction.label)) {
-
-        final var transactionId = attr.getString("transactionId");
-        final var reason = attr.getString("reason");
-        this.handleBestAnswerTransaction(transactionId, reason, env, transaction);
-
-      } else if ("moreAnswerTransaction".equalsIgnoreCase(transaction.label)) {
-
-        this.handleMoreAnswerTransaction(env, transaction);
-
-      } else if ("reportQuestionTransaction".equalsIgnoreCase(transaction.label)) {
-
-        final var reason = attr.getString("reason");
-        final var comment = attr.getString("comment");
-        this.handleReportQuestionTransaction(reason, comment, env, transaction);
-
-      } else if ("reportAnswerTransaction".equalsIgnoreCase(transaction.label)) {
-
-        final var transactionId = attr.getString("transactionId");
-        final var reason = attr.getString("reason");
-        final var comment = attr.getString("comment");
-        this.handleReportAnswerTransaction(transactionId, reason, comment, env, transaction);
-
       } else {
 
         Logger.trace("Unexpected transaction {}", transaction);
         final var msg = this.createTextualMessage(env, "Undefined transaction",
             "The transaction that you try to do is not allowed on this protocol.");
         msg.receiverId = transaction.actioneerId;
-        if (msg.receiverId == null) {
-
-          msg.receiverId = transaction.attributes.getString("volunteerId", env.task.requesterId);
-        }
         env.sendTo(msg);
       }
 
@@ -1093,6 +1075,59 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       this.notifyIncentiveServerTaskCreated(env);
 
     });
+
+  }
+
+  /**
+   * Handle a task transaction over the quesitons and answers protocol.
+   *
+   * @param env         protocol environment.
+   * @param transaction to handle.
+   */
+  protected void handleQuestionAndAnswerTaskTransaction(final HardCodedProtocolEnvironment env,
+      final TaskTransaction transaction) {
+
+    if (env.task.closeTs == null) {
+
+      final JsonObject attr = transaction.attributes;
+      if ("answerTransaction".equalsIgnoreCase(transaction.label)) {
+
+        final var answer = attr.getString("answer");
+        this.handleAnswerTransaction(answer, env, transaction);
+
+      } else if ("notAnswerTransaction".equalsIgnoreCase(transaction.label)) {
+
+        this.handleNotAnswerTransaction(env, transaction);
+
+      } else if ("bestAnswerTransaction".equalsIgnoreCase(transaction.label)) {
+
+        final var transactionId = attr.getString("transactionId");
+        final var reason = attr.getString("reason");
+        this.handleBestAnswerTransaction(transactionId, reason, env, transaction);
+
+      } else if ("moreAnswerTransaction".equalsIgnoreCase(transaction.label)) {
+
+        this.handleMoreAnswerTransaction(env, transaction);
+
+      } else if ("reportQuestionTransaction".equalsIgnoreCase(transaction.label)) {
+
+        final var reason = attr.getString("reason");
+        final var comment = attr.getString("comment");
+        this.handleReportQuestionTransaction(reason, comment, env, transaction);
+
+      } else if ("reportAnswerTransaction".equalsIgnoreCase(transaction.label)) {
+
+        final var transactionId = attr.getString("transactionId");
+        final var reason = attr.getString("reason");
+        final var comment = attr.getString("comment");
+        this.handleReportAnswerTransaction(transactionId, reason, comment, env, transaction);
+
+      } else {
+
+        Logger.trace("Unexpected {} over the Q&A protocol", transaction);
+      }
+
+    }
 
   }
 

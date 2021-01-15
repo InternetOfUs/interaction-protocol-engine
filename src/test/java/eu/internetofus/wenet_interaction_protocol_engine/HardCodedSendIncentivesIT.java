@@ -43,7 +43,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class HardcodedSendIncentivesIT {
+public class HardCodedSendIncentivesIT {
 
   /**
    * Check that an incentive message is send to the user.
