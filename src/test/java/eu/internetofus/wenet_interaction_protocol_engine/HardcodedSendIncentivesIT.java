@@ -106,9 +106,12 @@ public class HardcodedSendIncentivesIT {
               for (var i = 0; i < callbacks.size(); i++) {
 
                 final var message = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
-                if (message != null && "IncentiveMessage".equals(message.label)
+                if (message != null && "IncentiveBadge".equals(message.label)
                     && incentive.UserId.equals(message.receiverId)
-                    && incentive.Badge.Message.equals(message.attributes.getString("content"))) {
+                    && incentive.Badge.BadgeClass.equals(message.attributes.getString("badgeClass"))
+                    && incentive.Badge.ImgUrl.equals(message.attributes.getString("imageUrl"))
+                    && incentive.Badge.Criteria.equals(message.attributes.getString("criteria"))
+                    && incentive.Badge.Message.equals(message.attributes.getString("message"))) {
 
                   return true;
 
