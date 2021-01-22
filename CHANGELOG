@@ -3,6 +3,11 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
+## Version 0.16.0 (2021- )
+
+ *
+
+
 ## Version 0.15.0 (2021-01-22)
 
  * Inform the incentive server when task changed on the Q&A protocol.
