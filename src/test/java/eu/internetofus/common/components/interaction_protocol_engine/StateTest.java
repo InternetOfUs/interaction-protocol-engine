@@ -24,26 +24,35 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.persistence;
+package eu.internetofus.common.components.interaction_protocol_engine;
 
-import eu.internetofus.common.vertx.AbstractPersistenceVerticle;
-import io.vertx.core.Future;
+import eu.internetofus.common.components.ModelTestCase;
+import io.vertx.core.json.JsonObject;
 
 /**
- * The verticle that provide the persistence services.
+ * Test the {@link State}.
+ *
+ * @see State
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticle extends AbstractPersistenceVerticle {
+public class StateTest extends ModelTestCase<State> {
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected Future<Void> registerRepositoriesFor(final String schemaVersion) {
+  public State createModelExample(final int index) {
 
-    return NormsRepository.register(this.vertx, this.pool, schemaVersion)
-        .compose(empty -> StatesRepository.register(this.vertx, this.pool, schemaVersion));
+    assert index >= 0;
+    final var model = new State();
+    model.communityId = "community_" + index;
+    model.taskId = "task_" + index;
+    model.userId = "user_" + index;
+    model.attributes = new JsonObject().put("index", index);
+    model._creationTs = 1234567891 + index;
+    model._lastUpdateTs = 1234567991 + index * 2;
+    return model;
   }
 
 }

@@ -38,6 +38,8 @@ import eu.internetofus.wenet_interaction_protocol_engine.api.messages.Messages;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.MessagesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.NormsResource;
+import eu.internetofus.wenet_interaction_protocol_engine.api.states.States;
+import eu.internetofus.wenet_interaction_protocol_engine.api.states.StatesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.tasks.Tasks;
 import eu.internetofus.wenet_interaction_protocol_engine.api.tasks.TasksResource;
 import io.vertx.core.json.JsonObject;
@@ -84,6 +86,9 @@ public class APIVerticle extends AbstractAPIVerticle {
 
     routerBuilder.mountServiceInterface(Tasks.class, Tasks.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Tasks.ADDRESS).register(Tasks.class, new TasksResource(this.vertx));
+
+    routerBuilder.mountServiceInterface(States.class, States.ADDRESS);
+    new ServiceBinder(this.vertx).setAddress(States.ADDRESS).register(States.class, new StatesResource(this.vertx));
 
   }
 

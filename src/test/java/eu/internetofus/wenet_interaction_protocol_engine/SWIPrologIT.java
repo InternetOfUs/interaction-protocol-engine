@@ -28,15 +28,11 @@ package eu.internetofus.wenet_interaction_protocol_engine;
 
 import static eu.internetofus.common.components.profile_manager.WeNetProfileManagers.createUsers;
 import static eu.internetofus.common.components.service.WeNetServiceSimulators.waitUntilCallbacks;
+import static eu.internetofus.common.components.task_manager.WeNetTaskManagers.waitUntilTask;
 
-import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.HumanDescription;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.StoreServices;
-import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAddress;
-import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAddress.Component;
-import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
-import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
 import eu.internetofus.common.components.profile_manager.CommunityProfile;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.components.service.App;
@@ -44,14 +40,14 @@ import eu.internetofus.common.components.service.Message;
 import eu.internetofus.common.components.service.WeNetService;
 import eu.internetofus.common.components.service.WeNetServiceSimulator;
 import eu.internetofus.common.components.task_manager.Task;
-import eu.internetofus.common.components.task_manager.TaskType;
+import eu.internetofus.common.components.task_manager.TaskTransaction;
 import eu.internetofus.common.components.task_manager.WeNetTaskManager;
-import eu.internetofus.wenet_interaction_protocol_engine.persistence.Protocol;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -86,11 +82,6 @@ public class SWIPrologIT {
    * The community that will involved on the test.
    */
   protected static CommunityProfile community;
-
-  /**
-   * The task type that will involved on the test.
-   */
-  protected static TaskType taskType;
 
   /**
    * The task that will involved on the test.
@@ -160,86 +151,64 @@ public class SWIPrologIT {
 
     assert SWIPrologIT.users != null;
     assert SWIPrologIT.app != null;
-    StoreServices.storeTaskTypeExample(1, vertx, testContext).onSuccess(createdTaskType -> {
 
-      SWIPrologIT.taskType = createdTaskType;
-      final var task = new Task();
-      task.appId = SWIPrologIT.app.appId;
-      var deadlineTs = TimeManager.now() + 120;
-      var startTs = deadlineTs + 30;
-      var endTs = startTs + 300;
-      task.attributes = new JsonObject().put("deadlineTs", deadlineTs).put("startTs", startTs).put("endTs", endTs);
-      task.taskTypeId = taskType.id;
-      task.goal = new HumanDescription();
-      task.goal.name = "Test create task";
-      task.requesterId = SWIPrologIT.users.get(0).id;
-      testContext.assertComplete(WeNetTaskManager.createProxy(vertx).createTask(task)).onSuccess(createdTask -> {
+    final var task = new Task();
+    task.appId = SWIPrologIT.app.appId;
+    task.communityId = SWIPrologIT.community.id;
+    task.taskTypeId = WeNetTaskManager.ECHO_TASK_TYPE_ID;
+    task.goal = new HumanDescription();
+    task.goal.name = "Test create task";
+    task.requesterId = SWIPrologIT.users.get(0).id;
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).createTask(task)).onSuccess(createdTask -> {
 
-        SWIPrologIT.task = createdTask;
-        testContext.completeNow();
-      });
-
+      SWIPrologIT.task = createdTask;
+      testContext.completeNow();
     });
 
   }
 
   /**
-   * Store the protocol to follow.
+   * Should send transaction echo.
    *
    * @param vertx       event bus to use.
    * @param testContext context to do the test.
    */
   @Test
   @Order(4)
-  public void shouldStoreProtocol(final Vertx vertx, final VertxTestContext testContext) {
+  public void shouldDoTransactionEcho(final Vertx vertx, final VertxTestContext testContext) {
 
-    assert SWIPrologIT.users != null;
-    final var protocol = new Protocol();
-    protocol.appId = SWIPrologIT.app.appId;
-    protocol.communityId = SWIPrologIT.community.id;
-    protocol.taskTypeId = SWIPrologIT.taskType.id;
-    protocol.taskId = SWIPrologIT.task.id;
-    protocol.norms = "whenever  myuser(X) and msg_from(X,_) thenceforth  msg_to(X,1).";
-    protocol.ontology = "message(1,es,\"Hola, estamos trabajando en esta app para que pronto puedas hacer cosas mucho más interesantes.\").\n"
-        + "message(1,_,\"Hi, we are working on this app so you can do much more interesting things soon.\").";
-//    ProtocolsRepository.createProxy(vertx).storeProtocol(protocol,
-//        testContext.succeeding(added -> testContext.completeNow()));
+    assert SWIPrologIT.task != null;
 
-  }
+    var transaction = new TaskTransaction();
+    transaction.actioneerId = SWIPrologIT.task.requesterId;
+    transaction.taskId = SWIPrologIT.task.id;
+    transaction.label = "echo";
+    var message = UUID.randomUUID().toString();
+    transaction.attributes = new JsonObject().put("message", message);
+    testContext.assertComplete(WeNetTaskManager.createProxy(vertx).doTaskTransaction(transaction)
+        .compose(done -> waitUntilTask(SWIPrologIT.task.id, task -> {
 
-  /**
-   * Check that a task is created.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext context to do the test.
-   */
-  @Test
-  @Order(5)
-  public void shouldSendMessage(final Vertx vertx, final VertxTestContext testContext) {
+          if (SWIPrologIT.task.transactions == null && task.transactions != null && task.transactions.size() > 0
+              || SWIPrologIT.task.transactions != null && task.transactions != null
+                  && SWIPrologIT.task.transactions.size() < task.transactions.size()) {
 
-    assert SWIPrologIT.users != null;
-    assert SWIPrologIT.app != null;
-    final var message = new ProtocolMessage();
-    message.appId = app.appId;
-    message.communityId = community.id;
-    message.taskId = task.id;
-    message.sender = new ProtocolAddress();
-    message.sender.component = Component.USER_APP;
-    message.sender.userId = users.get(0).id;
-    message.receiver = new ProtocolAddress();
-    message.receiver.component = Component.INTERACTION_PROTOCOL_ENGINE;
-    message.particle = "echo";
-    message.content = new JsonObject();
-    testContext.assertComplete(WeNetInteractionProtocolEngine.createProxy(vertx).sendMessage(message))
-        .onSuccess(sent -> {
+            SWIPrologIT.task = task;
+            return true;
+
+          } else {
+
+            return false;
+          }
+
+        }, vertx, testContext))).onSuccess(createdTransactions -> {
 
           waitUntilCallbacks(SWIPrologIT.app.appId, callbacks -> {
 
             for (var i = 0; i < callbacks.size(); i++) {
 
               final var callback = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
-              if (callback != null && "TextualMessage".equals(callback.label) && callback.receiverId != null
-                  && callback.receiverId.equals(message.sender.userId)) {
+              if (callback != null && "echo".equals(callback.label)
+                  && transaction.actioneerId.equals(callback.receiverId)) {
 
                 return true;
 
@@ -249,6 +218,7 @@ public class SWIPrologIT {
             return false;
 
           }, vertx, testContext).onComplete(testContext.succeeding(callbacks -> {
+
             WeNetServiceSimulator.createProxy(vertx).deleteCallbacks(SWIPrologIT.app.appId,
                 testContext.succeeding(removed -> testContext.completeNow()));
           }));

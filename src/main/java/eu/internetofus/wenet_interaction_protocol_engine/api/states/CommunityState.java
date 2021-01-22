@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------------------
  *
- * Copyright (c) 2019 - 2022 UDT-IA, IIIA-CSIC
+ * Copyright (c) 1994 - 2021 UDT-IA, IIIA-CSIC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,27 +23,23 @@
  *
  * -----------------------------------------------------------------------------
  */
+package eu.internetofus.wenet_interaction_protocol_engine.api.states;
 
-package eu.internetofus.wenet_interaction_protocol_engine.persistence;
-
-import eu.internetofus.common.vertx.AbstractPersistenceVerticle;
-import io.vertx.core.Future;
+import eu.internetofus.common.components.interaction_protocol_engine.State;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * The verticle that provide the persistence services.
+ * Contains the state of a community.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticle extends AbstractPersistenceVerticle {
+@Schema(name = "CommunityState", description = "Model that describe a community state.")
+public class CommunityState extends State {
 
   /**
-   * {@inheritDoc}
+   * The identifier of the community.
    */
-  @Override
-  protected Future<Void> registerRepositoriesFor(final String schemaVersion) {
-
-    return NormsRepository.register(this.vertx, this.pool, schemaVersion)
-        .compose(empty -> StatesRepository.register(this.vertx, this.pool, schemaVersion));
-  }
+  @Schema(description = "The identifier of the community associated to the state.", example = "1")
+  public String communityId;
 
 }

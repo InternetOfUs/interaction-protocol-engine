@@ -31,6 +31,8 @@ import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.incentive_server.Incentive;
 import eu.internetofus.common.components.incentive_server.TaskStatus;
 import eu.internetofus.common.components.incentive_server.WeNetIncentiveServer;
+import eu.internetofus.common.components.interaction_protocol_engine.State;
+import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
 import eu.internetofus.common.components.service.Message;
 import eu.internetofus.common.components.service.WeNetService;
 import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilder;
@@ -770,7 +772,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
     } else {
       // Error too late
       final var msg = this.createTextualMessage(env, "Deadline reached", "It's too late to be a volunteer.");
-      msg.receiverId = volunteerId;
+      msg.receiverId = transaction.actioneerId;
       env.sendTo(msg);
 
     }
@@ -801,7 +803,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    */
   private void notifyIncentiveServerTaskStatusChanged(final TaskStatus status) {
 
-    WeNetIncentiveServer.createProxy(this.vertx).updateTaskStatus(status.toJsonObject(), update -> {
+    WeNetIncentiveServer.createProxy(this.vertx).updateTaskStatus(status.toJsonObjectWithEmptyValues(), update -> {
 
       if (update.failed()) {
 
@@ -859,7 +861,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
     } else {
       // Error too late
       final var msg = this.createTextualMessage(env, "Deadline reached", "It's too late to refuse to be a volunteer.");
-      msg.receiverId = volunteerId;
+      msg.receiverId = transaction.actioneerId;
       env.sendTo(msg);
     }
 
@@ -1072,9 +1074,87 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
       env.sendTo(appUsers, msg);
 
-      this.notifyIncentiveServerTaskCreated(env);
+      this.notifyIncentiveServerAsk4HelpChanged(env, env.task.requesterId, Ask4HelkpIncentiveAction.Questions);
 
     });
+
+  }
+
+  /**
+   * The possible action to notify the incentive server.
+   */
+  protected enum Ask4HelkpIncentiveAction {
+
+    /**
+     * When inform that an user has done an action.
+     */
+    Questions,
+    /**
+     * When the user has send and answer.
+     */
+    Answers,
+    /**
+     * When an answer of an user has been selected.
+     */
+    AnswersAccepted;
+  }
+
+  /**
+   * Inform the incentive server that an action is done in the Q&A protocol.
+   *
+   * @param env    protocol environment.
+   * @param userId identifier of the user that has done the action.
+   * @param action that has been done.
+   */
+  protected void notifyIncentiveServerAsk4HelpChanged(HardCodedProtocolEnvironment env, String userId,
+      Ask4HelkpIncentiveAction action) {
+
+    WeNetInteractionProtocolEngine.createProxy(this.vertx).retrieveCommunityUserState(env.task.communityId, userId)
+        .onComplete(search -> {
+
+          if (search.failed()) {
+
+            Logger.trace(search.cause(), "For the user {} not found community state", userId);
+          }
+          var state = search.result();
+          var defaultCount = new JsonObject().put(Ask4HelkpIncentiveAction.Questions.name(), 0)
+              .put(Ask4HelkpIncentiveAction.Answers.name(), 0).put(Ask4HelkpIncentiveAction.AnswersAccepted.name(), 0);
+          if (state == null) {
+
+            state = new State();
+            state.communityId = env.task.communityId;
+            state.userId = env.task.requesterId;
+            state.attributes.put("incentives", defaultCount);
+
+          }
+
+          var incentives = state.attributes.getJsonObject("incentives", null);
+          if (incentives == null) {
+
+            state.attributes.put("incentives", defaultCount);
+            incentives = defaultCount;
+          }
+
+          var count = incentives.getLong(action.name(), 0l) + 1;
+          incentives.put(action.name(), count);
+          WeNetInteractionProtocolEngine.createProxy(this.vertx)
+              .mergeCommunityUserState(env.task.communityId, userId, state).onComplete(merged -> {
+
+                if (merged.failed()) {
+
+                  Logger.trace(search.cause(), "For the user {} can not update community state ", userId);
+                }
+
+                var status = new TaskStatus();
+                status.community_id = env.task.communityId;
+                status.task_id = env.task.id;
+                status.user_id = userId;
+                status.Action = action.name() + " " + count;
+                status.Message = "";
+                this.notifyIncentiveServerTaskStatusChanged(status);
+
+              });
+        });
 
   }
 
@@ -1149,6 +1229,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           env.transaction.actioneerId);
       env.sendTo(msg);
 
+      this.notifyIncentiveServerAsk4HelpChanged(env, transaction.actioneerId, Ask4HelkpIncentiveAction.Answers);
+
     });
 
   }
@@ -1166,25 +1248,26 @@ public class HardCodedProtocolWorker extends AbstractVerticle
   }
 
   /**
-   * Check if an answer transaction is done on the task.
+   * Search an answer transaction is done on the task.
    *
    * @param transactionId the id of the picked answer transaction
    * @param env           to get the data.
    *
-   * @return {@code true} if exist the transaction.
+   * @return the done transaction associated to the id, or {@code null} if it does
+   *         not exist.
    */
-  private boolean checkAnswerTransactionDone(String transactionId, HardCodedProtocolEnvironment env) {
+  private TaskTransaction searchAnswerTransactionDone(String transactionId, HardCodedProtocolEnvironment env) {
 
-    for (var doneTranssaction : env.task.transactions) {
+    for (var doneTransaction : env.task.transactions) {
 
-      if (doneTranssaction.id.equals(transactionId) && "answerTransaction".equals(doneTranssaction.label)) {
+      if (doneTransaction.id.equals(transactionId) && "answerTransaction".equals(doneTransaction.label)) {
 
-        return true;
+        return doneTransaction;
       }
 
     }
 
-    return false;
+    return null;
   }
 
   /**
@@ -1198,15 +1281,20 @@ public class HardCodedProtocolWorker extends AbstractVerticle
   private void handleBestAnswerTransaction(String transactionId, String reason, HardCodedProtocolEnvironment env,
       TaskTransaction transaction) {
 
-    if (this.checkAnswerTransactionDone(transactionId, env)) {
+    var answerTransaction = this.searchAnswerTransactionDone(transactionId, env);
+    if (answerTransaction != null) {
 
       env.addTransaction(transaction).compose(empty -> {
 
         env.task.closeTs = TimeManager.now();
         return env.updateTask();
+
       }).onComplete(empty -> {
 
         Logger.trace("Closed task {} because selected {}, because {}", env.task.id, transactionId, reason);
+
+        this.notifyIncentiveServerAsk4HelpChanged(env, answerTransaction.actioneerId,
+            Ask4HelkpIncentiveAction.AnswersAccepted);
 
       });
 
@@ -1260,7 +1348,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
   private void handleReportAnswerTransaction(String transactionId, String reason, String comment,
       HardCodedProtocolEnvironment env, TaskTransaction transaction) {
 
-    if (this.checkAnswerTransactionDone(transactionId, env)) {
+    var answerTransaction = this.searchAnswerTransactionDone(transactionId, env);
+    if (answerTransaction != null) {
 
       env.addTransaction(transaction).onSuccess(updated -> {
 

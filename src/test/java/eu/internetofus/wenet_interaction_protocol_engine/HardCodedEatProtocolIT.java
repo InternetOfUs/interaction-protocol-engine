@@ -809,7 +809,8 @@ public class HardCodedEatProtocolIT {
           for (var i = 0; i < callbacks.size(); i++) {
 
             final var message = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
-            if (message != null && "TextualMessage".equals(message.label) && volunteerId.equals(message.receiverId)) {
+            if (message != null && "TextualMessage".equals(message.label)
+                && taskTransaction.actioneerId.equals(message.receiverId)) {
 
               return true;
 
@@ -931,7 +932,7 @@ public class HardCodedEatProtocolIT {
     assert HardCodedEatProtocolIT.users != null;
     assert HardCodedEatProtocolIT.task != null;
 
-    var deadlineTs = HardCodedEatProtocolIT.task.attributes.getLong("deadlineTs", 0l);
+    var deadlineTs = HardCodedEatProtocolIT.task.attributes.getLong("deadlineTs", 0l) + 1;
     while (TimeManager.now() <= deadlineTs) {
       // Wait until deadline is reached
     }
@@ -948,7 +949,8 @@ public class HardCodedEatProtocolIT {
           for (var i = 0; i < callbacks.size(); i++) {
 
             final var message = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
-            if (message != null && "TextualMessage".equals(message.label) && volunteerId.equals(message.receiverId)) {
+            if (message != null && "TextualMessage".equals(message.label)
+                && taskTransaction.actioneerId.equals(message.receiverId)) {
 
               return true;
 

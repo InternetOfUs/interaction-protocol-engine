@@ -8,6 +8,8 @@ openAPI:
       description: Other services provided by the API.
     - name: Messages
       description: The functionality provided allows to send messages.
+    - name: States
+      description: The functionality to manage the states necessaries on the norm engine.
     - name: Norms
       description: The functionality provided allows to publish norms, and manage the user and community norms.
   info:

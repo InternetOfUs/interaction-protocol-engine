@@ -24,26 +24,32 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.persistence;
+package eu.internetofus.common.components.interaction_protocol_engine;
 
-import eu.internetofus.common.vertx.AbstractPersistenceVerticle;
-import io.vertx.core.Future;
+import eu.internetofus.common.components.ModelTestCase;
+import java.util.ArrayList;
 
 /**
- * The verticle that provide the persistence services.
+ * Test the {@link StatesPage}.
+ *
+ * @see StatesPage
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticle extends AbstractPersistenceVerticle {
+public class StatesPageTest extends ModelTestCase<StatesPage> {
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected Future<Void> registerRepositoriesFor(final String schemaVersion) {
+  public StatesPage createModelExample(final int index) {
 
-    return NormsRepository.register(this.vertx, this.pool, schemaVersion)
-        .compose(empty -> StatesRepository.register(this.vertx, this.pool, schemaVersion));
+    final var model = new StatesPage();
+    model.offset = index;
+    model.total = 100 + index;
+    model.states = new ArrayList<>();
+    model.states.add(new StateTest().createModelExample(index));
+    return model;
   }
 
 }
