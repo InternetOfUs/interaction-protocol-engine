@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.internetofus</groupId>
 	<artifactId>interaction-protocol-engine</artifactId>
-	<version>0.15.1</version>
+	<version>0.16.0</version>
 	<description>This project will be used to provide the API to manage the protocol interaction.</description>
 	<organization>
 		<name>UDT-IA, IIIA-CSIC</name>
