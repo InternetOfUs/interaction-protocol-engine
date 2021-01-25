@@ -315,7 +315,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
      * @param users        to send the message.
      * @param notification to send to the application.
      */
-    public void sendTo(final JsonArray users, Message notification) {
+    public void sendTo(final JsonArray users, final Message notification) {
 
       for (var i = 0; i < users.size(); i++) {
 
@@ -330,7 +330,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
      *
      * @param notification to send to the application.
      */
-    public void sendTo(Message notification) {
+    public void sendTo(final Message notification) {
 
       if (this.callbackUrl == null) {
 
@@ -353,7 +353,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
                 () -> this.callbackUrl, () -> body, () -> response.statusCode(), () -> response.bodyAsString());
             if (this.transaction != null) {
 
-              var msg = Model.fromJsonObject(body, Message.class);
+              final var msg = Model.fromJsonObject(body, Message.class);
               WeNetTaskManager.createProxy(HardCodedProtocolWorker.this.vertx)
                   .addMessageIntoTransaction(this.task.id, this.transaction.id, msg).onComplete(added -> {
 
@@ -384,9 +384,9 @@ public class HardCodedProtocolWorker extends AbstractVerticle
      *
      * @return the future added transaction.
      */
-    public Future<Void> addTransaction(TaskTransaction transaction) {
+    public Future<Void> addTransaction(final TaskTransaction transaction) {
 
-      Promise<Void> promise = Promise.promise();
+      final Promise<Void> promise = Promise.promise();
       transaction.taskId = this.task.id;
       WeNetTaskManager.createProxy(HardCodedProtocolWorker.this.vertx).addTransactionIntoTask(this.task.id, transaction)
           .onComplete(added -> {
@@ -415,7 +415,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
      */
     public Future<Void> updateTask() {
 
-      Promise<Void> promise = Promise.promise();
+      final Promise<Void> promise = Promise.promise();
       this.transaction.taskId = this.task.id;
       WeNetTaskManager.createProxy(HardCodedProtocolWorker.this.vertx).mergeTask(this.task.id, this.task)
           .onComplete(merged -> {
@@ -443,7 +443,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
      */
     protected Future<JsonArray> getAppUser() {
 
-      Promise<JsonArray> promise = Promise.promise();
+      final Promise<JsonArray> promise = Promise.promise();
       WeNetService.createProxy(HardCodedProtocolWorker.this.vertx).retrieveAppUserIds(this.task.appId, retrieve -> {
 
         if (retrieve.failed()) {
@@ -484,9 +484,9 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    *
    * @return the created message.
    */
-  protected Message createMessage(HardCodedProtocolEnvironment env) {
+  protected Message createMessage(final HardCodedProtocolEnvironment env) {
 
-    var msg = new Message();
+    final var msg = new Message();
     msg.appId = env.task.appId;
     msg.attributes = new JsonObject();
     return msg;
@@ -500,9 +500,9 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    *
    * @return the created message.
    */
-  protected Message createMessageWithTaskId(HardCodedProtocolEnvironment env) {
+  protected Message createMessageWithTaskId(final HardCodedProtocolEnvironment env) {
 
-    var msg = this.createMessage(env);
+    final var msg = this.createMessage(env);
     msg.attributes.put("taskId", env.task.id);
     return msg;
 
@@ -515,9 +515,9 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    *
    * @return the created message.
    */
-  protected Message createMessageWithCommunityandTaskIds(HardCodedProtocolEnvironment env) {
+  protected Message createMessageWithCommunityandTaskIds(final HardCodedProtocolEnvironment env) {
 
-    var msg = this.createMessageWithTaskId(env);
+    final var msg = this.createMessageWithTaskId(env);
     msg.appId = env.task.appId;
     msg.attributes.put("communityId", env.task.communityId);
     return msg;
@@ -533,9 +533,10 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    *
    * @return the created message.
    */
-  protected Message createTextualMessage(HardCodedProtocolEnvironment env, String title, String text) {
+  protected Message createTextualMessage(final HardCodedProtocolEnvironment env, final String title,
+      final String text) {
 
-    var msg = this.createMessage(env);
+    final var msg = this.createMessage(env);
     msg.label = "TextualMessage";
     msg.attributes = new JsonObject().put("title", title).put("text", text);
     return msg;
@@ -571,7 +572,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
     if (env.task.closeTs == null) {
 
-      final JsonObject attr = transaction.attributes;
+      final var attr = transaction.attributes;
       if ("volunteerForTask".equalsIgnoreCase(transaction.label)) {
 
         final var volunteerId = attr.getString("volunteerId", "0");
@@ -641,9 +642,9 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    *
    * @return the create task transaction.
    */
-  private TaskTransaction buildCreateTaskTransaction(HardCodedProtocolEnvironment env) {
+  private TaskTransaction buildCreateTaskTransaction(final HardCodedProtocolEnvironment env) {
 
-    var transaction = new TaskTransaction();
+    final var transaction = new TaskTransaction();
     transaction.taskId = env.task.id;
     transaction.actioneerId = env.task.requesterId;
     transaction.label = "CREATE_TASK";
@@ -661,14 +662,14 @@ public class HardCodedProtocolWorker extends AbstractVerticle
     if (env.task.attributes == null || env.task.attributes.getLong("deadlineTs") == null
         || env.task.attributes.getLong("deadlineTs") <= TimeManager.now()) {
 
-      var notification = this.createTextualMessage(env, "Bad deadlineTs",
+      final var notification = this.createTextualMessage(env, "Bad deadlineTs",
           "A new task require a deadline time-stamp that has to be greater than now.");
       notification.receiverId = env.task.requesterId;
       env.sendTo(notification);
 
     } else {
 
-      var transaction = this.buildCreateTaskTransaction(env);
+      final var transaction = this.buildCreateTaskTransaction(env);
       env.addTransaction(transaction).compose(added -> env.getAppUserExceptRequester()).onSuccess(appUsers -> {
         appUsers.remove(env.task.requesterId);
         // TO DO RANKING users before ask them
@@ -695,7 +696,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
   private void handleVolunteerForTask(final String volunteerId, final HardCodedProtocolEnvironment env,
       final TaskTransaction transaction) {
 
-    var deadlineTs = env.task.attributes.getLong("deadlineTs", 0l);
+    final var deadlineTs = env.task.attributes.getLong("deadlineTs", 0l);
     if (deadlineTs > TimeManager.now()) {
 
       final var unanswered = env.task.attributes.getJsonArray("unanswered");
@@ -710,7 +711,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
         env.addTransaction(transaction).onComplete(added -> {
 
-          var volunteers = env.task.attributes.getJsonArray("volunteers");
+          final var volunteers = env.task.attributes.getJsonArray("volunteers");
           volunteers.add(volunteerId);
           env.updateTask().onComplete(update -> {
 
@@ -784,7 +785,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    *
    * @param env to use.
    */
-  private void notifyIncentiveServerTaskCreated(HardCodedProtocolEnvironment env) {
+  private void notifyIncentiveServerTaskCreated(final HardCodedProtocolEnvironment env) {
 
     final var status = new TaskStatus();
     status.user_id = env.task.requesterId;
@@ -828,7 +829,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
   private void handleRefuseTask(final String volunteerId, final HardCodedProtocolEnvironment env,
       final TaskTransaction transaction) {
 
-    var deadlineTs = env.task.attributes.getLong("deadlineTs", null);
+    final var deadlineTs = env.task.attributes.getLong("deadlineTs", null);
     if (deadlineTs != null && deadlineTs > TimeManager.now()) {
 
       final var unanswered = env.task.attributes.getJsonArray("unanswered");
@@ -1062,9 +1063,9 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    *
    * @param env protocol environment.
    */
-  private void createdQuestionAndAnswerProtocol(HardCodedProtocolEnvironment env) {
+  private void createdQuestionAndAnswerProtocol(final HardCodedProtocolEnvironment env) {
 
-    var transaction = this.buildCreateTaskTransaction(env);
+    final var transaction = this.buildCreateTaskTransaction(env);
     env.addTransaction(transaction).compose(added -> env.getAppUserExceptRequester()).onSuccess(appUsers -> {
 
       final var msg = this.createMessageWithTaskId(env);
@@ -1106,8 +1107,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    * @param userId identifier of the user that has done the action.
    * @param action that has been done.
    */
-  protected void notifyIncentiveServerAsk4HelpChanged(HardCodedProtocolEnvironment env, String userId,
-      Ask4HelkpIncentiveAction action) {
+  protected void notifyIncentiveServerAsk4HelpChanged(final HardCodedProtocolEnvironment env, final String userId,
+      final Ask4HelkpIncentiveAction action) {
 
     WeNetInteractionProtocolEngine.createProxy(this.vertx).retrieveCommunityUserState(env.task.communityId, userId)
         .onComplete(search -> {
@@ -1117,7 +1118,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
             Logger.trace(search.cause(), "For the user {} not found community state", userId);
           }
           var state = search.result();
-          var defaultCount = new JsonObject().put(Ask4HelkpIncentiveAction.Questions.name(), 0)
+          final var defaultCount = new JsonObject().put(Ask4HelkpIncentiveAction.Questions.name(), 0)
               .put(Ask4HelkpIncentiveAction.Answers.name(), 0).put(Ask4HelkpIncentiveAction.AnswersAccepted.name(), 0);
           if (state == null) {
 
@@ -1135,7 +1136,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
             incentives = defaultCount;
           }
 
-          var count = incentives.getLong(action.name(), 0l) + 1;
+          final var count = incentives.getLong(action.name(), 0l) + 1;
           incentives.put(action.name(), count);
           WeNetInteractionProtocolEngine.createProxy(this.vertx)
               .mergeCommunityUserState(env.task.communityId, userId, state).onComplete(merged -> {
@@ -1145,7 +1146,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
                   Logger.trace(search.cause(), "For the user {} can not update community state ", userId);
                 }
 
-                var status = new TaskStatus();
+                final var status = new TaskStatus();
                 status.community_id = env.task.communityId;
                 status.task_id = env.task.id;
                 status.user_id = userId;
@@ -1169,7 +1170,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
     if (env.task.closeTs == null) {
 
-      final JsonObject attr = transaction.attributes;
+      final var attr = transaction.attributes;
       if ("answerTransaction".equalsIgnoreCase(transaction.label)) {
 
         final var answer = attr.getString("answer");
@@ -1218,7 +1219,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    * @param env         to get the data.
    * @param transaction to do.
    */
-  private void handleAnswerTransaction(String answer, HardCodedProtocolEnvironment env, TaskTransaction transaction) {
+  private void handleAnswerTransaction(final String answer, final HardCodedProtocolEnvironment env,
+      final TaskTransaction transaction) {
 
     env.addTransaction(transaction).onComplete(added -> {
 
@@ -1241,7 +1243,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    * @param env         to get the data.
    * @param transaction to do.
    */
-  private void handleNotAnswerTransaction(HardCodedProtocolEnvironment env, TaskTransaction transaction) {
+  private void handleNotAnswerTransaction(final HardCodedProtocolEnvironment env, final TaskTransaction transaction) {
 
     env.addTransaction(transaction);
 
@@ -1256,9 +1258,10 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    * @return the done transaction associated to the id, or {@code null} if it does
    *         not exist.
    */
-  private TaskTransaction searchAnswerTransactionDone(String transactionId, HardCodedProtocolEnvironment env) {
+  private TaskTransaction searchAnswerTransactionDone(final String transactionId,
+      final HardCodedProtocolEnvironment env) {
 
-    for (var doneTransaction : env.task.transactions) {
+    for (final var doneTransaction : env.task.transactions) {
 
       if (doneTransaction.id.equals(transactionId) && "answerTransaction".equals(doneTransaction.label)) {
 
@@ -1278,10 +1281,10 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    * @param env           to get the data.
    * @param transaction   to do.
    */
-  private void handleBestAnswerTransaction(String transactionId, String reason, HardCodedProtocolEnvironment env,
-      TaskTransaction transaction) {
+  private void handleBestAnswerTransaction(final String transactionId, final String reason,
+      final HardCodedProtocolEnvironment env, final TaskTransaction transaction) {
 
-    var answerTransaction = this.searchAnswerTransactionDone(transactionId, env);
+    final var answerTransaction = this.searchAnswerTransactionDone(transactionId, env);
     if (answerTransaction != null) {
 
       env.addTransaction(transaction).compose(empty -> {
@@ -1312,7 +1315,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    * @param env         to get the data.
    * @param transaction to do.
    */
-  private void handleMoreAnswerTransaction(HardCodedProtocolEnvironment env, TaskTransaction transaction) {
+  private void handleMoreAnswerTransaction(final HardCodedProtocolEnvironment env, final TaskTransaction transaction) {
 
     env.addTransaction(transaction);
   }
@@ -1325,8 +1328,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    * @param env         to get the data.
    * @param transaction to do.
    */
-  private void handleReportQuestionTransaction(String reason, String comment, HardCodedProtocolEnvironment env,
-      TaskTransaction transaction) {
+  private void handleReportQuestionTransaction(final String reason, final String comment,
+      final HardCodedProtocolEnvironment env, final TaskTransaction transaction) {
 
     env.addTransaction(transaction).onSuccess(updated -> {
 
@@ -1345,10 +1348,10 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    * @param env           to get the data.
    * @param transaction   to do.
    */
-  private void handleReportAnswerTransaction(String transactionId, String reason, String comment,
-      HardCodedProtocolEnvironment env, TaskTransaction transaction) {
+  private void handleReportAnswerTransaction(final String transactionId, final String reason, final String comment,
+      final HardCodedProtocolEnvironment env, final TaskTransaction transaction) {
 
-    var answerTransaction = this.searchAnswerTransactionDone(transactionId, env);
+    final var answerTransaction = this.searchAnswerTransactionDone(transactionId, env);
     if (answerTransaction != null) {
 
       env.addTransaction(transaction).onSuccess(updated -> {

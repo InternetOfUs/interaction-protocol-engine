@@ -26,6 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
+import static eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngineAsserts.assertUntilCommunityUserStateIs;
 import static eu.internetofus.common.components.profile_manager.WeNetProfileManagers.createUsers;
 import static eu.internetofus.common.components.service.WeNetServiceSimulators.createApp;
 import static eu.internetofus.common.components.service.WeNetServiceSimulators.waitUntilCallbacks;
@@ -34,6 +35,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import eu.internetofus.common.components.HumanDescription;
 import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.interaction_protocol_engine.State;
+import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.components.service.App;
 import eu.internetofus.common.components.service.Message;
@@ -41,6 +44,7 @@ import eu.internetofus.common.components.service.WeNetServiceSimulator;
 import eu.internetofus.common.components.task_manager.Task;
 import eu.internetofus.common.components.task_manager.TaskTransaction;
 import eu.internetofus.common.components.task_manager.WeNetTaskManager;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
@@ -118,6 +122,7 @@ public class HardCodedQuestionAndAnswersProtocolIT {
           HardCodedQuestionAndAnswersProtocolIT.app = app;
           testContext.completeNow();
         });
+
   }
 
   /**
@@ -140,8 +145,9 @@ public class HardCodedQuestionAndAnswersProtocolIT {
     task.goal = new HumanDescription();
     task.goal.name = "Test create task";
     task.requesterId = HardCodedQuestionAndAnswersProtocolIT.users.get(0).id;
-    var future = WeNetTaskManager.createProxy(vertx).createTask(task).compose(createdTask -> {
-
+    final var newState = new State();
+    newState.attributes = new JsonObject().put("incentives", new JsonObject().put("Answers", 3));
+    final var future = WeNetTaskManager.createProxy(vertx).createTask(task).compose(createdTask -> {
       HardCodedQuestionAndAnswersProtocolIT.task = createdTask;
       return waitUntilCallbacks(HardCodedQuestionAndAnswersProtocolIT.app.appId, callbacks -> {
 
@@ -176,33 +182,54 @@ public class HardCodedQuestionAndAnswersProtocolIT {
               && updatedTask.transactions.get(0).messages != null && updatedTask.transactions.get(0).messages
                   .size() == HardCodedQuestionAndAnswersProtocolIT.users.size() - 1;
 
-        }, vertx, testContext));
+        }, vertx, testContext)).compose(storedTask -> {
 
-    testContext.assertComplete(future).onSuccess(storedTask -> testContext.verify(() -> {
+          HardCodedQuestionAndAnswersProtocolIT.task = storedTask;
+          testContext.verify(() -> {
 
-      HardCodedQuestionAndAnswersProtocolIT.task = storedTask;
-      assertThat(storedTask.transactions).isNotEmpty();
-      var transaction = storedTask.transactions.get(0);
-      assertThat(transaction.messages).isNotEmpty();
-      var messages = new ArrayList<>(transaction.messages);
-      for (final WeNetUserProfile profile : HardCodedQuestionAndAnswersProtocolIT.users) {
+            assertThat(storedTask.transactions).isNotEmpty();
+            final var transaction = storedTask.transactions.get(0);
+            assertThat(transaction.messages).isNotEmpty();
+            final var messages = new ArrayList<>(transaction.messages);
+            for (final WeNetUserProfile profile : HardCodedQuestionAndAnswersProtocolIT.users) {
 
-        var iter = messages.iterator();
-        while (iter.hasNext()) {
+              final var iter = messages.iterator();
+              while (iter.hasNext()) {
 
-          var message = iter.next();
-          if (profile.id.equals(message.receiverId)) {
+                final var message = iter.next();
+                if (profile.id.equals(message.receiverId)) {
 
-            iter.remove();
-            break;
+                  iter.remove();
+                  break;
+                }
+
+              }
+            }
+
+            assertThat(messages).isEmpty();
+          });
+
+          return Future.succeededFuture(storedTask);
+
+        }).compose(storedTask -> assertUntilCommunityUserStateIs(state -> {
+
+          if (state.attributes == null && state.attributes.containsKey("incentives")) {
+
+            return false;
+
+          } else {
+
+            final var incentives = state.attributes.getJsonObject("incentives");
+            final var questions = incentives.getLong("Questions", 0l);
+            final var answers = incentives.getLong("Answers", 0l);
+            final var answersAccepted = incentives.getLong("AnswersAccepted", 0l);
+            return questions == 1l && answers == 0l && answersAccepted == 0l;
+
           }
 
-        }
-      }
+        }, HardCodedQuestionAndAnswersProtocolIT.task.communityId, storedTask.requesterId, vertx, testContext));
 
-      assertThat(messages).isEmpty();
-      testContext.completeNow();
-    }));
+    testContext.assertComplete(future).onSuccess(state -> testContext.completeNow());
   }
 
   /**
@@ -222,9 +249,14 @@ public class HardCodedQuestionAndAnswersProtocolIT {
     taskTransaction.taskId = HardCodedQuestionAndAnswersProtocolIT.task.id;
     taskTransaction.actioneerId = HardCodedQuestionAndAnswersProtocolIT.users.get(1).id;
     taskTransaction.label = "answerTransaction";
-    var answer = "Response to the question";
+    final var answer = "Response to the question";
     taskTransaction.attributes = new JsonObject().put("answer", answer);
-    var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction)
+    final var newState = new State();
+    newState.attributes = new JsonObject().put("incentives", new JsonObject().put("Answers", 3));
+    final var future = WeNetInteractionProtocolEngine.createProxy(vertx)
+        .mergeCommunityUserState(HardCodedQuestionAndAnswersProtocolIT.task.communityId, taskTransaction.actioneerId,
+            newState)
+        .compose(state -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction))
         .compose(done -> waitUntilCallbacks(HardCodedQuestionAndAnswersProtocolIT.app.appId, callbacks -> {
 
           for (var i = 0; i < callbacks.size(); i++) {
@@ -250,15 +282,29 @@ public class HardCodedQuestionAndAnswersProtocolIT {
               && updatedTask.transactions.get(1).messages != null
               && updatedTask.transactions.get(1).messages.size() == 1;
 
-        }, vertx, testContext));
-    testContext.assertComplete(future).onSuccess(task -> testContext.verify(() -> {
+        }, vertx, testContext)).compose(task -> {
 
-      HardCodedQuestionAndAnswersProtocolIT.task = task;
-      assertThat(task.transactions.get(1).id)
-          .isEqualTo(task.transactions.get(1).messages.get(0).attributes.getString("transactionId", null));
-      testContext.completeNow();
+          HardCodedQuestionAndAnswersProtocolIT.task = task;
+          testContext.verify(() -> {
+            assertThat(task.transactions.get(1).id)
+                .isEqualTo(task.transactions.get(1).messages.get(0).attributes.getString("transactionId", null));
+          });
+          return Future.succeededFuture(task);
+        }).compose(task -> assertUntilCommunityUserStateIs(state -> {
 
-    }));
+          if (state.attributes == null) {
+
+            return false;
+
+          } else {
+
+            final var answers = state.attributes.getJsonObject("incentives", new JsonObject()).getLong("Answers", 0l);
+            return answers == 4l;
+
+          }
+
+        }, HardCodedQuestionAndAnswersProtocolIT.task.communityId, taskTransaction.actioneerId, vertx, testContext));
+    testContext.assertComplete(future).onSuccess(state -> testContext.completeNow());
 
   }
 
@@ -280,7 +326,7 @@ public class HardCodedQuestionAndAnswersProtocolIT {
         .get(HardCodedQuestionAndAnswersProtocolIT.users.size() - 1).id;
     taskTransaction.taskId = HardCodedQuestionAndAnswersProtocolIT.task.id;
     taskTransaction.label = "notAnswerTransaction";
-    var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction)
+    final var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction)
         .compose(done -> waitUntilTask(HardCodedQuestionAndAnswersProtocolIT.task.id, task -> {
 
           return task.transactions != null && task.transactions.size() == 3
@@ -314,7 +360,7 @@ public class HardCodedQuestionAndAnswersProtocolIT {
     taskTransaction.actioneerId = HardCodedQuestionAndAnswersProtocolIT.task.requesterId;
     taskTransaction.taskId = HardCodedQuestionAndAnswersProtocolIT.task.id;
     taskTransaction.label = "moreAnswerTransaction";
-    var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction)
+    final var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction)
         .compose(done -> waitUntilTask(HardCodedQuestionAndAnswersProtocolIT.task.id, task -> {
 
           return task.transactions != null && task.transactions.size() == 4
@@ -349,7 +395,7 @@ public class HardCodedQuestionAndAnswersProtocolIT {
     taskTransaction.taskId = HardCodedQuestionAndAnswersProtocolIT.task.id;
     taskTransaction.label = "reportQuestionTransaction";
     taskTransaction.attributes = new JsonObject().put("reason", "Reason msg").put("comment", "Comment msg");
-    var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction)
+    final var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction)
         .compose(done -> waitUntilTask(HardCodedQuestionAndAnswersProtocolIT.task.id, task -> {
 
           return task.transactions != null && task.transactions.size() == 5
@@ -386,7 +432,7 @@ public class HardCodedQuestionAndAnswersProtocolIT {
     taskTransaction.attributes = new JsonObject()
         .put("transactionId", HardCodedQuestionAndAnswersProtocolIT.task.transactions.get(1).id)
         .put("reason", "Reason msg").put("comment", "Comment msg");
-    var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction)
+    final var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction)
         .compose(done -> waitUntilTask(HardCodedQuestionAndAnswersProtocolIT.task.id, task -> {
 
           return task.transactions != null && task.transactions.size() == 6
@@ -423,7 +469,7 @@ public class HardCodedQuestionAndAnswersProtocolIT {
     taskTransaction.attributes = new JsonObject()
         .put("transactionId", HardCodedQuestionAndAnswersProtocolIT.task.transactions.get(1).id)
         .put("reason", "Reason msg");
-    var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction)
+    final var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction)
         .compose(done -> waitUntilTask(HardCodedQuestionAndAnswersProtocolIT.task.id, task -> {
 
           return task.transactions != null && task.transactions.size() == 7
@@ -438,6 +484,113 @@ public class HardCodedQuestionAndAnswersProtocolIT {
 
     }));
 
+  }
+
+  /**
+   * Check that create a second task.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to do the test.
+   */
+  @Test
+  @Order(10)
+  public void shouldCreateSecondTask(final Vertx vertx, final VertxTestContext testContext) {
+
+    assert HardCodedQuestionAndAnswersProtocolIT.users != null;
+    assert HardCodedQuestionAndAnswersProtocolIT.app != null;
+
+    final var task = new Task();
+    task.appId = HardCodedQuestionAndAnswersProtocolIT.app.appId;
+    task.attributes = new JsonObject().put("kindOfAnswerer", "anyone");
+    task.taskTypeId = WeNetTaskManager.QUESTION_AND_ANSWER_TASK_TYPE_ID;
+    task.goal = new HumanDescription();
+    task.goal.name = "Test create task";
+    task.requesterId = HardCodedQuestionAndAnswersProtocolIT.users.get(0).id;
+    final var newState = new State();
+    newState.attributes = new JsonObject().put("incentives", new JsonObject().put("Answers", 3));
+    final var future = WeNetTaskManager.createProxy(vertx).createTask(task).compose(createdTask -> {
+      HardCodedQuestionAndAnswersProtocolIT.task = createdTask;
+      return waitUntilCallbacks(HardCodedQuestionAndAnswersProtocolIT.app.appId, callbacks -> {
+
+        final Set<String> ids = new HashSet<>();
+        for (final WeNetUserProfile profile : HardCodedQuestionAndAnswersProtocolIT.users) {
+
+          ids.add(profile.id);
+        }
+        ids.remove(createdTask.requesterId);
+
+        for (var i = 0; i < callbacks.size(); i++) {
+
+          final var msg = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+          if (msg != null && "QuestionToAnswerMessage".equals(msg.label)
+              && createdTask.id.equals(msg.attributes.getString("taskId"))
+              && createdTask.goal.name.equals(msg.attributes.getString("question"))
+              && createdTask.requesterId.equals(msg.attributes.getString("userId"))) {
+
+            ids.remove(msg.receiverId);
+
+          }
+        }
+        return ids.isEmpty();
+
+      }, vertx, testContext);
+
+    }).compose(msg -> WeNetServiceSimulator.createProxy(vertx)
+        .deleteCallbacks(HardCodedQuestionAndAnswersProtocolIT.app.appId))
+        .compose(done -> waitUntilTask(HardCodedQuestionAndAnswersProtocolIT.task.id, updatedTask -> {
+
+          return updatedTask.transactions != null && updatedTask.transactions.size() == 1
+              && updatedTask.transactions.get(0).messages != null && updatedTask.transactions.get(0).messages
+                  .size() == HardCodedQuestionAndAnswersProtocolIT.users.size() - 1;
+
+        }, vertx, testContext)).compose(storedTask -> {
+
+          HardCodedQuestionAndAnswersProtocolIT.task = storedTask;
+          testContext.verify(() -> {
+
+            assertThat(storedTask.transactions).isNotEmpty();
+            final var transaction = storedTask.transactions.get(0);
+            assertThat(transaction.messages).isNotEmpty();
+            final var messages = new ArrayList<>(transaction.messages);
+            for (final WeNetUserProfile profile : HardCodedQuestionAndAnswersProtocolIT.users) {
+
+              final var iter = messages.iterator();
+              while (iter.hasNext()) {
+
+                final var message = iter.next();
+                if (profile.id.equals(message.receiverId)) {
+
+                  iter.remove();
+                  break;
+                }
+
+              }
+            }
+
+            assertThat(messages).isEmpty();
+          });
+
+          return Future.succeededFuture(storedTask);
+
+        }).compose(storedTask -> assertUntilCommunityUserStateIs(state -> {
+
+          if (state.attributes == null && state.attributes.containsKey("incentives")) {
+
+            return false;
+
+          } else {
+
+            final var incentives = state.attributes.getJsonObject("incentives");
+            final var questions = incentives.getLong("Questions", 0l);
+            final var answers = incentives.getLong("Answers", 0l);
+            final var answersAccepted = incentives.getLong("AnswersAccepted", 0l);
+            return questions == 2l && answers == 0l && answersAccepted == 0l;
+
+          }
+
+        }, HardCodedQuestionAndAnswersProtocolIT.task.communityId, storedTask.requesterId, vertx, testContext));
+
+    testContext.assertComplete(future).onSuccess(state -> testContext.completeNow());
   }
 
 }
