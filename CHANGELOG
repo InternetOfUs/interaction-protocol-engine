@@ -3,9 +3,9 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
-## Version 0.16.0 (2021- )
+## Version 0.15.1 (2021-01-25)
 
- *
+ * Solve problem with nullable values on status.
 
 
 ## Version 0.15.0 (2021-01-22)
