@@ -342,7 +342,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<outputPath>${basedir}/target/classes</outputPath>
+					<outputPath>${project.build.directory}</outputPath>
 					<outputFileName>wenet-interaction_protocol_engine-openapi</outputFileName>
 					<outputFormat>YAML</outputFormat>
 					<configurationFilePath>${basedir}/src/main/swagger/wenet-interaction-protocol-engine-configuration.yaml</configurationFilePath>
