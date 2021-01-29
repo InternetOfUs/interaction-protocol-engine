@@ -58,7 +58,7 @@ The scrip start the next services:
  - [Mongo express](http://localhost:8081)
  - [Swagger editor](http://localhost:8080)
  - [Shish](http://localhost:3050)
- 
+
 And also start a bash console where you can compile and test the project. The project uses the [Apache maven](https://maven.apache.org/)
 to solve the dependencies, generate the Open API documentation, compile the component and run the test.
 
@@ -101,7 +101,7 @@ Also, you can define your configuration that modifies these properties and mount
 You can start this component starting the [latest docker image upload to docker hub](https://hub.docker.com/r/internetofus/interaction-protocol-engine).
 
 ```
-docker run internetofus/interaction-protocol-engine:latest 
+docker run internetofus/interaction-protocol-engine:latest
 ```
 
 On this container, you can use the next environment variables:
@@ -118,8 +118,9 @@ On this container, you can use the next environment variables:
  - **WENET_SERVICE_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/service**.
  - **WENET_INCENTIVE_SERVER_APII** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
  - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
+ - **COMP_AUTH_KEY** to define the authentication key that the componet has to use to interact with the other WeNet components.
 
-If you want to start also a database and link both you can use the defined docker compose configuration. 
+If you want to start also a database and link both you can use the defined docker compose configuration.
 
 ```
 docker-compose -f src/main/docker/docker-compose.yml up -d
@@ -134,7 +135,7 @@ This docker compose has the next variables:
  - **WENET_SERVICE_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/service**.
  - **WENET_INCENTIVE_SERVER_API** to define the path to the incentive server component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
  - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the social context builder component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
- 
+
 
 ### Show running logs
 
@@ -148,7 +149,7 @@ When the container is ready you can access the logs of the component, following 
 
 This component provides a performance test using [K6](https://k6.io/). To run this test use the script `./runPerformanceTest.sh`.
 By default, it is run over the development server, if you want to test another server pass the environment property **INTERACTION_PROTOCOL_ENGINE_API**,
-and also you can pass any parameter to configure **k6**. For example to run the test over the production one with 10 virtual users 
+and also you can pass any parameter to configure **k6**. For example to run the test over the production one with 10 virtual users
 during 30 seconds execute:
 
 ```

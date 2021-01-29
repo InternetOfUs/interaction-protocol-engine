@@ -25,6 +25,7 @@ ARG DEFAULT_WENET_TASK_MANAGER_API="https://wenet.u-hopper.com/prod/task_manager
 ARG DEFAULT_WENET_SERVICE_API="https://wenet.u-hopper.com/prod/service"
 ARG DEFAULT_WENET_INCENTIVE_SERVER_API="https://wenet.u-hopper.com/prod/incentive_server"
 ARG DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API="https://wenet.u-hopper.com/prod/social_context_builder"
+ARG DEFAULT_COMP_AUTH_KEY=""
 ENV API_HOST=${DEFAULT_API_HOST}
 ENV API_PORT=${DEFAULT_API_PORT}
 ENV DB_HOST=${DEFAULT_DB_HOST}
@@ -38,6 +39,7 @@ ENV WENET_SERVICE_API=${DEFAULT_WENET_SERVICE_API}
 ENV WENET_INCENTIVE_SERVER_API=${DEFAULT_WENET_INCENTIVE_SERVER_API}
 ENV WENET_SOCIAL_CONTEXT_BUILDER_API=${DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API}
 ENV RUN_ARGS=""
+ENV COMP_AUTH_KEY=${DEFAULT_COMP_AUTH_KEY}
 
 # Install JRE
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y update
@@ -94,4 +96,5 @@ CMD /wait && java -jar wenet-interaction-protocol-engine.jar -c etc \
   -pwenetComponents.service=${WENET_SERVICE_API}\
   -pwenetComponents.incentiveServer=${WENET_INCENTIVE_SERVER_API}\
   -pwenetComponents.socialContextBuilder=${WENET_SOCIAL_CONTEXT_BUILDER_API}\
+  -pwebClient.wenetComponentApikey=${COMP_AUTH_KEY}\
   ${RUN_ARGS}
