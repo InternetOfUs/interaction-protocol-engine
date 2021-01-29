@@ -125,9 +125,9 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
-   *      Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
+   * @see Norms#retrievePublishedNormsPage(String, String, String, String, Long,
+   *      Long, String, int, int, io.vertx.ext.web.api.service.ServiceRequest,
+   *      io.vertx.core.Handler)
    */
   @Test
   public void shouldFoundNormsByName(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
@@ -164,9 +164,9 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
-   *      Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
+   * @see Norms#retrievePublishedNormsPage(String, String, String, String, Long,
+   *      Long, String, int, int, io.vertx.ext.web.api.service.ServiceRequest,
+   *      io.vertx.core.Handler)
    */
   @Test
   public void shouldFoundNormsByDescription(final Vertx vertx, final WebClient client,
@@ -204,9 +204,9 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
-   *      Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
+   * @see Norms#retrievePublishedNormsPage(String, String, String, String, Long,
+   *      Long, String, int, int, io.vertx.ext.web.api.service.ServiceRequest,
+   *      io.vertx.core.Handler)
    */
   @Test
   public void shouldFoundNormsByAKeyword(final Vertx vertx, final WebClient client,
@@ -244,9 +244,9 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
-   *      Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
+   * @see Norms#retrievePublishedNormsPage(String, String, String, String, Long,
+   *      Long, String, int, int, io.vertx.ext.web.api.service.ServiceRequest,
+   *      io.vertx.core.Handler)
    */
   @Test
   public void shouldFoundNormsBySomeKeyword(final Vertx vertx, final WebClient client,
@@ -288,9 +288,9 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
-   *      Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
+   * @see Norms#retrievePublishedNormsPage(String, String, String, String, Long,
+   *      Long, String, int, int, io.vertx.ext.web.api.service.ServiceRequest,
+   *      io.vertx.core.Handler)
    */
   @Test
   public void shouldFoundNormsByPublisherId(final Vertx vertx, final WebClient client,
@@ -325,9 +325,9 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
-   *      Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
+   * @see Norms#retrievePublishedNormsPage(String, String, String, String, Long,
+   *      Long, String, int, int, io.vertx.ext.web.api.service.ServiceRequest,
+   *      io.vertx.core.Handler)
    */
   @Test
   public void shouldNotFoundNormsBecausePatternIsNotValid(final WebClient client, final VertxTestContext testContext) {
@@ -348,9 +348,9 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
    * @param client      to connect to the server.
    * @param testContext context to test.
    *
-   * @see Norms#retrievePublishedNormsPage(String, String, java.util.List, String,
-   *      Long, Long, java.util.List, int, int,
-   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
+   * @see Norms#retrievePublishedNormsPage(String, String, String, String, Long,
+   *      Long, String, int, int, io.vertx.ext.web.api.service.ServiceRequest,
+   *      io.vertx.core.Handler)
    */
   @Test
   public void shouldEmptyPageIfAnyPublishedNormMatch(final WebClient client, final VertxTestContext testContext) {
