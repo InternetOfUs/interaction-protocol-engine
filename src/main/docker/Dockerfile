@@ -7,6 +7,7 @@ ENV MAVEN_OPTS="-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
 RUN mkdir -p /build
 WORKDIR /build
 COPY pom.xml .
+RUN mkdir -p /root/.m2
 RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn dependency:go-offline
 COPY src/ /build/src/
 RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn -DfinalName=wenet-interaction-protocol-engine -DskipTests install
@@ -42,6 +43,7 @@ ENV RUN_ARGS=""
 ENV COMP_AUTH_KEY=${DEFAULT_COMP_AUTH_KEY}
 
 # Install JRE
+RUN mkdir -p /var/cache/apt
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y update
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install openjdk-11-jre
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
