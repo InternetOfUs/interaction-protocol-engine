@@ -3,7 +3,7 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
-## Version 0.16.0 (2021-01-29)
+## Version 0.16.0 (2021-02-01)
 
  * Add component key when ask other components.
  * Fix log format

@@ -26,11 +26,10 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import static eu.internetofus.common.components.AbstractComponentMocker.createClientWithDefaultSession;
-
 import eu.internetofus.common.Containers;
 import eu.internetofus.common.components.service.WeNetServiceSimulator;
 import eu.internetofus.common.vertx.AbstractMain;
+import eu.internetofus.common.vertx.AbstractServicesVerticle;
 import eu.internetofus.common.vertx.AbstractWeNetComponentIntegrationExtension;
 import eu.internetofus.common.vertx.MainArgumentBuilder;
 import eu.internetofus.common.vertx.WeNetModuleContext;
@@ -51,7 +50,7 @@ public class WeNetInteractionProtocolEngineIntegrationExtension extends Abstract
   protected void afterStarted(final WeNetModuleContext context) {
 
     final var vertx = context.vertx;
-    final var client = createClientWithDefaultSession(vertx);
+    final var client = AbstractServicesVerticle.createWebClientSession(context.vertx, context.configuration);
     final var conf = context.configuration.getJsonObject("wenetComponents", new JsonObject());
     WeNetServiceSimulator.register(vertx, client, conf);
 

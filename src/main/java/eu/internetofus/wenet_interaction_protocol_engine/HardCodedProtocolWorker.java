@@ -44,12 +44,10 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.client.WebClientOptions;
 import org.tinylog.Logger;
 
 /**
@@ -73,12 +71,18 @@ public class HardCodedProtocolWorker extends AbstractVerticle
   protected MessageConsumer<JsonObject> consumer;
 
   /**
+   * Client used to interact with the other components.
+   */
+  public WebClient client;
+
+  /**
    * {@inheritDoc}
    */
   @Override
   public void start(final Promise<Void> startPromise) throws Exception {
 
     this.consumer = this.vertx.eventBus().consumer(ADDRESSS, this);
+    this.client = WebClient.create(this.getVertx());
     startPromise.complete();
 
   }
@@ -191,7 +195,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       final var app = retrieve.result();
       if (app != null) {
 
-        final var env = new HardCodedProtocolEnvironment(task, this.vertx, app.messageCallbackUrl);
+        final var env = new HardCodedProtocolEnvironment(task, app.messageCallbackUrl);
         promise.complete(env);
 
       } else {
@@ -254,18 +258,12 @@ public class HardCodedProtocolWorker extends AbstractVerticle
     public String callbackUrl;
 
     /**
-     * Client used to do the call backs.
-     */
-    public WebClient client;
-
-    /**
      * Create a new environment.
      *
      * @param task        for the environment.
-     * @param vertx       the event bus to use.
      * @param callbackUrl the URL to post the callback messages.
      */
-    public HardCodedProtocolEnvironment(final Task task, final Vertx vertx, final String callbackUrl) {
+    public HardCodedProtocolEnvironment(final Task task, final String callbackUrl) {
 
       this.task = task;
       if (task.attributes == null) {
@@ -303,8 +301,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
       }
 
-      final var options = new WebClientOptions();
-      this.client = WebClient.create(vertx, options);
       this.callbackUrl = callbackUrl;
 
     }
@@ -339,7 +335,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       } else {
 
         final var body = notification.toJsonObject();
-        this.client.postAbs(this.callbackUrl).sendJsonObject(body, send -> {
+        HardCodedProtocolWorker.this.client.postAbs(this.callbackUrl).sendJsonObject(body, send -> {
 
           if (send.failed()) {
 
@@ -1015,8 +1011,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       } else {
 
         final var app = retrieveApp.result();
-        final var options = new WebClientOptions();
-        final var client = WebClient.create(this.vertx, options);
 
         final var notification = new Message();
         notification.appId = incentive.AppID;
@@ -1038,7 +1032,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
         }
 
         final var body = notification.toJsonObject();
-        client.postAbs(app.messageCallbackUrl).sendJsonObject(body, send -> {
+        this.client.postAbs(app.messageCallbackUrl).sendJsonObject(body, send -> {
 
           if (send.failed()) {
 

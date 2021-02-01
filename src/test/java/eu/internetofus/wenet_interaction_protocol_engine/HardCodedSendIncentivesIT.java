@@ -33,7 +33,9 @@ import eu.internetofus.common.components.incentive_server.IncentiveTest;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
 import eu.internetofus.common.components.service.Message;
 import io.vertx.core.Vertx;
+import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxTestContext;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -51,6 +53,7 @@ public class HardCodedSendIncentivesIT {
    * @param vertx       event bus to use.
    * @param testContext context to do the test.
    */
+  @Timeout(value = 1, timeUnit = TimeUnit.HOURS)
   @Test
   public void shouldSendIncentiveMessage(final Vertx vertx, final VertxTestContext testContext) {
 

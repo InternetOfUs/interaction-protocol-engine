@@ -120,6 +120,9 @@ On this container, you can use the next environment variables:
  - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
  - **COMP_AUTH_KEY** to define the authentication key that the componet has to use to interact with the other WeNet components.
 
+When the container is started, it generates log files at the directory **/usr/wenet/profile-manager/var/log**.
+The files with the **WeNet component logs** are generated in a rolling file with the name **wenet_X.log** ( where X is a number between 0 and 99).
+
 If you want to start also a database and link both you can use the defined docker compose configuration.
 
 ```
