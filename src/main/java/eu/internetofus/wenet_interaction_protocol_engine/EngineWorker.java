@@ -27,31 +27,23 @@
 package eu.internetofus.wenet_interaction_protocol_engine;
 
 import eu.internetofus.common.components.Model;
-import eu.internetofus.common.components.incentive_server.Incentive;
-import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
-import eu.internetofus.common.components.profile_manager.CommunityProfile;
-import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
-import eu.internetofus.common.components.task_manager.Task;
-import eu.internetofus.common.components.task_manager.TaskTransaction;
-import eu.internetofus.common.components.task_manager.TaskType;
-import eu.internetofus.common.components.task_manager.WeNetTaskManager;
+import eu.internetofus.common.components.task_manager.ProtocolNorm;
 import eu.internetofus.common.vertx.Worker;
-import eu.internetofus.wenet_interaction_protocol_engine.persistence.Protocol;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
+import java.io.Closeable;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import org.apache.commons.io.FileUtils;
-import org.tinylog.Level;
+import java.nio.file.StandardOpenOption;
 import org.tinylog.Logger;
-import org.tinylog.provider.InternalLogger;
 
 /**
  * The worker verticle that is used to process the messages for an interaction
@@ -139,6 +131,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
           new JsonObject());
       this.prologDir = Paths.get(prologConf.getString("workDir", "var/prolog"));
       this.prologDir.toFile().mkdirs();
+      var index = 0;
       for (final String prologFileName : PROLOG_FILE_NAMES) {
 
         final var resource = PROLOG_RESOURCE_DIR + prologFileName;
@@ -151,10 +144,12 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
         } else {
 
-          final var file = this.prologDir.resolve(Paths.get(prologFileName));
+          final var newFileName = String.format("%04d", index) + "_" + prologFileName;
+          final var file = this.prologDir.resolve(Paths.get(newFileName));
           Files.copy(engineStream, file, StandardCopyOption.REPLACE_EXISTING);
 
         }
+        index++;
 
       }
       promise.complete();
@@ -172,27 +167,39 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
   @Override
   public void handle(final Message<JsonObject> event) {
 
-    try {
+    try (var env = new SWIProplogEnvironment()) {
 
       final var body = event.body();
       final var type = MessageForWorkerBuilder.Type
           .valueOf(body.getString("type", MessageForWorkerBuilder.Type.DO_TASK_TRANSACTION.name()));
+      final var protocol = Model.fromJsonObject(body.getJsonObject("protocol"), ProtocolData.class);
+
+      env.fillInAutoloadPrologFilesIn(this.prologDir);
+      env.appendToInitAssertaModel(this.config(), "wenet_configuration.conf", "wenet_configuration");
+      env.fillIn(protocol);
+
       switch (type) {
       case SEND_INCENTIVE:
-        this.handleSendIncentive(body);
+        env.appendToInitAssertaModel(body.getJsonObject("incentive"), "wenet_protocol_incentive.json",
+            "get_received_incentive");
         break;
       case CREATED_TASK:
-        this.handleCreatedTask(body);
+        Files.writeString(env.init, "\n:- get_task(Task), asserta(get_received_created_task(Task)).\n",
+            StandardOpenOption.APPEND);
         break;
       case DO_TASK_TRANSACTION:
-        this.handleDoTaskTransaction(body);
+        env.appendToInitAssertaModel(body.getJsonObject("transaction"), "wenet_protocol_transaction.json",
+            "get_received_do_task_transaction");
         break;
       case PROTOCOL_MESSAGE:
-        this.handleProtocolMessage(body);
+        env.appendToInitAssertaModel(body.getJsonObject("message"), "wenet_protocol_message.json",
+            "get_received_message");
         break;
       default:
         Logger.trace("Can not process the event {}, because does not contains a valid Message.", event);
       }
+
+      env.run();
 
     } catch (final Throwable throwable) {
 
@@ -202,188 +209,213 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
   }
 
   /**
-   * Called when have received a send incentive message.
-   *
-   * @param message with the incentive.
+   * The environment to execute the SWIProlog.
    */
-  protected void handleSendIncentive(final JsonObject message) {
+  protected class SWIProplogEnvironment implements Closeable {
 
-    final int step = message.getInteger("step", 0);
-    final var incentive = Model.fromJsonObject(message.getJsonObject("incentive"), Incentive.class);
-    final var community = Model.fromJsonObject(message.getJsonObject("community"), CommunityProfile.class);
+    /**
+     * The working directory.
+     */
+    protected Path work;
 
-    this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
+    /**
+     * The path to the file with the protocol norms.
+     */
+    protected Path protocolNorms;
 
-  }
+    /**
+     * The path to the init file.
+     */
+    protected Path init;
 
-  /**
-   * Called when a task has been created.
-   *
-   * @param message with the created task.
-   */
-  protected void handleCreatedTask(final JsonObject message) {
+    /**
+     * Create the environment to execute the SWIProlog.
+     *
+     * @throws IOException If can not create a necessary file.
+     */
+    public SWIProplogEnvironment() throws IOException {
 
-    final var task = Model.fromJsonObject(message.getJsonObject("task"), Task.class);
-    final var taskType = Model.fromJsonObject(message.getJsonObject("taskType"), TaskType.class);
-
-  }
-
-  /**
-   * Called when has to do a task transaction.
-   *
-   * @param message with the transaction to do.
-   */
-  protected void handleDoTaskTransaction(final JsonObject message) {
-
-    final var transaction = Model.fromJsonObject(message.getJsonObject("transaction"), TaskTransaction.class);
-    final var taskType = Model.fromJsonObject(message.getJsonObject("taskType"), TaskType.class);
-
-  }
-
-  /**
-   * Called when has to process a message of the protocol.
-   *
-   * @param message with the protocol message.
-   */
-  protected void handleProtocolMessage(final JsonObject message) {
-
-    final var protocolMessage = Model.fromJsonObject(message.getJsonObject("message"), ProtocolMessage.class);
-    if (protocolMessage.taskId != null && !message.containsKey("task")) {
-
-      WeNetTaskManager.createProxy(this.vertx).retrieveTask(protocolMessage.taskId).onComplete(retrieveTask -> {
-
-        final var task = retrieveTask.result();
-        if (task == null) {
-
-          Logger.warn(retrieveTask.cause(), "Cannot import the task for {}", message);
-          message.putNull("task");
-
-        } else {
-
-          message.put("task", task.toJsonObject());
-        }
-        WeNetTaskManager.createProxy(this.vertx).retrieveTaskType(task.taskTypeId).onComplete(retrieveTaskType -> {
-
-          final var taskType = retrieveTaskType.result();
-          if (taskType == null) {
-
-            Logger.warn(retrieveTaskType.cause(), "Cannot import the task type for {}", message);
-            message.putNull("taskType");
-
-          } else {
-
-            message.put("taskType", taskType.toJsonObject());
-          }
-
-          this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
-        });
-
-      });
-
-    } else if (protocolMessage.communityId != null && !message.containsKey("community")) {
-
-      WeNetProfileManager.createProxy(this.vertx).retrieveCommunity(protocolMessage.communityId)
-          .onComplete(retrieve -> {
-
-            final var community = retrieve.result();
-            if (community == null) {
-
-              Logger.warn(retrieve.cause(), "Cannot import the community for {}", message);
-              message.putNull("community");
-
-            } else {
-
-              message.put("community", community.toJsonObject());
-            }
-            this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
-
-          });
-
-    } else {
-
-      final var task = Model.fromJsonObject(message.getJsonObject("task"), Task.class);
-      final var taskType = Model.fromJsonObject(message.getJsonObject("taskType"), TaskType.class);
-      final var community = Model.fromJsonObject(message.getJsonObject("community"), CommunityProfile.class);
+      this.work = Files.createTempDirectory("engine_worker");
+      this.init = this.createFileAtWork("init.pl");
+      this.protocolNorms = this.createFileAtWork("protocol_norms.pl");
 
     }
-  }
 
-  /**
-   * Handle a SWIProlog event.
-   *
-   * @param message  that contains the task transaction.
-   * @param protocol to check.
-   */
-  protected void handleSWIProlog(final ProtocolMessage message, final Protocol protocol) {
+    /**
+     * Create the file with the specified name on the work.
+     *
+     * @param name of the file.
+     *
+     * @return the created file.
+     *
+     * @throws IOException If can not create the new file.
+     */
+    protected Path createFileAtWork(final String name) throws IOException {
 
-    Path tmp = null;
-    try {
+      final var path = this.work.resolve(Paths.get(name));
+      path.toFile().createNewFile();
+      return path;
 
-      tmp = Files.createTempDirectory("engine_worker");
-      final var error = tmp.resolve(Paths.get("error.txt"));
-      final var output = tmp.resolve(Paths.get("output.txt"));
+    }
 
-      final var messagePath = tmp.resolve(Paths.get("message.json"));
-      Files.writeString(messagePath, message.toJsonString());
-      final var init = new StringBuilder();
-      init.append("wenet_message_file('");
-      init.append(messagePath.toAbsolutePath());
-      init.append("').\n");
+    /**
+     * Add to the init file to load all the files.
+     *
+     * @param dir directory to obtain the files to autoload.
+     *
+     * @throws IOException If can not obtain the files to load.
+     */
+    public void fillInAutoloadPrologFilesIn(final Path dir) throws IOException {
 
-      final var configurationPath = tmp.resolve(Paths.get("configuration.json"));
-      Files.writeString(configurationPath, this.config().encode());
-      init.append("wenet_configuration_file('");
-      init.append(configurationPath.toAbsolutePath());
-      init.append("').\n");
+      final var content = new StringBuilder();
+      content.append("\n:- load_files([");
+      Files.list(dir).filter(path -> path.getFileName().toString().endsWith(".pl")).sorted().forEach(path -> {
 
-      // Add to the init the files to load
-      init.append(":- load_files([");
-      final var index = init.length();
-      Files.list(this.prologDir).filter(path -> path.getFileName().toString().endsWith(".pl")).forEach(path -> {
-
-        init.append(",\n\t'");
-        init.append(path.toAbsolutePath());
-        init.append("'");
+        content.append("\n\t'");
+        content.append(path.toAbsolutePath());
+        content.append("',");
 
       });
-      // At this point init ends with a ,
-      init.deleteCharAt(index);// Remove the extra ,
+      content.append("\n\t'");
+      content.append(this.protocolNorms.toAbsolutePath());
+      content.append("'");
+      content.append("\n\t],[autoload(true)]).\n");
+      Files.writeString(this.init, content, StandardOpenOption.APPEND);
 
-      if (protocol.ontology != null) {
-        // Load the protocol ontology
-        final var protocolOntologyPath = tmp.resolve(Paths.get("protocol_ontology.json"));
-        Files.writeString(protocolOntologyPath, protocol.ontology);
-        init.append(",\n\t'");
-        init.append(protocolOntologyPath.toAbsolutePath());
-        init.append("'");
+    }
+
+    /**
+     * Add to the init file the load of a model.
+     *
+     * @param model     to load.
+     * @param fileName  name of the file to write.
+     * @param predicate to load.
+     *
+     * @throws IOException If can not append to component to load the model.
+     */
+    public void appendToInitAssertaModel(final JsonObject model, final String fileName, final String predicate)
+        throws IOException {
+
+      final var content = new StringBuilder();
+      final var modelFile = this.createFileAtWork(fileName);
+      Files.writeString(modelFile, model.encode());
+
+      content.append("\n:- wenet_read_json_from_file('");
+      content.append(modelFile.toAbsolutePath());
+      content.append("',Data),\n\tasserta(");
+      content.append(predicate);
+      content.append("(Data)),\n\twenet_log_trace(\"Loaded ");
+      content.append(fileName);
+      content.append("\",Data).\n");
+
+      Files.writeString(this.init, content, StandardOpenOption.APPEND);
+
+    }
+
+    /**
+     * Fill in the data of the protocol.
+     *
+     * @param protocol to extract the data to fill in.
+     *
+     * @throws IOException If can not fill in the data form the protocol.
+     */
+    public void fillIn(final ProtocolData protocol) throws IOException {
+
+      if (protocol.profile != null) {
+
+        // TODO add profile norms but now are not ProtocolNorm
+        this.appendToInitAssertaModel(protocol.profile.toJsonObject(), "wenet_protocol_profile.json", "get_profile");
+
       }
 
-      if (protocol.norms != null) {
-        // Load the protocol norms
-        final var protocolNormsPath = tmp.resolve(Paths.get("protocol_norms.json"));
-        Files.writeString(protocolNormsPath, protocol.norms);
-        init.append(",\n\t'");
-        init.append(protocolNormsPath.toAbsolutePath());
-        init.append("'");
+      if (protocol.community != null) {
+
+        this.appendToInitAssertaModel(protocol.community.toJsonObject(), "wenet_protocol_community.json",
+            "get_community");
+        this.appendNorms(protocol.community.norms, "Norms of community ", protocol.community.name, " (",
+            protocol.community.id, ")");
+
       }
 
-      init.append("\n\t],[autoload(true)]).\n");
+      if (protocol.task != null) {
 
-      InternalLogger.log(Level.ERROR, init.toString());
+        this.appendToInitAssertaModel(protocol.task.toJsonObject(), "wenet_protocol_task.json", "get_task");
 
-      final var initPath = tmp.resolve(Paths.get("init.pl"));
-      Files.writeString(initPath, init.toString());
+      }
+
+      if (protocol.taskType != null) {
+
+        this.appendToInitAssertaModel(protocol.taskType.toJsonObject(), "wenet_protocol_task_type.json",
+            "get_task_type");
+        this.appendNorms(protocol.taskType.norms, "Norms of task type ", protocol.taskType.name, " (",
+            protocol.taskType.id, ")");
+
+      }
+
+    }
+
+    /**
+     * Append the norms into the protocol norms file.
+     *
+     * @param norms   to fill in.
+     * @param headers for the norms.
+     *
+     * @throws IOException If can not write into the protocol norms.
+     */
+    protected void appendNorms(final Iterable<ProtocolNorm> norms, final String... headers) throws IOException {
+
+      final var content = new StringBuilder();
+      content.append("\n% ");
+      for (final var header : headers) {
+
+        content.append(header);
+      }
+      content.append("\n");
+
+      if (norms != null) {
+
+        for (final var norm : norms) {
+
+          if (norm.ontology != null) {
+
+            content.append("\n");
+            content.append(norm.ontology.trim());
+            if (content.charAt(content.length() - 1) != '.') {
+
+              content.append(".");
+            }
+            content.append("\n");
+          }
+
+          content.append("\nwhenever ");
+          content.append(norm.whenever.trim());
+          content.append(" thenceforth ");
+          content.append(norm.thenceforth.trim());
+          content.append(".\n");
+        }
+      }
+
+      Files.writeString(this.protocolNorms, content, StandardOpenOption.APPEND);
+
+    }
+
+    /**
+     * Run the.
+     *
+     * @throws Throwable If cannot execute the SWIProlog
+     */
+    public void run() throws Throwable {
 
       final var processBuilder = new ProcessBuilder("swipl", "--debug", "-O", "-s",
-          initPath.toAbsolutePath().toString(), "-g", "go", "-t", "halt");
-      processBuilder.directory(tmp.toFile());
+          this.init.toAbsolutePath().toString(), "-g", "go", "-t", "halt");
+      processBuilder.directory(this.work.toFile());
+      final var error = this.work.resolve(Paths.get("error.txt"));
+      final var output = this.work.resolve(Paths.get("output.txt"));
       processBuilder.redirectError(error.toFile());
       processBuilder.redirectOutput(output.toFile());
       final var process = processBuilder.start();
       Logger.trace("Start process with {}", () -> processBuilder.command(), () -> process.pid());
       final var status = process.waitFor();
-      InternalLogger.log(Level.ERROR, readQuietly(error));
-      InternalLogger.log(Level.DEBUG, readQuietly(output));
       if (status == 0) {
 
         Logger.trace("Finished process {} successfully.\nThe error stream is:\n{}\nThe output stream is:\n{}",
@@ -395,14 +427,21 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             () -> process.pid(), () -> status, () -> readQuietly(error), () -> readQuietly(output));
       }
 
-    } catch (final Throwable processError) {
-
-      Logger.error(processError, "Cannot process the SWI Prolog message");
     }
 
-    if (!FileUtils.deleteQuietly(tmp.toFile())) {
+    /**
+     * Remove completely the working directory.
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public void close() throws IOException {
 
-      Logger.error("Cannot remove the working directory {}", tmp);
+      // if (!FileUtils.deleteQuietly(this.work.toFile())) {
+
+      Logger.error("Cannot remove the working directory {}", this.work);
+
+      // }
 
     }
 

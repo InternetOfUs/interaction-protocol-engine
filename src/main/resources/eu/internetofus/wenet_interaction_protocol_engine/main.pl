@@ -21,10 +21,6 @@
 %
 
 go() :-
-	get_profile(Profile),
-	asserta(myuser(Profile.id)),
-	wenet_message(Message),
-	asserta(msg_from(Message.sender.userId,Message.content)),
 	normengine(Output),
 	flatten(Output,Actions),
 	!,

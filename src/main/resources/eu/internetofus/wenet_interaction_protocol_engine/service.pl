@@ -23,7 +23,7 @@
 :- use_module(library(http/json)).
 :- use_module(library(http/http_open)).
 :- use_module(library(http/http_client)).
-:- dynamic 
+:- dynamic
 	get_app/1,
 	get_app/2,
 	get_app_users/1,
@@ -31,20 +31,20 @@
 
 %!	wenet_service_url(+Url,-Paths)
 %
-%	Calculate the URL from a path	
+%	Calculate the URL from a path
 %
 wenet_service_url(Url,Paths) :-
 	wenet_configuration(Configuration),
 	wenet_build_url(Url,[Configuration.wenetComponents.service|Paths])
 	.
-	
+
 
 %!	get_app(+App,-Id)
 %
 %	Return the app associated to an identifier.
 %
 %	@param App dictionary with the app information.
-%	@param Id string identifeir of the app to obtain.
+%	@param Id string identifier of the app to obtain.
 %
 get_app(App,Id) :-
 	wenet_service_url(Url,["/app/",Id]),
@@ -63,16 +63,16 @@ get_app(App,Id) :-
 get_app(App) :-
 	wenet_message(Message),
 	get_app(App,Message.appId),
-	asserta(get_app(App)) 
+	asserta(get_app(App))
 	.
 
-	
+
 %!	get_app_users(+Service,-Id)
 %
 %	Return the users of an application.
 %
 %	@param Users list of string with the user identifiers of the application.
-%	@param Id string identifeir of the application to obtain.
+%	@param Id string identifier of the application to obtain.
 %
 get_app_users(Users,Id) :-
 	wenet_service_url(Url,["/app/",Id,"/users"]),
@@ -92,16 +92,16 @@ get_app_users(Users,Id) :-
 get_app_users(Users) :-
 	wenet_message(Message),
 	get_app_users(Users,Message.appId),
-	asserta(get_app_users(Users)) 
+	asserta(get_app_users(Users))
 	.
-	
+
 %!	put_callback(+App,+Message,-Result)
 %
 %	Do a callback into an application.
 %
 %	@param App to do the callback.
 %	@param Message to post.
-%	@param Result of teh callback.
+%	@param Result of the callback.
 %
 put_callback(App,Message,Result) :-
 	atom_json_term(Atom, Message, []),
@@ -109,28 +109,16 @@ put_callback(App,Message,Result) :-
 	format(string(Log_Text),'Post to the app ~w the callback message ~w',[App.appId,Atom]),
 	wenet_log_trace(Log_Text,Result)
 	.
-	
+
 %!	put_callback(+Message,-Result)
 %
-%	Do a callback into the curretn application.
+%	Do a callback into the current application.
 %
 %	@param Message to post.
-%	@param Result of teh callback.
+%	@param Result of the callback.
 %
 put_callback(Message,Result) :-
 	get_app(App),
 	put_callback(App,Message,Result)
 	.
-	
 
-%!	wenet_service_get_app(+AppId,-App)
-%
-%	Obtain the information of an application.
-%
-%	@param AppId identifier of teh application to obtain the information.
-%	@param App the dictionary wit the information of the application.
-%
-wenet_service_get_app(AppId,App) :-
-	
-	.
-	
