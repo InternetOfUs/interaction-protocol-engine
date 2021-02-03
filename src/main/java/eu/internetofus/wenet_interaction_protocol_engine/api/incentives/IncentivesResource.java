@@ -29,8 +29,10 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.incentives;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.incentive_server.Incentive;
 import eu.internetofus.common.vertx.ServiceResponseHandlers;
+import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker;
 import eu.internetofus.wenet_interaction_protocol_engine.HardCodedProtocolWorker;
 import eu.internetofus.wenet_interaction_protocol_engine.MessageForWorkerBuilder;
+import eu.internetofus.wenet_interaction_protocol_engine.ProtocolData;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -89,8 +91,21 @@ public class IncentivesResource implements Incentives {
 
         } else {
 
-          final var message = MessageForWorkerBuilder.buildSendIncentiveMessage(incentive);
-          this.vertx.eventBus().publish(HardCodedProtocolWorker.ADDRESSS, message);
+          ProtocolData.createWith(incentive, this.vertx).onSuccess(protocol -> {
+
+            if (!protocol.hasProtocolNorms()) {
+
+              final var message = MessageForWorkerBuilder.buildSendIncentiveMessage(incentive);
+              this.vertx.eventBus().publish(HardCodedProtocolWorker.ADDRESSS, message);
+
+            } else {
+
+              final var message = MessageForWorkerBuilder.buildSendIncentiveMessage(incentive, protocol);
+              this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
+            }
+
+          });
+
           Logger.trace("Accepted sendIncentive {} ", body);
           ServiceResponseHandlers.responseWith(resultHandler, Status.ACCEPTED, incentive);
         }

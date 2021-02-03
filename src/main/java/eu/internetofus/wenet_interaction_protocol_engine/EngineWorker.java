@@ -27,12 +27,20 @@
 package eu.internetofus.wenet_interaction_protocol_engine;
 
 import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.incentive_server.Incentive;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
+import eu.internetofus.common.components.profile_manager.CommunityProfile;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
+import eu.internetofus.common.components.task_manager.Task;
+import eu.internetofus.common.components.task_manager.TaskTransaction;
+import eu.internetofus.common.components.task_manager.TaskType;
+import eu.internetofus.common.components.task_manager.WeNetTaskManager;
 import eu.internetofus.common.vertx.Worker;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.Protocol;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import java.nio.charset.Charset;
@@ -52,7 +60,7 @@ import org.tinylog.provider.InternalLogger;
  * @author UDT-IA, IIIA-CSIC
  */
 @Worker
-public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.core.eventbus.Message<JsonObject>> {
+public class EngineWorker extends AbstractVerticle implements Handler<Message<JsonObject>> {
 
   /**
    * The address used to send messages to the worker.
@@ -162,27 +170,28 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
    * {@inheritDoc}
    */
   @Override
-  public void handle(final io.vertx.core.eventbus.Message<JsonObject> event) {
+  public void handle(final Message<JsonObject> event) {
 
     try {
 
       final var body = event.body();
       final var type = MessageForWorkerBuilder.Type
           .valueOf(body.getString("type", MessageForWorkerBuilder.Type.DO_TASK_TRANSACTION.name()));
-      if (SEND_INCENTIVE_TYPE.equals(type)) {
-        // send incentive
-
-      } else {
-        final var message = Model.fromJsonObject(body, ProtocolMessage.class);
-        if (message == null) {
-
-          Logger.trace("Can not process the event {}, because does not contains a valid Message.", event);
-
-        } else {
-
-          this.handle(message);
-        }
-
+      switch (type) {
+      case SEND_INCENTIVE:
+        this.handleSendIncentive(body);
+        break;
+      case CREATED_TASK:
+        this.handleCreatedTask(body);
+        break;
+      case DO_TASK_TRANSACTION:
+        this.handleDoTaskTransaction(body);
+        break;
+      case PROTOCOL_MESSAGE:
+        this.handleProtocolMessage(body);
+        break;
+      default:
+        Logger.trace("Can not process the event {}, because does not contains a valid Message.", event);
       }
 
     } catch (final Throwable throwable) {
@@ -193,29 +202,110 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
   }
 
   /**
-   * Called when have a message to process.
+   * Called when have received a send incentive message.
    *
-   * @param message to process.
+   * @param message with the incentive.
    */
-  protected void handle(final ProtocolMessage message) {
+  protected void handleSendIncentive(final JsonObject message) {
 
-    Logger.trace("Received message to process {}", message);
+    final int step = message.getInteger("step", 0);
+    final var incentive = Model.fromJsonObject(message.getJsonObject("incentive"), Incentive.class);
+    final var community = Model.fromJsonObject(message.getJsonObject("community"), CommunityProfile.class);
 
-    // final var params = new ModelsPageContext();
-    // params.sort = ProtocolsRepository.createProtocolsPageQuery(message.appId,
-    // message.communityId, message.taskTypeId,
-    // message.taskId);
-    // params.offset = 0;
-    // params.limit = 1;
-    // ProtocolsRepository.createProxy(this.vertx).retrieveProtocolsPage(params,
-    // search -> {
-    //
-    // final var page = search.result();
-    // final var protocol = page.protocols.get(0);
-    // this.handleSWIProlog(message, protocol);
-    //
-    // });
+    this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
 
+  }
+
+  /**
+   * Called when a task has been created.
+   *
+   * @param message with the created task.
+   */
+  protected void handleCreatedTask(final JsonObject message) {
+
+    final var task = Model.fromJsonObject(message.getJsonObject("task"), Task.class);
+    final var taskType = Model.fromJsonObject(message.getJsonObject("taskType"), TaskType.class);
+
+  }
+
+  /**
+   * Called when has to do a task transaction.
+   *
+   * @param message with the transaction to do.
+   */
+  protected void handleDoTaskTransaction(final JsonObject message) {
+
+    final var transaction = Model.fromJsonObject(message.getJsonObject("transaction"), TaskTransaction.class);
+    final var taskType = Model.fromJsonObject(message.getJsonObject("taskType"), TaskType.class);
+
+  }
+
+  /**
+   * Called when has to process a message of the protocol.
+   *
+   * @param message with the protocol message.
+   */
+  protected void handleProtocolMessage(final JsonObject message) {
+
+    final var protocolMessage = Model.fromJsonObject(message.getJsonObject("message"), ProtocolMessage.class);
+    if (protocolMessage.taskId != null && !message.containsKey("task")) {
+
+      WeNetTaskManager.createProxy(this.vertx).retrieveTask(protocolMessage.taskId).onComplete(retrieveTask -> {
+
+        final var task = retrieveTask.result();
+        if (task == null) {
+
+          Logger.warn(retrieveTask.cause(), "Cannot import the task for {}", message);
+          message.putNull("task");
+
+        } else {
+
+          message.put("task", task.toJsonObject());
+        }
+        WeNetTaskManager.createProxy(this.vertx).retrieveTaskType(task.taskTypeId).onComplete(retrieveTaskType -> {
+
+          final var taskType = retrieveTaskType.result();
+          if (taskType == null) {
+
+            Logger.warn(retrieveTaskType.cause(), "Cannot import the task type for {}", message);
+            message.putNull("taskType");
+
+          } else {
+
+            message.put("taskType", taskType.toJsonObject());
+          }
+
+          this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
+        });
+
+      });
+
+    } else if (protocolMessage.communityId != null && !message.containsKey("community")) {
+
+      WeNetProfileManager.createProxy(this.vertx).retrieveCommunity(protocolMessage.communityId)
+          .onComplete(retrieve -> {
+
+            final var community = retrieve.result();
+            if (community == null) {
+
+              Logger.warn(retrieve.cause(), "Cannot import the community for {}", message);
+              message.putNull("community");
+
+            } else {
+
+              message.put("community", community.toJsonObject());
+            }
+            this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
+
+          });
+
+    } else {
+
+      final var task = Model.fromJsonObject(message.getJsonObject("task"), Task.class);
+      final var taskType = Model.fromJsonObject(message.getJsonObject("taskType"), TaskType.class);
+      final var community = Model.fromJsonObject(message.getJsonObject("community"), CommunityProfile.class);
+
+    }
   }
 
   /**
@@ -248,7 +338,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<io.vertx.c
 
       // Add to the init the files to load
       init.append(":- load_files([");
-      final int index = init.length();
+      final var index = init.length();
       Files.list(this.prologDir).filter(path -> path.getFileName().toString().endsWith(".pl")).forEach(path -> {
 
         init.append(",\n\t'");

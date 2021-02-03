@@ -28,8 +28,6 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.tasks;
 
 import eu.internetofus.common.components.task_manager.Task;
 import eu.internetofus.common.components.task_manager.TaskTransaction;
-import eu.internetofus.common.components.task_manager.TaskType;
-import eu.internetofus.common.components.task_manager.WeNetTaskManager;
 import eu.internetofus.common.vertx.ModelContext;
 import eu.internetofus.common.vertx.ModelResources;
 import eu.internetofus.common.vertx.ServiceContext;
@@ -37,18 +35,15 @@ import eu.internetofus.common.vertx.ServiceResponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker;
 import eu.internetofus.wenet_interaction_protocol_engine.HardCodedProtocolWorker;
 import eu.internetofus.wenet_interaction_protocol_engine.MessageForWorkerBuilder;
+import eu.internetofus.wenet_interaction_protocol_engine.ProtocolData;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.service.ServiceRequest;
 import io.vertx.ext.web.api.service.ServiceResponse;
-import java.util.Collections;
-import java.util.Map;
-import java.util.WeakHashMap;
 import javax.ws.rs.core.Response.Status;
+import org.tinylog.Logger;
 
 /**
  * The implementation of the web services.
@@ -56,11 +51,6 @@ import javax.ws.rs.core.Response.Status;
  * @author UDT-IA, IIIA-CSIC
  */
 public class TasksResource implements Tasks {
-
-  /**
-   * The component used to store a cache of the task types.
-   */
-  private static final Map<String, TaskType> typesCache = Collections.synchronizedMap(new WeakHashMap<>());
 
   /**
    * The event bus that is using.
@@ -79,79 +69,6 @@ public class TasksResource implements Tasks {
   }
 
   /**
-   * Return the task type associated to a task.
-   *
-   * @param taskId identifier of the task to obtain the task type.
-   *
-   * @return the future that will provide the task type associated to the task.
-   */
-  protected Future<TaskType> getTypeOf(final String taskId) {
-
-    final Promise<TaskType> promise = Promise.promise();
-    final var type = typesCache.get(taskId);
-    if (type != null) {
-
-      promise.complete(type);
-
-    } else {
-
-      WeNetTaskManager.createProxy(this.vertx).retrieveTask(taskId).onComplete(retrieve -> {
-
-        final var result = retrieve.result();
-        if (result != null) {
-
-          this.getTypeOf(result).onComplete(promise);
-
-        } else {
-
-          promise.fail(retrieve.cause());
-        }
-
-      });
-    }
-
-    return promise.future();
-
-  }
-
-  /**
-   * Return the task type associated to a task.
-   *
-   * @param task to obtain the task type.
-   *
-   * @return the future that will provide the task type associated to the task.
-   */
-  protected Future<TaskType> getTypeOf(final Task task) {
-
-    final Promise<TaskType> promise = Promise.promise();
-    final var type = typesCache.get(task.id);
-    if (type != null) {
-
-      promise.complete(type);
-
-    } else {
-
-      WeNetTaskManager.createProxy(this.vertx).retrieveTaskType(task.taskTypeId).onComplete(retrieve -> {
-
-        final var result = retrieve.result();
-        if (result != null) {
-
-          typesCache.put(task.id, result);
-          promise.complete(result);
-
-        } else {
-
-          promise.fail(retrieve.cause());
-        }
-
-      });
-    }
-
-    return promise.future();
-
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override
@@ -166,20 +83,26 @@ public class TasksResource implements Tasks {
 
       ServiceResponseHandlers.responseWith(resultHandler, Status.ACCEPTED, model.source);
 
-      this.getTypeOf(model.source).onComplete(get -> {
+      ProtocolData.createWith(model.source, this.vertx).onSuccess(protocol -> {
 
-        final var message = MessageForWorkerBuilder.buildCreatedTaskMessage(model.source);
-        final var type = get.result();
-        if (type == null || type.norms == null || type.norms.isEmpty()) {
+        if (!protocol.hasProtocolNorms()) {
           // it is a hard-coded protocol
+          final var message = MessageForWorkerBuilder.buildCreatedTaskMessage(model.source);
           this.vertx.eventBus().publish(HardCodedProtocolWorker.ADDRESSS, message);
 
         } else {
           // process the message
+          final var message = MessageForWorkerBuilder.buildCreatedTaskMessage(protocol);
           this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
 
         }
+
+      }).onFailure(cause -> {
+
+        Logger.warn(cause, "Cannot process the creation of the task {}", model.source);
+
       });
+
     });
 
   }
@@ -199,20 +122,24 @@ public class TasksResource implements Tasks {
 
       ServiceResponseHandlers.responseWith(resultHandler, Status.ACCEPTED, model.source);
 
-      this.getTypeOf(model.source.taskId).onComplete(get -> {
+      ProtocolData.createWith(model.source, this.vertx).onSuccess(protocol -> {
 
-        final var type = get.result();
-        final var message = MessageForWorkerBuilder.buildDoTaskTransactionMessage(model.source);
-
-        if (type == null || type.norms == null || type.norms.isEmpty()) {
+        if (!protocol.hasProtocolNorms()) {
           // it is a hard-coded protocol
+          final var message = MessageForWorkerBuilder.buildDoTaskTransactionMessage(model.source);
           this.vertx.eventBus().publish(HardCodedProtocolWorker.ADDRESSS, message);
 
         } else {
           // process the message
+          final var message = MessageForWorkerBuilder.buildDoTaskTransactionMessage(model.source, protocol);
           this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
 
         }
+
+      }).onFailure(cause -> {
+
+        Logger.warn(cause, "Cannot process the creation of the task {}", model.source);
+
       });
 
     });
