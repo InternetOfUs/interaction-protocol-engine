@@ -20,46 +20,11 @@
 % SOFTWARE.
 %
 
-:- use_module(library(http/json)).
-:- use_module(library(http/http_open)).
-:- use_module(library(http/http_client)).
-:- dynamic
-	get_task/1,
-	get_task/2.
-
-%!	get_task_manager_url_to(+Url,-Paths)
+%!	get_interaction_protocol_engine_url_to(+Url,-Paths)
 %
-%	Calculate the URL from a path
+%	Calculate the URL to interact to the specified path of the interaction protocol engine.
 %
-get_task_manager_url_to(Url,Paths) :-
-	wenet_task_manager_api_url(Api),
+get_interaction_protocol_engine_url_to(Url,Paths) :-
+	wenet_interaction_protocol_engine_api_url(Api),
 	wenet_build_url(Url,[Api|Paths])
-	.
-
-
-%!	get_task(+Task,-Id)
-%
-%	Return the task associated to an identifier.
-%
-%	@param Task dictionary with the task information.
-%	@param Id string identifeir of the task to obtain.
-%
-get_task(Task,Id) :-
-	get_task_manager_url_to(Url,["/tasks/",Id]),
-	wenet_read_json_from_url(Url,Task),
-	asserta(get_task(Task,Id)),
-	wenet_log_trace("Loaded task",Task)
-	.
-
-
-%!	get_task(+Task)
-%
-%	Return the task associated to the engine.
-%
-%	@param Task dictionary with the task information.
-%
-get_task(Task) :-
-	wenet_message(Message),
-	get_task(Task,Message.taskId),
-	asserta(get_task(Task))
 	.

@@ -26,18 +26,26 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.incentives;
 
+import static eu.internetofus.common.components.service.WeNetServiceSimulators.waitUntilCallbacks;
 import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
 import static io.reactiverse.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import eu.internetofus.common.components.ErrorMessage;
+import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.incentive_server.Incentive;
 import eu.internetofus.common.components.incentive_server.IncentiveTest;
+import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
+import eu.internetofus.common.components.service.App;
+import eu.internetofus.common.components.service.Message;
+import eu.internetofus.common.components.task_manager.ProtocolNorm;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxTestContext;
+import java.util.ArrayList;
 import javax.ws.rs.core.Response.Status;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -122,6 +130,55 @@ public class IncentivesIT {
         assertThat(sent).isEqualTo(incentive);
 
       }).sendJson(incentive.toJsonObject(), testContext);
+
+    });
+  }
+
+  /**
+   * Verify that can send a incentive using norms.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Incentives#sendIncentive(io.vertx.core.json.JsonObject,
+   *      io.vertx.ext.web.api.service.ServiceRequest, io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldSendIncentiveUsingCommunityNorms(final Vertx vertx, final WebClient client,
+      final VertxTestContext testContext) {
+
+    testContext.assertComplete(new IncentiveTest().createModelExample(1, vertx, testContext)).onSuccess(incentive -> {
+
+      testContext.assertComplete(App.getOrCreateDefaultCommunityFor(incentive.AppID, vertx)).onSuccess(community -> {
+
+        community.norms = new ArrayList<>();
+        final var norm = new ProtocolNorm();
+        norm.whenever = "get_received_incentive(Incentive)";
+        norm.thenceforth = "get_dict(\"AppID\",Incentive,AppId) and\n\tget_app(App,AppId) and\n\tput_callback(App,_{appId:Incentive.get(\"AppID\"),receiverId:Incentive.get(\"UserId\"),label:\"INCENTTIVE\",attributes:Incentive},_)";
+        community.norms.add(norm);
+        testContext.assertComplete(WeNetProfileManager.createProxy(vertx).updateCommunity(community)
+            .compose(updatedCommunity -> WeNetInteractionProtocolEngine.createProxy(vertx).sendIncentive(incentive))
+            .compose(sentIncentive -> waitUntilCallbacks(incentive.AppID, callbacks -> {
+
+              for (var i = 0; i < callbacks.size(); i++) {
+
+                final var msg = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+                if (msg != null && "INCENTTIVE".equals(msg.label) && msg.receiverId.equals(incentive.UserId)) {
+
+                  return true;
+
+                }
+              }
+              return false;
+
+            }, vertx, testContext)
+
+            )
+
+        ).onSuccess(call -> testContext.completeNow());
+
+      });
 
     });
   }

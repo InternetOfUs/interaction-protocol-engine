@@ -23,12 +23,7 @@
 :- use_module(library(http/json)).
 :- use_module(library(http/http_open)).
 :- use_module(library(http/http_client)).
-:- dynamic
-	wenet_configuration/1,
-	wenet_message/1,
-	wenet_user_language/2,
-	wenet_user_language/1
-	.
+:- dynamic wenet_log_trace/2.
 
 
 %!  wenet_read_json_from_file(+FilePath, -JsonDictionary)
@@ -52,7 +47,8 @@ wenet_read_json_from_file(FilePath, JsonDictionary) :-
 %	@param JsonDictionary dictionary with the data on the JSON resource.
 %
 wenet_read_json_from_url(Url, JsonDictionary) :-
-	http_open(Url,Stream,[]),
+	wenet_component_auth_header(Header),
+	http_open(Url,Stream,[Header]),
 	json_read_dict(Stream, JsonDictionary),
   	close(Stream)
   	.
@@ -89,19 +85,9 @@ wenet_log_trace(Text,Term) :-
 %	@param Actions to execute.
 %
 wenet_do_actions([]).
-wenet_do_actions([A|O]) :-
+wenet_do_actions([put(A)|O]) :-
 	wenet_log_trace("Try to do action",A),
-	(wenet_do_action(A),wenet_log_trace("Done action",A);wenet_log_trace("Cannot do action",A)),
+	(A,wenet_log_trace("Done action",A);wenet_log_trace("Cannot do action",A)),
 	wenet_do_actions(O)
-	.
-
-wenet_do_action(put(msg_to(X,C))) :-
-	wenet_user_language(Lang),
-	message(C,Lang,Text),
-	put_callback(message{type:"textualMessage",recipientId:X,title:'',text:Text},_)
-	.
-
-wenet_do_action(A) :-
-	wenet_log_trace("Action not defined",A)
 	.
 

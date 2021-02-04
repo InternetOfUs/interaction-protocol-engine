@@ -27,7 +27,14 @@
 package eu.internetofus.wenet_interaction_protocol_engine;
 
 import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.incentive_server.WeNetIncentiveServerClient;
+import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngineClient;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManagerClient;
+import eu.internetofus.common.components.service.WeNetServiceClient;
+import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilderClient;
 import eu.internetofus.common.components.task_manager.ProtocolNorm;
+import eu.internetofus.common.components.task_manager.WeNetTaskManagerClient;
+import eu.internetofus.common.vertx.AbstractServicesVerticle;
 import eu.internetofus.common.vertx.Worker;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
@@ -43,7 +50,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import org.tinylog.Level;
 import org.tinylog.Logger;
+import org.tinylog.provider.InternalLogger;
 
 /**
  * The worker verticle that is used to process the messages for an interaction
@@ -67,8 +76,9 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
   /**
    * The name of the files of the prolog files to copy.
    */
-  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "profile_manager.pl", "task_manager.pl", "service.pl",
-      "ontology.pl", "norms.pl", "engine.pl", "main.pl" };
+  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "ontology.pl", "norms.pl", "engine.pl",
+      "profile_manager.pl", "task_manager.pl", "interaction_protocol_engine.pl", "social_context_builder.pl",
+      "service.pl", "incentive_server.pl", "main.pl" };
 
   /**
    * The type that define the the received event of the type incentive.
@@ -175,7 +185,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       final var protocol = Model.fromJsonObject(body.getJsonObject("protocol"), ProtocolData.class);
 
       env.fillInAutoloadPrologFilesIn(this.prologDir);
-      env.appendToInitAssertaModel(this.config(), "wenet_configuration.conf", "wenet_configuration");
+      env.appendToInitConfigurationFacts(this.config());
       env.fillIn(protocol);
 
       switch (type) {
@@ -236,7 +246,9 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     public SWIProplogEnvironment() throws IOException {
 
       this.work = Files.createTempDirectory("engine_worker");
+      InternalLogger.log(Level.DEBUG, this.work.toAbsolutePath().toString());
       this.init = this.createFileAtWork("init.pl");
+      Files.writeString(this.init, "%\n% Initialize norm engine\n%\n\n");
       this.protocolNorms = this.createFileAtWork("protocol_norms.pl");
 
     }
@@ -268,7 +280,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     public void fillInAutoloadPrologFilesIn(final Path dir) throws IOException {
 
       final var content = new StringBuilder();
-      content.append("\n:- load_files([");
+      content.append(":- load_files([");
       Files.list(dir).filter(path -> path.getFileName().toString().endsWith(".pl")).sorted().forEach(path -> {
 
         content.append("\n\t'");
@@ -279,7 +291,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       content.append("\n\t'");
       content.append(this.protocolNorms.toAbsolutePath());
       content.append("'");
-      content.append("\n\t],[autoload(true)]).\n");
+      content.append("\n\t],[autoload(true)]).\n\n");
       Files.writeString(this.init, content, StandardOpenOption.APPEND);
 
     }
@@ -304,9 +316,9 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       content.append(modelFile.toAbsolutePath());
       content.append("',Data),\n\tasserta(");
       content.append(predicate);
-      content.append("(Data)),\n\twenet_log_trace(\"Loaded ");
+      content.append("(Data)),\n\twenet_log_trace('Loaded ");
       content.append(fileName);
-      content.append("\",Data).\n");
+      content.append("',Data).\n");
 
       Files.writeString(this.init, content, StandardOpenOption.APPEND);
 
@@ -387,15 +399,76 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             content.append("\n");
           }
 
-          content.append("\nwhenever ");
+          content.append("\nwhenever\n\t");
           content.append(norm.whenever.trim());
-          content.append(" thenceforth ");
+          content.append("\nthenceforth\n\t");
           content.append(norm.thenceforth.trim());
           content.append(".\n");
         }
       }
 
       Files.writeString(this.protocolNorms, content, StandardOpenOption.APPEND);
+
+    }
+
+    /**
+     * Append to the initialization file the configuration facts.
+     *
+     * @param config configuration of the component.
+     *
+     * @throws IOException If can not append the content to the init file.
+     */
+    public void appendToInitConfigurationFacts(final JsonObject config) throws IOException {
+
+      final var content = new StringBuilder();
+      final var components = config.getJsonObject("wenetComponents", new JsonObject());
+
+      this.appendFact(content, "wenet_profile_manager_api_url",
+          components.getString(WeNetProfileManagerClient.PROFILE_MANAGER_CONF_KEY,
+              WeNetProfileManagerClient.DEFAULT_PROFILE_MANAGER_API_URL));
+
+      this.appendFact(content, "wenet_task_manager_api_url", components.getString(
+          WeNetTaskManagerClient.TASK_MANAGER_CONF_KEY, WeNetTaskManagerClient.DEFAULT_TASK_MANAGER_API_URL));
+
+      this.appendFact(content, "wenet_interaction_protocol_engine_api_url",
+          components.getString(WeNetInteractionProtocolEngineClient.INTERACTION_PROTOCOL_ENGINE_CONF_KEY,
+              WeNetInteractionProtocolEngineClient.DEFAULT_INTERACTION_PROTOCOL_ENGINE_API_URL));
+
+      this.appendFact(content, "wenet_social_context_builder_api_url",
+          components.getString(WeNetSocialContextBuilderClient.SOCIAL_CONTEXT_BUILDER_CONF_KEY,
+              WeNetSocialContextBuilderClient.DEFAULT_SOCIAL_CONTEXT_BUILDER_API_URL));
+
+      this.appendFact(content, "wenet_service_api_url",
+          components.getString(WeNetServiceClient.SERVICE_CONF_KEY, WeNetServiceClient.DEFAULT_SERVICE_API_URL));
+
+      this.appendFact(content, "wenet_incentive_server_api_url",
+          components.getString(WeNetIncentiveServerClient.INCENTIVE_SERVER_CONF_KEY,
+              WeNetIncentiveServerClient.DEFAULT_INCENTIVE_SERVER_API_URL));
+
+      content.append("wenet_component_auth_header(header('");
+      content.append(AbstractServicesVerticle.WENET_COMPONENT_APIKEY_HEADER);
+      content.append("','");
+      content.append(config.getJsonObject(AbstractServicesVerticle.WEB_CLIENT_CONF_KEY, new JsonObject())
+          .getString(AbstractServicesVerticle.WENET_COMPONENT_APIKEY_CONF_KEY, "UDEFINED"));
+      content.append("')).\n\n");
+
+      Files.writeString(this.init, content, StandardOpenOption.APPEND);
+
+    }
+
+    /**
+     * Append a fact.
+     *
+     * @param content to append the fact.
+     * @param key     of the fact.
+     * @param value   of the fact.
+     */
+    protected void appendFact(final StringBuilder content, final String key, final String value) {
+
+      content.append(key);
+      content.append("('");
+      content.append(value);
+      content.append("').\n");
 
     }
 
@@ -437,6 +510,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     @Override
     public void close() throws IOException {
 
+      // TODO UNCOMMENT
       // if (!FileUtils.deleteQuietly(this.work.toFile())) {
 
       Logger.error("Cannot remove the working directory {}", this.work);

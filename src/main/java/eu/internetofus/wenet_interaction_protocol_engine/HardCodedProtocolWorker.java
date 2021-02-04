@@ -100,51 +100,18 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           .valueOf(body.getString("type", MessageForWorkerBuilder.Type.DO_TASK_TRANSACTION.name()));
       switch (type) {
       case CREATED_TASK:
-
-        final var task = Model.fromJsonObject(body.getJsonObject("task"), Task.class);
-        if (task == null) {
-
-          Logger.trace("Cannot process the event {}, because does not contains a valid transaction.", event);
-
-        } else {
-
-          this.createEnvironmentFor(task).onComplete(creation -> {
-
-            if (creation.failed()) {
-
-              Logger.trace(creation.cause(), "Cannot process the creation of the task {}", task);
-
-            } else {
-
-              final var env = creation.result();
-              this.handleTaskCreated(env);
-            }
-          });
-
-        }
+        Model.fromFutureJsonObject(Future.succeededFuture(body.getJsonObject("task")), Task.class)
+            .compose(task -> this.createEnvironmentFor(task))
+            .onFailure(cause -> Logger.trace(cause, "Cannot process the creation of the task {}", event))
+            .onSuccess(env -> this.handleTaskCreated(env));
         break;
       case DO_TASK_TRANSACTION:
-
-        final var transaction = Model.fromJsonObject(body.getJsonObject("transaction"), TaskTransaction.class);
-        if (transaction == null) {
-
-          Logger.trace("Cannot process the event {}, because does not contains a valid transaction.", event);
-
-        } else {
-
-          this.createEnvironmentFor(transaction.taskId).onComplete(creation -> {
-
-            if (creation.failed()) {
-
-              Logger.trace(creation.cause(), "Cannot process the task transaction {}", transaction);
-
-            } else {
-
-              final var env = creation.result();
-              this.handleTaskTransaction(env, transaction);
-            }
-          });
-        }
+        Model.fromFutureJsonObject(Future.succeededFuture(body.getJsonObject("transaction")), TaskTransaction.class)
+            .compose(transaction -> this.createEnvironmentFor(transaction.taskId)
+                .compose(env -> Future.succeededFuture(new Object[] { env, transaction })))
+            .onFailure(cause -> Logger.trace(cause, "Cannot process the task transaction {}", event))
+            .onSuccess(values -> this.handleTaskTransaction((HardCodedProtocolEnvironment) values[0],
+                (TaskTransaction) values[1]));
         break;
       default:
         // Is an incentive
@@ -176,35 +143,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    */
   protected Future<HardCodedProtocolEnvironment> createEnvironmentFor(final Task task) {
 
-    final Promise<HardCodedProtocolEnvironment> promise = Promise.promise();
-    this.createEnvironmentFor(task, promise);
-    return promise.future();
-
-  }
-
-  /**
-   * Create the environment for the specified task.
-   *
-   * @param task    to create the environment.
-   * @param promise to inform of the environment for the task.
-   */
-  protected void createEnvironmentFor(final Task task, final Promise<HardCodedProtocolEnvironment> promise) {
-
-    WeNetService.createProxy(this.vertx).retrieveApp(task.appId).onComplete(retrieve -> {
-
-      final var app = retrieve.result();
-      if (app != null) {
-
-        final var env = new HardCodedProtocolEnvironment(task, app.messageCallbackUrl);
-        promise.complete(env);
-
-      } else {
-
-        Logger.trace("Cannot obtain the callback URL for the app {}", task.appId);
-        promise.fail(retrieve.cause());
-      }
-
-    });
+    return WeNetService.createProxy(this.vertx).retrieveApp(task.appId)
+        .compose(app -> Future.succeededFuture(new HardCodedProtocolEnvironment(task, app.messageCallbackUrl)));
 
   }
 
@@ -217,23 +157,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    */
   protected Future<HardCodedProtocolEnvironment> createEnvironmentFor(final String taskId) {
 
-    final Promise<HardCodedProtocolEnvironment> promise = Promise.promise();
-    WeNetTaskManager.createProxy(this.vertx).retrieveTask(taskId).onComplete(retrieve -> {
-
-      final var task = retrieve.result();
-      if (task != null) {
-
-        this.createEnvironmentFor(task, promise);
-
-      } else {
-
-        Logger.trace("Cannot obtain the task {}", taskId);
-        promise.fail(retrieve.cause());
-      }
-
-    });
-
-    return promise.future();
+    return WeNetTaskManager.createProxy(this.vertx).retrieveTask(taskId)
+        .compose(task -> this.createEnvironmentFor(task));
 
   }
 

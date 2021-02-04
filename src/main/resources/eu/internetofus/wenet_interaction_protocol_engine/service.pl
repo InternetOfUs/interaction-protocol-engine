@@ -27,15 +27,17 @@
 	get_app/1,
 	get_app/2,
 	get_app_users/1,
-	get_app_users/2.
+	get_app_users/2,
+	put_callback/3,
+	put_callback/2.
 
 %!	wenet_service_url(+Url,-Paths)
 %
 %	Calculate the URL from a path
 %
 wenet_service_url(Url,Paths) :-
-	wenet_configuration(Configuration),
-	wenet_build_url(Url,[Configuration.wenetComponents.service|Paths])
+	wenet_service_api_url(Api),
+	wenet_build_url(Url,[Api|Paths])
 	.
 
 

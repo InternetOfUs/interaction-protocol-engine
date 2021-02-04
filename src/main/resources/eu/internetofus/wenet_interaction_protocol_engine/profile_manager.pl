@@ -23,7 +23,7 @@
 :- use_module(library(http/json)).
 :- use_module(library(http/http_open)).
 :- use_module(library(http/http_client)).
-:- dynamic 
+:- dynamic
 	get_profile/1,
 	get_profile/2,
 	get_community/1,
@@ -31,11 +31,11 @@
 
 %!	get_profile_manager_url_to(+Url,-Paths)
 %
-%	Calculate the URL from a path	
+%	Calculate the URL from a path
 %
 get_profile_manager_url_to(Url,Paths) :-
-	wenet_configuration(Configuration),
-	wenet_build_url(Url,[Configuration.wenetComponents.profileManager|Paths])
+	wenet_profile_manager_api_url(Api),
+	wenet_build_url(Url,[Api|Paths])
 	.
 
 
@@ -91,5 +91,5 @@ get_community(Community,Id) :-
 get_community(Community) :-
 	wenet_message(Message),
 	get_community(Community,Message.communityId),
-	asserta(get_community(Community)) 
+	asserta(get_community(Community))
 	.
