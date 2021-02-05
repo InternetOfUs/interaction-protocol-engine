@@ -26,5 +26,5 @@
 %
 get_incentive_server_builder_url_to(Url,Paths) :-
 	wenet_incentive_server_api_url(Api),
-	wenet_build_url(Url,[Api|Paths])
+	atomics_to_string([Api|Paths],Url)
 	.

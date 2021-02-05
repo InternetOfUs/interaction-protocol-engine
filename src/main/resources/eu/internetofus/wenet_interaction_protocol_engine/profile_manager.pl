@@ -35,7 +35,7 @@
 %
 get_profile_manager_url_to(Url,Paths) :-
 	wenet_profile_manager_api_url(Api),
-	wenet_build_url(Url,[Api|Paths])
+	atomics_to_string([Api|Paths],Url)
 	.
 
 
@@ -47,10 +47,10 @@ get_profile_manager_url_to(Url,Paths) :-
 %	@param Id string identifeir of the profile to obtain.
 %
 get_profile(Profile,Id) :-
-	get_profile_manager_url_to(Url,["/profiles/",Id]),
+	get_profile_manager_url_to(Url,['/profiles/',Id]),
 	wenet_read_json_from_url(Url,Profile),
 	asserta(get_profile(Profile,Id)),
-	wenet_log_trace("Loaded profile",Profile)
+	wenet_log_trace('Loaded profile',Profile)
 	.
 
 
@@ -62,7 +62,7 @@ get_profile(Profile,Id) :-
 %
 get_profile(Profile) :-
 	wenet_message(Message),
-	(Message.sender.component == "USER_APP" -> get_profile(Profile,Message.sender.userId); get_profile(Profile,Message.receiver.userId)),
+	(Message.sender.component == 'USER_APP' -> get_profile(Profile,Message.sender.userId); get_profile(Profile,Message.receiver.userId)),
 	asserta(get_profile(Profile))
 	.
 
@@ -75,10 +75,10 @@ get_profile(Profile) :-
 %	@param Id string identifeir of the community to obtain.
 %
 get_community(Community,Id) :-
-	get_profile_manager_url_to(Url,["/communities/",Id]),
+	get_profile_manager_url_to(Url,['/communities/',Id]),
 	wenet_read_json_from_url(Url,Community),
 	asserta(get_community(Community,Id)),
-	wenet_log_trace("Loaded community",Community)
+	wenet_log_trace('Loaded community',Community)
 	.
 
 

@@ -26,5 +26,5 @@
 %
 get_interaction_protocol_engine_url_to(Url,Paths) :-
 	wenet_interaction_protocol_engine_api_url(Api),
-	wenet_build_url(Url,[Api|Paths])
+	atomics_to_string([Api|Paths],Url)
 	.

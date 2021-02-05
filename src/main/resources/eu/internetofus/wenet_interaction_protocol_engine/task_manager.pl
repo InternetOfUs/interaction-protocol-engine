@@ -33,7 +33,7 @@
 %
 get_task_manager_url_to(Url,Paths) :-
 	wenet_task_manager_api_url(Api),
-	wenet_build_url(Url,[Api|Paths])
+	atomics_to_string([Api|Paths],Url)
 	.
 
 
@@ -45,10 +45,10 @@ get_task_manager_url_to(Url,Paths) :-
 %	@param Id string identifeir of the task to obtain.
 %
 get_task(Task,Id) :-
-	get_task_manager_url_to(Url,["/tasks/",Id]),
+	get_task_manager_url_to(Url,['/tasks/',Id]),
 	wenet_read_json_from_url(Url,Task),
 	asserta(get_task(Task,Id)),
-	wenet_log_trace("Loaded task",Task)
+	wenet_log_trace('Loaded task',Task)
 	.
 
 

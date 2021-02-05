@@ -37,7 +37,7 @@
 %
 wenet_service_url(Url,Paths) :-
 	wenet_service_api_url(Api),
-	wenet_build_url(Url,[Api|Paths])
+	atomics_to_string([Api|Paths],Url)
 	.
 
 
@@ -49,10 +49,11 @@ wenet_service_url(Url,Paths) :-
 %	@param Id string identifier of the app to obtain.
 %
 get_app(App,Id) :-
-	wenet_service_url(Url,["/app/",Id]),
+	wenet_log_trace('AppId:',Id),
+	wenet_service_url(Url,['/app/',Id]),
 	wenet_read_json_from_url(Url,App),
 	asserta(get_app(App,Id)),
-	wenet_log_trace("Loaded application",App)
+	wenet_log_trace('Loaded application',App)
 	.
 
 
@@ -77,7 +78,7 @@ get_app(App) :-
 %	@param Id string identifier of the application to obtain.
 %
 get_app_users(Users,Id) :-
-	wenet_service_url(Url,["/app/",Id,"/users"]),
+	wenet_service_url(Url,['/app/',Id,'/users']),
 	wenet_read_json_from_url(Url,Users),
 	asserta(get_app_users(Users,Id)),
 	format(string(Log_Text),'Loaded users of the application ~w',[Id]),

@@ -53,18 +53,6 @@ wenet_read_json_from_url(Url, JsonDictionary) :-
   	close(Stream)
   	.
 
-%!	wenet_build_url(+Url,-Strings)
-%
-%	Create the URL from a list of strings.
-%
-%	@param Url string the created URL.
-%	@param Strings list of string to create the url.
-%
-wenet_build_url("",[]).
-wenet_build_url(Url,[H|T]) :-
-	wenet_build_url(Partial,T),
-	string_concat(H,Partial,Url)
-	.
 
 %!	wenet_log_trace(-Text,-Term)
 %
@@ -86,8 +74,8 @@ wenet_log_trace(Text,Term) :-
 %
 wenet_do_actions([]).
 wenet_do_actions([put(A)|O]) :-
-	wenet_log_trace("Try to do action",A),
-	(A,wenet_log_trace("Done action",A);wenet_log_trace("Cannot do action",A)),
+	wenet_log_trace('Try to do action',A),
+	(clause(A,B),B,wenet_log_trace('Done action',A);wenet_log_trace('Cannot do action',A)),
 	wenet_do_actions(O)
 	.
 

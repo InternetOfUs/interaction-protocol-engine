@@ -26,5 +26,5 @@
 %
 get_social_context_builder_url_to(Url,Paths) :-
 	wenet_social_context_builder_api_url(Api),
-	wenet_build_url(Url,[Api|Paths])
+	atomics_to_string([Api|Paths],Url)
 	.
