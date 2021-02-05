@@ -180,35 +180,13 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     try (var env = new SWIProplogEnvironment()) {
 
       final var body = event.body();
-      final var type = MessageForWorkerBuilder.Type
-          .valueOf(body.getString("type", MessageForWorkerBuilder.Type.DO_TASK_TRANSACTION.name()));
       final var protocol = Model.fromJsonObject(body.getJsonObject("protocol"), ProtocolData.class);
 
       env.fillInAutoloadPrologFilesIn(this.prologDir);
       env.appendToInitConfigurationFacts(this.config());
       env.fillIn(protocol);
-
-      switch (type) {
-      case SEND_INCENTIVE:
-        env.appendToInitAssertaModel(body.getJsonObject("incentive"), "wenet_protocol_incentive.json",
-            "get_received_incentive");
-        break;
-      case CREATED_TASK:
-        Files.writeString(env.init, "\n:- get_task(Task), asserta(get_received_created_task(Task)).\n",
-            StandardOpenOption.APPEND);
-        break;
-      case DO_TASK_TRANSACTION:
-        env.appendToInitAssertaModel(body.getJsonObject("transaction"), "wenet_protocol_transaction.json",
-            "get_received_do_task_transaction");
-        break;
-      case PROTOCOL_MESSAGE:
-        env.appendToInitAssertaModel(body.getJsonObject("message"), "wenet_protocol_message.json",
-            "get_received_message");
-        break;
-      default:
-        Logger.trace("Can not process the event {}, because does not contains a valid Message.", event);
-      }
-
+      env.appendToInitAssertaModel(body.getJsonObject("message"), "wenet_protocol_message.json",
+          "get_received_message");
       env.run();
 
     } catch (final Throwable throwable) {

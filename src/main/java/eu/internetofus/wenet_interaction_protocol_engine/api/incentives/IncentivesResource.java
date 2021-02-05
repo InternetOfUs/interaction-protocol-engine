@@ -100,7 +100,7 @@ public class IncentivesResource implements Incentives {
 
             } else {
 
-              final var message = MessageForWorkerBuilder.buildSendIncentiveMessage(incentive, protocol);
+              final var message = MessageForWorkerBuilder.buildProtocolMessageForSendIncentive(incentive, protocol);
               this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
             }
 

@@ -92,7 +92,7 @@ public class TasksResource implements Tasks {
 
         } else {
           // process the message
-          final var message = MessageForWorkerBuilder.buildCreatedTaskMessage(protocol);
+          final var message = MessageForWorkerBuilder.buildProtocolMessageForCreatedTask(protocol);
           this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
 
         }
@@ -131,7 +131,7 @@ public class TasksResource implements Tasks {
 
         } else {
           // process the message
-          final var message = MessageForWorkerBuilder.buildDoTaskTransactionMessage(model.source, protocol);
+          final var message = MessageForWorkerBuilder.buildProtocolMessageForDoTaskTransaction(model.source, protocol);
           this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
 
         }
