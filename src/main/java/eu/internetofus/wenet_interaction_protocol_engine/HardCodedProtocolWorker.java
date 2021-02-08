@@ -652,9 +652,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
             });
 
-            final var status = new TaskStatus();
+            final var status = this.createTaskStatus(env);
             status.user_id = volunteerId;
-            status.task_id = env.task.id;
             status.Action = "volunteerForTask";
             status.Message = "An user has offered to be a volunteer for a task.";
             this.notifyIncentiveServerTaskStatusChanged(status);
@@ -708,9 +707,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    */
   private void notifyIncentiveServerTaskCreated(final HardCodedProtocolEnvironment env) {
 
-    final var status = new TaskStatus();
+    final var status = this.createTaskStatus(env);
     status.user_id = env.task.requesterId;
-    status.task_id = env.task.id;
     status.Action = "taskCreated";
     status.Message = "A task is created";
     this.notifyIncentiveServerTaskStatusChanged(status);
@@ -769,9 +767,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           env.updateTask().onComplete(update -> {
 
             Logger.trace("Added declined users {} into task {}", () -> volunteerId, () -> env.task.id);
-            final var status = new TaskStatus();
+            final var status = this.createTaskStatus(env);
             status.user_id = volunteerId;
-            status.task_id = env.task.id;
             status.Action = "refuseTask";
             status.Message = "An user has declined to be a volunteer for a task.";
             this.notifyIncentiveServerTaskStatusChanged(status);
@@ -823,9 +820,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           notification.attributes.put("outcome", "accepted");
           env.sendTo(notification);
 
-          final var status = new TaskStatus();
+          final var status = this.createTaskStatus(env);
           status.user_id = volunteerId;
-          status.task_id = env.task.id;
           status.Action = "acceptVolunteer";
           status.Message = "An user is selected to provide help.";
           this.notifyIncentiveServerTaskStatusChanged(status);
@@ -868,9 +864,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           notification.attributes.put("outcome", "refused");
           env.sendTo(notification);
 
-          final var status = new TaskStatus();
+          final var status = this.createTaskStatus(env);
           status.user_id = volunteerId;
-          status.task_id = env.task.id;
           status.Action = "refuseVolunteer";
           status.Message = "An user is refused as volunteer.";
           this.notifyIncentiveServerTaskStatusChanged(status);
@@ -909,9 +904,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
         final var accepted = env.task.attributes.getJsonArray("accepted");
         env.sendTo(accepted, notification);
 
-        final var status = new TaskStatus();
+        final var status = this.createTaskStatus(env);
         status.user_id = env.task.requesterId;
-        status.task_id = env.task.id;
         status.Action = "taskCompleted";
         status.Message = "A task is completed with the outcome:" + outcome;
         this.notifyIncentiveServerTaskStatusChanged(status);
@@ -1065,9 +1059,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
                   Logger.trace(search.cause(), "For the user {} can not update community state ", userId);
                 }
 
-                final var status = new TaskStatus();
-                status.community_id = env.task.communityId;
-                status.task_id = env.task.id;
+                final var status = this.createTaskStatus(env);
                 status.user_id = userId;
                 status.Action = action.name() + " " + count;
                 status.Message = "";
@@ -1079,7 +1071,24 @@ public class HardCodedProtocolWorker extends AbstractVerticle
   }
 
   /**
-   * Handle a task transaction over the quesitons and answers protocol.
+   * Create the task status for the specified environment.
+   *
+   * @param env environment to get the data.
+   *
+   * @return the status with.
+   */
+  protected TaskStatus createTaskStatus(final HardCodedProtocolEnvironment env) {
+
+    final var status = new TaskStatus();
+    status.app_id = env.task.appId;
+    status.task_id = env.task.id;
+    status.community_id = env.task.communityId;
+    return status;
+
+  }
+
+  /**
+   * Handle a task transaction over the questions and answers protocol.
    *
    * @param env         protocol environment.
    * @param transaction to handle.
