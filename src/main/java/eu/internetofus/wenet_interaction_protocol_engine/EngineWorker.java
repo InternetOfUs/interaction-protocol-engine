@@ -53,9 +53,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import org.apache.commons.io.FileUtils;
-import org.tinylog.Level;
 import org.tinylog.Logger;
-import org.tinylog.provider.InternalLogger;
 
 /**
  * The worker verticle that is used to process the messages for an interaction
@@ -227,7 +225,6 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     public SWIProplogEnvironment() throws IOException {
 
       this.work = Files.createTempDirectory("engine_worker");
-      InternalLogger.log(Level.DEBUG, this.work.toAbsolutePath().toString());
       this.init = this.createFileAtWork("init.pl");
       Files.writeString(this.init, "%\n% Initialize norm engine\n%\n\n");
       this.protocolNorms = this.createFileAtWork("protocol_norms.pl");
