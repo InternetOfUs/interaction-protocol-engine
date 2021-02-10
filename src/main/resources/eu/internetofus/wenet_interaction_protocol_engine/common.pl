@@ -30,6 +30,7 @@
 	wenet_get_json_from_url/2,
 	wenet_post_json_to_url/2,
 	wenet_post_json_to_url/3,
+	wenet_log_trace/1,
 	wenet_log_trace/2,
 	wenet_log_error/3
 	.
@@ -90,6 +91,16 @@ wenet_post_json_to_url(Url, Json, Headers) :-
 	format(string(Log_Text),'Post to ~w the callback message ~w',[Url,Atom]),
 	wenet_log_trace(Log_Text,Result).
 
+%!	wenet_log_trace(-Text)
+%
+%	Write a trace log message into the output console.
+%
+%	@param Text string message of the log.
+%
+wenet_log_trace(Text) :-
+	format(string(Lines),'~w~n',[Text]),
+	print_message_lines(current_output,kind(trace),[Lines])
+	.
 
 %!	wenet_log_trace(-Text,-Term)
 %
