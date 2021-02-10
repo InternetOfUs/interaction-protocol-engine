@@ -30,7 +30,8 @@
 	wenet_get_json_from_url/2,
 	wenet_post_json_to_url/2,
 	wenet_post_json_to_url/3,
-	wenet_log_trace/2
+	wenet_log_trace/2,
+	wenet_log_error/3
 	.
 
 
@@ -102,3 +103,16 @@ wenet_log_trace(Text,Term) :-
 	print_message_lines(current_output,kind(trace),[Lines])
 	.
 
+%!	wenet_log_error(-Text,-Term,-Error)
+%
+%	Write an error log message into the output console.
+%
+%	@param Text string message of the log.
+%	@param Term to show into the log message.
+%	@param Error to show into the log message.
+%
+wenet_log_error(Text,Term,Error) :-
+	message_to_string(Error,ErrorMessage),
+	format(string(Lines),'~w~n~w~n~w~n',[Text,Term,ErrorMessage]),
+	print_message_lines(current_output,kind(error),[Lines])
+	.
