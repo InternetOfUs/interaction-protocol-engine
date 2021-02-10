@@ -20,7 +20,6 @@
 % SOFTWARE.
 %
 
-
 :- dynamic fact/1.
 :- dynamic todo/1.
 :- op(800, fx, whenever).
@@ -31,6 +30,10 @@
 :- op(200, xfy, and).
 
 
+% normengine(- Output) will be called by Bruno to get the norm engine started.
+% normengine will be called for ONE incomming message only (and not a set),
+% 		which is connected to ONE community only,
+% 		and friends ONLY in that community.
 normengine(Output) :-
     % We assume the user id is loaded as myuser(IdNUmber)
     % We assume the user profile is already loaded (as the normengine may need to access some parameters)
@@ -46,7 +49,7 @@ normengine(Output) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %recursive_norm_check(Output1,AllNorms,Output) :-
-%    assert_towenet_do_actions(Output1),
+%    assert_todo_actions(Output1),
 %    check_norms(AllNorms,Output2),
 %    need_to_repeat(Output1,Output2,X),
 %    remove_duplicates(Output1,Output2,Output3),
@@ -55,14 +58,14 @@ normengine(Output) :-
 
 recursive_norm_check(_Output1,AllNorms,Output) :- check_norms(AllNorms,Output).
 
-assert_towenet_do_actions([]).
-assert_towenet_do_actions([todo(X)|T]) :-
+assert_todo_actions([]).
+assert_todo_actions([todo(X)|T]) :-
     (   (   todo(X),!	)	;		   % NARDINE: what about variables??
     	(   assertz(todo(X))	)	),
-    assert_towenet_do_actions(T).
-assert_towenet_do_actions([H|T]) :-			% NARDINE: should we raise an error if not of type tod?
+    assert_todo_actions(T).
+assert_todo_actions([H|T]) :-			% NARDINE: should we raise an error if not of type tod?
     \+functor(H, todo, _),
-    assert_towenet_do_actions(T).
+    assert_todo_actions(T).
 
 need_to_repeat(_List,[],0).
 need_to_repeat(List,[H|T],X) :-

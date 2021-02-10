@@ -24,7 +24,7 @@
 :- use_module(library(http/http_open)).
 :- use_module(library(http/http_client)).
 :- dynamic
-	get_task/1,
+	get_task_manager_url_to/2,
 	get_task/2.
 
 %!	get_task_manager_url_to(+Url,-Paths)
@@ -41,25 +41,13 @@ get_task_manager_url_to(Url,Paths) :-
 %
 %	Return the task associated to an identifier.
 %
-%	@param Task dictionary with the task information.
+%	@param Task list with the task information.
 %	@param Id string identifeir of the task to obtain.
 %
 get_task(Task,Id) :-
 	get_task_manager_url_to(Url,['/tasks/',Id]),
-	wenet_read_json_from_url(Url,Task),
+	wenet_get_json_from_url(Url,Task),
 	asserta(get_task(Task,Id)),
 	wenet_log_trace('Loaded task',Task)
 	.
 
-
-%!	get_task(+Task)
-%
-%	Return the task associated to the engine.
-%
-%	@param Task dictionary with the task information.
-%
-get_task(Task) :-
-	wenet_message(Message),
-	get_task(Task,Message.taskId),
-	asserta(get_task(Task))
-	.

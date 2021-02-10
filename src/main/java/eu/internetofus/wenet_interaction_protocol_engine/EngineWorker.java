@@ -26,6 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
+import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.incentive_server.WeNetIncentiveServerClient;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngineClient;
@@ -36,6 +37,7 @@ import eu.internetofus.common.components.task_manager.ProtocolNorm;
 import eu.internetofus.common.components.task_manager.WeNetTaskManagerClient;
 import eu.internetofus.common.vertx.AbstractServicesVerticle;
 import eu.internetofus.common.vertx.Worker;
+import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker.SWIProplogEnvironment;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -50,6 +52,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import org.apache.commons.io.FileUtils;
 import org.tinylog.Level;
 import org.tinylog.Logger;
 import org.tinylog.provider.InternalLogger;
@@ -401,6 +404,10 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       final var content = new StringBuilder();
       final var components = config.getJsonObject("wenetComponents", new JsonObject());
 
+      content.append("wenet_now(");
+      content.append(TimeManager.now());
+      content.append(").\n");
+
       this.appendFact(content, "wenet_profile_manager_api_url",
           components.getString(WeNetProfileManagerClient.PROFILE_MANAGER_CONF_KEY,
               WeNetProfileManagerClient.DEFAULT_PROFILE_MANAGER_API_URL));
@@ -423,9 +430,9 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
           components.getString(WeNetIncentiveServerClient.INCENTIVE_SERVER_CONF_KEY,
               WeNetIncentiveServerClient.DEFAULT_INCENTIVE_SERVER_API_URL));
 
-      content.append("wenet_component_auth_header(header('");
+      content.append("wenet_component_auth_header(request_header('");
       content.append(AbstractServicesVerticle.WENET_COMPONENT_APIKEY_HEADER);
-      content.append("','");
+      content.append("' = '");
       content.append(config.getJsonObject(AbstractServicesVerticle.WEB_CLIENT_CONF_KEY, new JsonObject())
           .getString(AbstractServicesVerticle.WENET_COMPONENT_APIKEY_CONF_KEY, "UDEFINED"));
       content.append("')).\n\n");
@@ -488,12 +495,11 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     @Override
     public void close() throws IOException {
 
-      // TODO UNCOMMENT
-      // if (!FileUtils.deleteQuietly(this.work.toFile())) {
+      if (!FileUtils.deleteQuietly(this.work.toFile())) {
 
-      Logger.error("Cannot remove the working directory {}", this.work);
+        Logger.error("Cannot remove the working directory {}", this.work);
 
-      // }
+      }
 
     }
 

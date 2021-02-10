@@ -3,9 +3,9 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
-## Version 0.17.0 (2021-)
+## Version 0.17.0 (2021-02-10)
 
- *
+ * Add new field when notify task status
 
 
 ## Version 0.16.1 (2021-02-01)

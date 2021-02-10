@@ -43,53 +43,26 @@ get_profile_manager_url_to(Url,Paths) :-
 %
 %	Return the profile associated to an identifier.
 %
-%	@param Profile dictionary with the profile information.
+%	@param Profile list with the profile information.
 %	@param Id string identifeir of the profile to obtain.
 %
 get_profile(Profile,Id) :-
 	get_profile_manager_url_to(Url,['/profiles/',Id]),
-	wenet_read_json_from_url(Url,Profile),
+	wenet_get_json_from_url(Url,Profile),
 	asserta(get_profile(Profile,Id)),
 	wenet_log_trace('Loaded profile',Profile)
 	.
-
-
-%!	get_profile(+Profile)
-%
-%	Return the profile associated to the engine.
-%
-%	@param Profile dictionary with the profile information.
-%
-get_profile(Profile) :-
-	wenet_message(Message),
-	(Message.sender.component == 'USER_APP' -> get_profile(Profile,Message.sender.userId); get_profile(Profile,Message.receiver.userId)),
-	asserta(get_profile(Profile))
-	.
-
 
 %!	get_community(+Community,-Id)
 %
 %	Return the community associated to an identifier.
 %
-%	@param Community dictionary with the community information.
+%	@param Community list with the community information.
 %	@param Id string identifeir of the community to obtain.
 %
 get_community(Community,Id) :-
 	get_profile_manager_url_to(Url,['/communities/',Id]),
-	wenet_read_json_from_url(Url,Community),
+	wenet_get_json_from_url(Url,Community),
 	asserta(get_community(Community,Id)),
 	wenet_log_trace('Loaded community',Community)
-	.
-
-
-%!	get_community(+Community)
-%
-%	Return the community associated to the engine.
-%
-%	@param Community dictionary with the community information.
-%
-get_community(Community) :-
-	wenet_message(Message),
-	get_community(Community,Message.communityId),
-	asserta(get_community(Community))
 	.

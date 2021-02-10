@@ -23,35 +23,71 @@
 :- use_module(library(http/json)).
 :- use_module(library(http/http_open)).
 :- use_module(library(http/http_client)).
-:- dynamic wenet_log_trace/2.
+:- use_module(library(http/http_ssl_plugin)).
+
+:- dynamic
+	wenet_read_json_from_file/2,
+	wenet_get_json_from_url/2,
+	wenet_post_json_to_url/2,
+	wenet_post_json_to_url/3,
+	wenet_log_trace/2
+	.
 
 
-%!  wenet_read_json_from_file(+FilePath, -JsonDictionary)
+%!  wenet_read_json_from_file(+FilePath, -Json)
 %
-%	Read a json file and convert into a dictionary.
+%	Read a json file and convert into a list.
 %
 %	@param FilePath string with the path to the JSON file.
-%	@param JsonDictionary dictionary with the data on the JSON file.
+%	@param Json dictionary with the data on the JSON file.
 %
-wenet_read_json_from_file(FilePath, JsonDictionary) :-
+wenet_read_json_from_file(FilePath, Json) :-
 	open(FilePath, read, Stream),
-	json_read_dict(Stream, JsonDictionary),
+	json_read_dict(Stream, Json),
 	close(Stream)
 	.
 
-%!  wenet_read_json_from_url(+Url, -JsonDictionary)
+%!  wenet_get_json_from_url(+Url, -Json)
 %
-%	Read a json from an URL and convert into a dictionary.
+%	Get a json from an URL.
 %
 %	@param Url string to the resource with the JSON model.
-%	@param JsonDictionary dictionary with the data on the JSON resource.
+%	@param Json dictionary with the data on the JSON resource.
 %
-wenet_read_json_from_url(Url, JsonDictionary) :-
+wenet_get_json_from_url(Url, Json) :-
 	wenet_component_auth_header(Header),
 	http_open(Url,Stream,[Header]),
-	json_read_dict(Stream, JsonDictionary),
+	json_read_dict(Stream, Json),
   	close(Stream)
   	.
+
+%!  wenet_post_json_to_url(+Url, +Json)
+%
+%	Post a json into an URL.
+%
+%	@param Url string to the post the Json.
+%	@param Json dictionary to post.
+%
+wenet_post_json_to_url(Url, Json) :-
+	wenet_component_auth_header(Header),
+	wenet_post_json_to_url(Url,Json,[Header]).
+
+%!  wenet_post_json_to_url(+Url, +Json,+Headers)
+%
+%	Post a json into an URL.
+%
+%	@param Url string to the post the Json.
+%	@param Json dictionary to post.
+%	@param Headers for the post action.
+%
+wenet_post_json_to_url(Url, Json, Headers) :-
+	wenet_log_trace("HERE",Json),
+	atom_json_dict(Atom, Json, []),
+	wenet_log_trace("HERE",Atom),
+	append(Headers,[header(content,'application/json')],PostHeaders),
+	http_post(Url, Atom, Result, PostHeaders),
+	format(string(Log_Text),'Post to ~w the callback message ~w',[Url,Atom]),
+	wenet_log_trace(Log_Text,Result).
 
 
 %!	wenet_log_trace(-Text,-Term)
@@ -63,19 +99,6 @@ wenet_read_json_from_url(Url, JsonDictionary) :-
 %
 wenet_log_trace(Text,Term) :-
 	format(string(Lines),'~w~n~w~n',[Text,Term]),
-    print_message_lines(current_output,kind(trace),[Lines])
-	.
-
-%!	wenet_do_actions(+Actions)
-%
-%	Do the specified actions.
-%
-%	@param Actions to execute.
-%
-wenet_do_actions([]).
-wenet_do_actions([put(A)|O]) :-
-	wenet_log_trace('Try to do action',A),
-	(clause(A,B),B,wenet_log_trace('Done action',A);wenet_log_trace('Cannot do action',A)),
-	wenet_do_actions(O)
+	print_message_lines(current_output,kind(trace),[Lines])
 	.
 

@@ -20,9 +20,27 @@
 % SOFTWARE.
 %
 
+:- dynamic wenet_execute_norm_action/0.
+
 go() :-
-	normengine(Output),
-	flatten(Output,Actions),
-	!,
+	normengine(Actions),
+	wenet_log_trace("Actions to do:",Actions),
 	wenet_do_actions(Actions)
 	.
+
+%!	wenet_do_actions(+Actions)
+%
+%	Do the specified actions.
+%
+%	@param Actions to execute.
+%
+wenet_do_actions([]).
+wenet_do_actions([NormActions|Tail]) :-
+	wenet_do_norm_actions(NormActions),
+	wenet_do_actions(Tail)
+	.
+
+wenet_do_norm_actions([]).
+wenet_do_norm_actions([put(NormAction)|Tail]) :-
+	once(NormAction),
+	wenet_do_norm_actions(Tail).
