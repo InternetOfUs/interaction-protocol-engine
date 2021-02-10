@@ -20,12 +20,15 @@
 % SOFTWARE.
 %
 
-:- dynamic wenet_execute_norm_action/0.
+:- dynamic
+	wenet_do_norm_action_error/2,
+	wenet_do_actions_status/1.
 
 go() :-
 	normengine(Actions),
 	wenet_log_trace("Actions to do:",Actions),
-	wenet_do_actions(Actions)
+	wenet_do_actions(Actions),
+	wenet_do_actions_status(Status)->halt(Status);true
 	.
 
 %!	wenet_do_actions(+Actions)
@@ -42,5 +45,10 @@ wenet_do_actions([NormActions|Tail]) :-
 
 wenet_do_norm_actions([]).
 wenet_do_norm_actions([put(NormAction)|Tail]) :-
-	once(NormAction),
+	catch(once(NormAction),Error,wenet_do_norm_action_error(NormAction, Error)),
 	wenet_do_norm_actions(Tail).
+
+wenet_do_norm_action_error(NormAction,Error) :-
+	asserta(wenet_do_actions_status(-1)),
+	wenet_log_error('Cannot do norm action:',NormAction, Error)
+	.
