@@ -20,6 +20,11 @@
 % SOFTWARE.
 %
 
+:- dynamic
+	get_interaction_protocol_engine_url_to/2
+	.
+
+
 %!	get_interaction_protocol_engine_url_to(+Url,-Paths)
 %
 %	Calculate the URL to interact to the specified path of the interaction protocol engine.

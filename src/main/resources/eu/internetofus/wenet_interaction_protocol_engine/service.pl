@@ -28,7 +28,9 @@
 	wenet_service_get_app_users/2,
 	wenet_service_post_callback/1,
 	wenet_create_callback_message/3,
-	wenet_create_callback_message/5.
+	wenet_create_callback_message/5
+	.
+
 
 %!	wenet_service_url(+Url,-Paths)
 %
@@ -48,12 +50,9 @@ wenet_service_url(Url,Paths) :-
 %	@param Id string identifier of the app to obtain.
 %
 wenet_service_get_app(App,Id) :-
-	string(Id),
 	wenet_service_url(Url,['/app/',Id]),
 	wenet_get_json_from_url(Url,App),
-	is_dict(App),
-	asserta(get_app(App,Id)),
-	wenet_log_trace('Loaded application',App)
+	asserta(wenet_service_get_app(App,Id))
 	.
 
 %!	get_app(+App)
@@ -76,12 +75,9 @@ wenet_service_get_app(App) :-
 %	@param Id string identifier of the application to obtain.
 %
 wenet_service_get_app_users(Users,Id) :-
-	string(Id),
 	wenet_service_url(Url,['/app/',Id,'/users']),
 	wenet_get_json_from_url(Url,Users),
-	asserta(get_app_users(Users,Id)),
-	format(string(Log_Text),'Loaded users of the application ~w',[Id]),
-	wenet_log_trace(Log_Text,Users)
+	asserta(wenet_service_get_app_users(Users,Id))
 	.
 
 %!	wenet_service_get_app_users(+Users)
@@ -119,6 +115,7 @@ wenet_service_post_callback(Callback) :-
 %	@param Attributes the attributes for the callback message.
 %
 wenet_create_callback_message(Callback,Label,Attributes) :-
+	wenet_log_trace("HERE"),
 	get_received_message(Message),
 	wenet_create_callback_message(Callback,Message.appId,Message.receiver.userId,Label,Attributes)
 	.
@@ -134,11 +131,6 @@ wenet_create_callback_message(Callback,Label,Attributes) :-
 %	@param Attributes the attributes for the callback message.
 %
 wenet_create_callback_message(Callback,AppId,ReceiverId,Label,Attributes) :-
-	string(AppId),
-	string(ReceiverId),
-	string(Label),
 	wenet_log_trace("Attributes:",Attributes),
-	is_dict(Attributes),
-	Callback = callback{appId:AppId,receiverId:ReceiverId,label:Label,attributes:Attributes},
-	wenet_log_trace("Callback:",Callback)
+	Callback = callback{appId:AppId,receiverId:ReceiverId,label:Label,attributes:Attributes}
 	.

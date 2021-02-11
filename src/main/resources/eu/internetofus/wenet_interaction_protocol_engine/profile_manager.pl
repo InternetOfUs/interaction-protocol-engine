@@ -20,14 +20,12 @@
 % SOFTWARE.
 %
 
-:- use_module(library(http/json)).
-:- use_module(library(http/http_open)).
-:- use_module(library(http/http_client)).
 :- dynamic
-	get_profile/1,
+	get_profile_manager_url_to/2,
 	get_profile/2,
-	get_community/1,
-	get_community/2.
+	get_community/2
+	.
+
 
 %!	get_profile_manager_url_to(+Url,-Paths)
 %

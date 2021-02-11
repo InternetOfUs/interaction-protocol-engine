@@ -20,6 +20,10 @@
 % SOFTWARE.
 %
 
+:- dynamic
+	get_incentive_server_builder_url_to/2
+	.
+
 %!	get_incentive_server_builder_url_to(+Url,-Paths)
 %
 %	Calculate the URL to interact to the specified path of the incentive server.

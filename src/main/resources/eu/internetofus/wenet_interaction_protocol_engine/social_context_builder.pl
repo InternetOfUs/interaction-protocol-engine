@@ -20,6 +20,11 @@
 % SOFTWARE.
 %
 
+:- dynamic
+	get_social_context_builder_url_to/2
+	.
+
+
 %!	get_social_context_builder_url_to(+Url,-Paths)
 %
 %	Calculate the URL to interact to the specified path of the social context builder.

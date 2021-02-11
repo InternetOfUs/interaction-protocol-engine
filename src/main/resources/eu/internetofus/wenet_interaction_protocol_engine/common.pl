@@ -20,21 +20,36 @@
 % SOFTWARE.
 %
 
-:- use_module(library(http/json)).
-:- use_module(library(http/http_open)).
-:- use_module(library(http/http_client)).
-:- use_module(library(http/http_ssl_plugin)).
-
 :- dynamic
+	wenet_do_actions_status/1,
+	wenet_execute_safetly_once/2,
+	wenet_execute_safetly_once/1,
 	wenet_read_json_from_file/2,
 	wenet_get_json_from_url/2,
-	wenet_post_json_to_url/2,
 	wenet_post_json_to_url/3,
-	wenet_log_trace/1,
+	wenet_post_json_to_url/2,
 	wenet_log_trace/2,
-	wenet_log_error/3
+	wenet_log_trace/1,
+	wenet_log_error/3,
+	wenet_log_error/2
 	.
 
+:- autoload(library(http/json)).
+:- autoload(library(http/http_open)).
+:- autoload(library(http/http_client)).
+:- autoload(library(http/http_ssl_plugin)).
+:- autoload(library(prolog_stack)).
+
+
+%!  wenet_execute_safetly_once(+Term)
+%
+%	Execute a term only one time and capture any error that happens.
+%
+%	@param Term to execute.
+%
+wenet_execute_safetly_once(Term) :-
+	catch(Term->wenet_log_trace('Executed',Term);wenet_log_error('Cannot execute',Term),Error,wenet_log_error('Cannot execute',Term,Error)),
+	!.
 
 %!  wenet_read_json_from_file(+FilePath, -Json)
 %
@@ -44,10 +59,13 @@
 %	@param Json dictionary with the data on the JSON file.
 %
 wenet_read_json_from_file(FilePath, Json) :-
+	wenet_execute_safetly_once(wenet_read_json_from_file_(FilePath, Json)).
+wenet_read_json_from_file_(FilePath, Json) :-
 	open(FilePath, read, Stream),
 	json_read_dict(Stream, Json),
 	close(Stream)
 	.
+
 
 %!  wenet_get_json_from_url(+Url, -Json)
 %
@@ -57,6 +75,8 @@ wenet_read_json_from_file(FilePath, Json) :-
 %	@param Json dictionary with the data on the JSON resource.
 %
 wenet_get_json_from_url(Url, Json) :-
+	wenet_execute_safetly_once(wenet_get_json_from_url_(Url, Json)).
+wenet_get_json_from_url_(Url, Json) :-
 	wenet_component_auth_header(Header),
 	http_open(Url,Stream,[Header]),
 	json_read_dict(Stream, Json),
@@ -83,13 +103,13 @@ wenet_post_json_to_url(Url, Json) :-
 %	@param Headers for the post action.
 %
 wenet_post_json_to_url(Url, Json, Headers) :-
-	wenet_log_trace("HERE",Json),
+	wenet_execute_safetly_once(wenet_post_json_to_url_(Url, Json, Headers)).
+wenet_post_json_to_url_(Url, Json, Headers) :-
 	atom_json_dict(Atom, Json, []),
-	wenet_log_trace("HERE",Atom),
 	append(Headers,[header(content,'application/json')],PostHeaders),
 	http_post(Url, Atom, Result, PostHeaders),
-	format(string(Log_Text),'Post to ~w the callback message ~w',[Url,Atom]),
-	wenet_log_trace(Log_Text,Result).
+	wenet_log_trace('Posted json to:',[Url, Json,Result])
+	.
 
 %!	wenet_log_trace(-Text)
 %
@@ -98,7 +118,7 @@ wenet_post_json_to_url(Url, Json, Headers) :-
 %	@param Text string message of the log.
 %
 wenet_log_trace(Text) :-
-	format(string(Lines),'~w~n',[Text]),
+	format(string(Lines),'TRACE: ~w~n',[Text]),
 	print_message_lines(current_output,kind(trace),[Lines])
 	.
 
@@ -110,20 +130,44 @@ wenet_log_trace(Text) :-
 %	@param Term Term to show into the log message.
 %
 wenet_log_trace(Text,Term) :-
-	format(string(Lines),'~w~n~w~n',[Text,Term]),
+	format(string(Lines),'TRACE: ~w ~w~n',[Text,Term]),
 	print_message_lines(current_output,kind(trace),[Lines])
 	.
 
-%!	wenet_log_error(-Text,-Term,-Error)
+%!	wenet_log_error(-Text,-Terms)
 %
 %	Write an error log message into the output console.
 %
 %	@param Text string message of the log.
-%	@param Term to show into the log message.
+%	@param Terms arguments to show into the log message.
+%
+wenet_log_error(Text,Terms) :-
+	wenet_print_error('Error: ~w ~w',[Text,Terms])
+	.
+
+%!	wenet_log_error(-Text,-Terms,-Error)
+%
+%	Write an error log message into the output console.
+%
+%	@param Text string message of the log.
+%	@param Terms arguments to show into the log message.
 %	@param Error to show into the log message.
 %
-wenet_log_error(Text,Term,Error) :-
+wenet_log_error(Text,Terms,Error) :-
 	message_to_string(Error,ErrorMessage),
-	format(string(Lines),'~w~n~w~n~w~n',[Text,Term,ErrorMessage]),
-	print_message_lines(current_output,kind(error),[Lines])
+	wenet_print_error('~w. ~w ~w',[ErrorMessage,Text,Terms])
+	.
+
+%!	wenet_print_error(-Lines)
+%
+%	Print error message lines.
+%
+%	@param Format to show into the log error message.
+%	@param Arguments to show into the log error message.
+%
+wenet_print_error(Format,Arguments) :-
+	format(string(Lines),Format,Arguments),
+	print_message_lines(current_output,kind(error),[Lines]),
+	asserta(wenet_do_actions_status(1)),
+	backtrace(100)
 	.

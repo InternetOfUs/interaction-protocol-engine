@@ -20,12 +20,11 @@
 % SOFTWARE.
 %
 
-:- use_module(library(http/json)).
-:- use_module(library(http/http_open)).
-:- use_module(library(http/http_client)).
 :- dynamic
 	get_task_manager_url_to/2,
-	get_task/2.
+	get_task/2
+	.
+
 
 %!	get_task_manager_url_to(+Url,-Paths)
 %

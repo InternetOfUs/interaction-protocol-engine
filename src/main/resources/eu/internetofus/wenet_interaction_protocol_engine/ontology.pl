@@ -20,11 +20,6 @@
 % SOFTWARE.
 %
 
-%
-% General ontology operators
-%
-:- use_module(library(clpfd)).
-
 :- dynamic
 	get_received_message_appid/1,
 	get_received_message_communityid/1,
@@ -45,6 +40,8 @@
 	wenet_now_equal_to/1
 	.
 
+:- use_module(library(clpfd)).
+
 %!	get_received_message_appid(+AppId)
 %
 %	Obtain the application identifier of the received message
@@ -53,9 +50,7 @@
 %
 get_received_message_appid(AppId) :-
 	get_received_message(Message),
-	is_dict(Message),
-	AppId = Message.appId,
-	string(AppId)
+	AppId = Message.appId
 	.
 
 %!	get_received_message_communityid(+CommunityId)
@@ -66,10 +61,7 @@ get_received_message_appid(AppId) :-
 %
 get_received_message_communityid(CommunityId) :-
 	get_received_message(Message),
-	is_dict(Message),
-	Data = Message.communityId,
-	string(Data),
-	CommunityId = Data
+	CommunityId = Message.communityId
 	.
 
 %!	get_received_message_taskid(+TaskId)
@@ -80,10 +72,7 @@ get_received_message_communityid(CommunityId) :-
 %
 get_received_message_taskid(TaskId) :-
 	get_received_message(Message),
-	is_dict(Message),
-	Data = Message.taskId,
-	string(Data),
-	TaskId = Data
+	TaskId = Message.taskId
 	.
 
 %!	get_received_message_transactionid(+TransactionId)
@@ -94,10 +83,7 @@ get_received_message_taskid(TaskId) :-
 %
 get_received_message_transactionid(TransactionId) :-
 	get_received_message(Message),
-	is_dict(Message),
-	Data = Message.transactionId,
-	string(Data),
-	TransactionId = Data
+	TransactionId = Message.transactionId
 	.
 
 
@@ -109,10 +95,7 @@ get_received_message_transactionid(TransactionId) :-
 %
 get_received_message_sender(Sender) :-
 	get_received_message(Message),
-	is_dict(Message),
-	Data = Message.sender,
-	is_dict(Data),
-	Sender = Data
+	Sender = Message.sender
 	.
 
 %!	get_received_message_sender_component(+Component)
@@ -123,9 +106,7 @@ get_received_message_sender(Sender) :-
 %
 get_received_message_sender_component(Component) :-
 	get_received_message_sender(Sender),
-	Data = Sender.component,
-	string(Data),
-	Component = Data
+	Component = Sender.component
 	.
 
 %!	get_received_message_sender_userid(+UserId)
@@ -136,9 +117,7 @@ get_received_message_sender_component(Component) :-
 %
 get_received_message_sender_userid(UserId) :-
 	get_received_message_sender(Sender),
-	Data = Sender.userId,
-	string(Data),
-	UserId = Data
+	UserId = Sender.userId
 	.
 
 %!	get_received_message_receiver(+Receiver)
@@ -149,10 +128,7 @@ get_received_message_sender_userid(UserId) :-
 %
 get_received_message_receiver(Receiver) :-
 	get_received_message(Message),
-	is_dict(Message),
-	Data = Message.receiver,
-	is_dict(Data),
-	Receiver = Data
+	Receiver = Message.receiver
 	.
 
 %!	get_received_message_receiver_component(+Component)
@@ -163,9 +139,7 @@ get_received_message_receiver(Receiver) :-
 %
 get_received_message_receiver_component(Component) :-
 	get_received_message_receiver(Receiver),
-	Data = Receiver.component,
-	string(Data),
-	Component = Data
+	Component = Receiver.component
 	.
 
 %!	get_received_message_receiver_userid(+UserId)
@@ -176,9 +150,7 @@ get_received_message_receiver_component(Component) :-
 %
 get_received_message_receiver_userid(UserId) :-
 	get_received_message_receiver(Receiver),
-	Data = Receiver.userId,
-	string(Data),
-	UserId = Data
+	UserId = Receiver.userId
 	.
 
 %!	get_received_message_particle(+Particle)
@@ -189,10 +161,7 @@ get_received_message_receiver_userid(UserId) :-
 %
 get_received_message_particle(Particle) :-
 	get_received_message(Message),
-	is_dict(Message),
-	Data = Message.particle,
-	string(Data),
-	Particle = Data
+	Particle = Message.particle
 	.
 
 %!	get_received_message_content(+Content)
@@ -203,10 +172,7 @@ get_received_message_particle(Particle) :-
 %
 get_received_message_content(Content) :-
 	get_received_message(Message),
-	is_dict(Message),
-	Data = Message.content,
-	is_dict(Data),
-	Content = Data
+	Content = Message.content
 	.
 
 %!	wenet_now_less_than(+Time)
