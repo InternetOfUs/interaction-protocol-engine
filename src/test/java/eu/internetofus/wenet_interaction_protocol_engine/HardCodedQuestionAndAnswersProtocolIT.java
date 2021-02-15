@@ -26,6 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
+import static eu.internetofus.common.components.incentive_server.WeNetIncentiveServerSimulatorAsserts.assertUntilTaskStatusIs;
 import static eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngineAsserts.assertUntilCommunityUserStateIs;
 import static eu.internetofus.common.components.profile_manager.WeNetProfileManagers.createUsers;
 import static eu.internetofus.common.components.service.WeNetServiceSimulators.createApp;
@@ -35,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import eu.internetofus.common.components.HumanDescription;
 import eu.internetofus.common.components.Model;
+import eu.internetofus.common.components.incentive_server.WeNetIncentiveServerSimulator;
 import eu.internetofus.common.components.interaction_protocol_engine.State;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
 import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
@@ -227,7 +229,16 @@ public class HardCodedQuestionAndAnswersProtocolIT {
 
           }
 
-        }, HardCodedQuestionAndAnswersProtocolIT.task.communityId, storedTask.requesterId, vertx, testContext));
+        }, HardCodedQuestionAndAnswersProtocolIT.task.communityId, storedTask.requesterId, vertx, testContext))
+        .compose(state -> assertUntilTaskStatusIs(taskStatus -> {
+
+          return HardCodedQuestionAndAnswersProtocolIT.app.appId.equals(taskStatus.app_id)
+              && HardCodedQuestionAndAnswersProtocolIT.task.communityId.equals(taskStatus.community_id)
+              && HardCodedQuestionAndAnswersProtocolIT.task.id.equals(taskStatus.task_id)
+              && task.requesterId.equals(taskStatus.user_id) && "Questions 1".equals(taskStatus.Action)
+              && "".equals(taskStatus.Message);
+
+        }, vertx, testContext)).compose(status -> WeNetIncentiveServerSimulator.createProxy(vertx).deleteTaskStatus());
 
     testContext.assertComplete(future).onSuccess(state -> testContext.completeNow());
   }
@@ -304,8 +315,18 @@ public class HardCodedQuestionAndAnswersProtocolIT {
 
           }
 
-        }, HardCodedQuestionAndAnswersProtocolIT.task.communityId, taskTransaction.actioneerId, vertx, testContext));
-    testContext.assertComplete(future).onSuccess(state -> testContext.completeNow());
+        }, HardCodedQuestionAndAnswersProtocolIT.task.communityId, taskTransaction.actioneerId, vertx, testContext))
+        .compose(state -> assertUntilTaskStatusIs(taskStatus -> {
+
+          return HardCodedQuestionAndAnswersProtocolIT.app.appId.equals(taskStatus.app_id)
+              && HardCodedQuestionAndAnswersProtocolIT.task.communityId.equals(taskStatus.community_id)
+              && HardCodedQuestionAndAnswersProtocolIT.task.id.equals(taskStatus.task_id)
+              && taskTransaction.actioneerId.equals(taskStatus.user_id) && "Answers 4".equals(taskStatus.Action)
+              && "".equals(taskStatus.Message);
+
+        }, vertx, testContext)).compose(status -> WeNetIncentiveServerSimulator.createProxy(vertx).deleteTaskStatus());
+
+    testContext.assertComplete(future).onSuccess(empty -> testContext.completeNow());
 
   }
 
@@ -473,6 +494,7 @@ public class HardCodedQuestionAndAnswersProtocolIT {
     final var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(taskTransaction)
         .compose(done -> waitUntilTask(HardCodedQuestionAndAnswersProtocolIT.task.id, task -> {
 
+          HardCodedQuestionAndAnswersProtocolIT.task = task;
           return task.transactions != null && task.transactions.size() == 7
               && "bestAnswerTransaction".equals(task.transactions.get(6).label);
 
@@ -516,13 +538,33 @@ public class HardCodedQuestionAndAnswersProtocolIT {
 
           return false;
 
-        }, vertx, testContext));
-    testContext.assertComplete(future).onSuccess(task -> {
+        }, vertx, testContext)).compose(task -> assertUntilCommunityUserStateIs(state -> {
 
-      HardCodedQuestionAndAnswersProtocolIT.task = task;
-      testContext.completeNow();
+          if (state.attributes == null) {
 
-    });
+            return false;
+
+          } else {
+
+            final var answers = state.attributes.getJsonObject("incentives", new JsonObject())
+                .getLong("AnswersAccepted", 0l);
+            return answers == 1l;
+
+          }
+
+        }, HardCodedQuestionAndAnswersProtocolIT.task.communityId,
+            HardCodedQuestionAndAnswersProtocolIT.task.transactions.get(1).actioneerId, vertx, testContext))
+        .compose(state -> assertUntilTaskStatusIs(taskStatus -> {
+
+          return HardCodedQuestionAndAnswersProtocolIT.app.appId.equals(taskStatus.app_id)
+              && HardCodedQuestionAndAnswersProtocolIT.task.communityId.equals(taskStatus.community_id)
+              && HardCodedQuestionAndAnswersProtocolIT.task.id.equals(taskStatus.task_id)
+              && HardCodedQuestionAndAnswersProtocolIT.task.transactions.get(1).actioneerId.equals(taskStatus.user_id)
+              && "AnswersAccepted 1".equals(taskStatus.Action) && "".equals(taskStatus.Message);
+
+        }, vertx, testContext)).compose(status -> WeNetIncentiveServerSimulator.createProxy(vertx).deleteTaskStatus());
+
+    testContext.assertComplete(future).onSuccess(empty -> testContext.completeNow());
 
   }
 

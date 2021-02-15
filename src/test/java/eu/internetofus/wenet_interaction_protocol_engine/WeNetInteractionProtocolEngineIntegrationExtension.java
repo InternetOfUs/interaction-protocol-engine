@@ -27,6 +27,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine;
 
 import eu.internetofus.common.Containers;
+import eu.internetofus.common.components.incentive_server.WeNetIncentiveServerSimulator;
 import eu.internetofus.common.components.service.WeNetServiceSimulator;
 import eu.internetofus.common.vertx.AbstractMain;
 import eu.internetofus.common.vertx.AbstractServicesVerticle;
@@ -53,6 +54,7 @@ public class WeNetInteractionProtocolEngineIntegrationExtension extends Abstract
     final var client = AbstractServicesVerticle.createWebClientSession(context.vertx, context.configuration);
     final var conf = context.configuration.getJsonObject("wenetComponents", new JsonObject());
     WeNetServiceSimulator.register(vertx, client, conf);
+    WeNetIncentiveServerSimulator.register(vertx, client, conf);
 
   }
 
