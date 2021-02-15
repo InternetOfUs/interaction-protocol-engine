@@ -290,6 +290,7 @@ public class HardCodedQuestionAndAnswersProtocolIT {
                 .isEqualTo(task.transactions.get(1).messages.get(0).attributes.getString("transactionId", null));
           });
           return Future.succeededFuture(task);
+
         }).compose(task -> assertUntilCommunityUserStateIs(state -> {
 
           if (state.attributes == null) {
@@ -475,14 +476,53 @@ public class HardCodedQuestionAndAnswersProtocolIT {
           return task.transactions != null && task.transactions.size() == 7
               && "bestAnswerTransaction".equals(task.transactions.get(6).label);
 
+        }, vertx, testContext))
+        .compose(done -> waitUntilCallbacks(HardCodedQuestionAndAnswersProtocolIT.app.appId, callbacks -> {
+
+          for (var i = 0; i < callbacks.size(); i++) {
+
+            final var notification = Model.fromJsonObject(callbacks.getJsonObject(i), Message.class);
+            if (notification != null && "AnsweredPickedMessage".equals(notification.label)
+                && HardCodedQuestionAndAnswersProtocolIT.task.transactions.get(1).actioneerId
+                    .equals(notification.receiverId)) {
+
+              return true;
+
+            }
+          }
+
+          return false;
+
+        }, vertx, testContext))
+        .compose(msg -> WeNetServiceSimulator.createProxy(vertx)
+            .deleteCallbacks(HardCodedQuestionAndAnswersProtocolIT.app.appId))
+        .compose(done -> waitUntilTask(HardCodedQuestionAndAnswersProtocolIT.task.id, task -> {
+
+          if (task.closeTs != null && task.transactions != null && task.transactions.size() == 7
+              && "bestAnswerTransaction".equals(task.transactions.get(6).label)) {
+
+            final var transaction = task.transactions.get(6);
+            if ("bestAnswerTransaction".equals(transaction.label)) {
+
+              if (transaction.messages != null && transaction.messages.size() == 1) {
+
+                final var notification = transaction.messages.get(0);
+                return "AnsweredPickedMessage".equals(notification.label)
+                    && HardCodedQuestionAndAnswersProtocolIT.task.transactions.get(1).actioneerId
+                        .equals(notification.receiverId);
+              }
+            }
+          }
+
+          return false;
+
         }, vertx, testContext));
-    testContext.assertComplete(future).onSuccess(task -> testContext.verify(() -> {
+    testContext.assertComplete(future).onSuccess(task -> {
 
       HardCodedQuestionAndAnswersProtocolIT.task = task;
-      assertThat(task.transactions.get(6).messages).isNull();
       testContext.completeNow();
 
-    }));
+    });
 
   }
 

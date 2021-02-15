@@ -173,9 +173,9 @@ public class HardCodedProtocolWorker extends AbstractVerticle
     public Task task;
 
     /**
-     * The transaction that is realizing.
+     * The identifier of the last added transaction.
      */
-    public TaskTransaction transaction;
+    public String transactionId;
 
     /**
      * The url to send callbacks.
@@ -272,24 +272,30 @@ public class HardCodedProtocolWorker extends AbstractVerticle
             final var response = send.result();
             Logger.trace("App[{}]: POST {} with {} responds with code {} and body {}", () -> this.task.appId,
                 () -> this.callbackUrl, () -> body, () -> response.statusCode(), () -> response.bodyAsString());
-            if (this.transaction != null) {
 
-              final var msg = Model.fromJsonObject(body, Message.class);
+            final var msg = Model.fromJsonObject(body, Message.class);
+            if (this.transactionId != null) {
+
               WeNetTaskManager.createProxy(HardCodedProtocolWorker.this.vertx)
-                  .addMessageIntoTransaction(this.task.id, this.transaction.id, msg).onComplete(added -> {
+                  .addMessageIntoTransaction(this.task.id, this.transactionId, msg).onComplete(added -> {
 
                     if (added.failed()) {
 
                       Logger.trace(added.cause(), "App[{}]: Can not add {} into the transaction  {} of the task {}",
-                          this.task.appId, msg, this.transaction.id, this.task.id);
+                          this.task.appId, msg, this.transactionId, this.task.id);
 
                     } else {
 
-                      Logger.trace("App[{}]: Added {} into the transaction  {} of the task {}", this.task.appId, msg,
-                          this.transaction.id, this.task.id);
+                      Logger.trace("App[{}]: Added {} into the transaction {} of the task {}", this.task.appId, msg,
+                          this.transactionId, this.task.id);
                     }
 
                   });
+
+            } else {
+
+              Logger.trace("App[{}]: Can not add {} into undefined transaction of task {}", this.task.appId, msg,
+                  this.task.id);
 
             }
           }
@@ -312,6 +318,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       WeNetTaskManager.createProxy(HardCodedProtocolWorker.this.vertx).addTransactionIntoTask(this.task.id, transaction)
           .onComplete(added -> {
 
+            this.transactionId = null;
             if (added.failed()) {
 
               Logger.trace(added.cause(), "App[{}]: Can not add {} into the task {}", this.task.appId, transaction,
@@ -319,7 +326,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
             } else {
 
-              this.transaction = added.result();
+              final var addedTransaction = added.result();
+              this.transactionId = addedTransaction.id;
             }
             promise.complete();
 
@@ -337,13 +345,15 @@ public class HardCodedProtocolWorker extends AbstractVerticle
     public Future<Void> updateTask() {
 
       final Promise<Void> promise = Promise.promise();
-      this.transaction.taskId = this.task.id;
-      WeNetTaskManager.createProxy(HardCodedProtocolWorker.this.vertx).mergeTask(this.task.id, this.task)
+      final var newTask = new Task();
+      newTask.closeTs = this.task.closeTs;
+      newTask.attributes = this.task.attributes;
+      WeNetTaskManager.createProxy(HardCodedProtocolWorker.this.vertx).mergeTask(this.task.id, newTask)
           .onComplete(merged -> {
 
             if (merged.failed()) {
 
-              Logger.trace(merged.cause(), "App[{}]: Can not update {}", this.task.appId, this.task);
+              Logger.trace(merged.cause(), "App[{}]: Can not update {}", this.task.appId, newTask);
 
             } else {
 
@@ -1155,8 +1165,8 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       final var msg = this.createMessageWithTaskId(env);
       msg.label = "AnsweredQuestionMessage";
       msg.receiverId = env.task.requesterId;
-      msg.attributes.put("answer", answer).put("transactionId", env.transaction.id).put("userId",
-          env.transaction.actioneerId);
+      msg.attributes.put("answer", answer).put("transactionId", env.transactionId).put("userId",
+          transaction.actioneerId);
       env.sendTo(msg);
 
       this.notifyIncentiveServerAsk4HelpChanged(env, transaction.actioneerId, Ask4HelkpIncentiveAction.Answers);
@@ -1173,7 +1183,11 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    */
   private void handleNotAnswerTransaction(final HardCodedProtocolEnvironment env, final TaskTransaction transaction) {
 
-    env.addTransaction(transaction);
+    env.addTransaction(transaction).onSuccess(updated -> {
+
+      Logger.trace("Donw NotAnswer: {}", updated);
+
+    });
 
   }
 
@@ -1215,12 +1229,18 @@ public class HardCodedProtocolWorker extends AbstractVerticle
     final var answerTransaction = this.searchAnswerTransactionDone(transactionId, env);
     if (answerTransaction != null) {
 
-      env.addTransaction(transaction).compose(empty -> {
+      env.addTransaction(transaction).compose(added -> {
 
         env.task.closeTs = TimeManager.now();
         return env.updateTask();
 
       }).onComplete(empty -> {
+
+        final var msg = this.createMessageWithTaskId(env);
+        msg.label = "AnsweredPickedMessage";
+        msg.receiverId = answerTransaction.actioneerId;
+        msg.attributes.put("transactionId", transactionId);
+        env.sendTo(msg);
 
         Logger.trace("Closed task {} because selected {}, because {}", env.task.id, transactionId, reason);
 
@@ -1245,7 +1265,11 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    */
   private void handleMoreAnswerTransaction(final HardCodedProtocolEnvironment env, final TaskTransaction transaction) {
 
-    env.addTransaction(transaction);
+    env.addTransaction(transaction).onSuccess(updated -> {
+
+      Logger.trace("Done MoreAnswerTransaction: {}", transaction);
+
+    });
   }
 
   /**

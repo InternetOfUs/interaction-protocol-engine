@@ -47,3 +47,5 @@ wenet_do_norm_actions([]).
 wenet_do_norm_actions([put(NormAction)|Tail]) :-
 	wenet_execute_safetly_once(NormAction),
 	wenet_do_norm_actions(Tail).
+
+norm(1) :- (get_received_message(Message),get_dict(particle,Message,"sendIncentive"))*->wenet_create_callback_message(Callback,'INCENTTIVE',Message.content),wenet_service_post_callback(Callback).

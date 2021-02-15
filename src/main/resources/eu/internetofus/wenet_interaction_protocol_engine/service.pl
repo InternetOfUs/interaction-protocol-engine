@@ -27,6 +27,7 @@
 	wenet_service_get_app_users/1,
 	wenet_service_get_app_users/2,
 	wenet_service_post_callback/1,
+	wenet_service_post_callback_to/2,
 	wenet_create_callback_message/3,
 	wenet_create_callback_message/5
 	.
@@ -105,6 +106,32 @@ wenet_service_post_callback(Callback) :-
 	wenet_post_json_to_url(Url,Callback,[])
 	.
 
+%!	wenet_service_post_callback_to(+Users,+Callback)
+%
+%	Post a callback message to the application of the received message.
+%
+%	@param UserId identifier of the receiver.
+%	@param Callback to post.
+%
+wenet_service_post_callback_to([],_).
+wenet_service_post_callback_to([UserId|Tail],Callback) :-
+	wenet_service_post_callback_to(UserId,Callback),
+	wenet_service_post_callback_to(Tail,Callback)
+	.
+
+%!	wenet_service_post_callback_to(+UserId,+Callback)
+%
+%	Post a callback message to the application of the received message.
+%
+%	@param UserId identifier of the receiver.
+%	@param Callback to post.
+%
+wenet_service_post_callback_to(UserId,Callback) :-
+	not(is_list(UserId)),
+	put_dict(receiverId,Callback,UserId,NewCallback),
+	wenet_service_post_callback(NewCallback)
+	.
+
 
 %!	wenet_create_callback_message(-Callback,+Label,+Attributes)
 %
@@ -115,7 +142,6 @@ wenet_service_post_callback(Callback) :-
 %	@param Attributes the attributes for the callback message.
 %
 wenet_create_callback_message(Callback,Label,Attributes) :-
-	wenet_log_trace("HERE"),
 	get_received_message(Message),
 	wenet_create_callback_message(Callback,Message.appId,Message.receiver.userId,Label,Attributes)
 	.
@@ -131,6 +157,5 @@ wenet_create_callback_message(Callback,Label,Attributes) :-
 %	@param Attributes the attributes for the callback message.
 %
 wenet_create_callback_message(Callback,AppId,ReceiverId,Label,Attributes) :-
-	wenet_log_trace("Attributes:",Attributes),
 	Callback = callback{appId:AppId,receiverId:ReceiverId,label:Label,attributes:Attributes}
 	.

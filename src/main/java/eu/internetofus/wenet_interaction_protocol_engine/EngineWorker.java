@@ -37,7 +37,6 @@ import eu.internetofus.common.components.task_manager.ProtocolNorm;
 import eu.internetofus.common.components.task_manager.WeNetTaskManagerClient;
 import eu.internetofus.common.vertx.AbstractServicesVerticle;
 import eu.internetofus.common.vertx.Worker;
-import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker.SWIProplogEnvironment;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -77,9 +76,9 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
   /**
    * The name of the files of the prolog files to copy.
    */
-  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "ontology.pl", "norms.pl", "engine.pl",
-      "profile_manager.pl", "task_manager.pl", "interaction_protocol_engine.pl", "social_context_builder.pl",
-      "service.pl", "incentive_server.pl", "main.pl" };
+  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "ontology.pl", "profile_manager.pl",
+      "task_manager.pl", "interaction_protocol_engine.pl", "social_context_builder.pl", "service.pl",
+      "incentive_server.pl", "engine.pl", "main.pl", "norms.pl" };
 
   /**
    * The type that define the the received event of the type incentive.

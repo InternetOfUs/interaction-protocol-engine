@@ -154,8 +154,8 @@ public class IncentivesIT {
 
         community.norms = new ArrayList<>();
         final var norm = new ProtocolNorm();
-        norm.whenever = "get_received_message_particle(\"sendIncentive\")";
-        norm.thenceforth = "get_received_message_content(Incentive) and wenet_create_callback_message(Callback,'INCENTTIVE',Incentive) and wenet_log_trace(\"Callback:\",Callback) and wenet_service_post_callback(Callback)";
+        norm.whenever = "get_received_message_particle(\"sendIncentive\") and get_received_message_content(Incentive) and wenet_create_callback_message(Callback,'INCENTTIVE',Incentive)";
+        norm.thenceforth = "wenet_service_post_callback(Callback)";
         community.norms.add(norm);
         testContext.assertComplete(WeNetProfileManager.createProxy(vertx).updateCommunity(community)
             .compose(updatedCommunity -> WeNetInteractionProtocolEngine.createProxy(vertx).sendIncentive(incentive))

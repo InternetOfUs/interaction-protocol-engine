@@ -108,7 +108,7 @@ wenet_post_json_to_url_(Url, Json, Headers) :-
 	atom_json_dict(Atom, Json, []),
 	append(Headers,[header(content,'application/json')],PostHeaders),
 	http_post(Url, Atom, Result, PostHeaders),
-	wenet_log_trace('Posted json to:',[Url, Json,Result])
+	wenet_log_trace('Post result',Result)
 	.
 
 %!	wenet_log_trace(-Text)
@@ -118,7 +118,7 @@ wenet_post_json_to_url_(Url, Json, Headers) :-
 %	@param Text string message of the log.
 %
 wenet_log_trace(Text) :-
-	format(string(Lines),'TRACE: ~w~n',[Text]),
+	format(string(Lines),'TRACE: ~w',[Text]),
 	print_message_lines(current_output,kind(trace),[Lines])
 	.
 
@@ -130,7 +130,7 @@ wenet_log_trace(Text) :-
 %	@param Term Term to show into the log message.
 %
 wenet_log_trace(Text,Term) :-
-	format(string(Lines),'TRACE: ~w ~w~n',[Text,Term]),
+	format(string(Lines),'TRACE: ~w ~w',[Text,Term]),
 	print_message_lines(current_output,kind(trace),[Lines])
 	.
 
@@ -142,7 +142,7 @@ wenet_log_trace(Text,Term) :-
 %	@param Terms arguments to show into the log message.
 %
 wenet_log_error(Text,Terms) :-
-	wenet_print_error('Error: ~w ~w',[Text,Terms])
+	wenet_print_error('~w ~w',[Text,Terms])
 	.
 
 %!	wenet_log_error(-Text,-Terms,-Error)
