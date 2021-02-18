@@ -95,7 +95,7 @@ wenet_get_json_from_url_(Url, Json) :-
 %
 wenet_post_json_to_url(Url, Json) :-
 	wenet_component_auth_header(Header),
-	wenet_post_json_to_url(Url,Json,[Header,request_header('Content-type'='application/json'),request_header('Accept'='application/json')]).
+	wenet_post_json_to_url(Url,Json,[Header]).
 
 %!  wenet_post_json_to_url(+Url, +Json,+Headers)
 %
@@ -107,8 +107,8 @@ wenet_post_json_to_url(Url, Json) :-
 %
 wenet_post_json_to_url(Url, Json, Headers) :-
 	atom_json_term(Atom, Json, []),
-	append(Headers,[request_header('Content-type'='application/json'),request_header('Accept'='application/json')],PostHeaders),
-	(http_client:http_post(Url, atom(Atom), Result, PostHeaders)->wenet_log_trace('POST',[Url,Atom,Result]);wenet_log_error('Cannot POST',[Url,Atom]))
+	append(Headers,[request_header('Accept'='application/json; charset=UTF-8')],PostHeaders),
+	(http_client:http_post(Url, atom('application/json',Atom), Result, PostHeaders)->wenet_log_trace('POST',[Url,Atom,Result]);wenet_log_error('Cannot POST',[Url,Atom]))
 	.
 
 %!	wenet_log_trace(-Text)
