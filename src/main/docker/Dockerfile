@@ -14,6 +14,8 @@ RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn -DfinalName=wenet-inter
 
 # --- Run the code
 FROM ubuntu:latest
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
 ARG DEFAULT_API_HOST=0.0.0.0
 ARG DEFAULT_API_PORT=8080
 ARG DEFAULT_DB_HOST=localhost
@@ -45,14 +47,18 @@ ENV COMP_AUTH_KEY=${DEFAULT_COMP_AUTH_KEY}
 # Install JRE
 RUN mkdir -p /var/cache/apt
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y update
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install openjdk-11-jre
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install aptitude
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y update
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y full-upgrade
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y install openjdk-11-jre
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 
 # Install swi prolog
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install software-properties-common
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y install software-properties-common
 RUN apt-add-repository ppa:swi-prolog/stable
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y update
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install swi-prolog
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y update
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y full-upgrade
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y install swi-prolog
 
 # Create running dierectories
 RUN mkdir -p /usr/wenet/interaction-protocol-engine/lib

@@ -49,8 +49,8 @@
 %	@param AppId of the received message.
 %
 get_received_message_appid(AppId) :-
-	get_received_message(Message),
-	AppId = Message.appId
+	get_received_message(json(Message)),
+	member(appId=AppId,Message)
 	.
 
 %!	get_received_message_communityid(+CommunityId)
@@ -60,8 +60,8 @@ get_received_message_appid(AppId) :-
 %	@param CommunityId of the received message.
 %
 get_received_message_communityid(CommunityId) :-
-	get_received_message(Message),
-	CommunityId = Message.communityId
+	get_received_message(json(Message)),
+	member(communityId=CommunityId,Message)
 	.
 
 %!	get_received_message_taskid(+TaskId)
@@ -71,8 +71,8 @@ get_received_message_communityid(CommunityId) :-
 %	@param TaskId of the received message.
 %
 get_received_message_taskid(TaskId) :-
-	get_received_message(Message),
-	TaskId = Message.taskId
+	get_received_message(json(Message)),
+	member(taskId=TaskId,Message)
 	.
 
 %!	get_received_message_transactionid(+TransactionId)
@@ -82,8 +82,8 @@ get_received_message_taskid(TaskId) :-
 %	@param TransactionId of the received message.
 %
 get_received_message_transactionid(TransactionId) :-
-	get_received_message(Message),
-	TransactionId = Message.transactionId
+	get_received_message(json(Message)),
+	member(transactionId=TransactionId,Message)
 	.
 
 
@@ -94,8 +94,8 @@ get_received_message_transactionid(TransactionId) :-
 %	@param Sender of the received message.
 %
 get_received_message_sender(Sender) :-
-	get_received_message(Message),
-	Sender = Message.sender
+	get_received_message(json(Message)),
+	member(sender=Sender,Message)
 	.
 
 %!	get_received_message_sender_component(+Component)
@@ -105,8 +105,8 @@ get_received_message_sender(Sender) :-
 %	@param Component that send the received message.
 %
 get_received_message_sender_component(Component) :-
-	get_received_message_sender(Sender),
-	Component = Sender.component
+	get_received_message_sender(json(Sender)),
+	member(component=Component,Sender)
 	.
 
 %!	get_received_message_sender_userid(+UserId)
@@ -116,8 +116,8 @@ get_received_message_sender_component(Component) :-
 %	@param UserId identifier of the sender user of the received message.
 %
 get_received_message_sender_userid(UserId) :-
-	get_received_message_sender(Sender),
-	UserId = Sender.userId
+	get_received_message_sender(json(Sender)),
+	member(userId=UserId,Sender)
 	.
 
 %!	get_received_message_receiver(+Receiver)
@@ -127,8 +127,8 @@ get_received_message_sender_userid(UserId) :-
 %	@param Receiver of the received message.
 %
 get_received_message_receiver(Receiver) :-
-	get_received_message(Message),
-	Receiver = Message.receiver
+	get_received_message(json(Message)),
+	member(receiver=Receiver,Message)
 	.
 
 %!	get_received_message_receiver_component(+Component)
@@ -138,8 +138,8 @@ get_received_message_receiver(Receiver) :-
 %	@param Component that send the received message.
 %
 get_received_message_receiver_component(Component) :-
-	get_received_message_receiver(Receiver),
-	Component = Receiver.component
+	get_received_message_receiver(json(Receiver)),
+	member(component=Component,Receiver)
 	.
 
 %!	get_received_message_receiver_userid(+UserId)
@@ -149,8 +149,8 @@ get_received_message_receiver_component(Component) :-
 %	@param UserId identifier of the receiver user of the received message.
 %
 get_received_message_receiver_userid(UserId) :-
-	get_received_message_receiver(Receiver),
-	UserId = Receiver.userId
+	get_received_message_receiver(json(Receiver)),
+	member(userId=UserId,Receiver)
 	.
 
 %!	get_received_message_particle(+Particle)
@@ -160,8 +160,8 @@ get_received_message_receiver_userid(UserId) :-
 %	@param Particle of the received message.
 %
 get_received_message_particle(Particle) :-
-	get_received_message(Message),
-	Particle = Message.particle
+	get_received_message(json(Message)),
+	member(particle=Particle,Message)
 	.
 
 %!	get_received_message_content(+Content)
@@ -171,8 +171,8 @@ get_received_message_particle(Particle) :-
 %	@param Content of the received message.
 %
 get_received_message_content(Content) :-
-	get_received_message(Message),
-	Content = Message.content
+	get_received_message(json(Message)),
+	member(content=Content,Message)
 	.
 
 %!	wenet_now_less_than(+Time)

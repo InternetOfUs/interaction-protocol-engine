@@ -51,6 +51,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.tinylog.Logger;
 
@@ -187,6 +189,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       env.fillIn(protocol);
       env.appendToInitAssertaModel(body.getJsonObject("message"), "wenet_protocol_message.json",
           "get_received_message");
+      env.include(env.protocolNorms);
+
       env.run();
 
     } catch (final Throwable throwable) {
@@ -256,19 +260,40 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
      */
     public void fillInAutoloadPrologFilesIn(final Path dir) throws IOException {
 
-      final var content = new StringBuilder();
-      content.append(":- load_files([");
+      final List<IOException> errors = new ArrayList<>();
       Files.list(dir).filter(path -> path.getFileName().toString().endsWith(".pl")).sorted().forEach(path -> {
 
-        content.append("\n\t'");
-        content.append(path.toAbsolutePath());
-        content.append("',");
+        try {
 
+          this.include(path);
+
+        } catch (final IOException cause) {
+
+          errors.add(cause);
+        }
       });
-      content.append("\n\t'");
-      content.append(this.protocolNorms.toAbsolutePath());
-      content.append("'");
-      content.append("\n\t],[autoload(true)]).\n\n");
+
+      if (!errors.isEmpty()) {
+
+        throw errors.get(0);
+
+      }
+
+    }
+
+    /**
+     * Include a file into the init file.
+     *
+     * @param path to the file to include.
+     *
+     * @throws IOException If can not include the file to load.
+     */
+    public void include(final Path path) throws IOException {
+
+      final var content = new StringBuilder();
+      content.append(":- include('");
+      content.append(path.toAbsolutePath());
+      content.append("').\n");
       Files.writeString(this.init, content, StandardOpenOption.APPEND);
 
     }
@@ -432,6 +457,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       content.append(config.getJsonObject(AbstractServicesVerticle.WEB_CLIENT_CONF_KEY, new JsonObject())
           .getString(AbstractServicesVerticle.WENET_COMPONENT_APIKEY_CONF_KEY, "UDEFINED"));
       content.append("')).\n\n");
+
+      content.append(":- debug.\n");
 
       Files.writeString(this.init, content, StandardOpenOption.APPEND);
 
