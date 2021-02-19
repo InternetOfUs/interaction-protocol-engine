@@ -22,7 +22,16 @@
 
 :- dynamic
 	get_task_manager_url_to/2,
-	get_task/2
+	get_task/2,
+	get_task_id/2,
+	get_task_transaction_label/2,
+	get_task_transaction_attributes/2,
+	get_task_transaction_actioneer_id/2,
+	get_task_transaction_task_id/2,
+	get_task_transaction_id/2,
+	get_task_transaction_messages/2,
+	wenet_task_manager_add_transaction_into_task/2,
+	wenet_task_manager_add_transaction_into_task/3
 	.
 
 
@@ -50,3 +59,107 @@ get_task(Task,Id) :-
 	wenet_log_trace('Loaded task',Task)
 	.
 
+%!	get_task_id(-Id,+Task)
+%
+%	Obtain the id of a task .
+%
+%	@param Id of the task .
+%	@param Task to get the id.
+%
+get_task_id(Id, json(Task)) :-
+	member(id=Id,Task)
+	.
+
+
+%!	get_task_transaction_label(-Label,+TaskTransaction)
+%
+%	Obtain the label of a task transaction.
+%
+%	@param Label of the task transaction.
+%	@param TaskTransaction to get the label.
+%
+get_task_transaction_label(Label, json(TaskTransaction)) :-
+	member(label=Label,TaskTransaction)
+	.
+
+%!	get_task_transaction_attributes(-Attributes,+TaskTransaction)
+%
+%	Obtain the attributes of a task transaction.
+%
+%	@param Attributes of the task transaction.
+%	@param TaskTransaction to get the attributes.
+%
+get_task_transaction_attributes(Attributes, json(TaskTransaction)) :-
+	member(attributes=Attributes,TaskTransaction)
+	.
+
+
+%!	get_task_transaction_actioneer_id(-ActioneerId,+TaskTransaction)
+%
+%	Obtain the actioneer identifier of a task transaction.
+%
+%	@param ActioneerId of the task transaction.
+%	@param TaskTransaction to get the actioneer identifier.
+%
+get_task_transaction_actioneer_id(ActioneerId, json(TaskTransaction)) :-
+	member(actioneerId=ActioneerId,TaskTransaction)
+	.
+
+%!	get_task_transaction_task_id(-TaskId,+TaskTransaction)
+%
+%	Obtain the task identifier of a task transaction.
+%
+%	@param TaskId of the task transaction.
+%	@param TaskTransaction to get the task identifier.
+%
+get_task_transaction_task_id(TaskId, json(TaskTransaction)) :-
+	member(taskId=TaskId,TaskTransaction)
+	.
+
+%!	get_task_transaction_id(-Id,+TaskTransaction)
+%
+%	Obtain the id of a task transaction.
+%
+%	@param Id of the task transaction.
+%	@param TaskTransaction to get the id.
+%
+get_task_transaction_id(Id, json(TaskTransaction)) :-
+	member(id=Id,TaskTransaction)
+	.
+
+%!	get_task_transaction_messages(-Messages,+TaskTransaction)
+%
+%	Obtain the messages of a task transaction.
+%
+%	@param Messages of the task transaction.
+%	@param TaskTransaction to get the messages.
+%
+get_task_transaction_messages(Messages, json(TaskTransaction)) :-
+	member(messages=Messages,TaskTransaction)
+	.
+
+
+%!	wenet_task_manager_add_transaction_into_task(-AddedTaskTransaction,+TaskTransaction)
+%
+%	Add a task transaction into a task.
+%
+%	@param AddedTaskTransaction return task transaction that has been added into the task.
+%	@param TaskTransaction to add to the task.
+%
+wenet_task_manager_add_transaction_into_task(AddedTaskTransaction,Transaction) :-
+	get_task_transaction_task_id(TaskId,Transaction),
+	wenet_task_manager_add_transaction_into_task(AddedTaskTransaction,TaskId,Transaction)
+	.
+
+%!	wenet_task_manager_add_transaction_into_task(-AddedTaskTransaction,+TaskId,+TaskTransaction)
+%
+%	Add a task transaction into a task.
+%
+%	@param AddedTaskTransaction return task transaction that has been added into the task.
+%	@param TaskId identifier of the task to add the transaction.
+%	@param TaskTransaction to add to the task.
+%
+wenet_task_manager_add_transaction_into_task(AddedTaskTransaction,TaskId,Transaction) :-
+	get_task_manager_url_to(Url,['/tasks/',TaskId,'/transactions']),
+	wenet_post_json_to_url(AddedTaskTransaction,Url,Transaction)
+	.

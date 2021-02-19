@@ -234,8 +234,7 @@ public interface MessageForWorkerBuilder {
 
     final var message = createProtocolMessage(protocol);
     message.sender.component = Component.USER_APP;
-    message.sender.userId = protocol.task.requesterId;
-    message.receiver.userId = protocol.task.requesterId;
+    message.sender.userId = message.receiver.userId = protocol.task.requesterId;
     message.particle = "createdTask";
     return buildProtocolMessage(message, protocol);
 
@@ -255,8 +254,7 @@ public interface MessageForWorkerBuilder {
 
     final var message = createProtocolMessage(protocol);
     message.sender.component = Component.USER_APP;
-    message.sender.userId = transaction.actioneerId;
-    message.receiver.userId = transaction.actioneerId;
+    message.sender.userId = message.receiver.userId = transaction.actioneerId;
     message.particle = "doTaskTransaction";
     message.content = transaction.toJsonObject();
     return buildProtocolMessage(message, protocol);

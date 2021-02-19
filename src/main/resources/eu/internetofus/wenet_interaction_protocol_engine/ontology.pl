@@ -33,11 +33,14 @@
 	get_received_message_receiver_userid/1,
 	get_received_message_particle/1,
 	get_received_message_content/1,
-	wenet_now_less_than/1,
-	wenet_now_less_than_or_equal_to/1,
-	wenet_now_greater_than/1,
-	wenet_now_greater_than_or_equal_to/1,
-	wenet_now_equal_to/1
+	is_now_less_than/1,
+	is_now_less_than_or_equal_to/1,
+	is_now_greater_than/1,
+	is_now_greater_than_or_equal_to/1,
+	is_now_equal_to/1,
+	is_received_do_transaction/1,
+	is_received_created_task/0,
+	is_received_send_incentive/1
 	.
 
 :- use_module(library(clpfd)).
@@ -175,57 +178,97 @@ get_received_message_content(Content) :-
 	member(content=Content,Message)
 	.
 
-%!	wenet_now_less_than(+Time)
+%!	is_now_less_than(+Time)
 %
 %	Check if the wenet time is less than a time.
 %
 %	@param Actions to execute.
 %
-wenet_now_less_than(Time) :-
-	wenet_now(Now),
+is_now_less_than(Time) :-
+	is_now(Now),
 	Now #< Time
 	.
 
-%!	wenet_now_less_than_or_equal_to(+Time)
+%!	is_now_less_than_or_equal_to(+Time)
 %
 %	Check if the wenet time is less than or equal to a time.
 %
 %	@param Actions to execute.
 %
-wenet_now_less_than_or_equal_to(Time) :-
-	wenet_now(Now),
+is_now_less_than_or_equal_to(Time) :-
+	is_now(Now),
 	Now #=< Time
 	.
 
-%!	wenet_now_greater_than(+Time)
+%!	is_now_greater_than(+Time)
 %
 %	Check if the wenet time is greater than a time.
 %
 %	@param Actions to execute.
 %
-wenet_now_greater_than(Time) :-
-	wenet_now(Now),
+is_now_greater_than(Time) :-
+	is_now(Now),
 	Now #> Time
 	.
 
-%!	wenet_now_greater_than_or_equal_to(+Time)
+%!	is_now_greater_than_or_equal_to(+Time)
 %
 %	Check if the wenet time is greater than or equal to a time.
 %
 %	@param Actions to execute.
 %
-wenet_now_greater_than_or_equal_to(Time) :-
-	wenet_now(Now),
+is_now_greater_than_or_equal_to(Time) :-
+	is_now(Now),
 	Now #>= Time
 	.
 
-%!	wenet_now_equal_to(+Time)
+%!	is_now_equal_to(+Time)
 %
 %	Check if the wenet time is equal to a time.
 %
 %	@param Actions to execute.
 %
-wenet_now_equal_to(Time) :-
-	wenet_now(Now),
+is_now_equal_to(Time) :-
+	is_now(Now),
 	Now #= Time
+	.
+
+%!	is_received_do_transaction(-Transaction)
+%
+%	Check if received a do transaction from the user.
+%
+%	@param Transaction that has to do.
+%
+is_received_do_transaction(Transaction) :-
+	get_received_message_particle('doTaskTransaction'),
+	get_received_message_sender_component('USER_APP'),
+	get_received_message_sender_userid(UserId),
+	get_received_message_receiver_component('INTERACTION_PROTOCOL_ENGINE'),
+	get_received_message_receiver_userid(UserId),
+	get_received_message_content(Transaction)
+	.
+
+%!	is_received_created_task()
+%
+%	Check if received a created task from the user.
+%
+is_received_created_task() :-
+	get_received_message_particle('createdTask'),
+	get_received_message_sender_component('USER_APP'),
+	get_received_message_sender_userid(UserId),
+	get_received_message_receiver_component('INTERACTION_PROTOCOL_ENGINE'),
+	get_received_message_receiver_userid(UserId)
+	.
+
+%!	is_received_send_incentive(-Incentive)
+%
+%	Check if teh incentive server try to send an incentive to an user.
+%
+%	@param Incentive to send to the user.
+%
+is_received_send_incentive(Incentive) :-
+	get_received_message_particle('sendIncentive'),
+	get_received_message_sender_component('INCENTIVE_SERVER'),
+	get_received_message_receiver_component('INTERACTION_PROTOCOL_ENGINE'),
+	get_received_message_content(Incentive)
 	.

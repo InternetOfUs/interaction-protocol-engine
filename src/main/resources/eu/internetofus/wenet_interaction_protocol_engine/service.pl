@@ -24,6 +24,9 @@
 	wenet_service_url/2,
 	wenet_service_get_app/1,
 	wenet_service_get_app/2,
+	get_app_id/2,
+	get_app_message_callback_url/2,
+	wenet_service_get_app_message_callback_url/1,
 	wenet_service_get_app_users/1,
 	wenet_service_get_app_users/2,
 	wenet_service_post_callback/1,
@@ -67,6 +70,28 @@ wenet_service_get_app(App) :-
 	wenet_service_get_app(App,AppId)
 	.
 
+%!	get_app_id(-Id,+App)
+%
+%	Obtain the id of a application.
+%
+%	@param Id of the application.
+%	@param App to get the id.
+%
+get_app_id(Id,json(App)) :-
+	member(appId=Id,App)
+	.
+
+%!	get_app_message_callback_url(-Url,+App)
+%
+%	Obtain the URL to post the callback messages for the application.
+%
+%	@param URL to post the callback messages. of the application.
+%	@param App to get the id.
+%
+get_app_message_callback_url(Url,json(App)) :-
+	member(messageCallbackUrl=Url,App)
+	.
+
 %!	wenet_service_get_app_message_callback_url(-Url)
 %
 %	Return the URL where has to post the callback messages of the application.
@@ -74,21 +99,9 @@ wenet_service_get_app(App) :-
 %	@param Url to post the callback messages.
 %
 wenet_service_get_app_message_callback_url(Url) :-
-	wenet_service_get_app(json(App)),
-	wenet_service_get_app_message_callback_url(Url,App)
+	wenet_service_get_app(App),
+	get_app_message_callback_url(Url,App)
 	.
-
-%!	wenet_service_get_app_message_callback_url(-Url,+App)
-%
-%	Return the URL where has to post the callback messages of the application.
-%
-%	@param Url to post the callback messages.
-%	@param App to post the callback messages.
-%
-wenet_service_get_app_message_callback_url(Url,App) :-
-	member(messageCallbackUrl=Url,App)
-	.
-
 
 %!	wenet_service_get_app_users(+Users,-Id)
 %
@@ -122,7 +135,7 @@ wenet_service_get_app_users(Users) :-
 %
 wenet_service_post_callback(Callback) :-
 	wenet_service_get_app_message_callback_url(Url),
-	wenet_post_json_to_url(Url,Callback,[])
+	wenet_post_json_to_url(_,Url,Callback,[])
 	.
 
 %!	wenet_service_post_callback_to(+Users,+Callback)
