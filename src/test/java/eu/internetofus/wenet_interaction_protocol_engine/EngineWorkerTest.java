@@ -26,11 +26,12 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import org.junit.jupiter.api.Test;
-
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test the {@link EngineWorker}.
@@ -41,7 +42,18 @@ import io.vertx.core.json.JsonObject;
  */
 public class EngineWorkerTest {
 
+  /**
+   * Should capture exception when copy resources.
+   */
+  @Test
+  public void shouldCaptureExceptionWhneCopyResources() {
 
+    final var worker = new EngineWorker();
+    final Promise<Void> promise = Promise.promise();
+    worker.copyResources(promise);
+    assertThat(promise.future().cause()).isNotNull();
+
+  }
 
   /**
    * Should capture error when handle {@code null} event.

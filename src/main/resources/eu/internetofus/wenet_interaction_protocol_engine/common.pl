@@ -110,9 +110,8 @@ wenet_post_json_to_url(Json, Url, Body) :-
 wenet_post_json_to_url(Json, Url, Body, Headers) :-
 	atom_json_term(AtomBody, Body, []),
 	append(Headers,[request_header('Accept'='application/json; charset=UTF-8')],PostHeaders),
-	http_post(Url, atom('application/json',AtomBody), Result, PostHeaders)->
-		wenet_log_trace('POST',[Url,AtomBody,Result]),
-		;(wenet_log_error('Cannot POST',[Url,AtomBody]),Result = '{}'),
+	http_post(Url, atom('application/json',AtomBody), Result, PostHeaders),
+	wenet_log_trace('POST',[Url,AtomBody,Result]),
 	atom_json_term(Result, Json, [])
 	.
 

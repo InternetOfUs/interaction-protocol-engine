@@ -39,6 +39,7 @@
 	is_now_greater_than_or_equal_to/1,
 	is_now_equal_to/1,
 	is_received_do_transaction/1,
+	is_received_do_transaction_with_label/2,
 	is_received_created_task/0,
 	is_received_send_incentive/1
 	.
@@ -246,6 +247,18 @@ is_received_do_transaction(Transaction) :-
 	get_received_message_receiver_component('INTERACTION_PROTOCOL_ENGINE'),
 	get_received_message_receiver_userid(UserId),
 	get_received_message_content(Transaction)
+	.
+
+%!	is_received_do_transaction_with_label(-Transaction,+Label)
+%
+%	Check if received a do transaction from the user.
+%
+%	@param Transaction that has to do.
+%	@param Label for the received transaction.
+%
+is_received_do_transaction_with_label(Transaction,Label) :-
+	is_received_do_transaction(Transaction),
+	get_task_transaction_label(Label,Transaction)
 	.
 
 %!	is_received_created_task()

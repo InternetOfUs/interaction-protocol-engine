@@ -51,8 +51,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.tinylog.Logger;
 
@@ -260,22 +258,12 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
      */
     public void fillInAutoloadPrologFilesIn(final Path dir) throws IOException {
 
-      final List<IOException> errors = new ArrayList<>();
-      Files.list(dir).filter(path -> path.getFileName().toString().endsWith(".pl")).sorted().forEach(path -> {
+      final var iter = Files.list(dir).filter(path -> path.getFileName().toString().endsWith(".pl")).sorted()
+          .iterator();
+      while (iter.hasNext()) {
 
-        try {
-
-          this.include(path);
-
-        } catch (final IOException cause) {
-
-          errors.add(cause);
-        }
-      });
-
-      if (!errors.isEmpty()) {
-
-        throw errors.get(0);
+        final var path = iter.next();
+        this.include(path);
 
       }
 
@@ -314,13 +302,11 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       final var modelFile = this.createFileAtWork(fileName);
       Files.writeString(modelFile, model.encode());
 
-      content.append("\n:- wenet_read_json_from_file('");
+      content.append("\n:- wenet_execute_safetly_once(wenet_read_json_from_file('");
       content.append(modelFile.toAbsolutePath());
-      content.append("',Data),\n\tasserta(");
+      content.append("',Data)),\n\tasserta(");
       content.append(predicate);
-      content.append("(Data)),\n\twenet_log_trace('Loaded ");
-      content.append(fileName);
-      content.append("',Data).\n");
+      content.append("(Data)).\n");
 
       Files.writeString(this.init, content, StandardOpenOption.APPEND);
 

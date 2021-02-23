@@ -26,19 +26,21 @@
 
 go() :-
 	wenet_execute_safetly_once(normengine(Actions)),
-	wenet_execute_safetly_once(wenet_do_actions(Actions)),
+	wenet_log_trace('The action to do are:',Actions),
+	wenet_do_actions(Actions),
 	wenet_do_actions_status(Status)->halt(Status);true
 	.
 
 %!	wenet_do_actions(+Actions)
 %
-%	Do the specified actions.
+%	Do the specified actions.q
 %
 %	@param Actions to execute.
 %
 wenet_do_actions([]).
 wenet_do_actions([NormActions|Tail]) :-
-	wenet_do_norm_actions(NormActions),
+	flatten(NormActions,NormActionstoDo),
+	wenet_do_norm_actions(NormActionstoDo),
 	wenet_do_actions(Tail)
 	.
 wenet_do_actions(_).
