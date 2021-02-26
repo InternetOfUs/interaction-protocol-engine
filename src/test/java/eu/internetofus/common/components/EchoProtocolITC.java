@@ -26,11 +26,15 @@
 
 package eu.internetofus.common.components;
 
+import eu.internetofus.common.components.service.MessagePredicates;
+import eu.internetofus.common.components.task_manager.TaskPredicates;
 import eu.internetofus.common.components.task_manager.TaskTransaction;
+import eu.internetofus.common.components.task_manager.TaskTransactionPredicates;
 import eu.internetofus.common.components.task_manager.WeNetTaskManager;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
+import java.util.Arrays;
 import java.util.UUID;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -45,12 +49,46 @@ public class EchoProtocolITC extends AbstractProtocolITC {
   /**
    * {@inheritDoc}
    *
+   * @return {@code 1} in any case.
+   */
+  @Override
+  protected int numberOfUsersToCreate() {
+
+    return 1;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * @return {@link WeNetTaskManager#ECHO_V1_TASK_TYPE_ID}
    */
   @Override
   protected String getDefaultTaskTypeIdToUse() {
 
     return WeNetTaskManager.ECHO_V1_TASK_TYPE_ID;
+  }
+
+  /**
+   * Check that a task is created.
+   *
+   * @param vertx       event bus to use.
+   * @param testContext context to do the test.
+   */
+  @Test
+  @Order(5)
+  public void shouldCreateTask(final Vertx vertx, final VertxTestContext testContext) {
+
+    this.assertLastSuccessfulTestWas(4, testContext);
+
+    final var source = this.createTaskForProtocol();
+    final var expectedTransaction = new TaskTransaction();
+    expectedTransaction.actioneerId = source.requesterId;
+    expectedTransaction.label = source.requesterId;
+    final var future = this.waitUntilTaskCreated(source, vertx, testContext,
+        TaskPredicates.similarTo(source).and(TaskPredicates.transactionSizeIs(1))
+            .and(TaskPredicates.transactionAt(0, TaskTransactionPredicates.withoutMessages())));
+    testContext.assertComplete(future).onComplete(stored -> this.assertSuccessfulCompleted(testContext));
+
   }
 
   /**
@@ -71,27 +109,18 @@ public class EchoProtocolITC extends AbstractProtocolITC {
     transaction.label = "echo";
     final var message = UUID.randomUUID().toString();
     transaction.attributes = new JsonObject().put("message", message);
+    final var checkMessage = MessagePredicates.labelIs("echo")
+        .and(MessagePredicates.receiverIs(transaction.actioneerId));
+    final var checkTask = TaskPredicates.transactionSizeIs(2)
+        .and(TaskPredicates.transactionAt(1,
+            TaskTransactionPredicates.similarTo(transaction).and(TaskTransactionPredicates.messagesSizeIs(1))
+                .and(TaskTransactionPredicates.messageAt(0, checkMessage))));
     final var future = WeNetTaskManager.createProxy(vertx).doTaskTransaction(transaction)
-        .compose(done -> this.waitUntilTask(vertx, testContext, () -> {
-
-          if (this.task.transactions != null && !this.task.transactions.isEmpty()) {
-
-            final var lastTransaction = this.task.transactions.get(this.task.transactions.size() - 1);
-            if (lastTransaction.label.equals(transaction.label)
-                && lastTransaction.actioneerId.equals(transaction.actioneerId)
-                && lastTransaction.attributes.equals(transaction.attributes)) {
-
-              return true;
-
-            }
-          }
-
-          return false;
-
-        }).compose(task -> this.waitUntilCallbacks(vertx, testContext,
-            new MessagePredicateBuilder().withLabelAndReceiverId("echo", transaction.actioneerId).build())));
+        .compose(ignored -> this.waitUntilCallbacks(vertx, testContext, Arrays.asList(checkMessage)))
+        .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask));
 
     testContext.assertComplete(future).onComplete(removed -> this.assertSuccessfulCompleted(testContext));
 
   }
+
 }

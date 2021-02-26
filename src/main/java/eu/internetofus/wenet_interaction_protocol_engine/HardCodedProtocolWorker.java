@@ -635,7 +635,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
         final var msg = this.createTextualMessage(env, "Accept not allowed",
             "You cannot be a volunteer, because you already are or you are not a person that can provide help.");
-        msg.receiverId = volunteerId;
+        msg.receiverId = transaction.actioneerId;
         env.sendTo(msg);
 
       } else {
@@ -766,7 +766,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
         final var msg = this.createTextualMessage(env, "Refuse not allowed",
             "You cannot refuse to be a volunteer, because you already refused or you are not a person that can provide help.");
-        msg.receiverId = volunteerId;
+        msg.receiverId = transaction.actioneerId;
         env.sendTo(msg);
 
       } else {
@@ -812,7 +812,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
       final var msg = this.createTextualMessage(env, "Unexpected volunteer to accept",
           "The user '" + volunteerId + "' is not a volunteer of the task, so you can not accept it.");
-      msg.receiverId = env.task.requesterId;
+      msg.receiverId = transaction.actioneerId;
       env.sendTo(msg);
 
     } else {
@@ -857,7 +857,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
       final var msg = this.createTextualMessage(env, "Unexpected volunteer to refuse",
           "The user '" + volunteerId + "' is not a volunteer of the task, so you can not refuse it.");
-      msg.receiverId = env.task.requesterId;
+      msg.receiverId = transaction.actioneerId;
       env.sendTo(msg);
 
     } else {
