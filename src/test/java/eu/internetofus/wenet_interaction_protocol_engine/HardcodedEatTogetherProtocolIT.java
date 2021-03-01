@@ -30,7 +30,9 @@ import eu.internetofus.common.components.HardcodedEatTogetherProtocolITC;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Interaction test over the hardcoded eat together protocol.
+ * Interaction test over the hardcoded eat together protocol. ATTENTION: This
+ * test is sequential and maintains the state between methods. In other words,
+ * you must to run the entire test methods on the specified order to work.
  *
  * @author UDT-IA, IIIA-CSIC
  */

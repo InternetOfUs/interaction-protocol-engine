@@ -24,19 +24,28 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine;
+package eu.internetofus.common.components;
 
-import eu.internetofus.common.components.EatTogetherWithNormsProtocolITC;
-import org.junit.jupiter.api.extension.ExtendWith;
+import eu.internetofus.common.components.task_manager.WeNetTaskManager;
 
 /**
- * Interaction test over the eat together protocol with norms. ATTENTION: This
- * test is sequential and maintains the state between methods. In other words,
- * you must to run the entire test methods on the specified order to work.
+ * Check the hardcoded question and answer protocol. ATTENTION: This test is
+ * sequential and maintains the state between methods. In other words, you must
+ * to run the entire test methods on the specified order to work.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class EatTogetherWithNormsProtocolIT extends EatTogetherWithNormsProtocolITC {
+public class HardcodedQuestionAndAnswersProtocolITC extends AbstractQuestionAndAnswersProtocolITC {
+
+  /**
+   * {@inheritDoc}
+   *
+   * @return {@link WeNetTaskManager#QUESTION_AND_ANSWER_TASK_TYPE_ID}
+   */
+  @Override
+  protected String getDefaultTaskTypeIdToUse() {
+
+    return WeNetTaskManager.QUESTION_AND_ANSWER_TASK_TYPE_ID;
+  }
 
 }

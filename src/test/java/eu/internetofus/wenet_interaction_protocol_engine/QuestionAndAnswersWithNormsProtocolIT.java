@@ -26,17 +26,18 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import eu.internetofus.common.components.EatTogetherWithNormsProtocolITC;
+import eu.internetofus.common.components.QuestionAndAnswersWithNormsProtocolITC;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Interaction test over the eat together protocol with norms. ATTENTION: This
- * test is sequential and maintains the state between methods. In other words,
- * you must to run the entire test methods on the specified order to work.
+ * Interaction test over the question and answers protocol with norms.
+ * ATTENTION: This test is sequential and maintains the state between methods.
+ * In other words, you must to run the entire test methods on the specified
+ * order to work.
  *
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class EatTogetherWithNormsProtocolIT extends EatTogetherWithNormsProtocolITC {
+public class QuestionAndAnswersWithNormsProtocolIT extends QuestionAndAnswersWithNormsProtocolITC {
 
 }
