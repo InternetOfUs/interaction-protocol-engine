@@ -24,16 +24,31 @@
 	get_task_manager_url_to/2,
 	get_task/2,
 	get_task_id/2,
+	get_task_id/1,
 	get_task_type_id/2,
+	get_task_type_id/1,
 	get_task_app_id/2,
+	get_task_app_id/1,
 	get_task_community_id/2,
+	get_task_community_id/1,
 	get_task_requester_id/2,
+	get_task_requester_id/1,
 	get_task_goal/2,
+	get_task_goal/1,
 	get_task_goal_name/2,
+	get_task_goal_name/1,
 	get_task_goal_description/2,
+	get_task_goal_description/1,
 	get_task_goal_keywords/2,
+	get_task_goal_keywords/1,
 	is_task_closed/1,
+	is_task_closed/0,
 	get_task_close_ts/2,
+	get_task_close_ts/1,
+	get_task_attributes/2,
+	get_task_attributes/1,
+	get_task_attribute_value/3,
+	get_task_attribute_value/2,
 	get_task_transaction_label/2,
 	get_task_transaction_attributes/2,
 	get_task_transaction_actioneer_id/2,
@@ -42,7 +57,9 @@
 	get_task_transaction_messages/2,
 	wenet_task_manager_add_transaction_into_task/3,
 	wenet_task_manager_add_message_into_transaction/4,
-	wenet_task_manager_add_created_transation_to_current_task/1
+	wenet_task_manager_add_created_transation_to_current_task/1,
+	wenet_task_manager_merge_task/3,
+	wenet_task_manager_merge_task/2
 	.
 
 
@@ -72,13 +89,24 @@ get_task(Task,Id) :-
 
 %!	get_task_id(-Id,+Task)
 %
-%	Obtain the id of a task .
+%	Obtain the id of a task.
 %
-%	@param Id of the task .
+%	@param Id of the task.
 %	@param Task to get the id.
 %
 get_task_id(Id, json(Task)) :-
 	member(id=Id,Task)
+	.
+
+%!	get_task_id(-Id)
+%
+%	Obtain the id of the last task.
+%
+%	@param Id of the task.
+%
+get_task_id(Id) :-
+	get_task(Task),
+	get_task_id(Id, Task)
 	.
 
 %!	get_task_type_id(-TaskTypeId,+Task)
@@ -92,72 +120,150 @@ get_task_type_id(TaskTypeId, json(Task)) :-
 	member(taskTypeId=TaskTypeId,Task)
 	.
 
+%!	get_task_type_id(-TaskTypeId)
+%
+%	Obtain the type identifier of the last task.
+%
+%	@param TaskTypeId of the last task.
+%
+get_task_type_id(TaskTypeId) :-
+	get_task(Task),
+	get_task_type_id(TaskTypeId,Task)
+	.
+
 %!	get_task_app_id(-AppId,+Task)
 %
-%	Obtain the app identifier of a task .
+%	Obtain the app identifier of a task.
 %
-%	@param AppId of the task .
+%	@param AppId of a task.
 %	@param Task to get the app identifier.
 %
 get_task_app_id(AppId, json(Task)) :-
 	member(appId=AppId,Task)
 	.
 
+%!	get_task_app_id(-AppId)
+%
+%	Obtain the app identifier of the last task.
+%
+%	@param AppId of the last task.
+%
+get_task_app_id(AppId) :-
+	get_task(Task),
+	get_task_app_id(AppId, Task)
+	.
+
 %!	get_task_community_id(-CommunityId,+Task)
 %
-%	Obtain the community identifier of a task .
+%	Obtain the community identifier of a task.
 %
-%	@param CommunityId of the task .
+%	@param CommunityId of a task.
 %	@param Task to get the community identifier.
 %
 get_task_community_id(CommunityId, json(Task)) :-
 	member(communityId=CommunityId,Task)
 	.
 
+%!	get_task_community_id(-CommunityId)
+%
+%	Obtain the community identifier of the last task .
+%
+%	@param CommunityId of the last task.
+%
+get_task_community_id(CommunityId) :-
+	get_task(Task),
+	get_task_community_id(CommunityId,Task)
+	.
+
 %!	get_task_requester_id(-RequesterId,+Task)
 %
 %	Obtain the requester identifier of a task .
 %
-%	@param RequesterId of the task .
+%	@param RequesterId of a task .
 %	@param Task to get the requester identifier.
 %
 get_task_requester_id(RequesterId, json(Task)) :-
 	member(requesterId=RequesterId,Task)
 	.
 
+%!	get_task_requester_id(-RequesterId)
+%
+%	Obtain the requester identifier of the last task.
+%
+%	@param RequesterId of the last task.
+%
+get_task_requester_id(RequesterId, json(Task)) :-
+	get_task(Task),
+	get_task_requester_id(RequesterId, Task)
+	.
+
 %!	get_task_goal(-Goal,+Task)
 %
-%	Obtain the goal of a task .
+%	Obtain the goal of a task.
 %
-%	@param Goal of the task .
+%	@param Goal of a task.
 %	@param Task to get the goal.
 %
 get_task_goal(Goal, json(Task)) :-
 	member(goal=Goal,Task)
 	.
 
+%!	get_task_goal(-Goal)
+%
+%	Obtain the goal of the last task.
+%
+%	@param Goal of the last task.
+%	@param Task to get the goal.
+%
+get_task_goal(Goal, json(Task)) :-
+	get_task(Task),
+	get_task_goal(Goal, Task)
+	.
+
 %!	get_task_goal_name(-GoalName,+Task)
 %
-%	Obtain the goal name of a task .
+%	Obtain the goal name of a task.
 %
-%	@param GoalName of the task .
+%	@param GoalName of a task.
 %	@param Task to get the goal name.
 %
 get_task_goal_name(GoalName, json(Task)) :-
-	get_task_goal(Goal, json(Task)),
+	get_task_goal(Goal, Task),
 	member(name=GoalName,Goal)
+	.
+
+%!	get_task_goal_name(-GoalName)
+%
+%	Obtain the goal name of the latest task.
+%
+%	@param GoalName of the latest task.
+%
+get_task_goal_name(GoalName) :-
+	get_task(Task),
+	get_task_goal_name(GoalName,Task)
 	.
 
 %!	get_task_goal_description(-GoalDescription,+Task)
 %
-%	Obtain the goal description of a task .
+%	Obtain the goal description of a task.
 %
-%	@param GoalDescription of the task .
+%	@param GoalDescription of a task.
 %	@param Task to get the goal description.
 %
 get_task_goal_description(GoalDescription, json(Task)) :-
 	get_task_goal(Goal, json(Task)),
 	member(description=GoalDescription,Goal)
+	.
+
+%!	get_task_goal_description(-GoalDescription)
+%
+%	Obtain the goal description of the latest task.
+%
+%	@param GoalDescription of the latest task.
+%
+get_task_goal_description(GoalDescription) :-
+	get_task(Task),
+	get_task_goal_description(GoalDescription,Task)
 	.
 
 %!	get_task_goal_keywords(-GoalKeywords,+Task)
@@ -172,26 +278,105 @@ get_task_goal_keywords(GoalKeywords, json(Task)) :-
 	member(keywords=GoalKeywords,Goal)
 	.
 
+%!	get_task_goal_keywords(-GoalKeywords)
+%
+%	Obtain the goal keywords of the latest task.
+%
+%	@param GoalKeywords of the latest task.
+%
+get_task_goal_keywords(GoalKeywords) :-
+	get_task(Task),
+	get_task_goal_keywords(GoalKeywords,Task)
+	.
+
 %!	get_task_close_ts(+Task)
 %
-%	Obtain the close time stamp of a task .
+%	Obtain the close time stamp of a task.
 %
-%	@param CloseTs of the task .
+%	@param CloseTs of a task.
 %	@param Task to get the close time stamp.
 %
 get_task_close_ts(CloseTs, json(Task)) :-
 	member(closeTs=CloseTs,Task)
 	.
 
-%!	get_task_close_ts(-CloseTs,+Task)
+%!	get_task_close_ts(-CloseTs)
 %
-%	Obtain the close time stamp of a task .
+%	Obtain the close time stamp of the latest task.
 %
-%	@param CloseTs of the task .
+%	@param CloseTs of the latest task.
 %	@param Task to get the close time stamp.
 %
-get_task_close_ts(CloseTs, json(Task)) :-
-	member(closeTs=CloseTs,Task)
+get_task_close_ts(CloseTs) :-
+	get_task(Task),
+	get_task_close_ts(CloseTs,Task)
+	.
+
+%!	is_task_closed(+Task)
+%
+%	This is true if a task is closed.
+%
+%	@param Task to check if it is closed.
+%
+is_task_closed(json(Task)) :-
+	not(member(closeTs=_,Task))
+	.
+
+%!	is_task_closed()
+%
+%	This is true if the latest task is closed.
+%
+is_task_closed() :-
+	get_task(Task),
+	is_task_closed(Task)
+	.
+
+%!	get_task_attributes(-Attributes,+Task)
+%
+%	Obtain the attributes of a task.
+%
+%	@param Attributes of the task.
+%	@param Task to get the attributes.
+%
+get_task_attributes(Attributes, json(Task)) :-
+	member(attributes=Attributes,Task)
+	.
+
+%!	get_task_attributes(-Attributes)
+%
+%	Obtain the attributes of the last task.
+%
+%	@param Attributes of the task.
+%
+get_task_attributes(Attributes) :-
+	get_task(Task),
+	get_task_attributes(Attributes, Task)
+	.
+
+
+%!	get_task_attribute_value(-Value,+Key,+Task)
+%
+%	Obtain the value of an attributes of a task.
+%
+%	@param Value of an attribute of a task.
+%	@param Key of an attributes to get the value of a task.
+%	@param Task to get the attribute value.
+%
+get_task_attribute_value(Value, Key,Task) :-
+	get_task_attributes(json(Attributes),Task),
+	member(Key=Value,Attributes)
+	.
+
+%!	get_task_attribute_value(-Value,+Key,+Task)
+%
+%	Obtain the value of an attributes of the last task.
+%
+%	@param Value of an attribute of the last task.
+%	@param Key of an attributes to get the value of the last task.
+%
+get_task_attribute_value(Value, Key) :-
+	get_task(Task),
+	get_task_attribute_value(Value, Key, Task)
 	.
 
 %!	get_task_transaction_label(-Label,+TaskTransaction)
@@ -289,15 +474,28 @@ wenet_task_manager_add_message_into_transaction(AddedTransactionMessage,TaskId,T
 	wenet_post_json_to_url(AddedTransactionMessage,Url,Message)
 	.
 
-%!	wenet_task_manager_add_created_transation_to_current_task(-InitialTransaction)
+%!	wenet_task_manager_merge_task(-MergedTask,+TaskId,+Task)
 %
-%	Add into the current task the transaction a message into a transaction.
+%	Merge a task with the information of another task.
 %
-%	@param InitialTransaction that has been added.
+%	@param MergedTask that has been merged.
+%	@param TaskId identifier of the task to merge.
+%	@param Task with the data to merge.
 %
-wenet_task_manager_add_created_transation_to_current_task(InitialTransaction) :-
-	get_task(Task),
-	get_task_id(TaskId,Task),
-	get_task_requester_id(RequesterId,Task),
-	wenet_task_manager_add_transaction_into_task(InitialTransaction,TaskId,json([taskId=TaskId,actioneerId=RequesterId,label='CREATED_TASK']))
+wenet_task_manager_merge_task(MergedTask,TaskId,Task) :-
+	get_task_manager_url_to(Url,['/tasks/',TaskId]),
+	wenet_patch_json_to_url(MergedTask,Url,Task)
 	.
+
+%!	wenet_task_manager_merge_task(-MergedTask,+Task)
+%
+%	Merge a task with the information of the last task.
+%
+%	@param MergedTask that has been merged.
+%	@param Task with the data to merge.
+%
+wenet_task_manager_merge_task(MergedTask,Task) :-
+	get_task_id(TaskId),
+	wenet_task_manager_merge_task(MergedTask,TaskId,Task)
+	.
+

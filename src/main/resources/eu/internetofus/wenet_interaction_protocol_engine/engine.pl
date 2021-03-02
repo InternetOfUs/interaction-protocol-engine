@@ -108,7 +108,7 @@ check_condition(not(C)) :-
     ( call(C) , ! , fail );
     ( ! , true ).
 check_condition(C1 and C2) :-
-	check_condition(C1),
+	check_condition(C1), !,
 	check_condition(C2), !.
 check_condition(C1 or C2) :-
 	( check_condition(C1) , ! ) ;

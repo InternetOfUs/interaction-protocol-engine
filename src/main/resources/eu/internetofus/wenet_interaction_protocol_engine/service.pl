@@ -29,6 +29,7 @@
 	wenet_service_get_app_message_callback_url/1,
 	wenet_service_get_app_users/1,
 	wenet_service_get_app_users/2,
+	wenet_service_get_app_users_except_me/1,
 	wenet_service_post_callback/1,
 	wenet_service_post_callback_to/2,
 	wenet_create_callback_message/3,
@@ -66,7 +67,8 @@ wenet_service_get_app(App,Id) :-
 %	@param App list with the app information.
 %
 wenet_service_get_app(App) :-
-	get_received_message_appid(AppId),
+	get_received_message(Message),
+	get_protocol_message_app_id(AppId,Message),
 	wenet_service_get_app(App,AppId)
 	.
 
@@ -123,8 +125,25 @@ wenet_service_get_app_users(Users,Id) :-
 %	@param Users list of string with the user identifiers of the application.
 %
 wenet_service_get_app_users(Users) :-
-	get_received_message_appid(AppId),
-	wenet_service_get_app_users(Users,AppId)
+	get_received_message(Message),
+	get_protocol_message_app_id(AppId,Message),
+	wenet_service_get_app_users(Users,AppId),
+	asserta(wenet_service_get_app_users(Users))
+	.
+
+%!	get_app_users_except_me(+Users)
+%
+%	Return the users of an application except the current user.
+%
+%	@param Users list of string with the user identifiers of the application.
+%
+get_app_users_except_me(Users) :-
+	wenet_service_get_app_users(AppUsers),
+	get_received_message(Message),
+	get_protocol_message_receiver(Receiver,Message),
+	get_protocol_address_user_id(Me,Receiver),
+	delete(AppUsers,Me,Users),
+	asserta(wenet_service_get_app_users_except_me(Users))
 	.
 
 %!	wenet_service_post_callback(+Callback)
@@ -174,8 +193,10 @@ wenet_service_post_callback_to(UserId,json(Callback)) :-
 %	@param Attributes the attributes for the callback message.
 %
 wenet_create_callback_message(Callback,Label,Attributes) :-
-	get_received_message_appid(AppId),
-	get_received_message_receiver_userid(UserId),
+	get_received_message(Message),
+	get_protocol_message_app_id(AppId,Message),
+	get_protocol_message_receiver(Receiver,Message),
+	get_protocol_address_user_id(UserId,Receiver),
 	wenet_create_callback_message(Callback,AppId,UserId,Label,Attributes)
 	.
 

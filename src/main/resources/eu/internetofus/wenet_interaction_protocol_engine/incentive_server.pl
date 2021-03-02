@@ -21,14 +21,63 @@
 %
 
 :- dynamic
-	get_incentive_server_builder_url_to/2
+	get_incentive_server_builder_url_to/2,
+	wenet_incentive_server_update_task_status/2,
+	wenet_create_task_status/8,
+	wenet_create_task_status/3
 	.
 
-%!	get_incentive_server_builder_url_to(+Url,-Paths)
+%!	get_incentive_server_builder_url_to(-Url,+Paths)
 %
 %	Calculate the URL to interact to the specified path of the incentive server.
 %
 get_incentive_server_builder_url_to(Url,Paths) :-
 	wenet_incentive_server_api_url(Api),
 	atomics_to_string([Api|Paths],Url)
+	.
+
+%!	wenet_incentive_server_update_task_status(-Updated,+Status)
+%
+%	Update the task status.
+%
+%	@param Updated the updated status.
+%	@param Status to update.
+%
+wenet_incentive_server_update_task_status(Updated,Status) :-
+	get_incentive_server_builder_url_to(Url,['/Tasks/TaskStatus/']),
+	wenet_put_json_to_url(Updated,Url,Status)
+	.
+
+%!	wenet_create_task_status(-Status,+AppId,+UserId,+CommunityId,+TaskId,+Action,+Message)
+%
+%	Create a task status.
+%
+%	@param Status that has been created.
+%	@param AppId of the status.
+%	@param UserId of the status.
+%	@param CommunityId of the status.
+%	@param TaskId of the status.
+%	@param Action of the status.
+%	@param Message of the status.
+%
+wenet_create_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message) :-
+	Status = json([app_id=AppId,user_id=UserId,community_id=CommunityId,task_id=TaskId,'Action'=Action,'Messsage'=Message])
+	.
+
+%!	wenet_create_task_status(-Status,+Action,+Message)
+%
+%	Create a task status with the received message information.
+%
+%	@param Status that has been created.
+%	@param Action of the status.
+%	@param Message of the status.
+%
+wenet_create_task_status(Status,Action,Message) :-
+	get_received_message(ReceivedMessage),
+	get_protocol_message_app_id(AppId,ReceivedMessage),
+	get_protocol_message_receiver(Receiver,ReceivedMessage),
+	get_protocol_address_user_id(UserId,Receiver),
+	get_protocol_message_community_id(CommunityId,ReceivedMessage),
+	get_protocol_message_task_id(TaskId,ReceivedMessage),
+	wenet_create_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message)
 	.

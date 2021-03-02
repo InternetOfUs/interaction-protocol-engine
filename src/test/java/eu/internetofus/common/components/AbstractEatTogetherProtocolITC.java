@@ -557,7 +557,8 @@ public abstract class AbstractEatTogetherProtocolITC extends AbstractProtocolITC
   @Order(22)
   public void shouldNotCreateTaskWithWithoutDeadline(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.assertLastSuccessfulTestWas(21, testContext);
+    this.assertAtLeastSuccessfulTestWas(4, testContext);
+    this.lastSuccessfulTest = 21;
 
     final var task = this.createTaskForProtocol();
     task.attributes.remove("deadlineTs");
@@ -582,7 +583,8 @@ public abstract class AbstractEatTogetherProtocolITC extends AbstractProtocolITC
   @Order(23)
   public void shouldNotCreateTaskWithWithBadDeadline(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.assertLastSuccessfulTestWas(22, testContext);
+    this.assertAtLeastSuccessfulTestWas(4, testContext);
+    this.lastSuccessfulTest = 22;
 
     final var task = this.createTaskForProtocol();
     task.attributes.put("deadlineTs", TimeManager.now());
@@ -607,7 +609,8 @@ public abstract class AbstractEatTogetherProtocolITC extends AbstractProtocolITC
   @Order(24)
   public void shouldCreateTaskWithShortDeadline(final Vertx vertx, final VertxTestContext testContext) {
 
-    this.assertLastSuccessfulTestWas(23, testContext);
+    this.assertAtLeastSuccessfulTestWas(4, testContext);
+    this.lastSuccessfulTest = 23;
 
     final var source = this.createTaskForProtocol();
     source.attributes.put("deadlineTs", TimeManager.now() + 10);

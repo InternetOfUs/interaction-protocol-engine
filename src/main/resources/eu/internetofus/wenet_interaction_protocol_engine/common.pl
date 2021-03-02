@@ -28,6 +28,8 @@
 	wenet_get_json_from_url/2,
 	wenet_post_json_to_url/3,
 	wenet_post_json_to_url/2,
+	wenet_put_json_to_url/2,
+	wenet_patch_json_to_url/2,
 	wenet_log_trace/2,
 	wenet_log_trace/1,
 	wenet_log_error/3,
@@ -40,6 +42,7 @@
 :- autoload(library(http/http_ssl_plugin)).
 :- autoload(library(ssl)).
 :- autoload(library(prolog_stack)).
+:- autoload(library(lists)).
 
 
 %!	wenet_execute_safetly_once(+Term)
