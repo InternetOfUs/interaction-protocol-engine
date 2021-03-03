@@ -484,7 +484,7 @@ wenet_task_manager_add_created_transation_to_current_task(InitialTransaction) :-
 	get_task(Task),
 	get_task_id(TaskId,Task),
 	get_task_requester_id(RequesterId,Task),
-	wenet_task_manager_add_transaction_into_task(InitialTransaction,TaskId,json([taskId=TaskId,actioneerId=RequesterId,label='CREATED_TASK']))
+	wenet_task_manager_add_transaction_into_task(InitialTransaction,TaskId,json([taskId=TaskId,actioneerId=RequesterId,label='CREATE_TASK']))
 	.
 
 %!	wenet_task_manager_merge_task(-MergedTask,+TaskId,+Task)

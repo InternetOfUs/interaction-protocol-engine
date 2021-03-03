@@ -26,6 +26,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api.states;
 
 import eu.internetofus.common.TimeManager;
+import eu.internetofus.common.components.Merges;
 import eu.internetofus.common.components.interaction_protocol_engine.State;
 import eu.internetofus.common.components.interaction_protocol_engine.StatesPage;
 import eu.internetofus.common.vertx.ModelContext;
@@ -67,8 +68,8 @@ public class StatesResource implements States {
    * {@inheritDoc}
    */
   @Override
-  public void retrieveStates(String communityId, String taskId, String userId, ServiceRequest context,
-      Handler<AsyncResult<ServiceResponse>> resultHandler) {
+  public void retrieveStates(final String communityId, final String taskId, final String userId,
+      final ServiceRequest context, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     ServiceResponseHandlers.responseOk(resultHandler, new StatesPage());
   }
@@ -77,8 +78,8 @@ public class StatesResource implements States {
    * {@inheritDoc}
    */
   @Override
-  public void retrieveCommunityUserState(String communityId, String userId, ServiceRequest context,
-      Handler<AsyncResult<ServiceResponse>> resultHandler) {
+  public void retrieveCommunityUserState(final String communityId, final String userId, final ServiceRequest context,
+      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     StatesRepository.createProxy(this.vertx).searchState(communityId, null, userId).onComplete(search -> {
 
@@ -99,8 +100,8 @@ public class StatesResource implements States {
    * {@inheritDoc}
    */
   @Override
-  public void mergeCommunityUserState(String communityId, String userId, JsonObject body, ServiceRequest request,
-      Handler<AsyncResult<ServiceResponse>> resultHandler) {
+  public void mergeCommunityUserState(final String communityId, final String userId, final JsonObject body,
+      final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = new ModelContext<State, Void>();
     model.name = "state";
@@ -110,7 +111,7 @@ public class StatesResource implements States {
 
       StatesRepository.createProxy(this.vertx).searchState(communityId, null, userId).onComplete(search -> {
 
-        var state = search.result();
+        final var state = search.result();
         if (state == null) {
 
           model.source.communityId = communityId;
@@ -125,11 +126,7 @@ public class StatesResource implements States {
 
         } else {
 
-          for (var key : model.source.attributes.fieldNames()) {
-
-            var value = model.source.attributes.getValue(key);
-            state.attributes.put(key, value);
-          }
+          state.attributes = Merges.mergeJsonObjects(state.attributes, model.source.attributes);
           state._lastUpdateTs = TimeManager.now();
 
           StatesRepository.createProxy(this.vertx).updateState(state).onComplete(updated -> {

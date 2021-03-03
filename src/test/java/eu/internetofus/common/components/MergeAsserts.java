@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,19 +28,18 @@ package eu.internetofus.common.components;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.function.Consumer;
-
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxTestContext;
+import java.util.function.Consumer;
 
 /**
- * Test the {@link Merges}.
+ * Asserts to do over the {@link Mergeable} components.
  *
- * @see Merges
+ * @see Mergeable
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class MergesTest {
+public class MergeAsserts {
 
   /**
    * Assert that a model can not be merged
@@ -51,7 +50,8 @@ public class MergesTest {
    * @param testContext test context to use.
    * @param <T>         type of model to merge.
    */
-  public static <T> void assertCannotMerge(final Mergeable<T> target, final T source, final Vertx vertx, final VertxTestContext testContext) {
+  public static <T> void assertCannotMerge(final Mergeable<T> target, final T source, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     assertCannotMerge(target, source, null, vertx, testContext);
 
@@ -67,7 +67,8 @@ public class MergesTest {
    * @param testContext test context to use.
    * @param <T>         type of model to merge.
    */
-  public static <T> void assertCannotMerge(final Mergeable<T> target, final T source, final String fieldName, final Vertx vertx, final VertxTestContext testContext) {
+  public static <T> void assertCannotMerge(final Mergeable<T> target, final T source, final String fieldName,
+      final Vertx vertx, final VertxTestContext testContext) {
 
     target.merge(source, "codePrefix", vertx).onComplete(testContext.failing(error -> testContext.verify(() -> {
 
@@ -95,7 +96,8 @@ public class MergesTest {
    * @param testContext test context to use.
    * @param <T>         model to test.
    */
-  public static <T extends Validable> void assertCanMerge(final Mergeable<T> target, final T source, final Vertx vertx, final VertxTestContext testContext) {
+  public static <T extends Validable> void assertCanMerge(final Mergeable<T> target, final T source, final Vertx vertx,
+      final VertxTestContext testContext) {
 
     assertCanMerge(target, source, vertx, testContext, null);
 
@@ -111,7 +113,8 @@ public class MergesTest {
    * @param expected    function to validate the merged value.
    * @param <T>         model to test.
    */
-  public static <T extends Validable> void assertCanMerge(final Mergeable<T> target, final T source, final Vertx vertx, final VertxTestContext testContext, final Consumer<T> expected) {
+  public static <T extends Validable> void assertCanMerge(final Mergeable<T> target, final T source, final Vertx vertx,
+      final VertxTestContext testContext, final Consumer<T> expected) {
 
     target.merge(source, "codePrefix", vertx).onComplete(testContext.succeeding(merged -> testContext.verify(() -> {
 

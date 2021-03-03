@@ -26,8 +26,8 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
-import static eu.internetofus.common.components.MergesTest.assertCanMerge;
-import static eu.internetofus.common.components.MergesTest.assertCannotMerge;
+import static eu.internetofus.common.components.MergeAsserts.assertCanMerge;
+import static eu.internetofus.common.components.MergeAsserts.assertCannotMerge;
 import static eu.internetofus.common.components.UpdatesTest.assertCanUpdate;
 import static eu.internetofus.common.components.UpdatesTest.assertCannotUpdate;
 import static eu.internetofus.common.components.ValidationsTest.assertIsNotValid;

@@ -81,21 +81,6 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       "incentive_server.pl", "engine.pl", "main.pl", "norms.pl" };
 
   /**
-   * The type that define the the received event of the type incentive.
-   */
-  public static final String SEND_INCENTIVE_TYPE = "send_incentive";
-
-  /**
-   * The type that define the the received event of the type incentive.
-   */
-  public static final String CREATED_TASK = "created_task";
-
-  /**
-   * The type that define the the received event of the type task transaction.
-   */
-  public static final String DO_TASK_TRANSACTION = "do_transaction";
-
-  /**
    * The component that will consume the messages.
    */
   protected MessageConsumer<JsonObject> consumer;
@@ -325,6 +310,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
         // TODO add profile norms but now are not ProtocolNorm
         this.appendToInitAssertaModel(protocol.profile.toJsonObject(), "wenet_protocol_profile.json", "get_profile");
+        Files.writeString(this.init, "wenet_me(" + protocol.profile.id + ").", StandardOpenOption.APPEND);
 
       }
 
