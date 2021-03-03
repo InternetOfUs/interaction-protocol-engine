@@ -104,17 +104,17 @@ check_norms([[_Condition,_Conclusion]|Norms],[OutputT]) :-
     % \+check_condition(Condition),
     check_norms(Norms,OutputT).
 
-check_condition(not(C)) :-
+check_condition(not(C)) :- !,
     ( call(C) , ! , fail );
     ( ! , true ).
-check_condition(C1 and C2) :-
-	check_condition(C1), !,
+check_condition(C1 and C2) :- !,
+	check_condition(C1),
 	check_condition(C2), !.
-check_condition(C1 or C2) :-
+check_condition(C1 or C2) :- !,
 	( check_condition(C1) , ! ) ;
 	( check_condition(C2) , ! ) .
 check_condition(C) :-
-    call(C).
+   call(C).
 
 execute_conclusion(Conclusion1 and Conclusion2,Output) :- !,
 	execute_conclusion(Conclusion1,C1),
