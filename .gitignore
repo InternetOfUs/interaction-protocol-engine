@@ -187,3 +187,6 @@ nbdist/
 !.vscode/extensions.json
 /.pmd
 /.pmdruleset.xml
+
+### Temporal directories
+work/

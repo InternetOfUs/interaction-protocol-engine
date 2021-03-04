@@ -310,7 +310,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
         // TODO add profile norms but now are not ProtocolNorm
         this.appendToInitAssertaModel(protocol.profile.toJsonObject(), "wenet_protocol_profile.json", "get_profile");
-        Files.writeString(this.init, "wenet_me(" + protocol.profile.id + ").", StandardOpenOption.APPEND);
+        Files.writeString(this.init, "wenet_me('" + protocol.profile.id + "').\n", StandardOpenOption.APPEND);
 
       }
 
