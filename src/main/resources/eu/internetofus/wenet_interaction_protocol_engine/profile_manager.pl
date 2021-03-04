@@ -21,17 +21,17 @@
 %
 
 :- dynamic
-	get_profile_manager_url_to/2,
+	wenet_profile_manager_api_url_to/2,
 	get_profile/2,
 	get_community/2
 	.
 
 
-%!	get_profile_manager_url_to(+Url,-Paths)
+%!	wenet_profile_manager_api_url_to(+Url,-Paths)
 %
 %	Calculate the URL from a path
 %
-get_profile_manager_url_to(Url,Paths) :-
+wenet_profile_manager_api_url_to(Url,Paths) :-
 	wenet_profile_manager_api_url(Api),
 	atomics_to_string([Api|Paths],Url)
 	.
@@ -44,10 +44,10 @@ get_profile_manager_url_to(Url,Paths) :-
 %	@param Profile list with the profile information.
 %	@param Id string identifeir of the profile to obtain.
 %
-get_profile(Profile,Id) :-
-	get_profile_manager_url_to(Url,['/profiles/',Id]),
+wenet_profile_manager_get_profile(Profile,Id) :-
+	wenet_profile_manager_api_url_to(Url,['/profiles/',Id]),
 	wenet_get_json_from_url(Url,Profile),
-	asserta(get_profile(Profile,Id)),
+	asserta(wenet_profile_manager_get_profile(Profile,Id)),
 	wenet_log_trace('Loaded profile',Profile)
 	.
 
@@ -58,9 +58,9 @@ get_profile(Profile,Id) :-
 %	@param Community list with the community information.
 %	@param Id string identifeir of the community to obtain.
 %
-get_community(Community,Id) :-
-	get_profile_manager_url_to(Url,['/communities/',Id]),
+wenet_profile_manager_get_community(Community,Id) :-
+	wenet_profile_manager_api_url_to(Url,['/communities/',Id]),
 	wenet_get_json_from_url(Url,Community),
-	asserta(get_community(Community,Id)),
+	asserta(wenet_profile_manager_get_community(Community,Id)),
 	wenet_log_trace('Loaded community',Community)
 	.

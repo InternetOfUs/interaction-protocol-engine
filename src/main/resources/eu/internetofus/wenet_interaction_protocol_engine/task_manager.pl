@@ -21,10 +21,9 @@
 %
 
 :- dynamic
-	get_task_manager_url_to/2,
+	wenet_task_manager_api_url_to/2,
 	get_task/2,
 	get_task_id/2,
-	get_task_id/1,
 	get_task_type_id/2,
 	get_task_type_id/1,
 	get_task_app_id/2,
@@ -55,6 +54,7 @@
 	get_task_transaction_task_id/2,
 	get_task_transaction_id/2,
 	get_task_transaction_messages/2,
+	wenet_task_manager_add_transaction_into_task/2,
 	wenet_task_manager_add_transaction_into_task/3,
 	wenet_task_manager_add_message_into_transaction/4,
 	wenet_task_manager_add_created_transation_to_current_task/1,
@@ -63,11 +63,11 @@
 	.
 
 
-%!	get_task_manager_url_to(+Url,-Paths)
+%!	wenet_task_manager_api_url_to(+Url,-Paths)
 %
 %	Calculate the URL from a path
 %
-get_task_manager_url_to(Url,Paths) :-
+wenet_task_manager_api_url_to(Url,Paths) :-
 	wenet_task_manager_api_url(Api),
 	atomics_to_string([Api|Paths],Url)
 	.
@@ -81,7 +81,7 @@ get_task_manager_url_to(Url,Paths) :-
 %	@param Id string identifeir of the task to obtain.
 %
 get_task(Task,Id) :-
-	get_task_manager_url_to(Url,['/tasks/',Id]),
+	wenet_task_manager_api_url_to(Url,['/tasks/',Id]),
 	wenet_get_json_from_url(Url,Task),
 	asserta(get_task(Task,Id)),
 	wenet_log_trace('Loaded task',Task)
@@ -98,16 +98,6 @@ get_task_id(Id, json(Task)) :-
 	member(id=Id,Task)
 	.
 
-%!	get_task_id(-Id)
-%
-%	Obtain the id of the last task.
-%
-%	@param Id of the task.
-%
-get_task_id(Id) :-
-	get_task(Task),
-	get_task_id(Id, Task)
-	.
 
 %!	get_task_type_id(-TaskTypeId,+Task)
 %
@@ -127,7 +117,7 @@ get_task_type_id(TaskTypeId, json(Task)) :-
 %	@param TaskTypeId of the last task.
 %
 get_task_type_id(TaskTypeId) :-
-	get_task(Task),
+	env_task(Task),
 	get_task_type_id(TaskTypeId,Task)
 	.
 
@@ -149,7 +139,7 @@ get_task_app_id(AppId, json(Task)) :-
 %	@param AppId of the last task.
 %
 get_task_app_id(AppId) :-
-	get_task(Task),
+	env_task(Task),
 	get_task_app_id(AppId, Task)
 	.
 
@@ -171,7 +161,7 @@ get_task_community_id(CommunityId, json(Task)) :-
 %	@param CommunityId of the last task.
 %
 get_task_community_id(CommunityId) :-
-	get_task(Task),
+	env_task(Task),
 	get_task_community_id(CommunityId,Task)
 	.
 
@@ -193,7 +183,7 @@ get_task_requester_id(RequesterId, json(Task)) :-
 %	@param RequesterId of the last task.
 %
 get_task_requester_id(RequesterId, json(Task)) :-
-	get_task(Task),
+	env_task(Task),
 	get_task_requester_id(RequesterId, Task)
 	.
 
@@ -216,7 +206,7 @@ get_task_goal(Goal, json(Task)) :-
 %	@param Task to get the goal.
 %
 get_task_goal(Goal, json(Task)) :-
-	get_task(Task),
+	env_task(Task),
 	get_task_goal(Goal, Task)
 	.
 
@@ -239,7 +229,7 @@ get_task_goal_name(GoalName, json(Task)) :-
 %	@param GoalName of the latest task.
 %
 get_task_goal_name(GoalName) :-
-	get_task(Task),
+	env_task(Task),
 	get_task_goal_name(GoalName,Task)
 	.
 
@@ -262,7 +252,7 @@ get_task_goal_description(GoalDescription, json(Task)) :-
 %	@param GoalDescription of the latest task.
 %
 get_task_goal_description(GoalDescription) :-
-	get_task(Task),
+	env_task(Task),
 	get_task_goal_description(GoalDescription,Task)
 	.
 
@@ -285,7 +275,7 @@ get_task_goal_keywords(GoalKeywords, json(Task)) :-
 %	@param GoalKeywords of the latest task.
 %
 get_task_goal_keywords(GoalKeywords) :-
-	get_task(Task),
+	env_task(Task),
 	get_task_goal_keywords(GoalKeywords,Task)
 	.
 
@@ -308,7 +298,7 @@ get_task_close_ts(CloseTs, json(Task)) :-
 %	@param Task to get the close time stamp.
 %
 get_task_close_ts(CloseTs) :-
-	get_task(Task),
+	env_task(Task),
 	get_task_close_ts(CloseTs,Task)
 	.
 
@@ -327,7 +317,7 @@ is_task_closed(json(Task)) :-
 %	This is true if the latest task is closed.
 %
 is_task_closed() :-
-	get_task(Task),
+	env_task(Task),
 	is_task_closed(Task)
 	.
 
@@ -349,7 +339,7 @@ get_task_attributes(Attributes, json(Task)) :-
 %	@param Attributes of the task.
 %
 get_task_attributes(Attributes) :-
-	get_task(Task),
+	env_task(Task),
 	get_task_attributes(Attributes, Task)
 	.
 
@@ -375,7 +365,7 @@ get_task_attribute_value(Value, Key,Task) :-
 %	@param Key of an attributes to get the value of the last task.
 %
 get_task_attribute_value(Value, Key) :-
-	get_task(Task),
+	env_task(Task),
 	get_task_attribute_value(Value, Key, Task)
 	.
 
@@ -456,7 +446,7 @@ get_task_transaction_messages(Messages, json(TaskTransaction)) :-
 %	@param TaskTransaction to add to the task.
 %
 wenet_task_manager_add_transaction_into_task(AddedTaskTransaction,TaskId,Transaction) :-
-	get_task_manager_url_to(Url,['/tasks/',TaskId,'/transactions']),
+	wenet_task_manager_api_url_to(Url,['/tasks/',TaskId,'/transactions']),
 	wenet_post_json_to_url(AddedTaskTransaction,Url,Transaction)
 	.
 
@@ -470,7 +460,7 @@ wenet_task_manager_add_transaction_into_task(AddedTaskTransaction,TaskId,Transac
 %	@param TransactionMessage to add to the transaction.
 %
 wenet_task_manager_add_message_into_transaction(AddedTransactionMessage,TaskId,TransactionId,Message) :-
-	get_task_manager_url_to(Url,['/tasks/',TaskId,'/transactions/',TransactionId,'/messages']),
+	wenet_task_manager_api_url_to(Url,['/tasks/',TaskId,'/transactions/',TransactionId,'/messages']),
 	wenet_post_json_to_url(AddedTransactionMessage,Url,Message)
 	.
 
@@ -481,10 +471,9 @@ wenet_task_manager_add_message_into_transaction(AddedTransactionMessage,TaskId,T
 %	@param InitialTransaction that has been added.
 %
 wenet_task_manager_add_created_transation_to_current_task(InitialTransaction) :-
-	get_task(Task),
-	get_task_id(TaskId,Task),
-	get_task_requester_id(RequesterId,Task),
-	wenet_task_manager_add_transaction_into_task(InitialTransaction,TaskId,json([taskId=TaskId,actioneerId=RequesterId,label='CREATE_TASK']))
+	env_task_id(TaskId),
+	env_profile_id(ProfileId),
+	wenet_task_manager_add_transaction_into_task(InitialTransaction,TaskId,json([taskId=TaskId,actioneerId=ProfileId,label='CREATE_TASK']))
 	.
 
 %!	wenet_task_manager_merge_task(-MergedTask,+TaskId,+Task)
@@ -496,7 +485,7 @@ wenet_task_manager_add_created_transation_to_current_task(InitialTransaction) :-
 %	@param Task with the data to merge.
 %
 wenet_task_manager_merge_task(MergedTask,TaskId,Task) :-
-	get_task_manager_url_to(Url,['/tasks/',TaskId]),
+	wenet_task_manager_api_url_to(Url,['/tasks/',TaskId]),
 	wenet_patch_json_to_url(MergedTask,Url,Task)
 	.
 
@@ -508,7 +497,7 @@ wenet_task_manager_merge_task(MergedTask,TaskId,Task) :-
 %	@param Task with the data to merge.
 %
 wenet_task_manager_merge_task(MergedTask,Task) :-
-	get_task_id(TaskId),
+	env_task_id(TaskId),
 	wenet_task_manager_merge_task(MergedTask,TaskId,Task)
 	.
 

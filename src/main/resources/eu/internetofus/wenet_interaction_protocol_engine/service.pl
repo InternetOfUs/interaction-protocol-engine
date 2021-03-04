@@ -21,7 +21,7 @@
 %
 
 :- dynamic
-	wenet_service_url/2,
+	wenet_service_api_url_to/2,
 	wenet_service_get_app/1,
 	wenet_service_get_app/2,
 	get_app_id/2,
@@ -32,16 +32,16 @@
 	wenet_service_get_app_users_except_me/1,
 	wenet_service_post_callback/1,
 	wenet_service_post_callback_to/2,
-	wenet_create_callback_message/3,
-	wenet_create_callback_message/5
+	create_callback_message/3,
+	create_callback_message/5
 	.
 
 
-%!	wenet_service_url(+Url,-Paths)
+%!	wenet_service_api_url_to(+Url,-Paths)
 %
 %	Calculate the URL from a path
 %
-wenet_service_url(Url,Paths) :-
+wenet_service_api_url_to(Url,Paths) :-
 	wenet_service_api_url(Api),
 	atomics_to_string([Api|Paths],Url)
 	.
@@ -55,7 +55,7 @@ wenet_service_url(Url,Paths) :-
 %	@param Id string identifier of the app to obtain.
 %
 wenet_service_get_app(App,Id) :-
-	wenet_service_url(Url,['/app/',Id]),
+	wenet_service_api_url_to(Url,['/app/',Id]),
 	wenet_get_json_from_url(Url,App),
 	asserta(wenet_service_get_app(App,Id))
 	.
@@ -67,7 +67,7 @@ wenet_service_get_app(App,Id) :-
 %	@param App list with the app information.
 %
 wenet_service_get_app(App) :-
-	get_received_message(Message),
+	env_message(Message),
 	get_protocol_message_app_id(AppId,Message),
 	wenet_service_get_app(App,AppId)
 	.
@@ -113,7 +113,7 @@ wenet_service_get_app_message_callback_url(Url) :-
 %	@param Id string identifier of the application to obtain.
 %
 wenet_service_get_app_users(Users,Id) :-
-	wenet_service_url(Url,['/app/',Id,'/users']),
+	wenet_service_api_url_to(Url,['/app/',Id,'/users']),
 	wenet_get_json_from_url(Url,Users),
 	asserta(wenet_service_get_app_users(Users,Id))
 	.
@@ -125,8 +125,7 @@ wenet_service_get_app_users(Users,Id) :-
 %	@param Users list of string with the user identifiers of the application.
 %
 wenet_service_get_app_users(Users) :-
-	get_received_message(Message),
-	get_protocol_message_app_id(AppId,Message),
+	env_app_id(AppId),
 	wenet_service_get_app_users(Users,AppId),
 	asserta(wenet_service_get_app_users(Users))
 	.
@@ -139,9 +138,7 @@ wenet_service_get_app_users(Users) :-
 %
 get_app_users_except_me(Users) :-
 	wenet_service_get_app_users(AppUsers),
-	get_received_message(Message),
-	get_protocol_message_receiver(Receiver,Message),
-	get_protocol_address_user_id(Me,Receiver),
+	env_profile_id(Me),
 	delete(AppUsers,Me,Users),
 	asserta(wenet_service_get_app_users_except_me(Users))
 	.
@@ -184,7 +181,7 @@ wenet_service_post_callback_to(UserId,json(Callback)) :-
 	.
 
 
-%!	wenet_create_callback_message(-Callback,+Label,+Attributes)
+%!	create_callback_message(-Callback,+Label,+Attributes)
 %
 %	Create an callback message.
 %
@@ -192,15 +189,13 @@ wenet_service_post_callback_to(UserId,json(Callback)) :-
 %	@param Label the label for the callback message.
 %	@param Attributes the attributes for the callback message.
 %
-wenet_create_callback_message(Callback,Label,Attributes) :-
-	get_received_message(Message),
-	get_protocol_message_app_id(AppId,Message),
-	get_protocol_message_receiver(Receiver,Message),
-	get_protocol_address_user_id(UserId,Receiver),
-	wenet_create_callback_message(Callback,AppId,UserId,Label,Attributes)
+create_callback_message(Callback,Label,Attributes) :-
+	env_app_id(AppId),
+	env_profile_id(UserId),
+	create_callback_message(Callback,AppId,UserId,Label,Attributes)
 	.
 
-%!	wenet_create_callback_message(-Callback,+AppId,+ReceiverId,+Label,+Attributes)
+%!	create_callback_message(-Callback,+AppId,+ReceiverId,+Label,+Attributes)
 %
 %	Create an callback message.
 %
@@ -210,6 +205,6 @@ wenet_create_callback_message(Callback,Label,Attributes) :-
 %	@param Label the label for the callback message.
 %	@param Attributes the attributes for the callback message.
 %
-wenet_create_callback_message(Callback,AppId,ReceiverId,Label,Attributes) :-
+create_callback_message(Callback,AppId,ReceiverId,Label,Attributes) :-
 	Callback = json([appId=AppId,receiverId=ReceiverId,label=Label,attributes=Attributes])
 	.

@@ -170,8 +170,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       env.fillInAutoloadPrologFilesIn(this.prologDir);
       env.appendToInitConfigurationFacts(this.config());
       env.fillIn(protocol);
-      env.appendToInitAssertaModel(body.getJsonObject("message"), "wenet_protocol_message.json",
-          "get_received_message");
+      env.appendToInitAssertaModel(body.getJsonObject("message"), "wenet_protocol_message.json", "env_message");
       env.include(env.protocolNorms);
 
       env.run();
@@ -309,7 +308,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       if (protocol.profile != null) {
 
         // TODO add profile norms but now are not ProtocolNorm
-        this.appendToInitAssertaModel(protocol.profile.toJsonObject(), "wenet_protocol_profile.json", "get_profile");
+        this.appendToInitAssertaModel(protocol.profile.toJsonObject(), "wenet_protocol_profile.json", "env_profile");
         Files.writeString(this.init, "wenet_me('" + protocol.profile.id + "').\n", StandardOpenOption.APPEND);
 
       }
@@ -317,7 +316,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       if (protocol.community != null) {
 
         this.appendToInitAssertaModel(protocol.community.toJsonObject(), "wenet_protocol_community.json",
-            "get_community");
+            "env_community");
         this.appendNorms(protocol.community.norms, "Norms of community ", protocol.community.name, " (",
             protocol.community.id, ")");
 
@@ -325,14 +324,14 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
       if (protocol.task != null) {
 
-        this.appendToInitAssertaModel(protocol.task.toJsonObject(), "wenet_protocol_task.json", "get_task");
+        this.appendToInitAssertaModel(protocol.task.toJsonObject(), "wenet_protocol_task.json", "env_task");
 
       }
 
       if (protocol.taskType != null) {
 
         this.appendToInitAssertaModel(protocol.taskType.toJsonObject(), "wenet_protocol_task_type.json",
-            "get_task_type");
+            "env_task_type");
         this.appendNorms(protocol.taskType.norms, "Norms of task type ", protocol.taskType.name, " (",
             protocol.taskType.id, ")");
 
