@@ -184,11 +184,13 @@ is_received_message_from_another_iteraction_protocol_engine_with_particle(Messag
 env_task_id(TaskId) :-
 	env_message(Message),
 	get_protocol_message_task_id(TaskId,Message),
+	!,
 	asserta(env_task_id(TaskId)).
 
 env_task_id(TaskId) :-
 	env_task(Task),
 	get_task_id(TaskId,Task),
+	!,
 	asserta(env_task_id(TaskId)).
 
 env_task_id(@(null)).
@@ -203,11 +205,13 @@ env_task_id(@(null)).
 env_task_type_id(TaskTypeId) :-
 	env_task(Task),
 	get_task_type_id(TaskTypeId,Task),
+	!,
 	asserta(env_task_type_id(TaskTypeId)).
 
 env_task_type_id(TaskTypeId) :-
 	env_task_type(TaskType),
 	member(id=TaskTypeId,TaskType),
+	!,
 	asserta(env_task_type_id(TaskTypeId)).
 
 env_task_type_id(@(null)).
@@ -222,16 +226,19 @@ env_task_type_id(@(null)).
 env_community_id(CommunityId) :-
 	env_message(Message),
 	get_protocol_message_community_id(CommunityId,Message),
+	!,
 	asserta(env_community_id(CommunityId)).
 
 env_community_id(CommunityId) :-
 	env_community(Community),
 	get_community_id(CommunityId,Community),
+	!,
 	asserta(env_community_id(CommunityId)).
 
 env_community_id(CommunityId) :-
 	env_task(Task),
 	get_task_community_id(CommunityId,Task),
+	!,
 	asserta(env_community_id(CommunityId)).
 
 env_community_id(@(null)).
@@ -246,16 +253,19 @@ env_community_id(@(null)).
 env_app_id(AppId) :-
 	env_message(Message),
 	get_protocol_message_app_id(AppId,Message),
+	!,
 	asserta(env_app_id(AppId)).
 
 env_app_id(AppId) :-
 	env_app(App),
 	get_app_id(AppId,App),
+	!,
 	asserta(env_app_id(AppId)).
 
 env_app_id(AppId) :-
 	env_task(Task),
 	get_task_app_id(AppId,Task),
+	!,
 	asserta(env_app_id(AppId)).
 
 env_app_id(@(null)).
@@ -270,11 +280,13 @@ env_app_id(@(null)).
 env_transaction_id(TransactionId) :-
 	env_message(Message),
 	get_protocol_message_transaction_id(TransactionId,Message),
+	!,
 	asserta(env_transaction_id(TransactionId)).
 
 env_transaction_id(TransactionId) :-
 	env_transaction(Transaction),
 	get_task_transaction_id(TransactionId,Transaction),
+	!,
 	asserta(env_transaction_id(TransactionId)).
 
 env_transaction_id(@(null)).
@@ -290,11 +302,13 @@ env_profile_id(ProfileId) :-
 	env_message(Message),
 	get_protocol_message_receiver(Receiver,Message),
 	get_protocol_address_user_id(ProfileId,Receiver),
+	!,
 	asserta(env_profile_id(ProfileId)).
 
 env_profile_id(ProfileId) :-
 	env_profile(Profile),
 	get_profile_id(ProfileId,Profile),
+	!,
 	asserta(env_profile_id(ProfileId)).
 
 env_profile_id(@(null)).

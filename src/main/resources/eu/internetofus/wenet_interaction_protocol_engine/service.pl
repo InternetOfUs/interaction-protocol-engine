@@ -57,6 +57,7 @@ wenet_service_api_url_to(Url,Paths) :-
 wenet_service_get_app(App,Id) :-
 	wenet_service_api_url_to(Url,['/app/',Id]),
 	wenet_get_json_from_url(Url,App),
+	!,
 	asserta(wenet_service_get_app(App,Id))
 	.
 
@@ -115,6 +116,7 @@ wenet_service_get_app_message_callback_url(Url) :-
 wenet_service_get_app_users(Users,Id) :-
 	wenet_service_api_url_to(Url,['/app/',Id,'/users']),
 	wenet_get_json_from_url(Url,Users),
+	!,
 	asserta(wenet_service_get_app_users(Users,Id))
 	.
 
@@ -127,6 +129,7 @@ wenet_service_get_app_users(Users,Id) :-
 wenet_service_get_app_users(Users) :-
 	env_app_id(AppId),
 	wenet_service_get_app_users(Users,AppId),
+	!,
 	asserta(wenet_service_get_app_users(Users))
 	.
 
@@ -140,6 +143,7 @@ get_app_users_except_me(Users) :-
 	wenet_service_get_app_users(AppUsers),
 	env_profile_id(Me),
 	delete(AppUsers,Me,Users),
+	!,
 	asserta(wenet_service_get_app_users_except_me(Users))
 	.
 

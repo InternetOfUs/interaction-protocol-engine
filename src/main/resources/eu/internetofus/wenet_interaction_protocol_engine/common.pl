@@ -52,8 +52,13 @@
 %	@param Term to execute.
 %
 wenet_execute_safetly_once(Term) :-
-	catch_with_backtrace(Term->wenet_log_trace('Executed',Term);wenet_log_error('Cannot execute',Term),Error,wenet_log_error('Cannot execute',Term,Error)),
-	!.
+	catch_with_backtrace(wenet_execute_once(Term),Error,wenet_log_error('Cannot execute',Term,Error))
+	.
+wenet_execute_once(Term) :-
+	once(Term)->
+		wenet_log_trace('Executed',Term);
+		(wenet_log_error('Cannot execute',Term),backtrace)
+	.
 
 %!	wenet_read_json_from_file(+FilePath, -Json)
 %
@@ -63,12 +68,10 @@ wenet_execute_safetly_once(Term) :-
 %	@param Json term with the data on the JSON file.
 %
 wenet_read_json_from_file(FilePath, Json) :-
-	wenet_execute_safetly_once(wenet_read_json_from_file_(FilePath, Json)).
-wenet_read_json_from_file_(FilePath, Json) :-
-	open(FilePath, read, Stream),
-	json_read(Stream, Json),
-	close(Stream),
-  	wenet_log_trace('LOAD file',[FilePath,Json])
+	once(open(FilePath, read, Stream)),
+	once(json_read(Stream, Json)),
+	once(close(Stream)),
+  	once(wenet_log_trace('LOAD file',[FilePath,Json]))
 	.
 
 
@@ -80,13 +83,11 @@ wenet_read_json_from_file_(FilePath, Json) :-
 %	@param Json term with the data on the JSON resource.
 %
 wenet_get_json_from_url(Url, Json) :-
-	wenet_execute_safetly_once(wenet_get_json_from_url_(Url, Json)).
-wenet_get_json_from_url_(Url, Json) :-
-	wenet_component_auth_header(Header),
-	http_open(Url,Stream,[Header]),
-	json_read(Stream, Json),
-  	close(Stream),
-  	wenet_log_trace('GET',[Url,Json])
+	once(wenet_component_auth_header(Header)),
+	once(http_open(Url,Stream,[Header])),
+	once(json_read(Stream, Json)),
+  	once(close(Stream)),
+  	once(wenet_log_trace('GET',[Url,Json]))
   	.
 
 %!	wenet_post_json_to_url(-Json,+Url,+Body)
@@ -98,8 +99,8 @@ wenet_get_json_from_url_(Url, Json) :-
 %	@param Json JSON term that return the post.
 %
 wenet_post_json_to_url(Json, Url, Body) :-
-	wenet_component_auth_header(Header),
-	wenet_post_json_to_url(Json,Url,Body,[Header]).
+	once(wenet_component_auth_header(Header)),
+	once(wenet_post_json_to_url(Json,Url,Body,[Header])).
 
 %!	wenet_post_json_to_url(-Json,+Url,+Body,+Headers)
 %
@@ -110,12 +111,18 @@ wenet_post_json_to_url(Json, Url, Body) :-
 %	@param Json JSON term that return the post.
 %	@param Headers for the post action.
 %
-wenet_post_json_to_url(Json, Url, Body, Headers) :-
-	atom_json_term(AtomBody, Body, []),
-	append(Headers,[request_header('Accept'='application/json; charset=UTF-8')],PostHeaders),
-	http_post(Url, atom('application/json',AtomBody), Result, PostHeaders),
-	wenet_log_trace('POST',[Url,AtomBody,Result]),
-	atom_json_term(Result, Json, [])
+wenet_post_json_to_url(Json, Url, Body, Headers)  :-
+	once(atom_json_term(AtomBody, Body, [])),
+	once(append(Headers,[request_header('Accept'='application/json; charset=UTF-8')],PostHeaders)),
+	once(http_post(Url,
+		atom('application/json',AtomBody),
+		Result,
+		PostHeaders
+		)->
+		wenet_log_trace('POST',[Url,AtomBody,Result])
+		;(wenet_log_error('Cannot POST',[Url,AtomBody]),Result = '{}')
+	),
+	once(atom_json_term(Result, Json, []))
 	.
 
 %!	wenet_put_json_to_url(-Json,+Url,+Body)
@@ -127,12 +134,17 @@ wenet_post_json_to_url(Json, Url, Body, Headers) :-
 %	@param Json JSON term that return the put.
 %
 wenet_put_json_to_url(Json, Url, Body) :-
-	wenet_component_auth_header(Header),
-	atom_json_term(AtomBody, Body, []),
-	http_put(Url, atom('application/json',AtomBody), Result, [Header,request_header('Accept'='application/json; charset=UTF-8')])->
-		wenet_log_trace('PUT',[Url,AtomBody,Result]),
-		;(wenet_log_error('Cannot PUT',[Url,AtomBody]),Result = '{}'),
-	atom_json_term(Result, Json, [])
+	once(wenet_component_auth_header(Header)),
+	once(atom_json_term(AtomBody, Body, [])),
+	once(http_put(Url,
+		atom('application/json',AtomBody),
+		Result,
+		[Header,request_header('Accept'='application/json; charset=UTF-8')]
+		)->
+		wenet_log_trace('PUT',[Url,AtomBody,Result])
+		;(wenet_log_error('Cannot PUT',[Url,AtomBody]),Result = '{}')
+	),
+	once(atom_json_term(Result, Json, []))
 	.
 
 %!	wenet_patch_json_to_url(-Json,+Url,+Body)
@@ -144,12 +156,17 @@ wenet_put_json_to_url(Json, Url, Body) :-
 %	@param Json JSON term that return the patch.
 %
 wenet_patch_json_to_url(Json, Url, Body) :-
-	wenet_component_auth_header(Header),
-	atom_json_term(AtomBody, Body, []),
-	http_patch(Url, atom('application/json',AtomBody), Result, [Header,request_header('Accept'='application/json; charset=UTF-8')])->
-		wenet_log_trace('PATCH',[Url,AtomBody,Result]),
-		;(wenet_log_error('Cannot PATCH',[Url,AtomBody]),Result = '{}'),
-	atom_json_term(Result, Json, [])
+	once(wenet_component_auth_header(Header)),
+	once(atom_json_term(AtomBody, Body, [])),
+	once(http_patch(Url,
+		atom('application/json',AtomBody),
+		Result,
+		[Header,request_header('Accept'='application/json; charset=UTF-8')]
+		)->
+		wenet_log_trace('PATCH',[Url,AtomBody,Result])
+		;(wenet_log_error('Cannot PATCH',[Url,AtomBody]),Result = '{}')
+	),
+	once(atom_json_term(Result, Json, []))
 	.
 
 %!	wenet_log_trace(-Text)
@@ -209,5 +226,6 @@ wenet_log_error(Text,Terms,Error) :-
 wenet_print_error(Format,Arguments) :-
 	format(string(Lines),Format,Arguments),
 	print_message_lines(user_error,kind(error),[Lines]),
+	!,
 	asserta(wenet_do_actions_status(1))
 	.

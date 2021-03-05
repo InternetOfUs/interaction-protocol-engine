@@ -87,6 +87,7 @@ wenet_task_manager_api_url_to(Url,Paths) :-
 get_task(Task,Id) :-
 	wenet_task_manager_api_url_to(Url,['/tasks/',Id]),
 	wenet_get_json_from_url(Url,Task),
+	!,
 	asserta(get_task(Task,Id)),
 	wenet_log_trace('Loaded task',Task)
 	.
@@ -122,6 +123,7 @@ get_task_type_id(TaskTypeId, json(Task)) :-
 %
 get_task_type_id(TaskTypeId) :-
 	env_task(Task),
+	!,
 	get_task_type_id(TaskTypeId,Task)
 	.
 
@@ -144,6 +146,7 @@ get_task_app_id(AppId, json(Task)) :-
 %
 get_task_app_id(AppId) :-
 	env_task(Task),
+	!,
 	get_task_app_id(AppId, Task)
 	.
 
@@ -166,6 +169,7 @@ get_task_community_id(CommunityId, json(Task)) :-
 %
 get_task_community_id(CommunityId) :-
 	env_task(Task),
+	!,
 	get_task_community_id(CommunityId,Task)
 	.
 
@@ -188,6 +192,7 @@ get_task_requester_id(RequesterId, json(Task)) :-
 %
 get_task_requester_id(RequesterId, json(Task)) :-
 	env_task(Task),
+	!,
 	get_task_requester_id(RequesterId, Task)
 	.
 
@@ -211,6 +216,7 @@ get_task_goal(Goal, json(Task)) :-
 %
 get_task_goal(Goal, json(Task)) :-
 	env_task(Task),
+	!,
 	get_task_goal(Goal, Task)
 	.
 
@@ -234,6 +240,7 @@ get_task_goal_name(GoalName, json(Task)) :-
 %
 get_task_goal_name(GoalName) :-
 	env_task(Task),
+	!,
 	get_task_goal_name(GoalName,Task)
 	.
 
@@ -257,6 +264,7 @@ get_task_goal_description(GoalDescription, json(Task)) :-
 %
 get_task_goal_description(GoalDescription) :-
 	env_task(Task),
+	!,
 	get_task_goal_description(GoalDescription,Task)
 	.
 
@@ -280,6 +288,7 @@ get_task_goal_keywords(GoalKeywords, json(Task)) :-
 %
 get_task_goal_keywords(GoalKeywords) :-
 	env_task(Task),
+	!,
 	get_task_goal_keywords(GoalKeywords,Task)
 	.
 
@@ -303,6 +312,7 @@ get_task_close_ts(CloseTs, json(Task)) :-
 %
 get_task_close_ts(CloseTs) :-
 	env_task(Task),
+	!,
 	get_task_close_ts(CloseTs,Task)
 	.
 
@@ -322,6 +332,7 @@ is_task_closed(json(Task)) :-
 %
 is_task_closed() :-
 	env_task(Task),
+	!,
 	is_task_closed(Task)
 	.
 
@@ -344,6 +355,7 @@ get_task_attributes(Attributes, json(Task)) :-
 %
 get_task_attributes(Attributes) :-
 	env_task(Task),
+	!,
 	get_task_attributes(Attributes, Task)
 	.
 
@@ -370,6 +382,7 @@ get_task_attribute_value(Value, Key,Task) :-
 %
 get_task_attribute_value(Value, Key) :-
 	env_task(Task),
+	!,
 	get_task_attribute_value(Value, Key, Task)
 	.
 
@@ -448,7 +461,11 @@ get_task_transaction_messages(Messages, json(TaskTransaction)) :-
 %	@param Transaction to add to the task.
 %
 wenet_task_manager_add_transaction_into_task(Transaction) :-
-	wenet_task_manager_add_transaction_into_task(_,Transaction)
+	wenet_task_manager_add_transaction_into_task(json(AddedTaskTransaction),Transaction),
+	member(id=AddedTaskTransactionId,AddedTaskTransaction),
+	!,
+	asserta(env_transaction(json(AddedTaskTransaction))),
+	asserta(env_transaction_id(AddedTaskTransactionId))
 	.
 
 %!	wenet_task_manager_add_transaction_into_task(-AddedTaskTransaction,+TaskId,+Transaction)
@@ -473,10 +490,7 @@ wenet_task_manager_add_transaction_into_task(AddedTaskTransaction,Transaction) :
 %
 wenet_task_manager_add_transaction_into_task(AddedTaskTransaction,TaskId,Transaction) :-
 	wenet_task_manager_api_url_to(Url,['/tasks/',TaskId,'/transactions']),
-	wenet_post_json_to_url(AddedTaskTransaction,Url,Transaction),
-	asserta(env_transaction(AddedTaskTransaction)),
-	member(id=AddedTaskTransactionId,AddedTaskTransaction),
-	asserta(env_transaction(AddedTaskTransactionId))
+	wenet_post_json_to_url(AddedTaskTransaction,Url,Transaction)
 	.
 
 %!	wenet_task_manager_add_message_into_transaction(+Message)
@@ -530,10 +544,15 @@ wenet_task_manager_add_created_transation() :-
 %
 %	@param InitialTransaction that has been added.
 %
-wenet_task_manager_add_created_transation(InitialTransaction) :-
+wenet_task_manager_add_created_transation(json(InitialTransaction)) :-
 	env_task_id(TaskId),
 	env_profile_id(ProfileId),
-	wenet_task_manager_add_transaction_into_task(InitialTransaction,TaskId,json([taskId=TaskId,actioneerId=ProfileId,label='CREATE_TASK']))
+	Transaction = json([taskId=TaskId,actioneerId=ProfileId,label='CREATE_TASK']),
+	wenet_task_manager_add_transaction_into_task(json(InitialTransaction),TaskId,Transaction),
+	member(id=InitialTransactionId,InitialTransaction),
+	!,
+	asserta(env_transaction(json(InitialTransaction))),
+	asserta(env_transaction_id(InitialTransactionId))
 	.
 
 %!	wenet_task_manager_merge_task(-MergedTask,+TaskId,+Task)
