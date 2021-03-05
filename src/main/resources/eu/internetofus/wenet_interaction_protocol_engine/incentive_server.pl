@@ -45,7 +45,7 @@ wenet_incentive_server_api_url_to(Url,Paths) :-
 %
 wenet_incentive_server_update_task_status(Updated,Status) :-
 	wenet_incentive_server_api_url_to(Url,['/Tasks/TaskStatus/']),
-	wenet_put_json_to_url(Updated,Url,Status)
+	wenet_post_json_to_url(Updated,Url,Status)
 	.
 
 %!	create_task_status(-Status,+AppId,+UserId,+CommunityId,+TaskId,+Action,+Message)
@@ -61,7 +61,7 @@ wenet_incentive_server_update_task_status(Updated,Status) :-
 %	@param Message of the status.
 %
 create_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message) :-
-	Status = json([app_id=AppId,user_id=UserId,community_id=CommunityId,task_id=TaskId,'Action'=Action,'Messsage'=Message])
+	Status = json([app_id=AppId,user_id=UserId,community_id=CommunityId,task_id=TaskId,'Action'=Action,'Message'=Message])
 	.
 
 %!	create_task_status(-Status,+Action,+Message)

@@ -22,8 +22,10 @@
 
 :- dynamic
 	wenet_profile_manager_api_url_to/2,
-	get_profile/2,
-	get_community/2
+	wenet_profile_manager_get_profile/2,
+	wenet_profile_manager_get_community/2,
+	get_profile_id/2,
+	get_community_id/2
 	.
 
 
@@ -63,4 +65,26 @@ wenet_profile_manager_get_community(Community,Id) :-
 	wenet_get_json_from_url(Url,Community),
 	asserta(wenet_profile_manager_get_community(Community,Id)),
 	wenet_log_trace('Loaded community',Community)
+	.
+
+%!	get_profile_id(-Id,+Profile)
+%
+%	Obtain the id of a profile.
+%
+%	@param Id of the profile.
+%	@param Profile to get the id.
+%
+get_profile_id(Id, json(Profile)) :-
+	member(id=Id,Profile)
+	.
+
+%!	get_community_id(-Id,+Community)
+%
+%	Obtain the id of a community.
+%
+%	@param Id of the community.
+%	@param Community to get the id.
+%
+get_community_id(Id, json(Community)) :-
+	member(id=Id,Community)
 	.
