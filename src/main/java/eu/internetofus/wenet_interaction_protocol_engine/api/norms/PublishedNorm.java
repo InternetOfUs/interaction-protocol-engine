@@ -85,7 +85,7 @@ public class PublishedNorm extends CreateUpdateTsDetails
   /**
    * The norm.
    */
-  @Schema(description = "The published norm.", ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/9fa82be7ae8b46fd2190d8531ee14ff3c1cacf3f/sources/wenet-models-openapi.yaml#/components/schemas/Norm")
+  @Schema(description = "The published norm.", ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/44659645df310753374c4e0ad5a6f86d8a2c6e0f/sources/wenet-models-openapi.yaml#/components/schemas/Norm")
   public Norm norm;
 
   /**
