@@ -51,6 +51,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import org.apache.commons.io.FileUtils;
 import org.tinylog.Logger;
 
@@ -76,9 +78,9 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
   /**
    * The name of the files of the prolog files to copy.
    */
-  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "ontology.pl", "profile_manager.pl",
-      "task_manager.pl", "interaction_protocol_engine.pl", "social_context_builder.pl", "service.pl",
-      "incentive_server.pl", "engine.pl", "main.pl", "norms.pl" };
+  public static final String[] PROLOG_FILE_NAMES = { "common.pl", "profile_manager.pl", "task_manager.pl",
+      "interaction_protocol_engine.pl", "social_context_builder.pl", "service.pl", "incentive_server.pl",
+      "conditions.pl", "actions.pl", "engine.pl", "main.pl", "ontology.pl", "norms.pl" };
 
   /**
    * The component that will consume the messages.
@@ -171,6 +173,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       env.appendToInitConfigurationFacts(this.config());
       env.fillIn(protocol);
       env.appendToInitAssertaModel(body.getJsonObject("message"), "wenet_protocol_message.json", "env_message");
+      env.include(env.protocolOntology);
       env.include(env.protocolNorms);
 
       env.run();
@@ -198,6 +201,11 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     protected Path protocolNorms;
 
     /**
+     * The path to the file with the protocol ontology.
+     */
+    protected Path protocolOntology;
+
+    /**
      * The path to the init file.
      */
     protected Path init;
@@ -213,6 +221,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       this.init = this.createFileAtWork("init.pl");
       Files.writeString(this.init, "%\n% Initialize norm engine\n%\n\n");
       this.protocolNorms = this.createFileAtWork("protocol_norms.pl");
+      this.protocolOntology = this.createFileAtWork("protocol_ontology.pl");
 
     }
 
@@ -309,8 +318,6 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
         // TODO add profile norms but now are not ProtocolNorm
         this.appendToInitAssertaModel(protocol.profile.toJsonObject(), "wenet_protocol_profile.json", "env_profile");
-        Files.writeString(this.init, "wenet_me('" + protocol.profile.id + "').\n", StandardOpenOption.APPEND);
-
       }
 
       if (protocol.community != null) {
@@ -349,13 +356,14 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
      */
     protected void appendNorms(final Iterable<ProtocolNorm> norms, final String... headers) throws IOException {
 
-      final var content = new StringBuilder();
-      content.append("\n% ");
+      final var ontologyContent = new StringBuilder();
+      final var normsContent = new StringBuilder();
+      normsContent.append("\n% ");
       for (final var header : headers) {
 
-        content.append(header);
+        normsContent.append(header);
       }
-      content.append("\n");
+      normsContent.append("\n");
 
       if (norms != null) {
 
@@ -363,24 +371,29 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
           if (norm.ontology != null) {
 
-            content.append("\n");
-            content.append(norm.ontology.trim());
-            if (content.charAt(content.length() - 1) != '.') {
+            ontologyContent.append("\n%\n% Ontology of norm:\n%\twhenever\n%\t\t");
+            ontologyContent.append(norm.whenever.trim());
+            ontologyContent.append("\n%\tthenceforth\n%\t\t");
+            ontologyContent.append(norm.thenceforth.trim());
+            ontologyContent.append("\n%\n");
+            ontologyContent.append(norm.ontology.trim());
+            if (ontologyContent.charAt(normsContent.length() - 1) != '.') {
 
-              content.append(".");
+              ontologyContent.append(".");
             }
-            content.append("\n");
+            ontologyContent.append("\n");
           }
 
-          content.append("\nwhenever\n\t");
-          content.append(norm.whenever.trim());
-          content.append("\nthenceforth\n\t");
-          content.append(norm.thenceforth.trim());
-          content.append(".\n");
+          normsContent.append("\nwhenever\n\t");
+          normsContent.append(norm.whenever.trim().replaceAll("\\sand\\s", "\n\tand "));
+          normsContent.append("\nthenceforth\n\t");
+          normsContent.append(norm.thenceforth.trim().replaceAll("\\sand\\s", "\n\tand "));
+          normsContent.append(".\n");
         }
       }
 
-      Files.writeString(this.protocolNorms, content, StandardOpenOption.APPEND);
+      Files.writeString(this.protocolOntology, ontologyContent, StandardOpenOption.APPEND);
+      Files.writeString(this.protocolNorms, normsContent, StandardOpenOption.APPEND);
 
     }
 
@@ -426,7 +439,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       content.append(AbstractServicesVerticle.WENET_COMPONENT_APIKEY_HEADER);
       content.append("' = '");
       content.append(config.getJsonObject(AbstractServicesVerticle.WEB_CLIENT_CONF_KEY, new JsonObject())
-          .getString(AbstractServicesVerticle.WENET_COMPONENT_APIKEY_CONF_KEY, "UDEFINED"));
+          .getString(AbstractServicesVerticle.WENET_COMPONENT_APIKEY_CONF_KEY, "UNDEFINED"));
       content.append("')).\n\n");
 
       content.append(":- debug.\n");
@@ -466,18 +479,20 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       processBuilder.redirectError(error.toFile());
       processBuilder.redirectOutput(output.toFile());
       final var process = processBuilder.start();
-      Logger.trace("Start process with {}", () -> processBuilder.command(), () -> process.pid());
+      final var pid = process.pid();
+      Logger.trace("Start swipl process {}", pid);
       final var status = process.waitFor();
       if (status == 0) {
 
-        Logger.trace("Finished process {} successfully.\nThe error stream is:\n{}\nThe output stream is:\n{}",
-            () -> process.pid(), () -> readQuietly(error), () -> readQuietly(output));
+        Logger.trace("Finished swipl process {} successfully.", pid);
 
       } else {
 
-        Logger.error("Finished process {} with error code {}.\nThe error stream is:\n{}\nThe output stream is:\n{}",
-            () -> process.pid(), () -> status, () -> readQuietly(error), () -> readQuietly(output));
+        Logger.error("Finished swipl process {} with error code {}.", pid, status);
       }
+
+      EngineWorker.this.logLinesOf(error, Logger::isErrorEnabled, "ERROR:", Logger::error, pid);
+      EngineWorker.this.logLinesOf(output, Logger::isTraceEnabled, "TRACE:", Logger::trace, pid);
 
     }
 
@@ -500,21 +515,34 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
   }
 
   /**
-   * Read a file as string capturing any exception.
+   * Read the lines of a file and consume as log messages.
    *
-   * @param path to read.
-   *
-   * @return the content of the file, or the error if can not read it.
+   * @param path       to read.
+   * @param logEnabled return {@code true} if the log is enabled.
+   * @param prefix     for the log lines.
+   * @param logger     the function to append the log.
+   * @param pid        identifier of the swipl process.
    */
-  private static String readQuietly(final Path path) {
+  private void logLinesOf(final Path path, final BooleanSupplier logEnabled, final String prefix,
+      final BiConsumer<String, Object[]> logger, final long pid) {
 
-    try {
+    if (logEnabled.getAsBoolean()) {
 
-      return Files.readString(path, Charset.defaultCharset());
+      try {
 
-    } catch (final Throwable error) {
+        final var content = Files.readString(path, Charset.defaultCharset());
+        final var lines = content.split(prefix);
+        for (final var line : lines) {
 
-      return error.toString();
+          logger.accept("swipl [{}] {}", new Object[] { pid, line });
+
+        }
+
+      } catch (final Throwable error) {
+
+        Logger.error(error, "Cannot append logs of {}", path);
+      }
+
     }
 
   }

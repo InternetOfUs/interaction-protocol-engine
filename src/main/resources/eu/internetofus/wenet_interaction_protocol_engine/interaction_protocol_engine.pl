@@ -25,19 +25,20 @@
 	wenet_interaction_protocol_engine_send_message/2,
 	wenet_interaction_protocol_engine_get_community_user_state/3,
 	wenet_interaction_protocol_engine_merge_community_user_state/4,
-	get_protocol_message_app_id/2,
-	get_protocol_message_community_id/2,
-	get_protocol_message_task_id/2,
-	get_protocol_message_transaction_id/2,
-	get_protocol_message_sender/2,
-	get_protocol_message_receiver/2,
-	get_protocol_message_particle/2,
-	get_protocol_message_content/2,
-	get_protocol_address_component/2,
-	get_protocol_address_user_id/2,
+	wenet_app_id_of_message/2,
+	wenet_community_id_of_message/2,
+	wenet_task_id_of_message/2,
+	wenet_transaction_id_of_message/2,
+	wenet_sender_of_message/2,
+	wenet_sender_component_of_message/2,
+	wenet_sender_id_of_message/2,
+	wenet_receiver_of_message/2,
+	wenet_receiver_component_of_message/2,
+	wenet_receiver_id_of_message/2,
+	wenet_particle_of_message/2,
+	wenet_content_of_message/2,
 	wenet_interaction_protocol_engine_send_messages/3,
-	create_protocol_message/9,
-	create_protocol_message/4
+	wenet_new_protocol_message/9
 	.
 
 
@@ -75,7 +76,7 @@ wenet_interaction_protocol_engine_send_message(Sent,Message) :-
 %
 wenet_interaction_protocol_engine_get_community_user_state(State,CommunityId,UserId) :-
 	wenet_interaction_protocol_engine_api_url_to(Url,['/states/communities/',CommunityId,'/users/'+UserId]),
-	wenet_post_get_to_url(State,Url)
+	wenet_get_json_from_url(State,Url)
 	.
 
 %!	wenet_interaction_protocol_engine_merge_community_user_state(+MergedState,-CommunityId,-UserId,-NewState)
@@ -89,120 +90,147 @@ wenet_interaction_protocol_engine_get_community_user_state(State,CommunityId,Use
 %
 wenet_interaction_protocol_engine_merge_community_user_state(MergedState,CommunityId,UserId,NewState) :-
 	wenet_interaction_protocol_engine_api_url_to(Url,['/states/communities/',CommunityId,'/users/'+UserId]),
-	wenet_post_json_to_url(MergedState,Url,NewState)
+	wenet_patch_json_to_url(MergedState,Url,NewState)
 	.
 
-%!	get_protocol_message_app_id(-AppId,+Message)
+%!	wenet_app_id_of_message(-AppId,+Message)
 %
 %	Obtain the application identifier associated to a protocol message.
 %
 %	@param AppId of the message.
 %	@param Message to get the application identifier.
 %
-get_protocol_message_app_id(AppId, json(Message)) :-
+wenet_app_id_of_message(AppId, json(Message)) :-
 	member(appId=AppId,Message)
 	.
 
-%!	get_protocol_message_community_id(-CommunityId,+Message)
+%!	wenet_community_id_of_message(-CommunityId,+Message)
 %
 %	Obtain the community identifier associated to a protocol message.
 %
 %	@param CommunityId of the message.
 %	@param Message to get the community identifier.
 %
-get_protocol_message_community_id(CommunityId, json(Message)) :-
+wenet_community_id_of_message(CommunityId, json(Message)) :-
 	member(communityId=CommunityId,Message)
 	.
 
-%!	get_protocol_message_task_id(-TaskId,+Message)
+%!	wenet_task_id_of_message(-TaskId,+Message)
 %
 %	Obtain the task identifier associated to a protocol message.
 %
 %	@param TaskId of the message.
 %	@param Message to get the task identifier.
 %
-get_protocol_message_task_id(TaskId, json(Message)) :-
+wenet_task_id_of_message(TaskId, json(Message)) :-
 	member(taskId=TaskId,Message)
 	.
 
-%!	get_protocol_message_transaction_id(-TransactionId,+Message)
+%!	wenet_transaction_id_of_message(-TransactionId,+Message)
 %
-%	Obtain the task transaction identifier associated to a protocol message.
+%	Obtain the transaction identifier associated to a protocol message.
 %
 %	@param TransactionId of the message.
-%	@param Message to get the task transaction identifier.
+%	@param Message to get the transaction identifier.
 %
-get_protocol_message_transaction_id(TransactionId, json(Message)) :-
+wenet_transaction_id_of_message(TransactionId, json(Message)) :-
 	member(transactionId=TransactionId,Message)
 	.
 
-%!	get_protocol_message_sender(-Sender,+Message)
+%!	wenet_sender_of_message(-Sender,+Message)
 %
 %	Obtain the sender associated to a protocol message.
 %
 %	@param Sender of the message.
 %	@param Message to get the sender.
 %
-get_protocol_message_sender(Sender, json(Message)) :-
+wenet_sender_of_message(Sender, json(Message)) :-
 	member(sender=Sender,Message)
 	.
 
-%!	get_protocol_message_receiver(-Receiver,+Message)
+%!	wenet_sender_component_of_message(-SenderComponent,+Message)
+%
+%	Obtain the sender component associated to a protocol message.
+%
+%	@param SenderComponent of the message.
+%	@param Message to get the sender.
+%
+wenet_sender_component_of_message(SenderComponent, json(Message)) :-
+	get_sender_of_message(json(Sender), json(Message)),
+	member(component=SenderComponent,Sender)
+	.
+
+%!	wenet_sender_id_of_message(-SenderId,+Message)
+%
+%	Obtain the sender identifier associated to a protocol message.
+%
+%	@param SenderId of the message.
+%	@param Message to get the sender.
+%
+wenet_sender_id_of_message(SenderId, json(Message)) :-
+	get_sender_of_message(json(Sender), json(Message)),
+	member(userId=SenderId,Sender)
+	.
+
+%!	wenet_receiver_of_message(-Receiver,+Message)
 %
 %	Obtain the receiver associated to a protocol message.
 %
 %	@param Receiver of the message.
 %	@param Message to get the receiver.
 %
-get_protocol_message_receiver(Receiver, json(Message)) :-
+wenet_receiver_of_message(Receiver, json(Message)) :-
 	member(receiver=Receiver,Message)
 	.
 
-%!	get_protocol_message_particle(-Particle,+Message)
+%!	wenet_receiver_component_of_message(-ReceiverComponent,+Message)
+%
+%	Obtain the receiver component associated to a protocol message.
+%
+%	@param ReceiverComponent of the message.
+%	@param Message to get the receiver.
+%
+wenet_receiver_component_of_message(ReceiverComponent, json(Message)) :-
+	get_receiver_of_message(json(Receiver), json(Message)),
+	member(component=ReceiverComponent,Receiver)
+	.
+
+%!	wenet_receiver_id_of_message(-ReceiverId,+Message)
+%
+%	Obtain the receiver identifier associated to a protocol message.
+%
+%	@param ReceiverId of the message.
+%	@param Message to get the receiver.
+%
+wenet_receiver_id_of_message(ReceiverId, json(Message)) :-
+	get_receiver_of_message(json(Receiver), json(Message)),
+	member(userId=ReceiverId,Receiver)
+	.
+
+%!	wenet_particle_of_message(-Particle,+Message)
 %
 %	Obtain the particle associated to a protocol message.
 %
 %	@param Particle of the message.
 %	@param Message to get the particle.
 %
-get_protocol_message_particle(Particle, json(Message)) :-
+wenet_particle_of_message(Particle, json(Message)) :-
 	member(particle=Particle,Message)
 	.
 
-%!	get_protocol_message_content(-Content,+Message)
+%!	wenet_content_of_message(-Content,+Message)
 %
 %	Obtain the content associated to a protocol message.
 %
 %	@param Content of the message.
 %	@param Message to get the content.
 %
-get_protocol_message_content(Content, json(Message)) :-
+wenet_content_of_message(Content, json(Message)) :-
 	member(content=Content,Message)
 	.
 
-%!	get_protocol_address_component(-Component,+Address)
-%
-%	Obtain the component of a protocol address.
-%
-%	@param Component of the address.
-%	@param Address to get the component.
-%
-get_protocol_address_component(Component, json(Address)) :-
-	member(component=Component,Address)
-	.
 
-%!	get_protocol_address_user_id(-UserId,+Address)
-%
-%	Obtain the user identifier of a protocol address.
-%
-%	@param UserId of the address.
-%	@param Address to get the user identifier.
-%
-get_protocol_address_user_id(UserId, json(Address)) :-
-	member(userId=UserId,Address)
-	.
-
-%!	create_protocol_message(-Message,+AppId,+CommunityId,+TaskId,+TransactionId,+Sender,+Receiver,+Particle,+Content)
+%!	wenet_new_protocol_message(-Message,+AppId,+CommunityId,+TaskId,+TransactionId,+Sender,+Receiver,+Particle,+Content)
 %
 %	Create a protocol message.
 %
@@ -216,7 +244,7 @@ get_protocol_address_user_id(UserId, json(Address)) :-
 %	@param Particle of the message.
 %	@param Content of the message.
 %
-create_protocol_message(Message,AppId,CommunityId,TaskId,TransactionId,Sender,Receiver,Particle,Content) :-
+wenet_new_protocol_message(Message,AppId,CommunityId,TaskId,TransactionId,Sender,Receiver,Particle,Content) :-
 	Message = json([appId=AppId,communityId=CommunityId,taskId=TaskId,transactionId=TransactionId,sender=Sender,receiver=Receiver,particle=Particle,content=Content])
 	.
 
@@ -263,19 +291,19 @@ create_protocol_address(Address,UserId) :-
 	create_protocol_address(Address,'INTERACTION_PROTOCOL_ENGINE',UserId)
 	.
 
-%!	wenet_interaction_protocol_engine_send_messages(+Userse,+Particle,+Content)
+%!	wenet_interaction_protocol_engine_send_messages(+Users,+Particle,+Content)
 %
 %	Create a protocol message whit the data of the received message and send to some users.
 %
 %	@param Users to receive the message.
-%	@param TransactionId transaction identifier of the message.
 %	@param Particle of the message.
 %	@param Content of the message.
 %
 wenet_interaction_protocol_engine_send_messages([],_,_).
 wenet_interaction_protocol_engine_send_messages([ReceiverId|Tail],Particle,Content) :-
 	create_protocol_message(Message,ReceiverId,Particle,Content),
-	wenet_interaction_protocol_engine_send_message(_,Message),
+	ignore(wenet_interaction_protocol_engine_send_message(_,Message)),
+	wenet_log_trace('********* HERE'),
 	wenet_interaction_protocol_engine_send_messages(Tail,Particle,Content)
 	.
 

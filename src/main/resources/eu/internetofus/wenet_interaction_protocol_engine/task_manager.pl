@@ -22,6 +22,29 @@
 
 :- dynamic
 	wenet_task_manager_api_url_to/2,
+	wenet_task_manager_get_task/2,
+	wenet_task_manager_merge_task/3,
+	wenet_task_manager_add_transaction_into_task/3,
+	wenet_task_manager_add_message_into_transaction/4,
+	wenet_id_of_task/2,
+	wenet_task_type_id_of_task/2,
+	wenet_app_id_of_task/2,
+	wenet_community_id_of_task/2,
+	wenet_requester_id_of_task/2,
+	wenet_goal_of_task/2,
+	wenet_goal_name_of_task/2,
+	wenet_goal_description_of_task/2,
+	wenet_goal_keywords_of_task/2,
+	wenet_is closed_task/1,
+	wenet_close_ts_of_task/2,
+	wenet_attributes_of_task/2,
+	wenet_transactions_of_task/2,
+	wenet_id_of_transaction/2,
+	wenet_task_id_of_transaction/2,
+	wenet_label_of_transaction/2,
+	wenet_attributes_of_transaction/2,
+	wenet_actioneer_id_of_transaction/2,
+	wenet_messages_of_transaction/2,
 	get_task/2,
 	get_task_id/2,
 	get_task_type_id/2,
@@ -76,6 +99,67 @@ wenet_task_manager_api_url_to(Url,Paths) :-
 	atomics_to_string([Api|Paths],Url)
 	.
 
+%!	wenet_task_manager_merge_task(-MergedTask,+TaskId,+Task)
+%
+%	Merge a task with the information of another task.
+%
+%	@param MergedTask that has been merged.
+%	@param TaskId identifier of the task to merge.
+%	@param Task with the data to merge.
+%
+wenet_task_manager_merge_task(MergedTask,TaskId,Task) :-
+	wenet_task_manager_api_url_to(Url,['/tasks/',TaskId]),
+	wenet_patch_json_to_url(MergedTask,Url,Task)
+	.
+
+%!	wenet_task_manager_add_transaction_into_task(-AddedTaskTransaction,+TaskId,+Transaction)
+%
+%	Add a task transaction into a task.
+%
+%	@param AddedTaskTransaction return task transaction that has been added into the task.
+%	@param TaskId identifier of the task to add the transaction.
+%	@param Transaction to add to the task.
+%
+wenet_task_manager_add_transaction_into_task(AddedTaskTransaction,TaskId,Transaction) :-
+	wenet_task_manager_api_url_to(Url,['/tasks/',TaskId,'/transactions']),
+	wenet_post_json_to_url(AddedTaskTransaction,Url,Transaction)
+	.
+
+%!	wenet_task_manager_add_message_into_transaction(-AddedTransactionMessage,+TaskId,+TransactionId,+Message)
+%
+%	Add a message into a transaction.
+%
+%	@param AddedTransactionMessage return message that has been added into the transaction.
+%	@param TaskId identifier of the task where is the transaction to add the message.
+%	@param TransactionId identifier of the transaction to add the message.
+%	@param Message to add to the transaction.
+%
+wenet_task_manager_add_message_into_transaction(AddedTransactionMessage,TaskId,TransactionId,Message) :-
+	wenet_task_manager_api_url_to(Url,['/tasks/',TaskId,'/transactions/',TransactionId,'/messages']),
+	wenet_post_json_to_url(AddedTransactionMessage,Url,Message)
+	.
+
+%!	wenet_id_of_task(-Id,+Task)
+%
+%	Obtain the id of a task.
+%
+%	@param Id of the task.
+%	@param Task to get the id.
+%
+wenet_id_of_task(Id,json(Task)) :-
+	member(taskId=Id,Task)
+	.
+
+%!	wenet_id_of_transaction(-Id,+Transaction)
+%
+%	Obtain the id of a transaction.
+%
+%	@param Id of the transaction.
+%	@param Transaction to get the id.
+%
+wenet_id_of_transaction(Id,json(Transaction)) :-
+	member(transactionId=Id,Transaction)
+	.
 
 %!	get_task(+Task,-Id)
 %
@@ -92,16 +176,6 @@ get_task(Task,Id) :-
 	wenet_log_trace('Loaded task',Task)
 	.
 
-%!	get_task_id(-Id,+Task)
-%
-%	Obtain the id of a task.
-%
-%	@param Id of the task.
-%	@param Task to get the id.
-%
-get_task_id(Id, json(Task)) :-
-	member(id=Id,Task)
-	.
 
 
 %!	get_task_type_id(-TaskTypeId,+Task)
@@ -480,103 +554,4 @@ wenet_task_manager_add_transaction_into_task(AddedTaskTransaction,Transaction) :
 	wenet_task_manager_add_transaction_into_task(AddedTaskTransaction,TaskId,Transaction)
 	.
 
-%!	wenet_task_manager_add_transaction_into_task(-AddedTaskTransaction,+TaskId,+Transaction)
-%
-%	Add a task transaction into a task.
-%
-%	@param AddedTaskTransaction return task transaction that has been added into the task.
-%	@param TaskId identifier of the task to add the transaction.
-%	@param Transaction to add to the task.
-%
-wenet_task_manager_add_transaction_into_task(AddedTaskTransaction,TaskId,Transaction) :-
-	wenet_task_manager_api_url_to(Url,['/tasks/',TaskId,'/transactions']),
-	wenet_post_json_to_url(AddedTaskTransaction,Url,Transaction)
-	.
-
-%!	wenet_task_manager_add_message_into_transaction(+Message)
-%
-%	Add a message into the current transaction.
-%
-%	@param Message to add to the transaction.
-%
-wenet_task_manager_add_message_into_transaction(AddedTransactionMessage,Message) :-
-	wenet_task_manager_add_message_into_transaction(AddedTransactionMessage,Message)
-	.
-
-%!	wenet_task_manager_add_message_into_transaction(-AddedTransactionMessage,+Message)
-%
-%	Add a message into the current transaction.
-%
-%	@param AddedTransactionMessage return message that has been added into the transaction.
-%	@param Message to add to the transaction.
-%
-wenet_task_manager_add_message_into_transaction(AddedTransactionMessage,Message) :-
-	env_task_id(TaskId),
-	env_transaction(TransactionId),
-	wenet_task_manager_add_message_into_transaction(AddedTransactionMessage,TaskId,TransactionId,Message)
-	.
-
-%!	wenet_task_manager_add_message_into_transaction(-AddedTransactionMessage,+TaskId,+TransactionId,+Message)
-%
-%	Add a message into a transaction.
-%
-%	@param AddedTransactionMessage return message that has been added into the transaction.
-%	@param TaskId identifier of the task where is the transaction to add the message.
-%	@param TransactionId identifier of the transaction to add the message.
-%	@param Message to add to the transaction.
-%
-wenet_task_manager_add_message_into_transaction(AddedTransactionMessage,TaskId,TransactionId,Message) :-
-	wenet_task_manager_api_url_to(Url,['/tasks/',TaskId,'/transactions/',TransactionId,'/messages']),
-	wenet_post_json_to_url(AddedTransactionMessage,Url,Message)
-	.
-
-%!	wenet_task_manager_add_created_transation()
-%
-%	Add into the current task the transaction a message into a transaction.
-%
-wenet_task_manager_add_created_transation() :-
-	wenet_task_manager_add_created_transation(_)
-	.
-
-%!	wenet_task_manager_add_created_transation(-InitialTransaction)
-%
-%	Add into the current task the transaction a message into a transaction.
-%
-%	@param InitialTransaction that has been added.
-%
-wenet_task_manager_add_created_transation(json(InitialTransaction)) :-
-	env_task_id(TaskId),
-	env_profile_id(ProfileId),
-	Transaction = json([taskId=TaskId,actioneerId=ProfileId,label='CREATE_TASK']),
-	wenet_task_manager_add_transaction_into_task(json(InitialTransaction),TaskId,Transaction),
-	member(id=InitialTransactionId,InitialTransaction),
-	!,
-	asserta(env_transaction(json(InitialTransaction))),
-	asserta(env_transaction_id(InitialTransactionId))
-	.
-
-%!	wenet_task_manager_merge_task(-MergedTask,+TaskId,+Task)
-%
-%	Merge a task with the information of another task.
-%
-%	@param MergedTask that has been merged.
-%	@param TaskId identifier of the task to merge.
-%	@param Task with the data to merge.
-%
-wenet_task_manager_merge_task(MergedTask,TaskId,Task) :-
-	wenet_task_manager_api_url_to(Url,['/tasks/',TaskId]),
-	wenet_patch_json_to_url(MergedTask,Url,Task)
-	.
-
-%!	wenet_task_manager_merge_task(-MergedTask,+Task)
-%
-%	Merge a task with the information of the last task.
-%
-%	@param MergedTask that has been merged.
-%	@param Task with the data to merge.
-%
-wenet_task_manager_merge_task(MergedTask,Task) :-
-	env_task_id(TaskId),
-	wenet_task_manager_merge_task(MergedTask,TaskId,Task)
-	.
 

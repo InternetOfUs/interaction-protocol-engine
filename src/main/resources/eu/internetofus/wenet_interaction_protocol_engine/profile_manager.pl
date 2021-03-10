@@ -23,9 +23,7 @@
 :- dynamic
 	wenet_profile_manager_api_url_to/2,
 	wenet_profile_manager_get_profile/2,
-	wenet_profile_manager_get_community/2,
-	get_profile_id/2,
-	get_community_id/2
+	wenet_profile_manager_get_community/2
 	.
 
 
@@ -44,14 +42,13 @@ wenet_profile_manager_api_url_to(Url,Paths) :-
 %	Return the profile associated to an identifier.
 %
 %	@param Profile list with the profile information.
-%	@param Id string identifeir of the profile to obtain.
+%	@param Id string identifier of the profile to obtain.
 %
 wenet_profile_manager_get_profile(Profile,Id) :-
 	wenet_profile_manager_api_url_to(Url,['/profiles/',Id]),
 	wenet_get_json_from_url(Url,Profile),
 	!,
-	asserta(wenet_profile_manager_get_profile(Profile,Id)),
-	wenet_log_trace('Loaded profile',Profile)
+	asserta(wenet_profile_manager_get_profile(Profile,Id))
 	.
 
 %!	get_community(+Community,-Id)
@@ -59,34 +56,11 @@ wenet_profile_manager_get_profile(Profile,Id) :-
 %	Return the community associated to an identifier.
 %
 %	@param Community list with the community information.
-%	@param Id string identifeir of the community to obtain.
+%	@param Id string identifier of the community to obtain.
 %
 wenet_profile_manager_get_community(Community,Id) :-
 	wenet_profile_manager_api_url_to(Url,['/communities/',Id]),
 	wenet_get_json_from_url(Url,Community),
-	!
-	asserta(wenet_profile_manager_get_community(Community,Id)),
-	wenet_log_trace('Loaded community',Community)
-	.
-
-%!	get_profile_id(-Id,+Profile)
-%
-%	Obtain the id of a profile.
-%
-%	@param Id of the profile.
-%	@param Profile to get the id.
-%
-get_profile_id(Id, json(Profile)) :-
-	member(id=Id,Profile)
-	.
-
-%!	get_community_id(-Id,+Community)
-%
-%	Obtain the id of a community.
-%
-%	@param Id of the community.
-%	@param Community to get the id.
-%
-get_community_id(Id, json(Community)) :-
-	member(id=Id,Community)
+	!,
+	asserta(wenet_profile_manager_get_community(Community,Id))
 	.

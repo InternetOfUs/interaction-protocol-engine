@@ -45,6 +45,67 @@
 :- autoload(library(lists)).
 
 
+%!	wenet_log_trace(-Text)
+%
+%	Write a trace log message into the output console.
+%
+%	@param Text string message of the log.
+%
+wenet_log_trace(Text) :-
+	format(string(Lines),'TRACE: ~w',[Text]),
+	print_message_lines(current_output,kind(trace),[Lines])
+	.
+
+%!	wenet_log_trace(-Text,-Term)
+%
+%	Write a trace log message into the output console.
+%
+%	@param Text string message of the log.
+%	@param Term Term to show into the log message.
+%
+wenet_log_trace(Text,Term) :-
+	format(string(Lines),'TRACE: ~w ~w',[Text,Term]),
+	print_message_lines(user_output,kind(trace),[Lines])
+	.
+
+%!	wenet_log_error(-Text,-Terms)
+%
+%	Write an error log message into the output console.
+%
+%	@param Text string message of the log.
+%	@param Terms arguments to show into the log message.
+%
+wenet_log_error(Text,Terms) :-
+	wenet_print_error('~w ~w',[Text,Terms])
+	.
+
+%!	wenet_log_error(-Text,-Terms,-Error)
+%
+%	Write an error log message into the output console.
+%
+%	@param Text string message of the log.
+%	@param Terms arguments to show into the log message.
+%	@param Error to show into the log message.
+%
+wenet_log_error(Text,Terms,Error) :-
+	message_to_string(Error,ErrorMessage),
+	wenet_print_error('~w. ~w ~w',[ErrorMessage,Text,Terms])
+	.
+
+%!	wenet_print_error(-Lines)
+%
+%	Print error message lines.
+%
+%	@param Format to show into the log error message.
+%	@param Arguments to show into the log error message.
+%
+wenet_print_error(Format,Arguments) :-
+	format(string(Lines),Format,Arguments),
+	print_message_lines(user_error,kind(error),[Lines]),
+	!,
+	asserta(wenet_do_actions_status(1))
+	.
+
 %!	wenet_execute_safetly_once(+Term)
 %
 %	Execute a term only one time and capture any error that happens.
@@ -69,9 +130,7 @@ wenet_execute_once(Term) :-
 %
 wenet_read_json_from_file(FilePath, Json) :-
 	once(open(FilePath, read, Stream)),
-	once(json_read(Stream, Json)),
-	once(close(Stream)),
-  	once(wenet_log_trace('LOAD file',[FilePath,Json]))
+	wenet_get_json_from_stream(Json,FilePath,Stream)
 	.
 
 
@@ -85,9 +144,24 @@ wenet_read_json_from_file(FilePath, Json) :-
 wenet_get_json_from_url(Url, Json) :-
 	once(wenet_component_auth_header(Header)),
 	once(http_open(Url,Stream,[Header])),
-	once(json_read(Stream, Json)),
-  	once(close(Stream)),
-  	once(wenet_log_trace('GET',[Url,Json]))
+	wenet_get_json_from_stream(Json,Url,Stream)
+  	.
+
+%!	wenet_get_json_from_stream(-Json,+Stream)
+%
+%	Get a json from a stream.
+%
+%	@param Json on the stream.
+%	@param Path of the stream.
+%	@param Stream to get the Json.
+%
+wenet_get_json_from_stream(Json,Path,Stream) :-
+	once(
+		json_read(Stream, Json) ->
+		wenet_log_trace('GET',[Path,Json]);
+		(wenet_log_error('Cannot GET',Path),Json = json([]))
+	),
+  	ignore(close(Stream))
   	.
 
 %!	wenet_post_json_to_url(-Json,+Url,+Body)
@@ -100,7 +174,7 @@ wenet_get_json_from_url(Url, Json) :-
 %
 wenet_post_json_to_url(Json, Url, Body) :-
 	once(wenet_component_auth_header(Header)),
-	once(wenet_post_json_to_url(Json,Url,Body,[Header])).
+	wenet_post_json_to_url(Json,Url,Body,[Header]).
 
 %!	wenet_post_json_to_url(-Json,+Url,+Body,+Headers)
 %
@@ -167,65 +241,4 @@ wenet_patch_json_to_url(Json, Url, Body) :-
 		;(wenet_log_error('Cannot PATCH',[Url,AtomBody]),Result = '{}')
 	),
 	once(atom_json_term(Result, Json, []))
-	.
-
-%!	wenet_log_trace(-Text)
-%
-%	Write a trace log message into the output console.
-%
-%	@param Text string message of the log.
-%
-wenet_log_trace(Text) :-
-	format(string(Lines),'TRACE: ~w',[Text]),
-	print_message_lines(current_output,kind(trace),[Lines])
-	.
-
-%!	wenet_log_trace(-Text,-Term)
-%
-%	Write a trace log message into the output console.
-%
-%	@param Text string message of the log.
-%	@param Term Term to show into the log message.
-%
-wenet_log_trace(Text,Term) :-
-	format(string(Lines),'TRACE: ~w ~w',[Text,Term]),
-	print_message_lines(user_output,kind(trace),[Lines])
-	.
-
-%!	wenet_log_error(-Text,-Terms)
-%
-%	Write an error log message into the output console.
-%
-%	@param Text string message of the log.
-%	@param Terms arguments to show into the log message.
-%
-wenet_log_error(Text,Terms) :-
-	wenet_print_error('~w ~w',[Text,Terms])
-	.
-
-%!	wenet_log_error(-Text,-Terms,-Error)
-%
-%	Write an error log message into the output console.
-%
-%	@param Text string message of the log.
-%	@param Terms arguments to show into the log message.
-%	@param Error to show into the log message.
-%
-wenet_log_error(Text,Terms,Error) :-
-	message_to_string(Error,ErrorMessage),
-	wenet_print_error('~w. ~w ~w',[ErrorMessage,Text,Terms])
-	.
-
-%!	wenet_print_error(-Lines)
-%
-%	Print error message lines.
-%
-%	@param Format to show into the log error message.
-%	@param Arguments to show into the log error message.
-%
-wenet_print_error(Format,Arguments) :-
-	format(string(Lines),Format,Arguments),
-	print_message_lines(user_error,kind(error),[Lines]),
-	!,
-	asserta(wenet_do_actions_status(1))
 	.

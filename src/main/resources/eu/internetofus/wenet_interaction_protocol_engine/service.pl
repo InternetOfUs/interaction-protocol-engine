@@ -22,18 +22,12 @@
 
 :- dynamic
 	wenet_service_api_url_to/2,
-	wenet_service_get_app/1,
 	wenet_service_get_app/2,
-	get_app_id/2,
-	get_app_message_callback_url/2,
-	wenet_service_get_app_message_callback_url/1,
-	wenet_service_get_app_users/1,
+	wenet_id_of_app/2,
+	wenet_message_callback_url_of_app/2,
 	wenet_service_get_app_users/2,
-	wenet_service_get_app_users_except_me/1,
-	wenet_service_post_callback/1,
-	wenet_service_post_callback_to/2,
-	create_callback_message/3,
-	create_callback_message/5
+	wenet_service_post_callback/2,
+	wenet_new_callback/5
 	.
 
 
@@ -61,49 +55,50 @@ wenet_service_get_app(App,Id) :-
 	asserta(wenet_service_get_app(App,Id))
 	.
 
-%!	get_app(+App)
-%
-%	Return the app associated to the received message.
-%
-%	@param App list with the app information.
-%
-wenet_service_get_app(App) :-
-	env_message(Message),
-	get_protocol_message_app_id(AppId,Message),
-	wenet_service_get_app(App,AppId)
-	.
-
-%!	get_app_id(-Id,+App)
+%!	wenet_id_of_app(-Id,+App)
 %
 %	Obtain the id of a application.
 %
 %	@param Id of the application.
 %	@param App to get the id.
 %
-get_app_id(Id,json(App)) :-
+wenet_id_of_app(Id,json(App)) :-
 	member(appId=Id,App)
 	.
 
-%!	get_app_message_callback_url(-Url,+App)
+%!	wenet_message_callback_url_of_app(-Url,+App)
 %
 %	Obtain the URL to post the callback messages for the application.
 %
 %	@param URL to post the callback messages. of the application.
 %	@param App to get the id.
 %
-get_app_message_callback_url(Url,json(App)) :-
+wenet_message_callback_url_of_app(Url,json(App)) :-
 	member(messageCallbackUrl=Url,App)
 	.
 
-%!	wenet_service_get_app_message_callback_url(-Url)
+%!	wenet_service_get_app_users(+Users,-json(App))
 %
-%	Return the URL where has to post the callback messages of the application.
+%	Return the users of an application.
 %
-%	@param Url to post the callback messages.
+%	@param Users list of string with the user identifiers of the application.
+%	@param App json with the application to obtain the users.
 %
-wenet_service_get_app_message_callback_url(Url) :-
-	wenet_service_get_app(App),
-	get_app_message_callback_url(Url,App)
+wenet_service_get_app_users(Users,json(App)) :-
+	wenet_service_get_app_users(Users,App)
+	.
+
+%!	wenet_service_get_app_users(+Users,-App)
+%
+%	Return the users of an application.
+%
+%	@param Users list of string with the user identifiers of the application.
+%	@param App list with the application attributes.
+%
+wenet_service_get_app_users(Users,App) :-
+	is_list(App),
+	member(appId=Id,App),
+	wenet_service_get_app_users(Users,Id)
 	.
 
 %!	wenet_service_get_app_users(+Users,-Id)
@@ -114,92 +109,50 @@ wenet_service_get_app_message_callback_url(Url) :-
 %	@param Id string identifier of the application to obtain.
 %
 wenet_service_get_app_users(Users,Id) :-
+	string(Id),
 	wenet_service_api_url_to(Url,['/app/',Id,'/users']),
 	wenet_get_json_from_url(Url,Users),
 	!,
 	asserta(wenet_service_get_app_users(Users,Id))
 	.
 
-%!	wenet_service_get_app_users(+Users)
+%!	wenet_service_post_callback(+Callback,+json(App))
 %
-%	Return the users of an application.
-%
-%	@param Users list of string with the user identifiers of the application.
-%
-wenet_service_get_app_users(Users) :-
-	env_app_id(AppId),
-	wenet_service_get_app_users(Users,AppId),
-	!,
-	asserta(wenet_service_get_app_users(Users))
-	.
-
-%!	get_app_users_except_me(+Users)
-%
-%	Return the users of an application except the current user.
-%
-%	@param Users list of string with the user identifiers of the application.
-%
-get_app_users_except_me(Users) :-
-	wenet_service_get_app_users(AppUsers),
-	env_profile_id(Me),
-	delete(AppUsers,Me,Users),
-	!,
-	asserta(wenet_service_get_app_users_except_me(Users))
-	.
-
-%!	wenet_service_post_callback(+Callback)
-%
-%	Post a callback message to the application of the received message.
+%	Post a callback message to an application.
 %
 %	@param Callback to post.
+%	@param App json application to post the message.
 %
-wenet_service_post_callback(Callback) :-
-	wenet_service_get_app_message_callback_url(Url),
+wenet_service_post_callback(Callback,json(App)) :-
+	wenet_service_post_callback(Callback,App)
+	.
+
+%!	wenet_service_post_callback(+Callback,+App)
+%
+%	Post a callback message to an application.
+%
+%	@param Callback to post.
+%	@param App list with the application attributes.
+%
+wenet_service_post_callback(Callback,App) :-
+	is_list(App),
+	member(messageCallbackUrl=Url,App),
 	wenet_post_json_to_url(_,Url,Callback,[])
 	.
 
-%!	wenet_service_post_callback_to(+Users,+Callback)
+%!	wenet_service_post_callback(+Callback,+Url)
 %
-%	Post a callback message to the application of the received message.
+%	Post a callback message to an Url.
 %
-%	@param UserId identifier of the receiver.
 %	@param Callback to post.
+%	@param Url to post the callback message.
 %
-wenet_service_post_callback_to([],_).
-wenet_service_post_callback_to([UserId|Tail],Callback) :-
-	wenet_service_post_callback_to(UserId,Callback),
-	wenet_service_post_callback_to(Tail,Callback)
+wenet_service_post_callback(Callback,Url) :-
+	string(Url),
+	wenet_post_json_to_url(_,Url,Callback,[])
 	.
 
-%!	wenet_service_post_callback_to(+UserId,+Callback)
-%
-%	Post a callback message to the application of the received message.
-%
-%	@param UserId identifier of the receiver.
-%	@param Callback to post.
-%
-wenet_service_post_callback_to(UserId,json(Callback)) :-
-	not(is_list(UserId)),
-	delete(Callback,receiverId=_,NewCallback),
-	wenet_service_post_callback(json([receiverId=UserId|NewCallback]))
-	.
-
-
-%!	create_callback_message(-Callback,+Label,+Attributes)
-%
-%	Create an callback message.
-%
-%	@param Callback_message the create callback message.
-%	@param Label the label for the callback message.
-%	@param Attributes the attributes for the callback message.
-%
-create_callback_message(Callback,Label,Attributes) :-
-	env_app_id(AppId),
-	env_profile_id(UserId),
-	create_callback_message(Callback,AppId,UserId,Label,Attributes)
-	.
-
-%!	create_callback_message(-Callback,+AppId,+ReceiverId,+Label,+Attributes)
+%!	wenet_new_callback(-Callback,+AppId,+ReceiverId,+Label,+Attributes)
 %
 %	Create an callback message.
 %
@@ -209,6 +162,6 @@ create_callback_message(Callback,Label,Attributes) :-
 %	@param Label the label for the callback message.
 %	@param Attributes the attributes for the callback message.
 %
-create_callback_message(Callback,AppId,ReceiverId,Label,Attributes) :-
+wenet_new_callback(Callback,AppId,ReceiverId,Label,Attributes) :-
 	Callback = json([appId=AppId,receiverId=ReceiverId,label=Label,attributes=Attributes])
 	.

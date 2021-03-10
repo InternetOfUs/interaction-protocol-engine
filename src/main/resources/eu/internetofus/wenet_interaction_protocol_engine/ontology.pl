@@ -21,11 +21,6 @@
 %
 
 :- dynamic
-	is_now_less_than/1,
-	is_now_less_than_or_equal_to/1,
-	is_now_greater_than/1,
-	is_now_greater_than_or_equal_to/1,
-	is_now_equal_to/1,
 	is_received_do_transaction/1,
 	is_received_do_transaction_with_label/2,
 	is_received_created_task/0,
@@ -43,60 +38,6 @@
 	env_profile_id/1
 	.
 
-%!	is_now_less_than(+Time)
-%
-%	Check if the wenet time is less than a time.
-%
-%	@param Actions to execute.
-%
-is_now_less_than(Time) :-
-	wenet_now(Now),
-	<(Now,Time)
-	.
-
-%!	is_now_less_than_or_equal_to(+Time)
-%
-%	Check if the wenet time is less than or equal to a time.
-%
-%	@param Actions to execute.
-%
-is_now_less_than_or_equal_to(Time) :-
-	wenet_now(Now),
-	=<(Now,Time)
-	.
-
-%!	is_now_greater_than(+Time)
-%
-%	Check if the wenet time is greater than a time.
-%
-%	@param Actions to execute.
-%
-is_now_greater_than(Time) :-
-	wenet_now(Now),
-	>(Now,Time)
-	.
-
-%!	is_now_greater_than_or_equal_to(+Time)
-%
-%	Check if the wenet time is greater than or equal to a time.
-%
-%	@param Actions to execute.
-%
-is_now_greater_than_or_equal_to(Time) :-
-	wenet_now(Now),
-	>=(Now,Time)
-	.
-
-%!	is_now_equal_to(+Time)
-%
-%	Check if the wenet time is equal to a time.
-%
-%	@param Actions to execute.
-%
-is_now_equal_to(Time) :-
-	wenet_now(Now),
-	=(Now,Time)
-	.
 
 %!	is_received_do_transaction(-Transaction)
 %
