@@ -531,10 +531,14 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       try {
 
         final var content = Files.readString(path, Charset.defaultCharset());
-        final var lines = content.split(prefix);
-        for (final var line : lines) {
+        final var logMessages = content.split(prefix);
+        for (final var logMessage : logMessages) {
 
-          logger.accept("swipl [{}] {}", new Object[] { pid, line });
+          final var msg = logMessage.trim();
+          if (msg.length() > 0) {
+
+            logger.accept("swipl [{}] {}", new Object[] { pid, msg });
+          }
 
         }
 
