@@ -25,10 +25,25 @@
 	wenet_do_actions_status/1.
 
 go() :-
+	check_exist_message(),
 	wenet_execute_safetly_once(normengine(Actions)),
 	wenet_log_trace('The action to do are:',Actions),
 	wenet_do_actions(Actions),
 	wenet_do_actions_status(Status)->halt(Status);true
+	.
+
+%!	check_exist_message()
+%
+%	Check that is defined the received message.
+%
+check_exist_message() :-
+	get_message(_)->
+		true
+		;
+		(
+			wenet_log_error('No message defined.'),
+			halt(1)
+		)
 	.
 
 %!	wenet_do_actions(+Actions)

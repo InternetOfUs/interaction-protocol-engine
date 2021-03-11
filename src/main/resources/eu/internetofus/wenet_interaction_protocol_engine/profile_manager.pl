@@ -23,7 +23,9 @@
 :- dynamic
 	wenet_profile_manager_api_url_to/2,
 	wenet_profile_manager_get_profile/2,
-	wenet_profile_manager_get_community/2
+	wenet_profile_manager_get_community/2,
+	wenet_id_of_profile/2,
+	wenet_id_of_community/2
 	.
 
 
@@ -46,9 +48,7 @@ wenet_profile_manager_api_url_to(Url,Paths) :-
 %
 wenet_profile_manager_get_profile(Profile,Id) :-
 	wenet_profile_manager_api_url_to(Url,['/profiles/',Id]),
-	wenet_get_json_from_url(Url,Profile),
-	!,
-	asserta(wenet_profile_manager_get_profile(Profile,Id))
+	wenet_get_json_from_url(Url,Profile)
 	.
 
 %!	get_community(+Community,-Id)
@@ -60,7 +60,27 @@ wenet_profile_manager_get_profile(Profile,Id) :-
 %
 wenet_profile_manager_get_community(Community,Id) :-
 	wenet_profile_manager_api_url_to(Url,['/communities/',Id]),
-	wenet_get_json_from_url(Url,Community),
-	!,
-	asserta(wenet_profile_manager_get_community(Community,Id))
+	wenet_get_json_from_url(Url,Community)
+	.
+
+%!	wenet_id_of_profile(-Id,+Profile)
+%
+%	Obtain the identifier of a profile.
+%
+%	@param Id of a profile.
+%	@param Profile to get the identifier.
+%
+wenet_id_of_profile(Id, json(Profile)) :-
+	member(appId=Id,Profile)
+	.
+
+%!	wenet_id_of_community(-Id,+Community)
+%
+%	Obtain the identifier of a community.
+%
+%	@param Id of a community.
+%	@param Community to get the identifier.
+%
+wenet_id_of_community(Id, json(Community)) :-
+	member(appId=Id,Community)
 	.

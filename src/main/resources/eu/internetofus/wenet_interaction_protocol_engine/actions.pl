@@ -25,36 +25,12 @@
 %
 
 :- dynamic
-	send_to_my_user/2
+	add_created_transaction/0,
+	add_message_transaction/0,
+	new_user_message/3,
+	send_user_message/2
 	.
 
-
-%!	send_to_my_user(+Label,+Attributes)
-%
-%	Send a message to the user of the interaction protocol engine.
-%
-%	@param Label of the message.
-%	@param Attributes list of the message attributes on the form key=value.
-%
-send_to_my_user(Label,Attributes) :-
-	is_list(Attributes),
-	send_to_my_user(Label,json(Attributes)).
-
-%!	send_to_my_user(+Label,+json(Attributes))
-%
-%	Send a message to the user of the interaction protocol engine.
-%
-%	@param Label of the message.
-%	@param Attributes json attributes of the message.
-%
-send_to_my_user(Label,json(Attributes)) :-
-	get_app_id(AppId),
-	get_profile_id(ReceiverId),
-	wenet_new_callback(Callback,AppId,ReceiverId,Label,json(Attributes)),
-	get_app_message_callback_url(Url),
-	wenet_service_post_callback(Callback,Url),
-	()->
-	.
 
 %!	add_created_transaction()
 %
@@ -64,10 +40,54 @@ add_created_transaction() :-
 	get_profile_id(ProfileId),
 	get_task_id(TaskId),
 	Transaction = json([taskId=TaskId,actioneerId=ProfileId,label='CREATE_TASK']),
-	wenet_task_manager_add_transaction_into_task(InitialTransaction,TaskId,Transaction),
+	ignore(wenet_task_manager_add_transaction_into_task(InitialTransaction,TaskId,Transaction)),
 	wenet_id_of_transaction(InitialTransactionId,InitialTransaction),
-	!,
 	asserta(add_created_transaction()),
 	asserta(get_transaction(InitialTransaction)),
 	asserta(get_transaction_id(InitialTransactionId))
+	.
+
+%!	add_message_transaction()
+%
+%	Add the transaction of the message into the task.
+%
+add_message_transaction() :-
+	get_message(Message),
+	wenet_content_of_protocol_message(Transaction,Message),
+	get_task_id(TaskId),
+	ignore(wenet_task_manager_add_transaction_into_task(AddedTransaction,TaskId,Transaction)),
+	wenet_id_of_transaction(AddedTransactionId,AddedTransaction),
+	asserta(add_message_transaction()),
+	asserta(get_transaction(AddedTransaction)),
+	asserta(get_transaction_id(AddedTransactionId))
+	.
+
+%!	new_user_message(-Message,+Label,+Content)
+%
+%	Create a message to send into an user.
+%
+%	@param Message for the user.
+%	@param Label of the message.
+%	@param Content of the message.
+%
+new_user_message(Message,Label,Content) :-
+	get_app_id(AppId),
+	get_profile_id(ReceiverId),
+	wenet_new_message(Message,AppId,ReceiverId,Label,Content)
+	.
+
+%!	send_user_message(+Label,+Content)
+%
+%	Send a message to the user associated to the interaction protocol engine.
+%
+%	@param Label of the message.
+%	@param Content of the message.
+%
+send_user_message(Label,Content) :-
+	new_user_message(Message,Label,Content),
+	get_app_message_callback_url(Url),
+	ignore(wenet_service_post_callback(_,Message,Url)),
+	get_task_id(TaskId),
+	get_transaction_id(TransactionId),
+	ignore(wenet_task_manager_add_message_into_transaction(_,TaskId,TransactionId,Message))
 	.

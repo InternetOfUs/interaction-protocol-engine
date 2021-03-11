@@ -233,7 +233,7 @@ public interface MessageForWorkerBuilder {
   public static JsonObject buildProtocolMessageForCreatedTask(final ProtocolData protocol) {
 
     final var message = createProtocolMessage(protocol);
-    message.sender.component = Component.USER_APP;
+    message.sender.component = Component.TASK_MANAGER;
     message.sender.userId = message.receiver.userId = protocol.task.requesterId;
     message.particle = "createdTask";
     return buildProtocolMessage(message, protocol);

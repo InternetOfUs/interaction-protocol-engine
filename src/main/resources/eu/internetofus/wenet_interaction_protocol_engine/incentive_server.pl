@@ -23,8 +23,7 @@
 :- dynamic
 	wenet_incentive_server_api_url_to/2,
 	wenet_incentive_server_update_task_status/2,
-	create_task_status/8,
-	create_task_status/3
+	wenet_new_task_status/8
 	.
 
 %!	wenet_incentive_server_api_url_to(-Url,+Paths)
@@ -48,7 +47,7 @@ wenet_incentive_server_update_task_status(Updated,Status) :-
 	wenet_post_json_to_url(Updated,Url,Status)
 	.
 
-%!	create_task_status(-Status,+AppId,+UserId,+CommunityId,+TaskId,+Action,+Message)
+%!	wenet_new_task_status(-Status,+AppId,+UserId,+CommunityId,+TaskId,+Action,+Message)
 %
 %	Create a task status.
 %
@@ -60,22 +59,6 @@ wenet_incentive_server_update_task_status(Updated,Status) :-
 %	@param Action of the status.
 %	@param Message of the status.
 %
-create_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message) :-
+wenet_new_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message) :-
 	Status = json([app_id=AppId,user_id=UserId,community_id=CommunityId,task_id=TaskId,'Action'=Action,'Message'=Message])
-	.
-
-%!	create_task_status(-Status,+Action,+Message)
-%
-%	Create a task status with the received message information.
-%
-%	@param Status that has been created.
-%	@param Action of the status.
-%	@param Message of the status.
-%
-create_task_status(Status,Action,Message) :-
-	env_app_id(AppId),
-	env_profile_id(UserId),
-	env_community_id(CommunityId),
-	env_task_id(TaskId),
-	create_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message)
 	.

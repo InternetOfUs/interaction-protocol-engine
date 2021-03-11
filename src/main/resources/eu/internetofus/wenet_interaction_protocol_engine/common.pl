@@ -33,7 +33,8 @@
 	wenet_log_trace/2,
 	wenet_log_trace/1,
 	wenet_log_error/3,
-	wenet_log_error/2
+	wenet_log_error/2,
+	wenet_log_error/1
 	.
 
 :- autoload(library(http/json)).
@@ -66,6 +67,16 @@ wenet_log_trace(Text) :-
 wenet_log_trace(Text,Term) :-
 	format(string(Lines),'TRACE: ~w ~w',[Text,Term]),
 	print_message_lines(user_output,kind(trace),[Lines])
+	.
+
+%!	wenet_log_error(-Text)
+%
+%	Write an error log message into the output console.
+%
+%	@param Text string message of the log.
+%
+wenet_log_error(Text) :-
+	wenet_print_error('~w',[Text])
 	.
 
 %!	wenet_log_error(-Text,-Terms)
@@ -130,7 +141,8 @@ wenet_execute_once(Term) :-
 %
 wenet_read_json_from_file(FilePath, Json) :-
 	once(open(FilePath, read, Stream)),
-	wenet_get_json_from_stream(Json,FilePath,Stream)
+	ignore(json_read(Stream, Json)),
+  	ignore(close(Stream))
 	.
 
 
@@ -144,18 +156,6 @@ wenet_read_json_from_file(FilePath, Json) :-
 wenet_get_json_from_url(Url, Json) :-
 	once(wenet_component_auth_header(Header)),
 	once(http_open(Url,Stream,[Header])),
-	wenet_get_json_from_stream(Json,Url,Stream)
-  	.
-
-%!	wenet_get_json_from_stream(-Json,+Stream)
-%
-%	Get a json from a stream.
-%
-%	@param Json on the stream.
-%	@param Path of the stream.
-%	@param Stream to get the Json.
-%
-wenet_get_json_from_stream(Json,Path,Stream) :-
 	once(
 		json_read(Stream, Json) ->
 		wenet_log_trace('GET',[Path,Json]);

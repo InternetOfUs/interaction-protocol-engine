@@ -53,7 +53,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
-import org.apache.commons.io.FileUtils;
 import org.tinylog.Logger;
 
 /**
@@ -172,7 +171,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       env.fillInAutoloadPrologFilesIn(this.prologDir);
       env.appendToInitConfigurationFacts(this.config());
       env.fillIn(protocol);
-      env.appendToInitAssertaModel(body.getJsonObject("message"), "wenet_protocol_message.json", "env_message");
+      env.appendToInitAssertaModel(body.getJsonObject("message"), "wenet_protocol_message.json", "get_message");
       env.include(env.protocolOntology);
       env.include(env.protocolNorms);
 
@@ -317,13 +316,13 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       if (protocol.profile != null) {
 
         // TODO add profile norms but now are not ProtocolNorm
-        this.appendToInitAssertaModel(protocol.profile.toJsonObject(), "wenet_protocol_profile.json", "env_profile");
+        this.appendToInitAssertaModel(protocol.profile.toJsonObject(), "wenet_protocol_profile.json", "get_profile");
       }
 
       if (protocol.community != null) {
 
         this.appendToInitAssertaModel(protocol.community.toJsonObject(), "wenet_protocol_community.json",
-            "env_community");
+            "get_community");
         this.appendNorms(protocol.community.norms, "Norms of community ", protocol.community.name, " (",
             protocol.community.id, ")");
 
@@ -331,14 +330,14 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
       if (protocol.task != null) {
 
-        this.appendToInitAssertaModel(protocol.task.toJsonObject(), "wenet_protocol_task.json", "env_task");
+        this.appendToInitAssertaModel(protocol.task.toJsonObject(), "wenet_protocol_task.json", "get_task");
 
       }
 
       if (protocol.taskType != null) {
 
         this.appendToInitAssertaModel(protocol.taskType.toJsonObject(), "wenet_protocol_task_type.json",
-            "env_task_type");
+            "get_task_type");
         this.appendNorms(protocol.taskType.norms, "Norms of task type ", protocol.taskType.name, " (",
             protocol.taskType.id, ")");
 
@@ -504,11 +503,11 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     @Override
     public void close() throws IOException {
 
-      if (!FileUtils.deleteQuietly(this.work.toFile())) {
+//      if (!FileUtils.deleteQuietly(this.work.toFile())) {
 
-        Logger.error("Cannot remove the working directory {}", this.work);
+      Logger.error("Cannot remove the working directory {}", this.work);
 
-      }
+      // }
 
     }
 

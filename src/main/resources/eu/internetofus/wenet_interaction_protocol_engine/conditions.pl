@@ -35,12 +35,14 @@
 	get_profile_id/1,
 	get_community/1,
 	get_community_id/1,
+	get_task/1,
+	get_task_id/1,
 	get_transaction/1,
 	get_transaction_id/1,
 	get_app/1,
 	get_app_id/1,
 	get_app_message_callback_url/1,
-	env_app_users/1
+	get_app_users/1,
 	get_app_users_except_me/1,
 	is_received_do_transaction/2
 	.
@@ -100,18 +102,6 @@ is_now_equal_to(Time) :-
 	=(Now,Time)
 	.
 
-%!	get_message(-Message)
-%
-%	Return the message that has started the norm engine.
-%
-%	@param Profile json definition of the profile.
-%
-get_message(Message) :-
-	wenet_logger_error('No message received.'),
-	backtrace(100),
-	throw(error('No message received'))
-	.
-
 %!	get_profile(-Profile)
 %
 %	Return the current profile of the user that is checking the norms.
@@ -124,6 +114,11 @@ get_profile(Profile) :-
 	!,
 	asserta(get_profile(Profile))
 	.
+get_profile(_) :-
+	wenet_log_error('No profile defined.'),
+	backtrace(100),
+	throw(error('No profile defined'))
+	.
 
 %!	get_profile_id(-ProfileId)
 %
@@ -133,7 +128,7 @@ get_profile(Profile) :-
 %
 get_profile_id(ProfileId) :-
 	get_message(Message),
-	wenet_receiver_id_of_message(ProfileId,Message),
+	wenet_receiver_id_of_protocol_message(ProfileId,Message),
 	!,
 	asserta(get_profile_id(ProfileId))
 	.
@@ -150,6 +145,11 @@ get_community(Community) :-
 	!,
 	asserta(get_community(Community))
 	.
+get_community(_) :-
+	wenet_log_error('No community defined.'),
+	backtrace(100),
+	throw(error('No community defined'))
+	.
 
 %!	get_community_id(-CommunityId)
 %
@@ -159,9 +159,41 @@ get_community(Community) :-
 %
 get_community_id(CommunityId) :-
 	get_message(Message),
-	wenet_community_id_of_message(CommunityId,Message),
+	wenet_community_id_of_protocol_message(CommunityId,Message),
 	!,
 	asserta(get_community_id(CommunityId))
+	.
+
+%!	get_task(-Task)
+%
+%	Return the current task of the user that is checking the norms.
+%
+%	@param Task json definition of the task.
+%
+get_task(Task) :-
+	get_task_id(TaskId),
+	wenet_task_manager_get_task(Task,TaskId),
+	!,
+	asserta(get_task(Task))
+	.
+get_task(_) :-
+	wenet_log_error('No task defined.'),
+	backtrace(100),
+	throw(error('No task defined'))
+	.
+
+
+%!	get_task_id(-TaskId)
+%
+%	Return the current task identifier defined on the norm engine.
+%
+%	@param TaskIs string with the user identifier.
+%
+get_task_id(TaskId) :-
+	get_message(Message),
+	wenet_task_id_of_protocol_message(TaskId,Message),
+	!,
+	asserta(get_task_id(TaskId))
 	.
 
 %!	get_transaction(-Transaction)
@@ -170,11 +202,19 @@ get_community_id(CommunityId) :-
 %
 %	@param Transaction json transaction on the norm engine.
 %
-get_transaction(Transaction) :-
+get_transaction(json(Transaction)) :-
 	get_transaction_id(TransactionId),
 	get_task(Task),
-	wenet_transaction_of_task(Transactions,Task)
-	% TODO
+	wenet_transaction_of_task(Transactions,Task),
+	member(json(Transaction),Transactions),
+	member(id=TransactionId,Transaction),
+	!,
+	asserta(get_transaction(json(Transaction)))
+	.
+get_transaction(_) :-
+	wenet_log_error('No transaction defined.'),
+	backtrace(100),
+	throw(error('No transaction defined'))
 	.
 
 %!	get_transaction_id(-TransactionId)
@@ -184,14 +224,8 @@ get_transaction(Transaction) :-
 %	@param TransactionIs string with the user identifier.
 %
 get_transaction_id(TransactionId) :-
-	get_transaction(Transaction),
-	wenet_id_of_transaction(TransactionId,Transaction),
-	!,
-	asserta(get_transaction_id(TransactionId))
-	.
-get_transaction_id(TransactionId) :-
 	get_message(Message),
-	wenet_transaction_id_of_message(TransactionId,Message),
+	wenet_transaction_id_of_protocol_message(TransactionId,Message),
 	!,
 	asserta(get_transaction_id(TransactionId))
 	.
@@ -208,6 +242,11 @@ get_app(App) :-
 	!,
 	asserta(get_app(App))
 	.
+get_app(_) :-
+	wenet_log_error('No application defined.'),
+	backtrace(100),
+	throw(error('No application defined'))
+	.
 
 %!	get_app_id(-AppId)
 %
@@ -217,7 +256,7 @@ get_app(App) :-
 %
 get_app_id(AppId) :-
 	get_message(Message),
-	wenet_app_id_of_message(AppId,Message),
+	wenet_app_id_of_protocol_message(AppId,Message),
 	!,
 	asserta(get_app_id(AppId))
 	.
@@ -235,8 +274,6 @@ get_app_message_callback_url(Url) :-
 	asserta(get_app_message_callback_url(Url))
 	.
 
-
-
 %!	get_app_users(-Users)
 %
 %	Return the users of the application.
@@ -247,7 +284,7 @@ get_app_users(Users) :-
 	get_app_id(AppId),
 	wenet_service_get_app_users(Users,AppId),
 	!,
-	asserta(env_app_users(Users))
+	asserta(get_app_users(Users))
 	.
 
 
@@ -266,6 +303,19 @@ get_app_users_except_me(Users) :-
 	asserta(get_app_users_except_me(Users))
 	.
 
+%!	is_received_created_task()
+%
+%	Check if received that a task is created.
+%
+is_received_created_task() :-
+	get_message(Message),
+	wenet_particle_of_protocol_message('createdTask',Message),
+	wenet_sender_component_of_protocol_message('TASK_MANAGER',Message),
+	wenet_sender_id_of_protocol_message(UserId,Message),
+	wenet_receiver_component_of_protocol_message('INTERACTION_PROTOCOL_ENGINE',Message),
+	wenet_receiver_id_of_protocol_message(UserId,Message)
+	.
+
 %!	is_received_do_transaction(-Label,-Attributes)
 %
 %	Check if received a do transaction from the user.
@@ -275,14 +325,13 @@ get_app_users_except_me(Users) :-
 %
 is_received_do_transaction(Label,Attributes) :-
 	get_message(Message),
-	wenet_particle_of_message('doTaskTransaction',Message),
-	wenet_sender_component_of_message('USER_APP',Message),
-	wenet_sender_id_of_message(UserId,Message),
-	wenet_receiver_component_of_message('INTERACTION_PROTOCOL_ENGINE',Message),
-	wenet_receiver_id_of_message(UserId,Message),
-	wenet_content_of_message(Content,Message),
-	get_protocol_address_component('INTERACTION_PROTOCOL_ENGINE',Receiver),
-	get_protocol_address_user_id(UserId,Receiver),
-	get_protocol_message_content(Transaction,Message)
+	wenet_particle_of_protocol_message('doTaskTransaction',Message),
+	wenet_sender_component_of_protocol_message('USER_APP',Message),
+	wenet_sender_id_of_protocol_message(UserId,Message),
+	wenet_receiver_component_of_protocol_message('INTERACTION_PROTOCOL_ENGINE',Message),
+	wenet_receiver_id_of_protocol_message(UserId,Message),
+	wenet_content_of_protocol_message(Transaction,Message),
+	wenet_label_of_transaction(Label,Transaction),
+	wenet_attributes_of_transaction(Attributes,Transaction)
 	.
 
