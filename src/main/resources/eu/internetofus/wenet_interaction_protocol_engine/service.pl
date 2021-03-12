@@ -125,7 +125,7 @@ wenet_service_post_callback(Response,Callback,App) :-
 %	@param Url to post the callback message.
 %
 wenet_service_post_callback(Response,Callback,Url) :-
-	wenet_post_json_to_url(Response,Url,Callback,[])
+	wenet_post_json_to_url(Response,Url,Callback,[request_header('Accept'='application/json; charset=UTF-8'),request_header('Content-Type'='application/json')])
 	.
 
 %!	wenet_new_message(-Callback,+AppId,+ReceiverId,+Label,+Attributes)
