@@ -335,3 +335,16 @@ is_received_do_transaction(Label,Attributes) :-
 	wenet_attributes_of_transaction(Attributes,Transaction)
 	.
 
+%!	is_received_send_incentive(-Incentive)
+%
+%	Check if received a send incentive message.
+%
+%	@param Incentive that has been received.
+%
+is_received_send_incentive(Incentive) :-
+	get_message(Message),
+	wenet_particle_of_protocol_message('sendIncentive',Message),
+	wenet_sender_component_of_protocol_message('INCENTIVE_SERVER',Message),
+	wenet_receiver_component_of_protocol_message('INTERACTION_PROTOCOL_ENGINE',Message),
+	wenet_content_of_protocol_message(Incentive,Message)
+	.
