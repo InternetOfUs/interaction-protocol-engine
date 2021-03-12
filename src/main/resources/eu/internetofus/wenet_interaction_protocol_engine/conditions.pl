@@ -44,7 +44,10 @@
 	get_app_message_callback_url/1,
 	get_app_users/1,
 	get_app_users_except_me/1,
-	is_received_do_transaction/2
+	is_received_do_transaction/2,
+	get_task_attribute_value/2,
+	is_received_send_incentive/1,
+	is_received/3
 	.
 
 %!	is_now_less_than(+Time)
@@ -114,11 +117,6 @@ get_profile(Profile) :-
 	!,
 	asserta(get_profile(Profile))
 	.
-get_profile(_) :-
-	wenet_log_error('No profile defined.'),
-	backtrace(100),
-	throw(error('No profile defined'))
-	.
 
 %!	get_profile_id(-ProfileId)
 %
@@ -144,11 +142,6 @@ get_community(Community) :-
 	wenet_profile_manager_get_community(Community,CommunityId),
 	!,
 	asserta(get_community(Community))
-	.
-get_community(_) :-
-	wenet_log_error('No community defined.'),
-	backtrace(100),
-	throw(error('No community defined'))
 	.
 
 %!	get_community_id(-CommunityId)
@@ -176,12 +169,6 @@ get_task(Task) :-
 	!,
 	asserta(get_task(Task))
 	.
-get_task(_) :-
-	wenet_log_error('No task defined.'),
-	backtrace(100),
-	throw(error('No task defined'))
-	.
-
 
 %!	get_task_id(-TaskId)
 %
@@ -211,11 +198,6 @@ get_transaction(json(Transaction)) :-
 	!,
 	asserta(get_transaction(json(Transaction)))
 	.
-get_transaction(_) :-
-	wenet_log_error('No transaction defined.'),
-	backtrace(100),
-	throw(error('No transaction defined'))
-	.
 
 %!	get_transaction_id(-TransactionId)
 %
@@ -241,11 +223,6 @@ get_app(App) :-
 	wenet_service_get_app(App,AppId),
 	!,
 	asserta(get_app(App))
-	.
-get_app(_) :-
-	wenet_log_error('No application defined.'),
-	backtrace(100),
-	throw(error('No application defined'))
 	.
 
 %!	get_app_id(-AppId)
@@ -347,4 +324,34 @@ is_received_send_incentive(Incentive) :-
 	wenet_sender_component_of_protocol_message('INCENTIVE_SERVER',Message),
 	wenet_receiver_component_of_protocol_message('INTERACTION_PROTOCOL_ENGINE',Message),
 	wenet_content_of_protocol_message(Incentive,Message)
+	.
+
+%!	get_task_attribute_value(-Value,+Key)
+%
+%	Return the value of an attribute.
+%
+%	@param Value of the attribute.
+%	@param Key name of the attribute to get.
+%
+get_task_attribute_value(Value,Key):-
+	get_task(Task),
+	wenet_attributes_of_task(json(Attributes),Task),
+	member(Key=Value,Attributes)
+	.
+
+%!	is_received(-SenderId,-Particle,-Content)
+%
+%	Check if received a send incentive message.
+%
+%	@param SenderId the identifier of the user that has send the message.
+%	@param Particle of the message.
+%	@param Content of the message.
+%
+is_received(SenderId,Particle,Content) :-
+	get_message(Message),
+	wenet_sender_component_of_protocol_message('INTERACTION_PROTOCOL_ENGINE',Message),
+	wenet_sender_id_of_protocol_message(SenderId,Message),
+	wenet_receiver_component_of_protocol_message('INTERACTION_PROTOCOL_ENGINE',Message),
+	wenet_particle_of_protocol_message(Particle,Message),
+	wenet_content_of_protocol_message(Content,Message)
 	.

@@ -79,19 +79,19 @@ wenet_message_callback_url_of_app(Url,json(App)) :-
 	member(messageCallbackUrl=Url,App)
 	.
 
-%!	wenet_service_get_app_users(+Users,-json(App))
+%!	wenet_service_get_app_users(-Users,+json(App))
 %
 %	Return the users of an application.
 %
 %	@param Users list of string with the user identifiers of the application.
 %	@param App json with the application to obtain the users.
 %
-wenet_service_get_app_users(Users,App) :-
-	wenet_id_of_app(Id,App),
+wenet_service_get_app_users(Users,json(App)) :-
+	wenet_id_of_app(Id,json(App)),
 	wenet_service_get_app_users(Users,Id)
 	.
 
-%!	wenet_service_get_app_users(+Users,-Id)
+%!	wenet_service_get_app_users(-Users,+Id)
 %
 %	Return the users of an application.
 %
@@ -99,7 +99,6 @@ wenet_service_get_app_users(Users,App) :-
 %	@param Id string identifier of the application to obtain.
 %
 wenet_service_get_app_users(Users,Id) :-
-	string(Id),
 	wenet_service_api_url_to(Url,['/app/',Id,'/users']),
 	wenet_get_json_from_url(Url,Users)
 	.

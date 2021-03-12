@@ -28,7 +28,11 @@
 	add_created_transaction/0,
 	add_message_transaction/0,
 	new_user_message/3,
-	send_user_message/2
+	send_user_message/2,
+	put_task_attribute/2,
+	send_messages/3,
+	send_message/3,
+	notify_incentive_server/2
 	.
 
 
@@ -90,4 +94,78 @@ send_user_message(Label,Content) :-
 	get_task_id(TaskId),
 	get_transaction_id(TransactionId),
 	ignore(wenet_task_manager_add_message_into_transaction(_,TaskId,TransactionId,Message))
+	.
+
+%!	get_task_attribute(-Key,-Value)
+%
+%	Change the value of a task attribute.
+%
+%	@param Key name of the attribute to put.
+%	@param Value of the attribute.
+%
+put_task_attribute(Key,Value) :-
+	get_task_id(TaskId),
+	Task = json([attributes=json([Key=Value])]),
+	ignore(wenet_task_manager_merge_task(MergedTask,TaskId,Task)),
+	asserta(get_task(MergedTask))
+	.
+
+%!	send_messages(+Users,+Particle,+Content)
+%
+%	Send a new message to the interaction protocol engine of each specified users.
+%
+%	@param Users to receive the message.
+%	@param Particle of the message.
+%	@param Content of the message.
+%
+send_messages([],_,_).
+send_messages([User|Tail],Particle,Content) :-
+ 	send_message(User,Particle,Content),
+	send_messages(Tail,Particle,Content)
+	.
+
+%!	send_message(+ReceiverUserId,+Particle,+Content)
+%
+%	Send a message to the interaction protocol engine of an user.
+%
+%	@param ReceiverUserId to receive the message.
+%	@param Particle of the message.
+%	@param Content of the message.
+%
+send_message(ReceiverUserId,Particle,Content) :-
+	get_profile_id(SenderUserId),
+	(
+		get_app_id(AppId)
+		; AppId = @(null)
+	),
+	(
+		get_community_id(CommunityId)
+		; CommunityId = @(null)
+	),
+	(
+		get_task_id(TaskId)
+		; TaskId = @(null)
+	),
+	(
+		get_transaction_id(TransactionId)
+		; TransactionId = @(null)
+	),
+	wenet_new_protocol_message(Message,AppId,CommunityId,TaskId,TransactionId,'INTERACTION_PROTOCOL_ENGINE',SenderUserId,'INTERACTION_PROTOCOL_ENGINE',ReceiverUserId,Particle,Content),
+	ignore(wenet_interaction_protocol_engine_send_message(_,Message))
+	.
+
+%!	send_message(+Action,+Message)
+%
+%	Send a message to the interaction protocol engine of an user.
+%
+%	@param Action to receive the message.
+%	@param Message .
+%
+notify_incentive_server(Action,Message) :-
+	get_app_id(AppId),
+	get_profile_id(UserId),
+	get_community_id(CommunityId),
+	get_task_id(TaskId),
+	wenet_new_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message),
+	ignore(wenet_incentive_server_update_task_status(_,Status))
 	.
