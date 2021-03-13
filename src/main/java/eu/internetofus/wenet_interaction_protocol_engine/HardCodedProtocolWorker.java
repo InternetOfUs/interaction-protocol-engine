@@ -993,7 +993,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
       final var msg = this.createMessageWithTaskId(env);
       msg.label = "QuestionToAnswerMessage";
-      msg.receiverId = env.task.requesterId;
       msg.attributes.put("question", env.task.goal.name).put("userId", env.task.requesterId);
 
       env.sendTo(appUsers, msg);
