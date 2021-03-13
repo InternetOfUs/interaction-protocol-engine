@@ -24,32 +24,39 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine;
+package eu.internetofus.common.components;
 
-import eu.internetofus.common.vertx.AbstractMainVerticle;
-import eu.internetofus.wenet_interaction_protocol_engine.api.APIVerticle;
-import eu.internetofus.wenet_interaction_protocol_engine.persistence.PersistenceVerticle;
-import eu.internetofus.wenet_interaction_protocol_engine.services.ServicesVerticle;
-import io.vertx.core.AbstractVerticle;
+import io.vertx.codegen.annotations.GenIgnore;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 
 /**
- * The Main verticle that deploy the necessary verticles for the WeNet
- * interactiomn protocol engine.
+ * A WeNet components that can be interacted with.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class MainVerticle extends AbstractMainVerticle {
+public interface WeNetComponent {
 
   /**
-   * {@inheritDoc}
+   * Obtain the URL to the API for interact with this component.
+   *
+   * @param handler to inform of the API.
    */
-  @SuppressWarnings("unchecked")
-  @Override
-  protected Class<? extends AbstractVerticle>[] getVerticleClassesToDeploy() {
+  void obtainApiUrl(final Handler<AsyncResult<String>> handler);
 
-    return new Class[] { ServicesVerticle.class, PersistenceVerticle.class, APIVerticle.class, EngineWorker.class,
-        HardCodedProtocolWorker.class };
+  /**
+   * Obtain the URL to the API for interact with this component.
+   *
+   * @return the future URL to the API of this component.
+   */
+  @GenIgnore
+  default Future<String> obtainApiUrl() {
 
+    final Promise<String> promise = Promise.promise();
+    this.obtainApiUrl(promise);
+    return promise.future();
   }
 
 }

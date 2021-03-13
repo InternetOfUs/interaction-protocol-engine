@@ -29,7 +29,7 @@ package eu.internetofus.wenet_interaction_protocol_engine;
 import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.incentive_server.WeNetIncentiveServerClient;
-import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngineClient;
+import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManagerClient;
 import eu.internetofus.common.components.service.WeNetServiceClient;
 import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilderClient;
@@ -93,26 +93,43 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
   protected Path prologDir;
 
   /**
+   * The URL to the interaction protocol engine API.
+   */
+  protected String interactionProtocolEngineApi;
+
+  /**
    * {@inheritDoc}
    */
   @Override
   public void start(final Promise<Void> startPromise) throws Exception {
 
-    this.consumer = this.vertx.eventBus().consumer(ADDRESSS, this);
-    this.consumer.completionHandler(completion -> {
+    WeNetInteractionProtocolEngine.createProxy(this.vertx).obtainApiUrl().onComplete(getter -> {
 
-      if (completion.failed()) {
+      if (getter.failed()) {
 
-        startPromise.fail(completion.cause());
+        startPromise.fail(getter.cause());
 
       } else {
 
-        this.vertx.executeBlocking(this::copyResources, res -> startPromise.handle(res));
+        this.interactionProtocolEngineApi = getter.result();
+        this.consumer = this.vertx.eventBus().consumer(ADDRESSS, this);
+        this.consumer.completionHandler(completion -> {
+
+          if (completion.failed()) {
+
+            startPromise.fail(completion.cause());
+
+          } else {
+
+            this.vertx.executeBlocking(this::copyResources, res -> startPromise.handle(res));
+
+          }
+
+        });
 
       }
 
     });
-
   }
 
   /**
@@ -421,8 +438,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
           WeNetTaskManagerClient.TASK_MANAGER_CONF_KEY, WeNetTaskManagerClient.DEFAULT_TASK_MANAGER_API_URL));
 
       this.appendFact(content, "wenet_interaction_protocol_engine_api_url",
-          components.getString(WeNetInteractionProtocolEngineClient.INTERACTION_PROTOCOL_ENGINE_CONF_KEY,
-              WeNetInteractionProtocolEngineClient.DEFAULT_INTERACTION_PROTOCOL_ENGINE_API_URL));
+          EngineWorker.this.interactionProtocolEngineApi);
 
       this.appendFact(content, "wenet_social_context_builder_api_url",
           components.getString(WeNetSocialContextBuilderClient.SOCIAL_CONTEXT_BUILDER_CONF_KEY,

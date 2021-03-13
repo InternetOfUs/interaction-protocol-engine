@@ -28,19 +28,31 @@ package eu.internetofus.common.components.incentive_server;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.Test;
-
+import eu.internetofus.common.components.WeNetComponentTestCase;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxTestContext;
+import org.junit.jupiter.api.Test;
 
 /**
- * General test over the classes that implements the {@link WeNetIncentiveServer}.
+ * General test over the classes that implements the
+ * {@link WeNetIncentiveServer}.
  *
  * @see WeNetIncentiveServer
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public abstract class WeNetIncentiveServerTestCase {
+public class WeNetIncentiveServerTestCase extends WeNetComponentTestCase<WeNetIncentiveServer> {
+
+  /**
+   * {@inheritDoc}
+   *
+   * @see WeNetIncentiveServer#createProxy(Vertx)
+   */
+  @Override
+  protected WeNetIncentiveServer createComponentProxy(final Vertx vertx) {
+
+    return WeNetIncentiveServer.createProxy(vertx);
+  }
 
   /**
    * Should update the task status.
@@ -52,7 +64,7 @@ public abstract class WeNetIncentiveServerTestCase {
   public void shouldUpdateTaskStatus(final Vertx vertx, final VertxTestContext testContext) {
 
     final var status = new TaskStatusTest().createModelExample(1);
-    WeNetIncentiveServer.createProxy(vertx).updateTaskStatus(status).onSuccess(updated -> testContext.verify(() -> {
+    this.createComponentProxy(vertx).updateTaskStatus(status).onSuccess(updated -> testContext.verify(() -> {
 
       assertThat(updated).isEqualTo(status);
       testContext.completeNow();
