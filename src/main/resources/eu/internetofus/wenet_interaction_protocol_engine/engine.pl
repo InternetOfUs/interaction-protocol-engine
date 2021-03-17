@@ -105,8 +105,10 @@ check_norms([[_Condition,_Conclusion]|Norms],[OutputT]) :-
     check_norms(Norms,OutputT).
 
 check_condition(not(C)) :- !,
-    ( call(C) , ! , fail );
-    ( ! , true ).
+    (
+      ( call(C) , ! , fail ) ;
+      ( ! , true )
+    ).
 check_condition(C1 and C2) :- !,
 	check_condition(C1),
 	check_condition(C2), !.
