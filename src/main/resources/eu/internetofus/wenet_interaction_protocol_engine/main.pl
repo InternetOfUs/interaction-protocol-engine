@@ -21,7 +21,8 @@
 %
 
 :- dynamic
-	wenet_do_norm_action_error/2,
+	wenet_do_actions/1,
+	wenet_do_norm_actions/1,
 	wenet_do_actions_status/1.
 
 go() :-
