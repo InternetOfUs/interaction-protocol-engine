@@ -22,7 +22,6 @@
 
 :- dynamic
 	wenet_do_actions_status/1,
-	wenet_execute_safetly_once/2,
 	wenet_execute_safetly_once/1,
 	wenet_read_json_from_file/2,
 	wenet_get_json_from_url/2,
@@ -34,7 +33,9 @@
 	wenet_log_trace/1,
 	wenet_log_error/3,
 	wenet_log_error/2,
-	wenet_log_error/1
+	wenet_log_error/1,
+	wenet_remove/3,
+	wenet_add/3
 	.
 
 :- autoload(library(http/json)).
@@ -124,25 +125,41 @@ wenet_print_error(Format,Arguments) :-
 %	@param Term to execute.
 %
 wenet_execute_safetly_once(Term) :-
-	catch_with_backtrace(wenet_execute_once(Term),Error,wenet_log_error('Cannot execute',Term,Error))
-	.
-wenet_execute_once(Term) :-
-	once(Term)->
-		wenet_log_trace('Executed',Term);
-		(wenet_log_error('Cannot execute',Term),backtrace)
-	.
+	catch_with_backtrace(
+		(
+		call(Term)->wenet_log_trace('Executed',[Term]);wenet_log_error('Cannot execute',[Term])
+		)
+		,Error
+		,wenet_log_error('Cannot execute',[Term],Error)
+	).
 
-%!	wenet_read_json_from_file(+FilePath, -Json)
+%!	wenet_read_json_from_file(-Json,+FilePath)
 %
 %	Read a json file and convert into a list.
 %
 %	@param FilePath string with the path to the JSON file.
 %	@param Json term with the data on the JSON file.
 %
-wenet_read_json_from_file(FilePath, Json) :-
-	once(open(FilePath, read, Stream)),
-	ignore(json_read(Stream, Json)),
-  	ignore(close(Stream))
+wenet_read_json_from_file(Json,FilePath) :-
+	catch(
+	(
+		(
+			open(FilePath, read, Stream),
+			json_read(Stream, Json),
+			close(Stream)
+		)
+			->true
+			;(
+				wenet_log_error('Cannot READ',[FilePath])
+				,false
+			)
+	)
+	,Error
+	,(
+		wenet_log_error('Cannot READ',[FilePath],Error)
+		,false
+	)),
+	wenet_log_trace('READ',[FilePath,Json])
 	.
 
 %!	wenet_get_json_from_url(+Url, -Json)
@@ -154,10 +171,11 @@ wenet_read_json_from_file(FilePath, Json) :-
 %
 wenet_get_json_from_url(Url, Json) :-
 	wenet_component_auth_header(AuthHeader),
-	Header = [AuthHeader,request_header('Accept'='application/json; charset=UTF-8')],
+	nonvar(Url),
+	nonvar(AuthHeader),
 	catch(
 	(
-		http_get(Url,Result,Header)
+		http_get(Url,Result,[AuthHeader,request_header('Accept'='application/json; charset=UTF-8')])
 			->true
 			;(
 				wenet_log_error('Cannot GET',[Url])
@@ -183,8 +201,9 @@ wenet_get_json_from_url(Url, Json) :-
 %
 wenet_post_json_to_url(Json, Url, Body) :-
 	wenet_component_auth_header(AuthHeader),
-	Header = [AuthHeader,request_header('Accept'='application/json; charset=UTF-8'),request_header('Content-Type'='application/json')],
-	wenet_post_json_to_url(Json,Url,Body,Header).
+	nonvar(AuthHeader),
+	wenet_post_json_to_url(Json,Url,Body,[AuthHeader,request_header('Accept'='application/json; charset=UTF-8'),request_header('Content-Type'='application/json')])
+	.
 
 %!	wenet_post_json_to_url(-Json,+Url,+Body,+Headers)
 %
@@ -197,6 +216,8 @@ wenet_post_json_to_url(Json, Url, Body) :-
 %
 wenet_post_json_to_url(Json, Url, Body, Header)  :-
 	atom_json_term(AtomBody, Body, []),
+	nonvar(Url),
+	nonvar(AtomBody),
 	catch(
 	(
 		http_post(Url,atom('application/json',AtomBody),Result,Header)
@@ -225,11 +246,13 @@ wenet_post_json_to_url(Json, Url, Body, Header)  :-
 %
 wenet_put_json_to_url(Json, Url, Body) :-
 	wenet_component_auth_header(AuthHeader),
-	Header = [AuthHeader,request_header('Accept'='application/json; charset=UTF-8'),request_header('Content-Type'='application/json')],
 	atom_json_term(AtomBody, Body, []),
+	nonvar(Url),
+	nonvar(AtomBody),
+	nonvar(AuthHeader),
 	catch(
 	(
-		http_put(Url,atom('application/json',AtomBody),Result,Header)
+		http_put(Url,atom('application/json',AtomBody),Result,[AuthHeader,request_header('Accept'='application/json; charset=UTF-8'),request_header('Content-Type'='application/json')])
 			->true
 			;(
 				wenet_log_error('Cannot PUT',[Url,AtomBody])
@@ -255,11 +278,13 @@ wenet_put_json_to_url(Json, Url, Body) :-
 %
 wenet_patch_json_to_url(Json, Url, Body) :-
 	wenet_component_auth_header(AuthHeader),
-	Header = [AuthHeader,request_header('Accept'='application/json; charset=UTF-8'),request_header('Content-Type'='application/json')],
 	atom_json_term(AtomBody, Body, []),
+	nonvar(Url),
+	nonvar(AtomBody),
+	nonvar(AuthHeader),
 	catch(
 	(
-		http_patch(Url,atom('application/json',AtomBody),Result,Header)
+		http_patch(Url,atom('application/json',AtomBody),Result,[AuthHeader,request_header('Accept'='application/json; charset=UTF-8'),request_header('Content-Type'='application/json')])
 			->true
 			;(
 				wenet_log_error('Cannot PATCH',[Url,AtomBody])
@@ -273,4 +298,28 @@ wenet_patch_json_to_url(Json, Url, Body) :-
 	)),
 	wenet_log_trace('PATCH',[Url,AtomBody,Result]),
 	atom_json_term(Result, Json, [])
+	.
+
+%!	wenet_remove(-Result,+Element,+List)
+%
+%	Remove an element from a list.
+%
+%	@param Result the list without the element.
+%	@param Element to remove.
+%	@param List to removed the element of a list.
+%
+wenet_remove(Result,Element,List) :-
+	once(selectchk(Element,List,Result))
+	.
+
+%!	wenet_add(-Result,+Element,+List)
+%
+%	Add an element into a list.
+%
+%	@param Result the list without the element.
+%	@param Element to add.
+%	@param List to addd the element of a list.
+%
+wenet_add(Result,Element,List) :-
+	append([List,[Element]], Result)
 	.

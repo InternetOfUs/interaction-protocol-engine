@@ -633,7 +633,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       final var unanswered = env.task.attributes.getJsonArray("unanswered");
       if (!unanswered.remove(volunteerId)) {
 
-        final var msg = this.createTextualMessage(env, "Accept not allowed",
+        final var msg = this.createTextualMessage(env, "Volunteer not allowed",
             "You cannot be a volunteer, because you already are or you are not a person that can provide help.");
         msg.receiverId = transaction.actioneerId;
         env.sendTo(msg);

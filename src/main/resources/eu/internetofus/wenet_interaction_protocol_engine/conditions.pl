@@ -25,6 +25,7 @@
 %
 
 :- dynamic
+	get_now/1,
 	is_now_less_than/1,
 	is_now_less_than_or_equal_to/1,
 	is_now_greater_than/1,
@@ -37,6 +38,8 @@
 	get_community_id/1,
 	get_task/1,
 	get_task_id/1,
+	get_task_type/1,
+	get_task_type_id/1,
 	get_transaction/1,
 	get_transaction_id/1,
 	get_app/1,
@@ -45,9 +48,14 @@
 	get_app_users/1,
 	get_app_users_except_me/1,
 	is_received_do_transaction/2,
+	is_received_created_task/0,
 	get_task_attribute_value/2,
 	is_received_send_incentive/1,
-	is_received/3
+	is_received/3,
+	get_task_goal_name/1,
+	get_task_requester_id/1,
+	get_social_explanation/2,
+	is_task_closed/0
 	.
 
 %!	is_now_less_than(+Time)
@@ -57,7 +65,7 @@
 %	@param Actions to execute.
 %
 is_now_less_than(Time) :-
-	wenet_now(Now),
+	get_now(Now),
 	<(Now,Time)
 	.
 
@@ -68,7 +76,7 @@ is_now_less_than(Time) :-
 %	@param Actions to execute.
 %
 is_now_less_than_or_equal_to(Time) :-
-	wenet_now(Now),
+	get_now(Now),
 	=<(Now,Time)
 	.
 
@@ -79,7 +87,7 @@ is_now_less_than_or_equal_to(Time) :-
 %	@param Actions to execute.
 %
 is_now_greater_than(Time) :-
-	wenet_now(Now),
+	get_now(Now),
 	>(Now,Time)
 	.
 
@@ -90,7 +98,7 @@ is_now_greater_than(Time) :-
 %	@param Actions to execute.
 %
 is_now_greater_than_or_equal_to(Time) :-
-	wenet_now(Now),
+	get_now(Now),
 	>=(Now,Time)
 	.
 
@@ -101,8 +109,22 @@ is_now_greater_than_or_equal_to(Time) :-
 %	@param Actions to execute.
 %
 is_now_equal_to(Time) :-
-	wenet_now(Now),
+	get_now(Now),
 	=(Now,Time)
+	.
+
+%!	get_message(-Message)
+%
+%	Return the received message to process.
+%
+%	@param Message json received on the norm engine.
+%
+get_message(Message) :-
+	wenet_protocol_message_file(FilePath),
+	wenet_read_json_from_file(Message,FilePath),
+	!,
+	retractall(get_message(_)),
+	asserta(get_message(Message))
 	.
 
 %!	get_profile(-Profile)
@@ -112,9 +134,10 @@ is_now_equal_to(Time) :-
 %	@param Profile json definition of the profile.
 %
 get_profile(Profile) :-
-	get_profile_id(ProfileId),
-	wenet_profile_manager_get_profile(Profile,ProfileId),
+	wenet_protocol_profile_file(FilePath),
+	wenet_read_json_from_file(Profile,FilePath),
 	!,
+	retractall(get_profile(_)),
 	asserta(get_profile(Profile))
 	.
 
@@ -122,12 +145,13 @@ get_profile(Profile) :-
 %
 %	Return the current profile identifier of the user that is checking the norms.
 %
-%	@param ProfileIs string with the user identifier.
+%	@param ProfileId string with the user identifier.
 %
 get_profile_id(ProfileId) :-
 	get_message(Message),
 	wenet_receiver_id_of_protocol_message(ProfileId,Message),
 	!,
+	retractall(get_profile_id(_)),
 	asserta(get_profile_id(ProfileId))
 	.
 
@@ -138,22 +162,25 @@ get_profile_id(ProfileId) :-
 %	@param Community json definition of the community.
 %
 get_community(Community) :-
-	get_community_id(CommunityId),
-	wenet_profile_manager_get_community(Community,CommunityId),
+	wenet_protocol_community_file(FilePath),
+	wenet_read_json_from_file(Community,FilePath),
 	!,
+	retractall(get_community(_)),
 	asserta(get_community(Community))
 	.
+
 
 %!	get_community_id(-CommunityId)
 %
 %	Return the current community identifier of the user that is checking the norms.
 %
-%	@param CommunityIs string with the user identifier.
+%	@param CommunityId string with the user identifier.
 %
 get_community_id(CommunityId) :-
 	get_message(Message),
 	wenet_community_id_of_protocol_message(CommunityId,Message),
 	!,
+	retractall(get_community_id(_)),
 	asserta(get_community_id(CommunityId))
 	.
 
@@ -164,23 +191,54 @@ get_community_id(CommunityId) :-
 %	@param Task json definition of the task.
 %
 get_task(Task) :-
-	get_task_id(TaskId),
-	wenet_task_manager_get_task(Task,TaskId),
+	wenet_protocol_task_file(FilePath),
+	wenet_read_json_from_file(Task,FilePath),
 	!,
+	retractall(get_task(_)),
 	asserta(get_task(Task))
 	.
+
 
 %!	get_task_id(-TaskId)
 %
 %	Return the current task identifier defined on the norm engine.
 %
-%	@param TaskIs string with the user identifier.
+%	@param TaskId string with the user identifier.
 %
 get_task_id(TaskId) :-
 	get_message(Message),
 	wenet_task_id_of_protocol_message(TaskId,Message),
 	!,
+	retractall(get_task_id(_)),
 	asserta(get_task_id(TaskId))
+	.
+
+%!	get_task_type(-TaskType)
+%
+%	Return the current task type of the user that is checking the norms.
+%
+%	@param TaskType json definition of the task type.
+%
+get_task_type(TaskType) :-
+	wenet_protocol_task_type_file(FilePath),
+	wenet_read_json_from_file(TaskType,FilePath),
+	!,
+	retractall(get_task_type(_)),
+	asserta(get_task_type(TaskType))
+	.
+
+%!	get_task_type_id(-TaskTypeId)
+%
+%	Return the current task type identifier defined on the norm engine.
+%
+%	@param TaskTypeId string with the user identifier.
+%
+get_task_type_id(TaskTypeId) :-
+	get_task(Task),
+	wenet_task_type_of_task(TaskTypeId,Task),
+	!,
+	retractall(get_task_type_id(_)),
+	asserta(get_task_type_id(TaskTypeId))
 	.
 
 %!	get_transaction(-Transaction)
@@ -196,6 +254,7 @@ get_transaction(json(Transaction)) :-
 	member(json(Transaction),Transactions),
 	member(id=TransactionId,Transaction),
 	!,
+	retractall(get_transaction(_)),
 	asserta(get_transaction(json(Transaction)))
 	.
 
@@ -209,6 +268,7 @@ get_transaction_id(TransactionId) :-
 	get_message(Message),
 	wenet_transaction_id_of_protocol_message(TransactionId,Message),
 	!,
+	retractall(get_transaction_id(_)),
 	asserta(get_transaction_id(TransactionId))
 	.
 
@@ -222,6 +282,7 @@ get_app(App) :-
 	get_app_id(AppId),
 	wenet_service_get_app(App,AppId),
 	!,
+	retractall(get_app(_)),
 	asserta(get_app(App))
 	.
 
@@ -235,6 +296,7 @@ get_app_id(AppId) :-
 	get_message(Message),
 	wenet_app_id_of_protocol_message(AppId,Message),
 	!,
+	retractall(get_app_id(_)),
 	asserta(get_app_id(AppId))
 	.
 
@@ -248,6 +310,7 @@ get_app_message_callback_url(Url) :-
 	get_app(App),
 	wenet_message_callback_url_of_app(Url,App),
 	!,
+	retractall(get_app_message_callback_url(_)),
 	asserta(get_app_message_callback_url(Url))
 	.
 
@@ -261,6 +324,7 @@ get_app_users(Users) :-
 	get_app_id(AppId),
 	wenet_service_get_app_users(Users,AppId),
 	!,
+	retractall(get_app_users(_)),
 	asserta(get_app_users(Users))
 	.
 
@@ -277,6 +341,7 @@ get_app_users_except_me(Users) :-
 	get_profile_id(ProfileId),
 	delete(AppUsers,ProfileId,Users),
 	!,
+	retractall(get_app_users_except_me(_)),
 	asserta(get_app_users_except_me(Users))
 	.
 
@@ -290,7 +355,10 @@ is_received_created_task() :-
 	wenet_sender_component_of_protocol_message('TASK_MANAGER',Message),
 	wenet_sender_id_of_protocol_message(UserId,Message),
 	wenet_receiver_component_of_protocol_message('INTERACTION_PROTOCOL_ENGINE',Message),
-	wenet_receiver_id_of_protocol_message(UserId,Message)
+	wenet_receiver_id_of_protocol_message(UserId,Message),
+	!,
+	retractall(is_received_created_task()),
+	asserta(is_received_created_task())
 	.
 
 %!	is_received_do_transaction(-Label,-Attributes)
@@ -309,7 +377,10 @@ is_received_do_transaction(Label,Attributes) :-
 	wenet_receiver_id_of_protocol_message(UserId,Message),
 	wenet_content_of_protocol_message(Transaction,Message),
 	wenet_label_of_transaction(Label,Transaction),
-	wenet_attributes_of_transaction(Attributes,Transaction)
+	wenet_attributes_of_transaction(Attributes,Transaction),
+	!,
+	retractall(is_received_do_transaction(_,_)),
+	asserta(is_received_do_transaction(Label,Attributes))
 	.
 
 %!	is_received_send_incentive(-Incentive)
@@ -323,7 +394,10 @@ is_received_send_incentive(Incentive) :-
 	wenet_particle_of_protocol_message('sendIncentive',Message),
 	wenet_sender_component_of_protocol_message('INCENTIVE_SERVER',Message),
 	wenet_receiver_component_of_protocol_message('INTERACTION_PROTOCOL_ENGINE',Message),
-	wenet_content_of_protocol_message(Incentive,Message)
+	wenet_content_of_protocol_message(Incentive,Message),
+	!,
+	retractall(is_received_send_incentive(_)),
+	asserta(is_received_send_incentive(Incentive))
 	.
 
 %!	get_task_attribute_value(-Value,+Key)
@@ -353,5 +427,63 @@ is_received(SenderId,Particle,Content) :-
 	wenet_sender_id_of_protocol_message(SenderId,Message),
 	wenet_receiver_component_of_protocol_message('INTERACTION_PROTOCOL_ENGINE',Message),
 	wenet_particle_of_protocol_message(Particle,Message),
-	wenet_content_of_protocol_message(Content,Message)
+	wenet_content_of_protocol_message(Content,Message),
+	!,
+	retractall(is_received(_,_,_)),
+	asserta(is_received(SenderId,Particle,Content))
+	.
+
+%!	get_task_requester_id(-RequesterId)
+%
+%	Return the identifier of the task requester.
+%
+%	@param RequesterId identifier of the user that has request to do the task.
+%
+get_task_requester_id(RequesterId) :-
+	get_task(Task),
+	wenet_requester_id_of_task(RequesterId,Task),
+	!,
+	retractall(get_task_requester_id(_)),
+	asserta(get_task_requester_id(RequesterId))
+	.
+
+%!	get_task_goal_name(-Name)
+%
+%	Return the name of the task goal
+%
+%	@param Name of the task goal.
+%
+get_task_goal_name(Name) :-
+	get_task(Task),
+	wenet_goal_name_of_task(Name,Task),
+	!,
+	retractall(get_task_goal_name(_)),
+	asserta(get_task_goal_name(Name))
+	.
+
+%!	get_social_explanation(-Explanation,+UserId)
+%
+%	Obtain the social explanation why choose a volunteer.
+%
+%	@param Explanation that explains why to choose the user.
+%	@param UserId identifier of the user to obtain the social explanation.
+%
+get_social_explanation(Explanation,UserId) :-
+	get_task_id(TaskId),
+	wenet_social_context_builder_retrieve_social_explanation(SocialExplanation,UserId,TaskId),
+	wenet_description_of_social_explanation(Explanation,SocialExplanation),
+	!,
+	asserta(get_social_explanation(Explanation,UserId))
+	.
+
+%!	is_task_closed()
+%
+%	Check if the task is closed.
+%
+is_task_closed() :-
+	get_task(Task),
+	wenet_is_closed_task(Task),
+	!,
+	retractall(is_task_closed()),
+	asserta(is_task_closed())
 	.

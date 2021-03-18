@@ -32,7 +32,8 @@
 	put_task_attribute/2,
 	send_messages/3,
 	send_message/3,
-	notify_incentive_server/2
+	notify_incentive_server/2,
+	notify_volunteers_to_social_context_builder/2
 	.
 
 
@@ -44,8 +45,10 @@ add_created_transaction() :-
 	get_profile_id(ProfileId),
 	get_task_id(TaskId),
 	Transaction = json([taskId=TaskId,actioneerId=ProfileId,label='CREATE_TASK']),
+	!,
 	ignore(wenet_task_manager_add_transaction_into_task(InitialTransaction,TaskId,Transaction)),
 	wenet_id_of_transaction(InitialTransactionId,InitialTransaction),
+	!,
 	asserta(add_created_transaction()),
 	asserta(get_transaction(InitialTransaction)),
 	asserta(get_transaction_id(InitialTransactionId))
@@ -59,8 +62,10 @@ add_message_transaction() :-
 	get_message(Message),
 	wenet_content_of_protocol_message(Transaction,Message),
 	get_task_id(TaskId),
+	!,
 	ignore(wenet_task_manager_add_transaction_into_task(AddedTransaction,TaskId,Transaction)),
 	wenet_id_of_transaction(AddedTransactionId,AddedTransaction),
+	!,
 	asserta(add_message_transaction()),
 	asserta(get_transaction(AddedTransaction)),
 	asserta(get_transaction_id(AddedTransactionId))
@@ -90,11 +95,17 @@ new_user_message(Message,Label,Content) :-
 send_user_message(Label,Content) :-
 	new_user_message(Message,Label,Content),
 	get_app_message_callback_url(Url),
+	!,
 	ignore(wenet_service_post_callback(_,Message,Url)),
-	get_task_id(TaskId),
-	get_transaction_id(TransactionId),
-	ignore(wenet_task_manager_add_message_into_transaction(_,TaskId,TransactionId,Message))
-	.
+	(
+		(
+			get_task_id(TaskId),
+			get_transaction_id(TransactionId)
+		)
+		->ignore(wenet_task_manager_add_message_into_transaction(_,TaskId,TransactionId,Message))
+		;true
+	),
+	!.
 
 %!	get_task_attribute(-Key,-Value)
 %
@@ -105,8 +116,8 @@ send_user_message(Label,Content) :-
 %
 put_task_attribute(Key,Value) :-
 	get_task_id(TaskId),
-	Task = json([attributes=json([Key=Value])]),
-	ignore(wenet_task_manager_merge_task(MergedTask,TaskId,Task)),
+	!,
+	ignore(wenet_task_manager_merge_task(MergedTask,TaskId,json([attributes=json([Key=Value])]))),
 	asserta(get_task(MergedTask))
 	.
 
@@ -151,6 +162,7 @@ send_message(ReceiverUserId,Particle,Content) :-
 		; TransactionId = @(null)
 	),
 	wenet_new_protocol_message(Message,AppId,CommunityId,TaskId,TransactionId,'INTERACTION_PROTOCOL_ENGINE',SenderUserId,'INTERACTION_PROTOCOL_ENGINE',ReceiverUserId,Particle,Content),
+	!,
 	ignore(wenet_interaction_protocol_engine_send_message(_,Message))
 	.
 
@@ -167,5 +179,19 @@ notify_incentive_server(Action,Message) :-
 	get_community_id(CommunityId),
 	get_task_id(TaskId),
 	wenet_new_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message),
+	!,
 	ignore(wenet_incentive_server_update_task_status(_,Status))
+	.
+
+%!	notify_social_context_builder
+%
+%	Notify the social context builder about the user preferences in a task.
+%
+%	@param Volunteers list of volunteers.
+%	@param UserId identifier of the users.
+%
+notify_volunteers_to_social_context_builder(Volunteers,UserId):-
+	get_task_id(TaskId),
+	!,
+	ignore(wenet_social_context_builder_update_preferences(UserId,TaskId,Volunteers))
 	.

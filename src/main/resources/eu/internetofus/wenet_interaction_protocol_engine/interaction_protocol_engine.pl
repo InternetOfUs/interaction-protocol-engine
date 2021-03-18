@@ -246,6 +246,8 @@ wenet_content_of_protocol_message(Content, json(Message)) :-
 %	@param Particle of the message.
 %	@param Content of the message.
 %
+wenet_new_protocol_message(Message,AppId,CommunityId,TaskId,TransactionId,SenderComponent,SenderUserId,ReceiverComponent,ReceiverUserId,Particle,@(null)) :-
+	wenet_new_protocol_message(Message,AppId,CommunityId,TaskId,TransactionId,SenderComponent,SenderUserId,ReceiverComponent,ReceiverUserId,Particle,json([])).
 wenet_new_protocol_message(Message,AppId,CommunityId,TaskId,TransactionId,SenderComponent,SenderUserId,ReceiverComponent,ReceiverUserId,Particle,Content) :-
 	Message = json([appId=AppId,communityId=CommunityId,taskId=TaskId,transactionId=TransactionId,sender=json([component=SenderComponent,userId=SenderUserId]),receiver=json([component=ReceiverComponent,userId=ReceiverUserId]),particle=Particle,content=Content])
 	.

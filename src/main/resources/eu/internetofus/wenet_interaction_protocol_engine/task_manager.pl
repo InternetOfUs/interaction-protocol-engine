@@ -219,11 +219,8 @@ wenet_goal_keywords_of_task(GoalKeywords, json(Task)) :-
 %	@param Task to check if it is closed.
 %
 wenet_is_closed_task(json(Task)) :-
-	not(member(closeTs=_,Task))
-	.
-wenet_is_closed_task(json(Task)) :-
-	member(closeTs=X,Task),
-	not(integer(X))
+	member(closeTs = X,Task),
+	integer(X)
 	.
 
 %!	wenet_close_ts_of_task(+Task)

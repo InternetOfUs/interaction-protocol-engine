@@ -189,11 +189,12 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       env.fillInAutoloadPrologFilesIn(this.prologDir);
       env.appendToInitConfigurationFacts(this.config());
       env.fillIn(protocol);
-      env.appendToInitAssertaModel(body.getJsonObject("message"), "wenet_protocol_message.json", "get_message");
+      final var message = body.getJsonObject("message");
+      env.appendToInitAssertaModel(message, "message");
       env.include(env.protocolOntology);
       env.include(env.protocolNorms);
 
-      env.run();
+      env.run(message);
 
     } catch (final Throwable throwable) {
 
@@ -297,27 +298,21 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     }
 
     /**
-     * Add to the init file the load of a model.
+     * Add to the init file the path to a file to load the data defined by the
+     * prefix.
      *
-     * @param model     to load.
-     * @param fileName  name of the file to write.
-     * @param predicate to load.
+     * @param model  to load.
+     * @param prefix that define the data.
      *
      * @throws IOException If can not append to component to load the model.
      */
-    public void appendToInitAssertaModel(final JsonObject model, final String fileName, final String predicate)
-        throws IOException {
+    public void appendToInitAssertaModel(final JsonObject model, final String prefix) throws IOException {
 
       final var content = new StringBuilder();
-      final var modelFile = this.createFileAtWork(fileName);
+      final var modelFile = this.createFileAtWork("wenet_protocol_" + prefix + ".json");
       Files.writeString(modelFile, model.encode());
 
-      content.append("\n:- wenet_execute_safetly_once(wenet_read_json_from_file('");
-      content.append(modelFile.toAbsolutePath());
-      content.append("',Data)),\n\tasserta(");
-      content.append(predicate);
-      content.append("(Data)).\n");
-
+      this.appendFact(content, "wenet_protocol_" + prefix + "_file", modelFile.toAbsolutePath().toString());
       Files.writeString(this.init, content, StandardOpenOption.APPEND);
 
     }
@@ -334,13 +329,12 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       if (protocol.profile != null) {
 
         // TODO add profile norms but now are not ProtocolNorm
-        this.appendToInitAssertaModel(protocol.profile.toJsonObject(), "wenet_protocol_profile.json", "get_profile");
+        this.appendToInitAssertaModel(protocol.profile.toJsonObject(), "profile");
       }
 
       if (protocol.community != null) {
 
-        this.appendToInitAssertaModel(protocol.community.toJsonObject(), "wenet_protocol_community.json",
-            "get_community");
+        this.appendToInitAssertaModel(protocol.community.toJsonObject(), "community");
         this.appendNorms(protocol.community.norms, "Norms of community ", protocol.community.name, " (",
             protocol.community.id, ")");
 
@@ -348,14 +342,13 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
       if (protocol.task != null) {
 
-        this.appendToInitAssertaModel(protocol.task.toJsonObject(), "wenet_protocol_task.json", "get_task");
+        this.appendToInitAssertaModel(protocol.task.toJsonObject(), "task");
 
       }
 
       if (protocol.taskType != null) {
 
-        this.appendToInitAssertaModel(protocol.taskType.toJsonObject(), "wenet_protocol_task_type.json",
-            "get_task_type");
+        this.appendToInitAssertaModel(protocol.taskType.toJsonObject(), "task_type");
         this.appendNorms(protocol.taskType.norms, "Norms of task type ", protocol.taskType.name, " (",
             protocol.taskType.id, ")");
 
@@ -426,7 +419,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       final var content = new StringBuilder();
       final var components = config.getJsonObject("wenetComponents", new JsonObject());
 
-      content.append("wenet_now(");
+      content.append("get_now(");
       content.append(TimeManager.now());
       content.append(").\n");
 
@@ -456,9 +449,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       content.append("' = '");
       content.append(config.getJsonObject(AbstractServicesVerticle.WEB_CLIENT_CONF_KEY, new JsonObject())
           .getString(AbstractServicesVerticle.WENET_COMPONENT_APIKEY_CONF_KEY, "UNDEFINED"));
-      content.append("')).\n\n");
-
-      content.append(":- debug.\n");
+      content.append("')).\n");
 
       Files.writeString(this.init, content, StandardOpenOption.APPEND);
 
@@ -483,9 +474,11 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     /**
      * Run the.
      *
+     * @param message to process.
+     *
      * @throws Throwable If cannot execute the SWIProlog
      */
-    public void run() throws Throwable {
+    public void run(final JsonObject message) throws Throwable {
 
       final var processBuilder = new ProcessBuilder("swipl", "--debug", "-O", "-s",
           this.init.toAbsolutePath().toString(), "-g", "go", "-t", "halt");
@@ -496,7 +489,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       processBuilder.redirectOutput(output.toFile());
       final var process = processBuilder.start();
       final var pid = process.pid();
-      Logger.trace("Start swipl process {}", pid);
+      Logger.trace("Start swipl process {} for {}", pid, message);
       final var status = process.waitFor();
       if (status == 0) {
 
