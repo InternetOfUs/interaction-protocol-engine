@@ -33,7 +33,9 @@
 	send_messages/3,
 	send_message/3,
 	notify_incentive_server/2,
-	notify_volunteers_to_social_context_builder/2
+	notify_volunteers_to_social_context_builder/2,
+	close_task/0,
+	merge_task/1
 	.
 
 
@@ -42,6 +44,7 @@
 %	Add the first transaction to a created task.
 %
 add_created_transaction() :-
+	!,
 	get_profile_id(ProfileId),
 	get_task_id(TaskId),
 	Transaction = json([taskId=TaskId,actioneerId=ProfileId,label='CREATE_TASK']),
@@ -59,6 +62,7 @@ add_created_transaction() :-
 %	Add the transaction of the message into the task.
 %
 add_message_transaction() :-
+	!,
 	get_message(Message),
 	wenet_content_of_protocol_message(Transaction,Message),
 	get_task_id(TaskId),
@@ -95,8 +99,13 @@ new_user_message(Message,Label,Content) :-
 send_user_message(Label,Content) :-
 	new_user_message(Message,Label,Content),
 	get_app_message_callback_url(Url),
+	atom_json_term(AtomBody, Message, []),
+	Data = atom('application/json',AtomBody),
+	Options = [request_header('Content-Type'='application/json')],
+	catch(http_post(Url,Data,Result,Options),Result,true),
 	!,
-	ignore(wenet_service_post_callback(_,Message,Url)),
+	wenet_log_trace('POST CALLBACK',[Url,AtomBody,Result])
+	,
 	(
 		(
 			get_task_id(TaskId),
@@ -105,7 +114,8 @@ send_user_message(Label,Content) :-
 		->ignore(wenet_task_manager_add_message_into_transaction(_,TaskId,TransactionId,Message))
 		;true
 	),
-	!.
+	!
+	.
 
 %!	get_task_attribute(-Key,-Value)
 %
@@ -115,10 +125,7 @@ send_user_message(Label,Content) :-
 %	@param Value of the attribute.
 %
 put_task_attribute(Key,Value) :-
-	get_task_id(TaskId),
-	!,
-	ignore(wenet_task_manager_merge_task(MergedTask,TaskId,json([attributes=json([Key=Value])]))),
-	asserta(get_task(MergedTask))
+	merge_task(json([attributes=json([Key=Value])]))
 	.
 
 %!	send_messages(+Users,+Particle,+Content)
@@ -143,6 +150,13 @@ send_messages([User|Tail],Particle,Content) :-
 %	@param Particle of the message.
 %	@param Content of the message.
 %
+send_message(ReceiverUserId,Particle,@(null)) :-
+	send_message(ReceiverUserId,Particle,json([]))
+	.
+send_message(ReceiverUserId,Particle,Content) :-
+	is_list(Content),
+	send_message(ReceiverUserId,Particle,json(Content))
+	.
 send_message(ReceiverUserId,Particle,Content) :-
 	get_profile_id(SenderUserId),
 	(
@@ -194,4 +208,37 @@ notify_volunteers_to_social_context_builder(Volunteers,UserId):-
 	get_task_id(TaskId),
 	!,
 	ignore(wenet_social_context_builder_update_preferences(UserId,TaskId,Volunteers))
+	.
+
+%!	close_task()
+%
+%	Mark the current task as closed.
+%
+close_task() :-
+	!,
+	get_now(Now),
+	merge_task(json([closeTs=Now]))
+	.
+
+%!	merge_task()
+%
+%	Merge the data with the current task.
+%
+%	@param Task list/json to merge
+%
+merge_task(Task) :-
+	is_list(Task),
+	merge_task(json(Task))
+	.
+merge_task(json(Task)) :-
+	get_task_id(TaskId),
+	!,
+	wenet_task_manager_merge_task(MergedTask,TaskId,json(Task))
+		->
+			(
+				retractall(get_task(_)),
+				asserta(get_task(MergedTask))
+			)
+		;
+			true
 	.

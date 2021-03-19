@@ -103,31 +103,6 @@ wenet_service_get_app_users(Users,Id) :-
 	wenet_get_json_from_url(Url,Users)
 	.
 
-%!	wenet_service_post_callback(-Response,+Callback,+json(App))
-%
-%	Post a callback message to an application.
-%
-%	@param Response of the post.
-%	@param Callback to post.
-%	@param App json application to post the message.
-%
-wenet_service_post_callback(Response,Callback,App) :-
-	wenet_message_callback_url_of_app(Url,App),
-	wenet_service_post_callback(Response,Callback,Url)
-	.
-
-%!	wenet_service_post_callback(+Callback,+Url)
-%
-%	Post a callback message to an Url.
-%
-%	@param Response of the post.
-%	@param Callback to post.
-%	@param Url to post the callback message.
-%
-wenet_service_post_callback(Response,Callback,Url) :-
-	wenet_post_json_to_url(Response,Url,Callback,[request_header('Accept'='application/json; charset=UTF-8'),request_header('Content-Type'='application/json')])
-	.
-
 %!	wenet_new_message(-Callback,+AppId,+ReceiverId,+Label,+Attributes)
 %
 %	Create an callback message.

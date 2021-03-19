@@ -446,7 +446,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
    *
    * @return the created message.
    */
-  protected Message createMessageWithCommunityandTaskIds(final HardCodedProtocolEnvironment env) {
+  protected Message createMessageWithCommunityAndTaskIds(final HardCodedProtocolEnvironment env) {
 
     final var msg = this.createMessageWithTaskId(env);
     msg.appId = env.task.appId;
@@ -607,7 +607,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
         env.task.attributes.put("unanswered", appUsers);
         env.updateTask().onComplete(update -> {
 
-          final var notification = this.createMessageWithCommunityandTaskIds(env);
+          final var notification = this.createMessageWithCommunityAndTaskIds(env);
           notification.label = "TaskProposalNotification";
           env.sendTo(appUsers, notification);
           this.notifyIncentiveServerTaskCreated(env);
@@ -670,7 +670,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
             socialContextBuilder.retrieveSocialExplanation(volunteerId, env.task.id).onComplete(retrieve -> {
 
-              final var notification = this.createMessageWithCommunityandTaskIds(env);
+              final var notification = this.createMessageWithCommunityAndTaskIds(env);
               notification.label = "TaskVolunteerNotification";
               notification.receiverId = env.task.requesterId;
               notification.attributes = notification.attributes.put("volunteerId", volunteerId);
@@ -824,7 +824,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
         env.updateTask().onComplete(update -> {
 
           Logger.trace("Added accepted users {} into task {}", () -> volunteerId, () -> env.task.id);
-          final var notification = this.createMessageWithCommunityandTaskIds(env);
+          final var notification = this.createMessageWithCommunityAndTaskIds(env);
           notification.label = "TaskSelectionNotification";
           notification.receiverId = volunteerId;
           notification.attributes.put("outcome", "accepted");
@@ -868,7 +868,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
         env.updateTask().onComplete(update -> {
 
           Logger.trace("Added refused users {} into task {}", () -> volunteerId, () -> env.task.id);
-          final var notification = this.createMessageWithCommunityandTaskIds(env);
+          final var notification = this.createMessageWithCommunityAndTaskIds(env);
           notification.label = "TaskSelectionNotification";
           notification.receiverId = volunteerId;
           notification.attributes.put("outcome", "refused");
@@ -904,7 +904,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
         Logger.trace("Closed {} task", () -> env.task.id);
 
-        final var notification = this.createMessageWithCommunityandTaskIds(env);
+        final var notification = this.createMessageWithCommunityAndTaskIds(env);
         notification.label = "TaskConcludedNotification";
         notification.attributes.put("outcome", outcome);
         final var unanswered = env.task.attributes.getJsonArray("unanswered");
