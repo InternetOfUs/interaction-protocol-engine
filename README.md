@@ -92,6 +92,7 @@ This creates the generic docker image, but you can create a different wit the **
  - **DEFAULT_WENET_SERVICE_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/service**.
  - **DEFAULT_WENET_INCENTIVE_SERVER_APII** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
  - **DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
+ - **DEFAULT_WENET_PERSONAL_CONTEXT_BUILDER_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/personal_context_builder**.
 
 Also, you can define your configuration that modifies these properties and mount to  **/usr/wenet/interaction-protocol-engine/etc**.
 
@@ -118,6 +119,7 @@ On this container, you can use the next environment variables:
  - **WENET_SERVICE_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/service**.
  - **WENET_INCENTIVE_SERVER_APII** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
  - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
+ - **WENET_PERSONAL_CONTEXT_BUILDER_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/personal_context_builder**.
  - **COMP_AUTH_KEY** to define the authentication key that the componet has to use to interact with the other WeNet components.
 
 When the container is started, it stores the log mesages at **/usr/wenet/interaction-protocol-engine/var/log/interaction-protocol-engine.log**. This file is limited
@@ -138,6 +140,7 @@ This docker compose has the next variables:
  - **WENET_SERVICE_API** to define the path to the service component to use. By default is **"https://wenet.u-hopper.com/prod/service**.
  - **WENET_INCENTIVE_SERVER_API** to define the path to the incentive server component to use. By default is **"https://wenet.u-hopper.com/prod/incentive_server**.
  - **WENET_SOCIAL_CONTEXT_BUILDER_API** to define the path to the social context builder component to use. By default is **"https://wenet.u-hopper.com/prod/social_context_builder**.
+ - **WENET_PERSONAL_CONTEXT_BUILDER_API** to define the path to the personal context builder component to use. By default is **"https://wenet.u-hopper.com/prod/personal_context_builder**.
 
 
 ### Show running logs
@@ -208,6 +211,11 @@ This software is under the [MIT license](LICENSE)
 ### Incentive server
 
  - Inform every time a task transaction success and change the state. (POST {{incentive_server_api}}/Tasks/TaskStatus/})
+
+
+### Personal context builder
+
+ - Inform about the locations of a set of users. (POST {{personal_context_builder_api}}/locations)
 
 
 ## Contact

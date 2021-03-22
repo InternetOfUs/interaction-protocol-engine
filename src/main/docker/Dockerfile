@@ -28,6 +28,7 @@ ARG DEFAULT_WENET_TASK_MANAGER_API="https://wenet.u-hopper.com/prod/task_manager
 ARG DEFAULT_WENET_SERVICE_API="https://wenet.u-hopper.com/prod/service"
 ARG DEFAULT_WENET_INCENTIVE_SERVER_API="https://wenet.u-hopper.com/prod/incentive_server"
 ARG DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API="https://wenet.u-hopper.com/prod/social_context_builder"
+ARG DEFAULT_WENET_PERSONAL_CONTEXT_BUILDER_API="https://wenet.u-hopper.com/prod/personal_context_builder"
 ARG DEFAULT_COMP_AUTH_KEY=""
 ENV API_HOST=${DEFAULT_API_HOST}
 ENV API_PORT=${DEFAULT_API_PORT}
@@ -41,6 +42,7 @@ ENV WENET_TASK_MANAGER_API=${DEFAULT_WENET_TASK_MANAGER_API}
 ENV WENET_SERVICE_API=${DEFAULT_WENET_SERVICE_API}
 ENV WENET_INCENTIVE_SERVER_API=${DEFAULT_WENET_INCENTIVE_SERVER_API}
 ENV WENET_SOCIAL_CONTEXT_BUILDER_API=${DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API}
+ENV WENET_PERSONAL_CONTEXT_BUILDER_API=${DEFAULT_WENET_PERSONAL_CONTEXT_BUILDER_API}
 ENV RUN_ARGS=""
 ENV COMP_AUTH_KEY=${DEFAULT_COMP_AUTH_KEY}
 
@@ -83,8 +85,11 @@ RUN echo "{\"wenetComponents\":{\"service\":\"${DEFAULT_WENET_SERVICE_API}\"}}" 
 # Create configuration for incentive component
 RUN echo "{\"wenetComponents\":{\"incentiveServer\":\"${DEFAULT_WENET_INCENTIVE_SERVER_API}\"}}" > /usr/wenet/interaction-protocol-engine/etc/incentiveServer.json
 
-# Create configuration for social context builderr component
+# Create configuration for social context builder component
 RUN echo "{\"wenetComponents\":{\"socialContextBuilder\":\"${DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API}\"}}" > /usr/wenet/interaction-protocol-engine/etc/socialContextBuilder.json
+
+# Create configuration for personal context builder component
+RUN echo "{\"wenetComponents\":{\"personalContextBuilder\":\"${DEFAULT_WENET_PERSONAL_CONTEXT_BUILDER_API}\"}}" > /usr/wenet/interaction-protocol-engine/etc/personalContextBuilder.json
 
 WORKDIR /usr/wenet/interaction-protocol-engine
 COPY --from=build /build/target/wenet-interaction-protocol-engine.jar /usr/wenet/interaction-protocol-engine/wenet-interaction-protocol-engine.jar
@@ -104,5 +109,6 @@ CMD /wait && java -jar wenet-interaction-protocol-engine.jar -c etc \
   -pwenetComponents.service=${WENET_SERVICE_API}\
   -pwenetComponents.incentiveServer=${WENET_INCENTIVE_SERVER_API}\
   -pwenetComponents.socialContextBuilder=${WENET_SOCIAL_CONTEXT_BUILDER_API}\
+  -pwenetComponents.personalContextBuilder=${WENET_PERSONAL_CONTEXT_BUILDER_API}\
   -pwebClient.wenetComponentApikey=${COMP_AUTH_KEY}\
   ${RUN_ARGS}
