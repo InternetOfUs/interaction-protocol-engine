@@ -66,7 +66,7 @@ wenet_task_manager_api_url_to(Url,Paths) :-
 %
 wenet_task_manager_get_task(Task,Id) :-
 	wenet_task_manager_api_url_to(Url,['/tasks/',Id]),
-	wenet_get_json_from_url(Url,Task)
+	wenet_get_json_from_url(Task,Url)
 	.
 
 %!	wenet_task_manager_merge_task(-MergedTask,+TaskId,+Task)
@@ -183,7 +183,7 @@ wenet_goal_of_task(Goal, json(Task)) :-
 %	@param GoalName of a task.
 %	@param Task to get the goal name.
 %
-wenet_goal_name_of_task(GoalName, json(Task)) :-
+wenet_goal_name_of_task(GoalName, Task) :-
 	wenet_goal_of_task(json(Goal), Task),
 	member(name=GoalName,Goal)
 	.
@@ -195,7 +195,7 @@ wenet_goal_name_of_task(GoalName, json(Task)) :-
 %	@param GoalDescription of a task.
 %	@param Task to get the goal description.
 %
-wenet_goal_description_of_task(GoalDescription, json(Task)) :-
+wenet_goal_description_of_task(GoalDescription, Task) :-
 	wenet_goal_of_task(json(Goal), Task),
 	member(description=GoalDescription,Goal)
 	.
@@ -207,7 +207,7 @@ wenet_goal_description_of_task(GoalDescription, json(Task)) :-
 %	@param GoalKeywords of a task.
 %	@param Task to get the goal keywords.
 %
-wenet_goal_keywords_of_task(GoalKeywords, json(Task)) :-
+wenet_goal_keywords_of_task(GoalKeywords, Task) :-
 	wenet_goal_of_task(json(Goal), Task),
 	member(keywords=GoalKeywords,Goal)
 	.

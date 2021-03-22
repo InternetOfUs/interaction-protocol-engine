@@ -48,7 +48,7 @@ wenet_profile_manager_api_url_to(Url,Paths) :-
 %
 wenet_profile_manager_get_profile(Profile,Id) :-
 	wenet_profile_manager_api_url_to(Url,['/profiles/',Id]),
-	wenet_get_json_from_url(Url,Profile)
+	wenet_get_json_from_url(Profile,Url)
 	.
 
 %!	get_community(+Community,-Id)
@@ -60,7 +60,7 @@ wenet_profile_manager_get_profile(Profile,Id) :-
 %
 wenet_profile_manager_get_community(Community,Id) :-
 	wenet_profile_manager_api_url_to(Url,['/communities/',Id]),
-	wenet_get_json_from_url(Url,Community)
+	wenet_get_json_from_url(Community,Url)
 	.
 
 %!	wenet_id_of_profile(-Id,+Profile)

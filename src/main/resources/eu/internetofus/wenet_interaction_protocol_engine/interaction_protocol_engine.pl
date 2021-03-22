@@ -75,7 +75,7 @@ wenet_interaction_protocol_engine_send_message(Sent,Message) :-
 %	@param UserId identifier of the user to get the state.
 %
 wenet_interaction_protocol_engine_get_community_user_state(State,CommunityId,UserId) :-
-	wenet_interaction_protocol_engine_api_url_to(Url,['/states/communities/',CommunityId,'/users/'+UserId]),
+	wenet_interaction_protocol_engine_api_url_to(Url,['/states/communities/',CommunityId,'/users/',UserId]),
 	wenet_get_json_from_url(State,Url)
 	.
 
@@ -89,7 +89,7 @@ wenet_interaction_protocol_engine_get_community_user_state(State,CommunityId,Use
 %	@param NewState the value to set the community user state.
 %
 wenet_interaction_protocol_engine_merge_community_user_state(MergedState,CommunityId,UserId,NewState) :-
-	wenet_interaction_protocol_engine_api_url_to(Url,['/states/communities/',CommunityId,'/users/'+UserId]),
+	wenet_interaction_protocol_engine_api_url_to(Url,['/states/communities/',CommunityId,'/users/',UserId]),
 	wenet_patch_json_to_url(MergedState,Url,NewState)
 	.
 

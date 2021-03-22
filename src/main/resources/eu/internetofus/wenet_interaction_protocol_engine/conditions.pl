@@ -41,6 +41,7 @@
 	get_task_type/1,
 	get_task_type_id/1,
 	get_transaction/1,
+	get_transaction/2,
 	get_transaction_id/1,
 	get_app/1,
 	get_app_id/1,
@@ -55,7 +56,12 @@
 	get_task_goal_name/1,
 	get_task_requester_id/1,
 	get_social_explanation/2,
-	is_task_closed/0
+	is_task_closed/0,
+	get_community_state/1,
+	get_community_state_attribute/2,
+	get_community_state_attribute/3,
+	get_attribute/4,
+	get_attribute/3
 	.
 
 %!	is_now_less_than(+Time)
@@ -249,13 +255,24 @@ get_task_type_id(TaskTypeId) :-
 %
 get_transaction(json(Transaction)) :-
 	get_transaction_id(TransactionId),
-	get_task(Task),
-	wenet_transaction_of_task(Transactions,Task),
-	member(json(Transaction),Transactions),
-	member(id=TransactionId,Transaction),
+	get_transaction(json(Transaction),TransactionId),
 	!,
 	retractall(get_transaction(_)),
 	asserta(get_transaction(json(Transaction)))
+	.
+
+%!	get_transaction(-Transaction,+TransactionId)
+%
+%	Return the current transaction defined on the norm engine.
+%
+%	@param Transaction json transaction on the norm engine.
+%	@param TransactionId string identifier of the transaction to return.
+%
+get_transaction(json(Transaction),TransactionId) :-
+	get_task(Task),
+	wenet_transactions_of_task(Transactions,Task),
+	member(json(Transaction),Transactions),
+	member(id=TransactionId,Transaction)
 	.
 
 %!	get_transaction_id(-TransactionId)
@@ -486,4 +503,78 @@ is_task_closed() :-
 	!,
 	retractall(is_task_closed()),
 	asserta(is_task_closed())
+	.
+
+%!	get_community_state(-State)
+%
+%	Return the state of the user on the community.
+%
+%	@param State of the user on the community.
+%
+get_community_state(State) :-
+	get_profile_id(ProfileId),
+	get_community_id(CommunityId),
+	(
+		wenet_interaction_protocol_engine_get_community_user_state(json(CommunityUserState),CommunityId,ProfileId)
+		->
+		(
+			member(attributes=State,CommunityUserState) -> true ; State = json([])
+		)
+		; State = json([])
+	),
+	!,
+	retractall(get_community_state(_)),
+	asserta(get_community_state(State))
+	.
+
+%!	get_community_state_attribute(-Value,+Key)
+%
+%	Return the state of the user on the community.
+%
+%	@param Value of the community user state attribute.
+%	@param Key of the community user state attribute to get.
+%
+get_community_state_attribute(Value,Key) :-
+	get_community_state(json(State)),
+	member(Key=Value,State)
+	.
+
+%!	get_community_state_attribute(-Value,+Key,+DefaultValue)
+%
+%	Return the state of the user on the community or
+%	the default value if it is not defined.
+%
+%	@param Value of the community user state attribute.
+%	@param Key of the community user state attribute to get.
+%	@param DefaultValue to return if the key is not defined. 
+%
+get_community_state_attribute(Value,Key,DefaultValue) :-
+	get_community_state_attribute(Value,Key) -> true ; Value = DefaultValue
+	.
+
+%!	get_attribute(-Value,+Key,+DefaultValue,+Json)
+%
+%	Return the attribute value for the specified key
+%	or the default value if it is not defined.
+%
+%	@param Value of the attribute.
+%	@param Key to get the value.
+%	@param DefaultValue to return if the attribute is not defined.
+%	@param Json to obtain the value.
+%
+get_attribute(Value,Key,DefaultValue,Json):-
+	get_attribute(Value,Key,Json)->true;Value = DefaultValue
+	.
+	
+%!	get_attribute(-Value,+Key,+DefaultValue,+Json)
+%
+%	Return the attribute value for the specified key
+%	or the default value if it is not defined.
+%
+%	@param Value of the attribute.
+%	@param Key to get the value.
+%	@param Attributes to obtain the value.
+%
+get_attribute(Value,Key,json(Attributes)):-
+	member(Key=Value,Attributes)
 	.

@@ -35,7 +35,8 @@
 	wenet_log_error/1,
 	wenet_remove/3,
 	wenet_add/3,
-	wenet_format/3
+	wenet_format/3,
+	wenet_math/2
 	.
 
 :- autoload(library(http/json)).
@@ -169,14 +170,14 @@ wenet_read_json_from_file(Json,FilePath) :-
 	wenet_log_trace('READ',[FilePath,Json])
 	.
 
-%!	wenet_get_json_from_url(+Url, -Json)
+%!	wenet_get_json_from_url(-Json,+Url)
 %
 %	Get a json from an URL.
 %
-%	@param Url string to the resource with the JSON model.
 %	@param Json term with the data on the JSON resource.
+%	@param Url string to the resource with the JSON model.
 %
-wenet_get_json_from_url(Url, Json) :-
+wenet_get_json_from_url(Json,Url) :-
 	catch(
 		(
 			(
@@ -346,4 +347,15 @@ wenet_format(Msg,WeNetFormat,Arguments) :-
 			format(string(Msg),Format,Arguments)
 		)
 		;wenet_format(Msg,WeNetFormat,[Arguments])
+	.
+
+%!	wenet_math(-Number,+Expr)
+%
+%	Return the evaluation of a mathematical expression.
+%
+%	@param Number result of the expression.
+%	@param Expr mathematical expression to evaluate.
+%
+wenet_math(Number,Expr) :-
+	Number is Expr
 	.

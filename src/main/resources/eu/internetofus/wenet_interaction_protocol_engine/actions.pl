@@ -35,7 +35,9 @@
 	notify_incentive_server/2,
 	notify_volunteers_to_social_context_builder/2,
 	close_task/0,
-	merge_task/1
+	merge_task/1,
+	merge_community_state/1,
+	put_community_state_attribute/2
 	.
 
 
@@ -117,7 +119,7 @@ send_user_message(Label,Content) :-
 	!
 	.
 
-%!	get_task_attribute(-Key,-Value)
+%!	put_task_attribute(+Key,+Value)
 %
 %	Change the value of a task attribute.
 %
@@ -241,4 +243,39 @@ merge_task(json(Task)) :-
 			)
 		;
 			true
+	.
+
+%!	merge_community_state()
+%
+%	Merge the data with the current community user state.
+%
+%	@param CommunityState list/json to merge
+%
+merge_community_state(CommunityState) :-
+	is_list(CommunityState),
+	merge_community_state(json(CommunityState))
+	.
+merge_community_state(json(CommunityState)) :-
+	get_profile_id(ProfileId),
+	get_community_id(CommunityId),
+	!,
+	wenet_interaction_protocol_engine_merge_community_user_state(MergedCommunityUserState,CommunityId,ProfileId,json(CommunityState))
+		->
+			(
+				retractall(get_community_state(_)),
+				asserta(get_community_state(MergedCommunityUserState))
+			)
+		;
+			true
+	.
+
+%!	put_community_state_attribute(+Key,+Value)
+%
+%	Change the value of a task attribute.
+%
+%	@param Key name of the attribute to put.
+%	@param Value of the attribute.
+%
+put_community_state_attribute(Key,Value) :-
+	merge_community_state(json([attributes=json([Key=Value])]))
 	.

@@ -54,7 +54,7 @@ wenet_service_api_url_to(Url,Paths) :-
 %
 wenet_service_get_app(App,Id) :-
 	wenet_service_api_url_to(Url,['/app/',Id]),
-	wenet_get_json_from_url(Url,App)
+	wenet_get_json_from_url(App,Url)
 	.
 
 %!	wenet_id_of_app(-Id,+App)
@@ -100,7 +100,7 @@ wenet_service_get_app_users(Users,json(App)) :-
 %
 wenet_service_get_app_users(Users,Id) :-
 	wenet_service_api_url_to(Url,['/app/',Id,'/users']),
-	wenet_get_json_from_url(Url,Users)
+	wenet_get_json_from_url(Users,Url)
 	.
 
 %!	wenet_new_message(-Callback,+AppId,+ReceiverId,+Label,+Attributes)

@@ -52,7 +52,7 @@
 		<gmavenplus-plugin-version>1.12.1</gmavenplus-plugin-version>
 		<groovy-version>3.0.7</groovy-version>
 		<!-- Library versions -->
-		<io.vertx-version>4.0.2</io.vertx-version>
+		<io.vertx-version>4.0.3</io.vertx-version>
 		<io.swagger-version>2.1.6</io.swagger-version>
 		<commons-validator-version>1.7</commons-validator-version>
 		<com.googlecode.libphonenumber-version>8.12.15</com.googlecode.libphonenumber-version>

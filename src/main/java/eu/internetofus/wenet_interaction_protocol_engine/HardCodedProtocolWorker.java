@@ -1046,7 +1046,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
             state = new State();
             state.communityId = env.task.communityId;
-            state.userId = env.task.requesterId;
+            state.userId = userId;
             state.attributes.put("incentives", defaultCount);
 
           }
@@ -1184,7 +1184,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
     env.addTransaction(transaction).onSuccess(updated -> {
 
-      Logger.trace("Donw NotAnswer: {}", updated);
+      Logger.trace("Done NotAnswer: {}", updated);
 
     });
 
