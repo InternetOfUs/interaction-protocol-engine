@@ -30,6 +30,7 @@ import eu.internetofus.common.TimeManager;
 import eu.internetofus.common.components.Model;
 import eu.internetofus.common.components.incentive_server.WeNetIncentiveServerClient;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
+import eu.internetofus.common.components.personal_context_builder.WeNetPersonalContextBuilderClient;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManagerClient;
 import eu.internetofus.common.components.service.WeNetServiceClient;
 import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilderClient;
@@ -80,7 +81,7 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    */
   public static final String[] PROLOG_FILE_NAMES = { "common.pl", "profile_manager.pl", "task_manager.pl",
       "interaction_protocol_engine.pl", "social_context_builder.pl", "service.pl", "incentive_server.pl",
-      "conditions.pl", "actions.pl", "engine.pl", "main.pl", "ontology.pl", "norms.pl" };
+      "personal_context_builder.pl", "conditions.pl", "actions.pl", "engine.pl", "main.pl", "ontology.pl", "norms.pl" };
 
   /**
    * The component that will consume the messages.
@@ -443,6 +444,10 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
       this.appendFact(content, "wenet_incentive_server_api_url",
           components.getString(WeNetIncentiveServerClient.INCENTIVE_SERVER_CONF_KEY,
               WeNetIncentiveServerClient.DEFAULT_INCENTIVE_SERVER_API_URL));
+
+      this.appendFact(content, "wenet_personal_context_builder_api_url",
+          components.getString(WeNetPersonalContextBuilderClient.PERSONAL_CONTEXT_BUILDER_CONF_KEY,
+              WeNetPersonalContextBuilderClient.DEFAULT_PERSONAL_CONTEXT_BUILDER_API_URL));
 
       content.append("wenet_component_auth_header(request_header('");
       content.append(AbstractServicesVerticle.WENET_COMPONENT_APIKEY_HEADER);
