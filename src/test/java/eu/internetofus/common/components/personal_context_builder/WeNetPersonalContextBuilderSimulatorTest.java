@@ -33,6 +33,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.util.ArrayList;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -104,7 +105,7 @@ public class WeNetPersonalContextBuilderSimulatorTest extends WeNetPersonalConte
     Future<?> future = Future.succeededFuture();
     for (var i = 0; i < 10; i++) {
 
-      final var location = new UserLocation();
+      final var location = new UserLocationTest().createModelExample(i);
       definedUsers.users.add(location.userId);
       definedUsers.users.add(UUID.randomUUID().toString());
       expectedLocations.locations.add(location);
@@ -115,9 +116,9 @@ public class WeNetPersonalContextBuilderSimulatorTest extends WeNetPersonalConte
 
     future = future
         .compose(ignored -> WeNetPersonalContextBuilderSimulator.createProxy(vertx).obtainUserlocations(definedUsers));
-    testContext.assertComplete(future).onSuccess(loctions -> testContext.verify(() -> {
+    testContext.assertComplete(future).onSuccess(locations -> testContext.verify(() -> {
 
-      assertThat(loctions).isEqualTo(expectedLocations);
+      assertThat(locations).isEqualTo(expectedLocations);
       testContext
           .assertComplete(WeNetPersonalContextBuilderSimulator.createProxy(vertx)
               .deleteLocation(expectedLocations.locations.get(0).userId).compose(
@@ -134,4 +135,42 @@ public class WeNetPersonalContextBuilderSimulatorTest extends WeNetPersonalConte
 
   }
 
+  /**
+   * Should obtain the closest users into a location.
+   *
+   * @param vertx       that contains the event bus to use.
+   * @param testContext context over the tests.
+   */
+  @Test
+  public void shouldAddLocationsAndObtainClosestUsers(final Vertx vertx, final VertxTestContext testContext) {
+
+    final var expectedDistances = new ArrayList<UserDistance>();
+    Future<?> future = Future.succeededFuture();
+    for (var i = 0; i < 10; i++) {
+
+      final var location = new UserLocationTest().createModelExample(i);
+      future = future
+          .compose(ignored -> WeNetPersonalContextBuilderSimulator.createProxy(vertx).addUserLocation(location));
+      final var userDistance = new UserDistance();
+      userDistance.userId = location.userId;
+      userDistance.distance = UserDistance.calculateDistance(0, 0, location.latitude, location.longitude);
+      expectedDistances.add(userDistance);
+
+    }
+
+    future = future
+        .compose(ignored -> WeNetPersonalContextBuilderSimulator.createProxy(vertx).obtainClosestUsersTo(0, 0, 10));
+    testContext.assertComplete(future).onSuccess(closest1 -> testContext.verify(() -> {
+
+      assertThat(closest1).isEqualTo(expectedDistances);
+      testContext.assertComplete(WeNetPersonalContextBuilderSimulator.createProxy(vertx).obtainClosestUsersTo(0, 0, 5))
+          .onSuccess(closest2 -> testContext.verify(() -> {
+
+            assertThat(closest2).isEqualTo(expectedDistances.subList(0, 5));
+            testContext.completeNow();
+
+          }));
+
+    }));
+  }
 }
