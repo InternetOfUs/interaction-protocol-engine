@@ -9,10 +9,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,6 +27,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine.services;
 
 import eu.internetofus.common.components.incentive_server.WeNetIncentiveServer;
+import eu.internetofus.common.components.personal_context_builder.WeNetPersonalContextBuilder;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.components.service.WeNetService;
 import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilder;
@@ -35,7 +36,8 @@ import eu.internetofus.common.vertx.AbstractServicesVerticle;
 import io.vertx.core.json.JsonObject;
 
 /**
- * The verticle that provide the services to interact with the other WeNet modules.
+ * The verticle that provide the services to interact with the other WeNet
+ * modules.
  *
  * @author UDT-IA, IIIA-CSIC
  */
@@ -56,11 +58,14 @@ public class ServicesVerticle extends AbstractServicesVerticle {
     // register the service to interact with the service API
     WeNetService.register(this.vertx, this.client, serviceConf);
 
-    // register the service to interact with the incentive server
+    // register the service to interact with the social context builder
     WeNetSocialContextBuilder.register(this.vertx, this.client, serviceConf);
 
     // register the service to interact with the incentive server
     WeNetIncentiveServer.register(this.vertx, this.client, serviceConf);
+
+    // register the service to interact with the personal context builder
+    WeNetPersonalContextBuilder.register(this.vertx, this.client, serviceConf);
 
   }
 
