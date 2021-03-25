@@ -357,9 +357,9 @@ get_app_users(Users) :-
 %		except the user that the norms engine represents.
 %
 get_app_users_except_me(Users) :-
-	get_app_users(AppUsers),
+	( get_app_users(AppUsers) -> true ; AppUsers=[] ),
 	get_profile_id(ProfileId),
-	wenet_remove(Users,ProfileId,AppUsers),
+	( wenet_remove(Users,ProfileId,AppUsers) -> true ; Users = AppUsers ),
 	!,
 	retractall(get_app_users_except_me(_)),
 	asserta(get_app_users_except_me(Users))
@@ -604,13 +604,18 @@ get_closest_users_to_me(Users) :-
 %
 get_closest_users_to_me(Users,NumUsers) :-
 	get_profile_id(Me),
-	wenet_personal_context_builder_locations([Location|_],[Me]),
-	wenet_longitude_of_location(Longitude,Location),
-	wenet_latitude_of_location(Latitude,Location),
-	Max is NumUsers + 1,
-	wenet_personal_context_builder_closest(ClosestUsers,Latitude,Longitude,Max),
-	wenet_users_of_closest(UserIds,ClosestUsers),
-	wenet_remove(Users,Me,UserIds),
+	( 
+		(
+			wenet_personal_context_builder_locations([Location|_],[Me]), 
+			wenet_longitude_of_location(Longitude,Location),
+			wenet_latitude_of_location(Latitude,Location),
+			Max is NumUsers + 1,
+			wenet_personal_context_builder_closest(ClosestUsers,Latitude,Longitude,Max),
+			wenet_users_of_closest(UserIds,ClosestUsers),
+			ignore(wenet_remove(Users,Me,UserIds))
+		)
+		-> true; Users = [] 
+	),
 	!,
 	asserta(get_closest_users_to_me(Users,NumUsers))
 	.
@@ -624,14 +629,19 @@ get_closest_users_to_me(Users,NumUsers) :-
 %	@param Max maximum distance (inclusive) in meters between me and the rest of user.
 %
 get_app_users_near_me(Users,Min,Max) :-
-	get_app_users(AppUsers),
-	get_profile_id(ProfileId),
-	wenet_personal_context_builder_locations(Locations,AppUsers),
-	member(json(Location),Locations),
-	member(userId=ProfileId,Location),
-	wenet_remove(UserLocations,json(Location),Locations),
-	wenet_filter_locations_by_distance(Filtered,json(Location),UserLocations,Min,Max),
-	wenet_users_of_locations(Users,Filtered),
+	(
+		(
+			get_app_users(AppUsers),
+			get_profile_id(ProfileId),
+			wenet_personal_context_builder_locations(Locations,AppUsers),
+			member(json(Location),Locations),
+			member(userId=ProfileId,Location),
+			wenet_remove(UserLocations,json(Location),Locations),
+			wenet_filter_locations_by_distance(Filtered,json(Location),UserLocations,Min,Max),
+			wenet_users_of_locations(Users,Filtered)
+		)
+		-> true; Users = []
+	),
 	!,
 	asserta(get_app_users_near_me(Users,Min,Max))
 	.
