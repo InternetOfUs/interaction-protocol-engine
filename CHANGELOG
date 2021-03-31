@@ -3,12 +3,13 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
-## Version 0.19.0 (2021-03-22)
+## Version 0.19.0 (2021-03-31)
 
  * Integrate with norm engine with swipl.
  * Upgrade Vert.x version.
- * Add new comon models to the API.
+ * Add new common models to the API.
  * Upgarde VertX.
+ * Allow to post/delete events for the norm engine.
 
 
 ## Version 0.18.0 (2021-02-15)

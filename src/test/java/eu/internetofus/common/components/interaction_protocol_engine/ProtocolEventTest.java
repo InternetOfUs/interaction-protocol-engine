@@ -27,9 +27,11 @@
 package eu.internetofus.common.components.interaction_protocol_engine;
 
 import static eu.internetofus.common.components.ValidationsTest.assertIsNotValid;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import eu.internetofus.common.components.StoreServices;
 import eu.internetofus.common.components.ValidationsTest;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAddress.Component;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -153,4 +155,24 @@ public class ProtocolEventTest extends AbstractProtocolActionTestCase<ProtocolEv
       assertIsNotValid(model, "userId", vertx, testContext);
     });
   }
+
+  /**
+   * Check that can convert to a protocol message.
+   *
+   * @see ProtocolEvent#toProtocolMessage()
+   */
+  @Test
+  public void shouldToProtocolMessage() {
+
+    final var event = this.createModelExample(1);
+    final var expectedMsg = new ProtocolMessageTest().createModelExample(1);
+    expectedMsg.sender.component = Component.INTERACTION_PROTOCOL_ENGINE;
+    expectedMsg.sender.userId = event.userId;
+    expectedMsg.receiver.component = Component.INTERACTION_PROTOCOL_ENGINE;
+    expectedMsg.receiver.userId = event.userId;
+    final var convert = event.toProtocolMessage();
+    assertThat(convert).isEqualTo(expectedMsg);
+
+  }
+
 }
