@@ -216,7 +216,7 @@ This software is under the [MIT license](LICENSE)
 ### Personal context builder
 
  - Inform about the locations of a set of users. (POST {{personal_context_builder_api}}/locations)
-
+ - Get the closest users into a location. (GET {{personal_context_builder_api}}/closest)
 
 ## Contact
 
