@@ -279,3 +279,4 @@ merge_community_state(json(CommunityState)) :-
 put_community_state_attribute(Key,Value) :-
 	merge_community_state(json([attributes=json([Key=Value])]))
 	.
+

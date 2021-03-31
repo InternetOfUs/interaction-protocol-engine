@@ -24,10 +24,10 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.messages;
+package eu.internetofus.wenet_interaction_protocol_engine.api.events;
 
 import eu.internetofus.common.components.ErrorMessage;
-import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
+import eu.internetofus.common.components.interaction_protocol_engine.ProtocolEvent;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -42,46 +42,64 @@ import io.vertx.ext.web.api.service.ServiceRequest;
 import io.vertx.ext.web.api.service.ServiceResponse;
 import io.vertx.ext.web.api.service.WebApiServiceGen;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 /**
- * The definition of the web services for manage the messages.
+ * The definition of the web services for manage the events.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@Path(Messages.PATH)
-@Tag(name = "Messages")
+@Path(Events.PATH)
+@Tag(name = "Events")
 @WebApiServiceGen
-public interface Messages {
+public interface Events {
 
   /**
    * The path to the service.
    */
-  String PATH = "/messages";
+  String PATH = "/events";
 
   /**
    * The address of this service.
    */
-  String ADDRESS = "wenet_interaction_protocol_engine.api.messages";
+  String ADDRESS = "wenet_interaction_protocol_engine.api.events";
 
   /**
-   * Called when want to send a message in an interaction protocol.
+   * Called when want to send a event in an interaction protocol.
    *
-   * @param body          the message to publish on the protocol.
+   * @param body          the event to publish on the protocol.
    * @param context       of the request.
    * @param resultHandler to inform of the response.
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(summary = "Send a message in an interaction protocol", description = "Publish a message in an interaction protocol that has to be validated by this engine.")
-  @RequestBody(description = "The message to publish", required = true, content = @Content(schema = @Schema(implementation = ProtocolMessage.class)))
-  @ApiResponse(responseCode = "202", description = "If the message is accepted to be processed", content = @Content(schema = @Schema(implementation = ProtocolMessage.class)))
-  @ApiResponse(responseCode = "400", description = "Bad message", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-  void sendMessage(@Parameter(hidden = true, required = false) JsonObject body,
+  @Operation(summary = "Add an event to be fired in an interaction protocol", description = "The event that has to be fired in the norm engine as a message.")
+  @RequestBody(description = "The event to publish", required = true, content = @Content(schema = @Schema(implementation = ProtocolEvent.class)))
+  @ApiResponse(responseCode = "202", description = "If the event is accepted to be processed", content = @Content(schema = @Schema(implementation = ProtocolEvent.class)))
+  @ApiResponse(responseCode = "400", description = "Bad event", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+  void sendEvent(@Parameter(hidden = true, required = false) JsonObject body,
+      @Parameter(hidden = true, required = false) ServiceRequest context,
+      @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
+
+  /**
+   * Called when want to delete an event from an interaction protocol.
+   *
+   * @param id            identifier of the event to be deleted.
+   * @param context       of the request.
+   * @param resultHandler to inform of the response.
+   */
+  @DELETE
+  @Path("/{id}")
+  @Operation(summary = "Delete an event to not be fired on an interaction protocol", description = "Remove an event to not be fired.")
+  @ApiResponse(responseCode = "204", description = "If the event is deleted")
+  @ApiResponse(responseCode = "404", description = "Not found event", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+  void deleteEvent(@PathParam("id") @Parameter(description = "The identifier of the event to delete") long id,
       @Parameter(hidden = true, required = false) ServiceRequest context,
       @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 

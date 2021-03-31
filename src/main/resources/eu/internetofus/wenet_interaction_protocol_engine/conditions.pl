@@ -64,14 +64,15 @@
 	get_attribute/3,
 	get_closest_users_to_me/1,
 	get_closest_users_to_me/2,
-	get_app_users_near_me/3
+	get_app_users_near_me/3,
+	is_event/2
 	.
 
 %!	is_now_less_than(+Time)
 %
 %	Check if the wenet time is less than a time.
 %
-%	@param Actions to execute.
+%	@param Time to be greater or equal than.
 %
 is_now_less_than(Time) :-
 	get_now(Now),
@@ -427,7 +428,7 @@ is_received_send_incentive(Incentive) :-
 %	@param Value of the attribute.
 %	@param Key name of the attribute to get.
 %
-get_task_attribute_value(Value,Key):-
+get_task_attribute_value(Value,Key) :-
 	get_task(Task),
 	wenet_attributes_of_task(json(Attributes),Task),
 	member(Key=Value,Attributes)
@@ -644,4 +645,25 @@ get_app_users_near_me(Users,Min,Max) :-
 	),
 	!,
 	asserta(get_app_users_near_me(Users,Min,Max))
+	.
+	
+%!	is_event(-Particle,-Content)
+%
+%	Check if received an event.
+%
+%	@param Particle of the event.
+%	@param Content of the event.
+%
+is_event(Particle,Content) :-
+	get_message(Message),
+	get_profile_id(Me),
+	wenet_sender_component_of_protocol_message('INTERACTION_PROTOCOL_ENGINE',Message),
+	wenet_sender_id_of_protocol_message(Me,Message),
+	wenet_receiver_component_of_protocol_message('INTERACTION_PROTOCOL_ENGINE',Message),
+	wenet_receiver_id_of_protocol_message(Me,Message),
+	wenet_particle_of_protocol_message(Particle,Message),
+	wenet_content_of_protocol_message(Content,Message),
+	!,
+	retractall(is_event(_,_)),
+	asserta(is_event(Particle,Content))
 	.

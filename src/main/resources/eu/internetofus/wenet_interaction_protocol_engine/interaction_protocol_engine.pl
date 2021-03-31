@@ -37,12 +37,11 @@
 	wenet_receiver_id_of_protocol_message/2,
 	wenet_particle_of_protocol_message/2,
 	wenet_content_of_protocol_message/2,
-	wenet_interaction_protocol_engine_send_messages/3,
 	wenet_new_protocol_message/11
 	.
 
 
-%!	wenet_interaction_protocol_engine_api_url_to(+Url,-Paths)
+%!	wenet_interaction_protocol_engine_api_url_to(-Url,+Paths)
 %
 %	Calculate the URL to interact to the specified path of the interaction protocol engine.
 %
@@ -54,7 +53,7 @@ wenet_interaction_protocol_engine_api_url_to(Url,Paths) :-
 	atomics_to_string([Api|Paths],Url)
 	.
 
-%!	wenet_interaction_protocol_engine_send_message(+Sent,-Message)
+%!	wenet_interaction_protocol_engine_send_message(-Sent,+Message)
 %
 %	Send a message to the interaction protocol engine of another user.
 %

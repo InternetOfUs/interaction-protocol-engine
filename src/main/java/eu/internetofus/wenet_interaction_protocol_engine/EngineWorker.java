@@ -388,10 +388,6 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
             ontologyContent.append(norm.thenceforth.trim());
             ontologyContent.append("\n%\n");
             ontologyContent.append(norm.ontology.trim());
-            if (ontologyContent.charAt(normsContent.length() - 1) != '.') {
-
-              ontologyContent.append(".");
-            }
             ontologyContent.append("\n");
           }
 
