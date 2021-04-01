@@ -175,329 +175,297 @@ this event is received.
 
 ## Conditions
 
-### is_now_less_than(Time)
+The norms are formed by a list of conditions separated by the conjunctions ``and`` or ``or``, or negated using
+the predicate ``not(Condition)``. You can use any predicate defined by the [SWI Prolog](https://www.swi-prolog.org/).
+The next sections shows the most common conditions that has been provided to help to the norm definition.
+
+
+### Message conditions
+
+The next conditions are used to check the received message that has started the norm engine.
+
+ - ``is_received_created_task()`` This condition is **true** when the received message is to inform that a user
+  has created a task.
+ - ``is_received_do_transaction(Label,Attributes)`` This condition is **true** when the received message is
+  to inform that a user wants to do a transaction. The label of the transaction is an string to match
+  the variable ``Label``, and the attributes are a JSON model to match ``Attributes``.
+ - ``is_received_send_incentive(Incentive)`` This condition is **true** when the received message is
+  send by the incentive server who want to notify a user about an incentive. The attribute ``Incentive`` is a JSON model
+  that contains the incentive to send to the user.
+ - ``is_received(SenderId,Particle,Content)`` This condition is **true** when the norm engine receive a message from another
+  norm engine. The identifier of the sender is a string that matches the variable ``SenderId``, the particle of the message
+  is a string to match the variable ``Particle``, and the content is a JSON model associated with ``Content``.
+ - ``is_received_event(Particle,Content)`` This condition is **true** when the received message is an event. The particle
+  of the event is a string to match the variable ``Particle``, and the content is a JSON model associated with ``Content``.
+
+
+### Users conditions
+
+The next conditions are used to manage the users that can be involved in a task. On this condition **me** refers
+to the user of the norm engine that has been started.
+
+ - ``get_app_users(Users)`` This condition is **true** when can obtain the users that are on the application.
+ The variable ``Users`` is a list of strings with the identifiers of the users that are on the application.
+ - ``get_app_users_except_me(Users)`` This condition is **true** when can obtain the users that are on the application
+ minus my identifier. The variable ``Users`` is a list of strings with the identifiers of the users that are
+ on the application where is removed the identifier of me.
+ - ``get_closest_users_to_me(Users)`` This condition is **true** when can obtain as maximum the 10 closest user to me.
+ The variable ``Users`` is a list of strings with the identifiers of the closest user to me.
+ - ``get_closest_users_to_me(Users,NumUsers)`` This condition is **true** when can obtain some closest user to me.
+ The variable ``Users`` is a list of strings with the identifiers of the closest user to me and the variable ``NumUsers``
+ is a number of maximum numbers to return.
+ - ``get_app_users_near_me(Users,Min,Max)`` This condition is **true** when can obtain some users that their distance to me
+ is in a range. The variable ``Users`` matches a list of string with the users' identifiers, and the ``Min`` is the minimum
+ distance in meters and ``Max``is the maximum distance to me (Both inclusive).
+
+
+### Status conditions
+
+The next conditions are used to check if that the status of any component. 
+
+ - ``get_profile_id(Me)`` This condition is **true** when the variable ``Me`` is an string with the user identifier
+  associated to the norm engine.
+ - ``get_profile(Profile)`` This condition is **true** when the variable ``Profile`` is a JSON model with the profile
+  of the user associated to the norm engine.
+ - ``get_user_state(State)`` This condition is **true** when the variable ``State`` is a JSON model with the state
+  of the user associated to the norm engine.
+ - ``get_user_state_attribute(Value,Key)`` This condition is **true** when the attribute name string value ``Key`` 
+  of the state of the user associated to the norm engine is defined and has the value of any type of ``Value``.
+ - ``get_user_state_attribute(Value,Key,DefaultValue)`` This condition is **true** when the attribute name
+  string value ``Key`` of the state of the user associated to the norm engine is defined and has the value
+  of any type of ``Value``, or if the attribute is not defined the ``Value`` has to be equals to ``DefaultValue``.
+ - ``get_app_id(AppId)`` This condition is **true** when the variable ``AppId`` is an string with the identifier
+  of the application associated to the received message.
+ - ``get_app(App)`` This condition is **true** when the variable ``App`` is a JSON model with the application
+  associated to the received message.
+ - ``get_app_message_callback_url(Url)`` This condition is **true** when the variable ``Url`` is a string URL to post
+  the callback messages of teh application associated to the received message.
+ - ``get_community_id(CommunityId)`` This condition is **true** when the variable ``CommunityId`` is an string with the identifier
+  of the community associated to the received message.
+ - ``get_community(Community)`` This condition is **true** when the variable ``Community`` is a JSON model with the community
+  profile associated to the received message.
+ - ``get_community_state(State)`` This condition is **true** when the variable ``State`` is a JSON model with the state
+  of the user on the community associated to the norm engine.
+ - ``get_community_state_attribute(Value,Key)`` This condition is **true** when the attribute name string value ``Key`` 
+  of the state of the user on the community associated to the norm engine is defined and has the value of any type of ``Value``.
+ - ``get_community_state_attribute(Value,Key,DefaultValue)`` This condition is **true** when the attribute name
+  string value ``Key`` of the state of the user on the community associated to the norm engine is defined and
+  has the value of any type of ``Value``, or if the attribute is not defined the ``Value`` has to be equals to ``DefaultValue``.
+ - ``get_task_id(TaskId)`` This condition is **true** when the variable ``TaskId`` is an string with the identifier
+  of the task associated to the received message.
+ - ``get_task(Task)`` This condition is **true** when the variable ``Task`` is a JSON model with the task
+  associated to the received message.
+ - ``get_task_requester_id(RequesterId)`` This condition is **true** when the variable ``RequesterId`` is a string with
+  the user identifier of the user that has requested to do the task associated to the received message.
+ - ``get_task_goal_name(Name)`` This condition is **true** when the variable ``Name`` is a string with
+  the goal name of the task associated to the received message.
+ - ``is_task_closed()`` This condition is **true** when the task associated to the received message is closed.
+ - ``get_task_attribute_value(Value,Key)`` This condition is **true** when the variable ``Key`` is a string of an attribute
+  of the task associated to the received message, and the ``Value`` is of any type with the attribute value.
+ - ``get_task_state(State)`` This condition is **true** when the variable ``State`` is a JSON model with the state
+  of the user on the task associated to the norm engine.
+ - ``get_task_state_attribute(Value,Key)`` This condition is **true** when the attribute name string value ``Key`` 
+  of the state of the user on the task associated to the norm engine is defined and has the value of any type of ``Value``.
+ - ``get_task_state_attribute(Value,Key,DefaultValue)`` This condition is **true** when the attribute name
+  string value ``Key`` of the state of the user on the task associated to the norm engine is defined and
+  has the value of any type of ``Value``, or if the attribute is not defined the ``Value`` has to be equals to ``DefaultValue``.
+ - ``get_task_type_id(TaskTypeId)`` This condition is **true** when the variable ``TaskTypeId`` is an string with the identifier
+  of the task type associated to the task of the received message.
+ - ``get_task_type(TaskType)`` This condition is **true** when the variable ``TaskType`` is a JSON model with the task
+  type of teh task associated to the received message.
+ - ``get_transaction_id(TransactionId)`` This condition is **true** when the variable ``TransactionId`` is an string with
+  the identifier of the task transaction associated to the received message.
+ - ``get_transaction(Transaction)`` This condition is **true** when the variable ``Transaction`` is a JSON model with the task
+  transaction associated to the received message.
+ - ``get_transaction(Transaction,TransactionId)`` This condition is **true** when the variable ``Transaction`` is a JSON model
+  with the task transaction defined on the task associated to the received message that has an identifier equals to
+  the string defined in ``TransactionId``.
+ - ``get_social_explanation(Explanation,UserId)`` This condition is **true** when the variable ``Explanation`` is a JSON model
+  with the explanation provided by the social context builder to selct the user with the identifeir as string defined
+  at ``UserId``.
 
-This condition is **true** when **Time** is greater than or equals to **NOW**, where **NOW** is the difference,
-measured in seconds, between the time the norm engine is started and midnight, January 1, 1970 UTC.
 
-### is_now_less_than_or_equal_to(Time)
+### Time conditions
 
-This condition is **true** when **Time** is greater than to **NOW**, where **NOW** is the difference,
-measured in seconds, between the time the norm engine is started and midnight, January 1, 1970 UTC.
+The constant **now** is set to the difference, measured in seconds, between the time the norm engine is started
+and midnight, January 1, 1970 UTC.
 
-### is_now_greater_than(Time)
+ - ``is_now_less_than(Time)`` This condition is **true** when **now** is less than the value associated to ``Time``.
+ - ``is_now_less_than_or_equal_to(Time)`` This condition is **true** when **now** is less than or equal to
+  the value associated to ``Time``.
+ - ``is_now_greater_than(Time)`` This condition is **true** when **now** is greater than the value associated to ``Time``.
+ - ``is_now_greater_than_or_equal_to(Time)`` This condition is **true** when **now** is greater than or equal
+  to the value associated to ``Time``.
+ - ``is_now_equal_to(Time)`` This condition is **true** when **now** is equal to ``Time``.
 
-This condition is **true** when **Time** is less than or equals to **NOW**, where **NOW** is the difference,
-measured in seconds, between the time the norm engine is started and midnight, January 1, 1970 UTC.
 
-### is_now_greater_than_or_equal_to(Time)
+### Others
 
-This condition is **true** when **Time** is less than to **NOW**, where **NOW** is the difference,
-measured in seconds, between the time the norm engine is started and midnight, January 1, 1970 UTC.
+ - ``get_attribute(Value,Key,Json)`` This condition is **true** when the attribute with the string value
+ defined in ``Key`` is defined on the JSON model of ``Json`` with a value of any type that matches ``Value`.
+ - ``get_attribute(Value,Key,DefaultValue,Json)`` This condition is **true** when the attribute with the string value
+ defined in ``Key`` is defined on the JSON model of ``Json`` with a value of any type that matches ``Value``,
+ or if the attribute is not dfined ``Value``is equals to ``DefaultValue``.
 
-### is_now_equal_to(Time)
-
-This condition is **true** when **Time** is equals to **NOW**, where **NOW** is the difference,
-measured in seconds, between the time the norm engine is started and midnight, January 1, 1970 UTC.
-
-### get_profile(Profile)
-
-This condition is **true** when **Profile** is equals to the profile in JSON of the user associated to the norm engine.
-
-### get_profile_id(ProfileId)
-
-This condition is **true** when **ProfileId** is equals to the identifier of the user that has started the norm engine.
-
-### get_community(Community)
-
-This condition is **true** when **Community** is equals to the community in JSON associated to the norm engine.
-
-### get_community_id(CommunityId)
-
-This condition is **true** when **CommunityId** is equals to the identifier of the community associated to the norm engine.
-
-### get_task(Task)
-
-This condition is **true** when **Task** is equals to the task in JSON associated to the norm engine.
-
-### get_task_id(TaskId)
-
-This condition is **true** when **TaskId** is equals to the identifier of the task associated to the norm engine.
-
-### get_task_type(TaskType)
-
-This condition is **true** when **TaskType** is equals to the task type in JSON associated to task of the norm engine.
-
-### get_task_type_id(TaskTypeId)
-
-This condition is **true** when **TaskTypeId** is equals to the identifier of the task type of the norm engine task.
-
-### get_task_type(TaskType)
-
-This condition is **true** when **TaskType** is equals to the task type in JSON associated
-to task of the norm engine.
-
-### get_transaction(Transaction,TransactionId)
-
-This condition is **true** when **Transaction** is the JSON object equals to transaction defined
-on the task of the norm engine with the identifier equals to **TransactionId**.
-
-### get_transaction_id(TransactionId)
-
-This condition is **true** when **TransactionId** is equals to the identifier of the transaction
-associated to the norm engine.
-
-### get_app(App)
-
-This condition is **true** when **App** is equals to the application in JSON associated to the norm engine.
-
-### get_app_id(AppId)
-
-This condition is **true** when **AppId** is equals to the identifier of the application
-associated to the norm engine.
-
-### get_app_message_callback_url(Url)
-
-This condition is **true** when **Url** is equals to the URL to post messages to the application
-associated to the norm engine.
-
-### get_app_users(Users)
-
-This condition is **true** when **Users** is an array of users identifiers that are registered
-on the application associated to the norm engine.
-
-### get_app_users_except_me(Users)
-
-This condition is **true** when **Users** is an array of users identifiers that are registered
-on the application associated to the norm engine except the identifier of the user associated
-to the norm engine.
-
-### is_received_created_task()
-
-This condition is **true** when the received message to process represents that the user has created a task.
-
-### is_received_do_transaction(Label,Attributes)
-
-This condition is **true** when the received message is a transaction to do with the string label equals
-to **Label** and the JSON attribute are equals to **Attributes**.
-
-### is_received_send_incentive(Incentive)
-
-This condition is **true** when the received message is an incentive to send to the user of the norm engine,
-and the JSON incentive to send is equal to **Incentive**.
-
-### get_task_attribute_value(Value,Key)
-
-This condition is **true** when an attribute of the task associated to the norm engine has the name **Key**
-and its value is equal to **Value**.
-
-### is_received(SenderId,Particle,Content)
-
-This condition is **true** when the message that has started the norm engine is sender by the user **SenderId**,
-has the particle equals to **Particle** and the JSON content is equals to **Content**.
-
-### get_task_requester_id(RequesterId)
-
-This condition is **true** when the user that has request to do the task associated to the norm engine
-is equal to **RequesterId**.
-
-### get_task_goal_name(Name)
-
-This condition is **true** when the name of the goal of the task associated to the norm engine
-is equal to **Name**.
-
-### get_social_explanation(Explanation,UserId)
-
-This condition is **true** when the explanation why to choose a volunteer is equals to the JSON **Explanation**
-and the user of the explanation is equal to **UserId**.
-
-### is_task_closed()
-
-This condition is **true** when the task associated to the norm engine is closed.
-
-### get_community_state(State)
-
-This condition is **true** when the community state of the user associated in the norm engine
-is equals to the JSON **State**.
-
-### get_community_state_attribute(Value,Key)
-
-This condition is **true** when the attribute with the name **Key** on the community state of the user associated
-in the norm engine has the value **Value**.
-
-
-### get_community_state_attribute(Value,Key,DefaultValue)
-
-This condition is **true** when the attribute with the name **Key** on the community state of the user associated
-in the norm engine has the value **Value** or if it is not defined is equals to **DefaultValue**.
-
-### get_attribute(Value,Key,DefaultValue,Json)
-
-This condition is **true** when the attribute with the name **Key** on the JSOn model **Json** has the value **Value**
-or if it is not defined is equals to **DefaultValue**.
-
-### get_attribute(Value,Key,Json)
-
-This condition is **true** when the attribute with the name **Key** on the JSOn model **Json** has the value **Value**.
-
-### get_closest_users_to_me(Users)
-
-This condition is **true** when the maximum 10 users closest to the user associated to the norm engine is equals
-to the array wit the users identifiers **Users**.
-
-### get_closest_users_to_me(Users,NumUsers)
-
-This condition is **true** when the maximum **NumUsers** users closest to the user associated to the norm engine is equals
-to the array wit the users identifiers **Users**.
-
-### get_app_users_near_me(Users,Min,Max)
-
-This condition is **true** when the users near the user associated to the norm engine is equals
-to the array wit the users identifiers **Users** and the distance between them in meters
-is in the range **Min** and **Max**.
-
-### is_event(Particle,Content)
-
-This condition is **true** when the message that has started the norm engine is an event with the particle
-equals to **Particle** and the JSON content is equals to **Content**.
 
 ## Actions
 
-### add_created_transaction()
+The norms to do when the conditions of a norm  are predicates separated by the conjunction ``and``. You can use
+any predicate defined by the [SWI Prolog](https://www.swi-prolog.org/), but before you have to mark it as ``dynamic``
+on the ontology of the norm. The next sections shows the most common actions that has been provided to help 
+to the norm definition.
 
-This action add a new transaction to the task associated to the norm engine that represents that the task is created.
 
-### add_message_transaction()
+### User actions
 
-This action add the transaction defined on the received message to the task associated to the norm engine.
+This action are done over the user that is associated to the norm engine, thus the receiver user of the message.
 
-### new_user_message(Message,Label,Content)
+ - ``send_user_message(Label,Content)`` This action post a callback message in the application associated
+ in the received message with the label as string defined in ``Label`` and as content the JSON model of ``Content``.
+ - ``merge_user_state(State)`` This action merge the current state of the user with the state defined by the JSON
+ in ``State``.
+ - ``put_user_state_attribute(Key,Value)`` This action change the user state attribute named in ``Key`` with the value
+ of any type defined in ``Value``.
+ 
 
-This action create the JSON **Message** with the string **Label** and the JSON **Content** to be send to
-the user associated to the norm engine though the application.
+### Community actions
 
-### send_user_message(Label,Content)
+This action are done over the community that is associated to the received message.
 
-This action send a message to the user though the application associated to the norm engine with the string **Label** and
-the JSON **Content**.
+ - ``merge_community_state(State)`` This action merge the current state of the user for the community with the state
+ defined by the JSON in ``State``.
+ - ``put_community_state_attribute(Key,Value)`` This action change the community user state attribute named
+ in ``Key`` with the value of any type defined in ``Value``.
 
-### put_task_attribute(Key,Value)
 
-This action change the the attribute with the name **Key** with the value **Value** to the task
-associated to the norm engine.
+### Task actions
 
-### send_messages(Users,Particle,Content)
+This actions are done in the task that is associated to the received message.
 
-This action send messages to the norm engines of the **Users** with the particle **Particle** and the JSON **Content**,
-and as sender the users associated to the norm engine.
+ - ``add_created_transaction()`` This action add a new transaction to the task that represents that the creation
+ of the task.
+ - ``add_message_transaction()`` This action add the transaction defined on the received message into the task.
+ - ``put_task_attribute(Key,Value)`` This action change the attribute with the string name ``Key`` with the value
+ associated to the variable``Value``.
+ - ``merge_task(Task)`` This action merge the task associated with the JSON model defined in ``Task``.
+ - ``close_task()`` This action mark the task associated to the norm engine as closed.
+ - ``merge_task_state(State)`` This action merge the current state of the user for the task with the state
+ defined by the JSON in ``State``.
+ - ``put_task_state_attribute(Key,Value)`` This action change the task user state attribute named
+ in ``Key`` with the value of any type defined in ``Value``.
 
-### send_message(UserId,Particle,Content)
 
-This action send a message to the norm engine of the **UserId** with the particle **Particle** and the JSON **Content**,
-and as sender the users associated to the norm engine.
+### Interact with WeNet components
 
-### notify_incentive_server(Action,Message)
+This actions are used to do an action that interact with the other components of the WeNet platform.
 
-This action notify the incentive server that the **Action** with the **Message** has done in the task associated
-to the norm engine.
+ - ``send_messages(Users,Particle,Content)`` This action send messages to the norm engines of the users
+ defined in the array of strings ``Users`` with the string particle in ``Particle`` and as content
+ the JSON defined in ``Content``,
+ - ``send_message(UserId,Particle,Content)`` This action send a message to the norm engines of the user
+ defined in the string ``UserId`` with the string particle in ``Particle`` and as content
+ the JSON defined in ``Content``,
+ - ``notify_incentive_server(Action,Message)`` This action notify the incentive server about a change of the task
+ associated to the received Message. The notification contains as string an action and a message defined
+ on the variables of the same name.
+ - ``notify_volunteers_to_social_context_builder(Volunteers,UserId)`` This action notify the social context builder
+ that the user identifier by the string at ``UserId`` is offered as volunteer for the task associated
+ to the received message. In ``Volunteers`` is the list of string identifiers of the volunteers users for the task.
+ 
 
-### notify_volunteers_to_social_context_builder(Volunteers,UserId)
+### Logs messages
 
-This action notify the social context builder that the user **UserId** is one of the **Volunteers** to do the task
-associated to teh norm engine.
+The next actions are used to add messages to the logging files of the norm engine.
 
-### close_task()
+ - ``wenet_log_trace(Text)`` This action print the string defined in ``Text`` into the trace log.
+ - ``wenet_log_trace(Text,Terms)`` This action print the string defined in ``Text`` with the ``Terms`` into
+  the trace log.
+ - ``wenet_log_error(Text)`` This action print the string defined in ``Text`` into the error log.
+ - ``wenet_log_error(Text,Terms)`` This action print the string defined in ``Text`` with the ``Terms`` into
+  the error log.
+ - ``wenet_log_error(Text,Terms,Error)`` This action print the string defined in ``Text`` with the ``Terms``
+ and exception ``Error`` into  the trace log.
 
-This action mark the task associated to the norm engine as closed.
 
-### merge_task(Task)
 
-This action merge the task associated to the norm engine with the values of the JSON **Task**.
+## Other Useful Norms predicates
 
-### merge_community_state(CommunityState)
+We provide other predicates that can be used to help to define the conditions and the actions of any norm.
 
-This action merge the community user state with the JSON state defined in **CommunityState**.
+### Facts
 
-### put_community_state_attribute(Key,Value)
+The next predicates refers to facts (constants) that has been set when the norm engine has been started.
 
-This action change the community user state attribute with name **Key** with the value **Value**.
+ - ``get_message(Message)`` The ``Message`` is a JSON model that contains the received message that has started
+  the norm engine.
+ - ``get_now(Time)`` This ``Time`` is a number that represents the difference, measured in seconds, between
+  the time the norm engine is started and midnight, January 1, 1970 UTC.
+ - ``wenet_profile_manager_api_url(URL)`` The ``URL`` is a string with the URL to the profile manager API.
+ - ``wenet_task_manager_api_url(URL)`` The ``URL`` is a string with the URL to the task manager API.
+ - ``wenet_interaction_protocol_engine_api_url(URL)`` The ``URL`` is a string with the URL to the interaction
+ protocol engine API.
+ - ``wenet_social_context_builder_api_url(URL)`` The ``URL`` is a string with the URL to the social context
+ builder API.
+ - ``wenet_service_api_url(URL)`` The ``URL`` is a string with the URL to the service API.
+ - ``wenet_incentive_server_api_url(URL)`` The ``URL`` is a string with the URL to the incentive server API.
+ - ``wenet_personal_context_builder_api_url(URL)`` The ``URL`` is a string with the URL to the personal context
+ builder API.
 
-## Constants
 
-### get_now(Now)
 
-This predicate is **true** when **Now**  is the difference, measured in seconds, between the time 
-the norm engine is started and midnight, January 1, 1970 UTC.
+### Utils
 
-### get_message(Message)
 
-This predicate is **true** when **Message** is equals to the message in JSON that has started the norm engine.
+ - ``wenet_remove(Result,Element,List)`` This predicate returns as ``Result`` the value of the array defined
+ in ``List`` without the value defined in ``Element``.
+ - ``wenet_add(Result,Element,List)`` This predicate returns as ``Result`` the value of the array defined
+ in ``List`` adding at the end the value defined in ``Element``.
+ - ``wenet_format(Msg,WeNetFormat,Arguments)`` This predicate return the ``Msg`` as an string where on 
+ the string defined at ``WeNetFormat`` the value **{}** are replaced with the argument ``Arguments``
+ on the same position. For example: ``wenet_format('Value One and 2','Value {} and {}',['One',2])``
 
-### wenet_profile_manager_api_url(URL)
+ - ``wenet_math(Number,Expr)`` This predicate evaluates an arithmetical expression defined in ``Expr``
+ and return the result in ``Number``. You can read more about the arithmetical expressions
+ [here](https://www.swi-prolog.org/pldoc/man?section=functions). For example: ``wenet_format(4,2+2)``
 
-This predicate is **true** when **URL** is equals to the URL of the API for the profile manager component.
 
-### wenet_task_manager_api_url(URL)
 
-This predicate is **true** when **URL** is equals to the URL of the API for the task manager component.
+### Profile manager
 
-### wenet_interaction_protocol_engine_api_url(URL)
 
-This predicate is **true** when **URL** is equals to the URL of the API for the interaction_protocol_engine component.
+TODO
 
-### wenet_social_context_builder_api_url(URL)
 
-This predicate is **true** when **URL** is equals to the URL of the API for the social_context_builder component.
+### Task manager
 
-### wenet_service_api_url(URL)
 
-This predicate is **true** when **URL** is equals to the URL of the API for the service component.
+TODO
 
-### wenet_incentive_server_api_url(URL)
 
-This predicate is **true** when **URL** is equals to the URL of the API for the incentive_server component.
+### Interaction protocol Engine
 
-### wenet_personal_context_builder_api_url(URL)
 
-This predicate is **true** when **URL** is equals to the URL of the API for the personal_context_builder component.
+TODO
 
-## Utility
+### Service
 
-### wenet_log_trace(Text)
 
-This predicate write on the log trace the string **Text**.
+TODO
 
-### wenet_log_trace(Text,Term)
 
-This predicate write on the log trace the string **Text** with the **Term**.
+### Incentive server
 
-### wenet_log_error(Text)
 
-This predicate write on the log error the string **Text**.
+TODO
 
-### wenet_log_error(Text,Terms)
 
-This predicate write on the log error the string **Text** with the **Terms**.
+### Social context builder
 
-### wenet_log_error(Text,Terms,Error)
 
-This predicate write on the log error the string **Text** with the **Terms** and **Error**.
+TODO
 
-### wenet_remove(Result,Element,List)
+### Personal context builder
 
-This predicate return the **Result** as the **List** where has removed the **Element** from it.
 
-### wenet_add(Result,Element,List)
+TODO
 
-This predicate return the **Result** as the **List** where has added the **Element** on it.
-
-### wenet_format(Msg,WeNetFormat,Arguments)
-
-This predicate return the **Msg** as an string where on the string **WeNetFormat** the value **{}** 
-are replaced with the argument **Arguments** on the same position.
-For example: **wenet_format('Value One and 2','Value {} and {}',['One',2])**
-
-### wenet_math(Number,Expr)
-
-This predicate evaluate the mathematical expression **Expr** as set the value into the **Number**.
-For example: **wenet_format(4,2+2)**
