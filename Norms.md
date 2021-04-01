@@ -74,7 +74,12 @@ as argument of the predicate or a value of a variable can be:
  - An underscore (``_``) to mark that it accepts any value. In other words, that the value that matches
   this position is ignored.
 
-At the moment we define norms at diferents levels user, community, task, message. One of the thinks what were are not anwer yet where are the norms defined. 
+As you have read before the norms are defined in different data models in the WeNet platform. The norms that affect
+any interaction that a user is involved in are defined on the profile of the user. You can modify these norms by doing
+HTTP CRUD request over the WeNet profile manager. For the interaction that do any user in a community the norms
+are defined on the community profile. You can modify these norms by doing HTTP CRUD request over the WeNet profile manager.
+For modifying the logic that is involved in a task you must modify the norms defined on the task and its type using
+HTTP CRUD requests over the task manager.
 
 
 ## Protocol actions
