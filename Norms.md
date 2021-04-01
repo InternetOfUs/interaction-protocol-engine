@@ -1,15 +1,42 @@
 # Norms
 
-The norms are used to define the interaction between user into the WeNet platform.
-The norm engine is written in **prolog** and the norms are written in a sublanguage of it.
-Any norm is based in 3 parts:
+The norms are used to controls the interactions into the WeNet platform. This interactions
+can be between WeNet users or between a component and a WeNet user. The control is done
+by the interaction protocol engine component on the WeNet platform. This component is formed
+by a set of norm engines, where each one is the responsible to evaluate the norms associated to an user. 
+In other words, each user on the WeNet platform has its norm engine to evaluate the actions
+that an user do, or the notification that it can receive. By default the norms
+engines are in rest mode an only are started if one of the next actions happens:
+
+ - **Create a task**: When an user want to create a task.
+ - **Do transaction**: When an user want to modify a task.
+ - **Send Incentive**: When the incentive server want to send an incentive to an user.
+ - **Receive a message**: When a norm engine receive a message from another norm engine.
+ - **Received an event**: When a norm engine notify himself of an event in an specific time.
+ 
+On the other hand, the norms are formed by a set of conditions that if they are satisfied execute
+a set of action associated to it. A grosso modo the conditions check the action that has started
+the norm engine or the status of the user, and the actions can send a message to the user associated
+to the norm engine or send a message to the norm engine of another user. 
+
+The norm engine is developed in [SWI Prolog](https://www.swi-prolog.org/), so this is language
+that is used to define the norms. The norm and action as defined as predicates. A predicate is like
+a function that starts with a lower case letter followed for letter, numbers or the underscore
+and after that between parenthesis are the arguments of the action or the condition separated
+by commas. For example:
+
+```prolog
+get_task_attribute_value(StartTime,'startTime')
+```
+
+The data model of a norm is defined in JSON, and it has the next fields:
 
  - **whenever** is used to define the conditions that has to satisfy to fire the actions.
  	Each condition can be separated by the conjunctions **and**, **or** or **not**.
  - **thenceforth** is used to define the actions to do if the conditions are satisfied.
  	Each action is separated by the conjunction **and**.
  - **ontology** is used to define new prolog predicates that can be used in the condition
-   or the actions of the norms. If the predicate can be used an action you must define it as **dynamic**.
+   or the actions of the norms. If the predicate can be used as action you must define it as **dynamic**.
 
 The next example is the JSON representation of a norm to send an error to the user if try to create a task
 with the start time less or equals to now.
@@ -22,76 +49,25 @@ with the start time less or equals to now.
 }
 ```
 
+As you can see the arguments of the conditions or the actions can be a **variable** or a value. A variable starts
+with an upper case letter followed for letter, numbers or the underscore. ATTENTION, the variables
+only be associated into a value. In other words, when a variable is associated into a value, it can not be changed
+in all the norm. So, if you want to change the value of a variable you must define a new variable. The values 
+as argument of the predicate or a value of a variable can be:
 
-## Basic components
+ - A **Boolean** value that can be ``true`` or ``false``.
+ - A **Number** value that can represents any integer or floating point number. For example: ``-1.34`` or ``89``
+ - A **String** value as a sequence of any characters between single quotes (``'``) or a sequence of characters that
+  starts with a lower case followed for letter, numbers or the underscore. For example: ``'String value'`` or ``id``.
+ - An **Array** value as a list of values between quadrators and separated by commas. For example: ``['One',2,[3,'three']]``
+ - A **Json** value that is mapped as the predicate ``json`` and with an array as argument where its elements
+  are pairs of field name and value separated by an equals. For example: ``json([id='1',goal=json([name='Eat together'])])``.
+  You can read more about the conversion from JSON to a predicate [here](https://www.swi-prolog.org/pldoc/doc_for?object=json_read/2).
+  Attention if the field name not start a lower case followed for letter, numbers or the underscore, it must be written
+  as string between single quotes. For example: ``json(['Action'='Questions 1','Message'=''])``
+ - An underscore (``_``) to mark that it accept any value. In other words, that the value that match
+  this position is ignored.
 
-### Boolean
-
-The basic types that can be used to define is something is **true** or **false**.
-
-### Number
-
-You can define any integer or floating point number. For example: **-1.34** or **89**.
-
-### String
-
-A string is a sequence of any characters between single quotes (**'**). For example: **'String value'**
-
-### Variables
-
-The variables start by a uppercase letter (A-Z) and after that success letters or numbers (a-zA-Z0-1).
-For example: **Requester1** or **Attributes**.
-
-### Arrays
-
-An array is a list of values started by a **[** and after **]** and separated by **,**.
-For example: **['One',2,[3,'three']]**
-
-### JSON
-
-A JSON model started by **json** and between parenthesis exist an array with the values
-of the model in pair by key equals value. With the specific mapping values:
-
- - The **null**  is coded as **@(null)**.
- - The **true**  is coded as **@(true)**.
- - The **false**  is coded as **@(false)**.
-
-For example the JSON:
-
-```json
-{
-	"key1":null,
-	"key2":true,
-	"key3":"string value",
-	"key4":23.4,
-	"key5":[
-		"One"
-		,2
-		,true
-		,{"two":2}
-	],
-	"key6":{
-		"subkey1":1,
-		"subkey2":{}
-	}
-}
-```
-
-is represented as:
-
-```prolog
-json(['key1'=@(null),'key2'=@(true),'key3'='string value','key4'=23.4,'key5'=['one',2,@(true),json(['two'=2])],'key6'=json(['subkey1'=1,'subkey2'=json([])])])
-
-```
-
-### Predicated
-
-The predicates start by a lower letter (a-z) and after that success letters, numbers or _ (a-zA-Z0-1_).
-For example: **get_profile(Profile)**
-
-### Any value
-
-In the matching process you can set that the value can be any value using the **_**.
 
 
 ## Conditions
