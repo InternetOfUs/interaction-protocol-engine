@@ -65,7 +65,13 @@
 	get_closest_users_to_me/1,
 	get_closest_users_to_me/2,
 	get_app_users_near_me/3,
-	is_event/2
+	is_received_event/2,
+	get_task_state/1,
+	get_task_state_attribute/2,
+	get_task_state_attribute/3,
+	get_user_state/1,
+	get_user_state_attribute/2,
+	get_user_state_attribute/3
 	.
 
 %!	is_now_less_than(+Time)
@@ -647,14 +653,14 @@ get_app_users_near_me(Users,Min,Max) :-
 	asserta(get_app_users_near_me(Users,Min,Max))
 	.
 	
-%!	is_event(-Particle,-Content)
+%!	is_received_event(-Particle,-Content)
 %
 %	Check if received an event.
 %
 %	@param Particle of the event.
 %	@param Content of the event.
 %
-is_event(Particle,Content) :-
+is_received_event(Particle,Content) :-
 	get_message(Message),
 	get_profile_id(Me),
 	wenet_sender_component_of_protocol_message('INTERACTION_PROTOCOL_ENGINE',Message),
@@ -666,4 +672,97 @@ is_event(Particle,Content) :-
 	!,
 	retractall(is_event(_,_)),
 	asserta(is_event(Particle,Content))
+	.
+
+%!	get_task_state(-State)
+%
+%	Return the state of the user on the task.
+%
+%	@param State of the user on the task.
+%
+get_task_state(State) :-
+	get_profile_id(ProfileId),
+	get_task_id(TaskId),
+	(
+		wenet_interaction_protocol_engine_get_task_user_state(json(TaskUserState),TaskId,ProfileId)
+		->
+		(
+			member(attributes=State,TaskUserState) -> true ; State = json([])
+		)
+		; State = json([])
+	),
+	!,
+	retractall(get_task_state(_)),
+	asserta(get_task_state(State))
+	.
+
+%!	get_task_state_attribute(-Value,+Key)
+%
+%	Return the state of the user on the task.
+%
+%	@param Value of the task user state attribute.
+%	@param Key of the task user state attribute to get.
+%
+get_task_state_attribute(Value,Key) :-
+	get_task_state(json(State)),
+	member(Key=Value,State)
+	.
+
+%!	get_task_state_attribute(-Value,+Key,+DefaultValue)
+%
+%	Return the state of the user on the task or
+%	the default value if it is not defined.
+%
+%	@param Value of the task user state attribute.
+%	@param Key of the task user state attribute to get.
+%	@param DefaultValue to return if the key is not defined. 
+%
+get_task_state_attribute(Value,Key,DefaultValue) :-
+	get_task_state_attribute(Value,Key) -> true ; Value = DefaultValue
+	.
+
+%!	get_user_state(-State)
+%
+%	Return the state of the user on the user.
+%
+%	@param State of the user on the user.
+%
+get_user_state(State) :-
+	get_profile_id(ProfileId),
+	(
+		wenet_interaction_protocol_engine_get_user_state(json(UserUserState),ProfileId)
+		->
+		(
+			member(attributes=State,UserUserState) -> true ; State = json([])
+		)
+		; State = json([])
+	),
+	!,
+	retractall(get_user_state(_)),
+	asserta(get_user_state(State))
+	.
+
+%!	get_user_state_attribute(-Value,+Key)
+%
+%	Return the state of the user on the user.
+%
+%	@param Value of the user user state attribute.
+%	@param Key of the user user state attribute to get.
+%
+get_user_state_attribute(Value,Key) :-
+	get_user_state(json(State)),
+	member(Key=Value,State)
+	.
+
+%!	get_user_state_attribute(-Value,+Key,+DefaultValue)
+%
+%	Return the state of the user on the user or
+%	the default value if it is not defined.
+%
+%	@param Value of the user user state attribute.
+%	@param Key of the user user state attribute to get.
+%	@param DefaultValue to return if the key is not defined. 
+%
+get_user_state_attribute(Value,Key,DefaultValue) :-
+	get_user_state_attribute(Value,Key) -> true ; Value = DefaultValue
 	.

@@ -72,22 +72,28 @@ public class StatesResource implements States {
       final ServiceRequest context, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     ServiceResponseHandlers.responseOk(resultHandler, new StatesPage());
+
   }
 
   /**
-   * {@inheritDoc}
+   * Retrieve an state.
+   *
+   * @param communityId   identifier of the community.
+   * @param taskId        identifier of the task.
+   * @param userId        identifier of the user.
+   * @param resultHandler to notify of the result.
    */
-  @Override
-  public void retrieveCommunityUserState(final String communityId, final String userId, final ServiceRequest context,
+  protected void retrieveState(final String communityId, final String taskId, final String userId,
       final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
-    StatesRepository.createProxy(this.vertx).searchState(communityId, null, userId).onComplete(search -> {
+    StatesRepository.createProxy(this.vertx).searchState(communityId, taskId, userId).onComplete(search -> {
 
       var state = search.result();
       if (state == null) {
 
         state = new State();
         state.communityId = communityId;
+        state.taskId = taskId;
         state.userId = userId;
       }
 
@@ -97,10 +103,16 @@ public class StatesResource implements States {
   }
 
   /**
-   * {@inheritDoc}
+   * Merge an state.
+   *
+   * @param communityId   identifier of the community.
+   * @param taskId        identifier of the task.
+   * @param userId        identifier of the user.
+   * @param body          that has received.
+   * @param request       that has been received.
+   * @param resultHandler to notify of the result.
    */
-  @Override
-  public void mergeCommunityUserState(final String communityId, final String userId, final JsonObject body,
+  protected void mergeState(final String communityId, final String taskId, final String userId, final JsonObject body,
       final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
     final var model = new ModelContext<State, Void>();
@@ -109,14 +121,14 @@ public class StatesResource implements States {
     final var context = new ServiceContext(request, resultHandler);
     ModelResources.toModel(body, model, context, () -> {
 
-      StatesRepository.createProxy(this.vertx).searchState(communityId, null, userId).onComplete(search -> {
+      StatesRepository.createProxy(this.vertx).searchState(communityId, taskId, userId).onComplete(search -> {
 
         final var state = search.result();
         if (state == null) {
 
           model.source.communityId = communityId;
+          model.source.taskId = taskId;
           model.source.userId = userId;
-          model.source.taskId = null;
           model.source._creationTs = model.source._lastUpdateTs = TimeManager.now();
           StatesRepository.createProxy(this.vertx).storeState(model.source).onComplete(stored -> {
 
@@ -139,6 +151,71 @@ public class StatesResource implements States {
       });
 
     });
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void retrieveCommunityUserState(final String communityId, final String userId, final ServiceRequest context,
+      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+
+    this.retrieveState(communityId, null, userId, resultHandler);
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void mergeCommunityUserState(final String communityId, final String userId, final JsonObject body,
+      final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+
+    this.mergeState(communityId, null, userId, body, request, resultHandler);
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void retrieveTaskUserState(final String taskId, final String userId, final ServiceRequest context,
+      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+
+    this.retrieveState(null, taskId, userId, resultHandler);
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void mergeTaskUserState(final String taskId, final String userId, final JsonObject body,
+      final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+
+    this.mergeState(null, taskId, userId, body, request, resultHandler);
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void retrieveUserState(final String userId, final ServiceRequest context,
+      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+
+    this.retrieveState(null, null, userId, resultHandler);
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void mergeUserState(final String userId, final JsonObject body, final ServiceRequest request,
+      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+
+    this.mergeState(null, null, userId, body, request, resultHandler);
 
   }
 

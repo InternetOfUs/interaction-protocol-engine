@@ -14,7 +14,7 @@ openAPI:
       description: The functionality provided allows to publish norms, and manage the user and community norms.
   info:
     # The verion of the API has to be synchonized with the 'api-version' property of the 'pom.xml'
-    version: '0.13.0'
+    version: '0.14.0'
     title: WeNet - Interaciton protocol engine API
     description:  >-
       The interaction protocol engine component is the one responsible for guaranteeing that interactions between WeNet users follow the norms.

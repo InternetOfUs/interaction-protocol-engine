@@ -37,7 +37,11 @@
 	wenet_receiver_id_of_protocol_message/2,
 	wenet_particle_of_protocol_message/2,
 	wenet_content_of_protocol_message/2,
-	wenet_new_protocol_message/11
+	wenet_new_protocol_message/11,
+	wenet_interaction_protocol_engine_get_task_user_state/3,
+	wenet_interaction_protocol_engine_merge_task_user_state/4,
+	wenet_interaction_protocol_engine_get_user_state/2,
+	wenet_interaction_protocol_engine_merge_user_state/3
 	.
 
 
@@ -65,7 +69,7 @@ wenet_interaction_protocol_engine_send_message(Sent,Message) :-
 	wenet_post_json_to_url(Sent,Url,Message)
 	.
 
-%!	wenet_interaction_protocol_engine_merge_community_user_state(+State,-CommunityId,-UserId)
+%!	wenet_interaction_protocol_engine_merge_community_user_state(-State,+CommunityId,+UserId)
 %
 %	Retrieve the state of an user for a community.
 %
@@ -78,7 +82,7 @@ wenet_interaction_protocol_engine_get_community_user_state(State,CommunityId,Use
 	wenet_get_json_from_url(State,Url)
 	.
 
-%!	wenet_interaction_protocol_engine_merge_community_user_state(+MergedState,-CommunityId,-UserId,-NewState)
+%!	wenet_interaction_protocol_engine_merge_community_user_state(-MergedState,+CommunityId,+UserId,+NewState)
 %
 %	Merge the state of an user for a community.
 %
@@ -249,4 +253,56 @@ wenet_new_protocol_message(Message,AppId,CommunityId,TaskId,TransactionId,Sender
 	wenet_new_protocol_message(Message,AppId,CommunityId,TaskId,TransactionId,SenderComponent,SenderUserId,ReceiverComponent,ReceiverUserId,Particle,json([])).
 wenet_new_protocol_message(Message,AppId,CommunityId,TaskId,TransactionId,SenderComponent,SenderUserId,ReceiverComponent,ReceiverUserId,Particle,Content) :-
 	Message = json([appId=AppId,communityId=CommunityId,taskId=TaskId,transactionId=TransactionId,sender=json([component=SenderComponent,userId=SenderUserId]),receiver=json([component=ReceiverComponent,userId=ReceiverUserId]),particle=Particle,content=Content])
+	.
+
+%!	wenet_interaction_protocol_engine_merge_task_user_state(-State,+TaskId,+UserId)
+%
+%	Retrieve the state of an user for a task.
+%
+%	@param State of the user on the task.
+%	@param TaskId identifier of the task to get the state.
+%	@param UserId identifier of the user to get the state.
+%
+wenet_interaction_protocol_engine_get_task_user_state(State,TaskId,UserId) :-
+	wenet_interaction_protocol_engine_api_url_to(Url,['/states/tasks/',TaskId,'/users/',UserId]),
+	wenet_get_json_from_url(State,Url)
+	.
+
+%!	wenet_interaction_protocol_engine_merge_task_user_state(-MergedState,+TaskId,+UserId,+NewState)
+%
+%	Merge the state of an user for a task.
+%
+%	@param MergedState the merged state of the user.
+%	@param TaskId identifier of the task to change the state.
+%	@param UserId identifier of the user to change the state.
+%	@param NewState the value to set the task user state.
+%
+wenet_interaction_protocol_engine_merge_task_user_state(MergedState,TaskId,UserId,NewState) :-
+	wenet_interaction_protocol_engine_api_url_to(Url,['/states/tasks/',TaskId,'/users/',UserId]),
+	wenet_patch_json_to_url(MergedState,Url,NewState)
+	.
+
+%!	wenet_interaction_protocol_engine_merge_community_user_state(-State,+UserId)
+%
+%	Retrieve the state of an user.
+%
+%	@param State of the user on the community.
+%	@param UserId identifier of the user to get the state.
+%
+wenet_interaction_protocol_engine_get_community_user_state(State,CommunityId,UserId) :-
+	wenet_interaction_protocol_engine_api_url_to(Url,['/states/users/',UserId]),
+	wenet_get_json_from_url(State,Url)
+	.
+	
+%!	wenet_interaction_protocol_engine_merge_user_state(-MergedState,+UserId,+NewState)
+%
+%	Merge the state of an user.
+%
+%	@param MergedState the merged state of the user.
+%	@param UserId identifier of the user to change the state.
+%	@param NewState the value to set the community user state.
+%
+wenet_interaction_protocol_engine_merge_community_user_state(MergedState,UserId,NewState) :-
+	wenet_interaction_protocol_engine_api_url_to(Url,['/states/users/',UserId]),
+	wenet_patch_json_to_url(MergedState,Url,NewState)
 	.

@@ -66,7 +66,7 @@ public class StatesIT {
    */
   @ParameterizedTest(name = " {0}")
   @ValueSource(strings = { "communityId", "taskId", "usetId" })
-  public void shouldBeEmptyPageWithUndefinedQueryField(String query, final Vertx vertx, final WebClient client,
+  public void shouldBeEmptyPageWithUndefinedQueryField(final String query, final Vertx vertx, final WebClient client,
       final VertxTestContext testContext) {
 
     testRequest(client, HttpMethod.GET, States.PATH).with(queryParam(query, "undefined")).expect(res -> {
@@ -90,7 +90,7 @@ public class StatesIT {
    */
   @ParameterizedTest(name = "Get {0} should return empty state")
   @ValueSource(strings = { States.PATH + "/communities/undefined/users/undefined" })
-  public void shouldBeEmptyStateForPath(String path, final Vertx vertx, final WebClient client,
+  public void shouldBeEmptyStateForPath(final String path, final Vertx vertx, final WebClient client,
       final VertxTestContext testContext) {
 
     testRequest(client, HttpMethod.GET, path).expect(res -> {
@@ -136,12 +136,12 @@ public class StatesIT {
   public void shouldMergeAndGetTwiceCommunityUser(final Vertx vertx, final WebClient client,
       final VertxTestContext testContext) {
 
-    var state = new State();
+    final var state = new State();
     state.communityId = UUID.randomUUID().toString();
     state.userId = UUID.randomUUID().toString();
     state.attributes.put("key", "value");
     state.attributes.put("key2", UUID.randomUUID().toString());
-    var checkpoint = testContext.checkpoint(4);
+    final var checkpoint = testContext.checkpoint(4);
     testRequest(client, HttpMethod.PATCH, States.PATH + "/communities/" + state.communityId + "/users/" + state.userId)
         .expect(resPatch -> {
 
@@ -156,8 +156,8 @@ public class StatesIT {
                 final var gettedState = assertThatBodyIs(State.class, resGet);
                 assertThat(patchedState).isEqualTo(gettedState);
 
-                var newState = new State();
-                var newKey2Value = UUID.randomUUID().toString();
+                final var newState = new State();
+                final var newKey2Value = UUID.randomUUID().toString();
                 newState.attributes.put("key2", newKey2Value);
                 newState.attributes.put("key3", "value3");
                 testRequest(client, HttpMethod.PATCH,
@@ -185,6 +185,169 @@ public class StatesIT {
               }).send(testContext, checkpoint);
 
         }).sendJson(state.toJsonObject(), testContext, checkpoint);
+
+  }
+
+  /**
+   * Should fail merge bad task user JSON.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   */
+  @Test
+  public void shouldFailMergeBadTaskUserJSON(final Vertx vertx, final WebClient client,
+      final VertxTestContext testContext) {
+
+    testRequest(client, HttpMethod.PATCH, States.PATH + "/tasks/undefined/users/undefined").expect(res -> {
+
+      assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+      final var error = assertThatBodyIs(ErrorMessage.class, res);
+      assertThat(error.code).isNotEmpty();
+      assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+
+    }).sendJson(new JsonObject().put("undefined", "undefined"), testContext);
+
+  }
+
+  /**
+   * Should merge and get task user state.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   */
+  @Test
+  public void shouldMergeAndGetTwiceTaskUser(final Vertx vertx, final WebClient client,
+      final VertxTestContext testContext) {
+
+    final var state = new State();
+    state.taskId = UUID.randomUUID().toString();
+    state.userId = UUID.randomUUID().toString();
+    state.attributes.put("key", "value");
+    state.attributes.put("key2", UUID.randomUUID().toString());
+    final var checkpoint = testContext.checkpoint(4);
+    testRequest(client, HttpMethod.PATCH, States.PATH + "/tasks/" + state.taskId + "/users/" + state.userId)
+        .expect(resPatch -> {
+
+          assertThat(resPatch.statusCode()).isEqualTo(Status.OK.getStatusCode());
+          final var patchedState = assertThatBodyIs(State.class, resPatch);
+          assertThat(state.attributes).isEqualTo(patchedState.attributes);
+
+          testRequest(client, HttpMethod.GET, States.PATH + "/tasks/" + state.taskId + "/users/" + state.userId)
+              .expect(resGet -> {
+
+                assertThat(resGet.statusCode()).isEqualTo(Status.OK.getStatusCode());
+                final var gettedState = assertThatBodyIs(State.class, resGet);
+                assertThat(patchedState).isEqualTo(gettedState);
+
+                final var newState = new State();
+                final var newKey2Value = UUID.randomUUID().toString();
+                newState.attributes.put("key2", newKey2Value);
+                newState.attributes.put("key3", "value3");
+                testRequest(client, HttpMethod.PATCH, States.PATH + "/tasks/" + state.taskId + "/users/" + state.userId)
+                    .expect(resPatch2 -> {
+
+                      assertThat(resPatch2.statusCode()).isEqualTo(Status.OK.getStatusCode());
+                      final var patchedState2 = assertThatBodyIs(State.class, resPatch2);
+                      assertThat(patchedState).isNotEqualTo(patchedState2);
+                      patchedState._lastUpdateTs = patchedState2._lastUpdateTs;
+                      patchedState.attributes.put("key2", newKey2Value);
+                      patchedState.attributes.put("key3", "value3");
+
+                      testRequest(client, HttpMethod.GET,
+                          States.PATH + "/tasks/" + state.taskId + "/users/" + state.userId).expect(resGet2 -> {
+
+                            assertThat(resGet2.statusCode()).isEqualTo(Status.OK.getStatusCode());
+                            final var gettedState2 = assertThatBodyIs(State.class, resGet2);
+                            assertThat(patchedState2).isEqualTo(gettedState2);
+
+                          }).send(testContext, checkpoint);
+
+                    }).sendJson(newState.toJsonObject(), testContext, checkpoint);
+
+              }).send(testContext, checkpoint);
+
+        }).sendJson(state.toJsonObject(), testContext, checkpoint);
+
+  }
+
+  /**
+   * Should fail merge bad user JSON.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   */
+  @Test
+  public void shouldFailMergeBadUserJSON(final Vertx vertx, final WebClient client,
+      final VertxTestContext testContext) {
+
+    testRequest(client, HttpMethod.PATCH, States.PATH + "/users/undefined").expect(res -> {
+
+      assertThat(res.statusCode()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+      final var error = assertThatBodyIs(ErrorMessage.class, res);
+      assertThat(error.code).isNotEmpty();
+      assertThat(error.message).isNotEmpty().isNotEqualTo(error.code);
+
+    }).sendJson(new JsonObject().put("undefined", "undefined"), testContext);
+
+  }
+
+  /**
+   * Should merge and get user state.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   */
+  @Test
+  public void shouldMergeAndGetTwiceUser(final Vertx vertx, final WebClient client,
+      final VertxTestContext testContext) {
+
+    final var state = new State();
+    state.userId = UUID.randomUUID().toString();
+    state.attributes.put("key", "value");
+    state.attributes.put("key2", UUID.randomUUID().toString());
+    final var checkpoint = testContext.checkpoint(4);
+    testRequest(client, HttpMethod.PATCH, States.PATH + "/users/" + state.userId).expect(resPatch -> {
+
+      assertThat(resPatch.statusCode()).isEqualTo(Status.OK.getStatusCode());
+      final var patchedState = assertThatBodyIs(State.class, resPatch);
+      assertThat(state.attributes).isEqualTo(patchedState.attributes);
+
+      testRequest(client, HttpMethod.GET, States.PATH + "/users/" + state.userId).expect(resGet -> {
+
+        assertThat(resGet.statusCode()).isEqualTo(Status.OK.getStatusCode());
+        final var gettedState = assertThatBodyIs(State.class, resGet);
+        assertThat(patchedState).isEqualTo(gettedState);
+
+        final var newState = new State();
+        final var newKey2Value = UUID.randomUUID().toString();
+        newState.attributes.put("key2", newKey2Value);
+        newState.attributes.put("key3", "value3");
+        testRequest(client, HttpMethod.PATCH, States.PATH + "/users/" + state.userId).expect(resPatch2 -> {
+
+          assertThat(resPatch2.statusCode()).isEqualTo(Status.OK.getStatusCode());
+          final var patchedState2 = assertThatBodyIs(State.class, resPatch2);
+          assertThat(patchedState).isNotEqualTo(patchedState2);
+          patchedState._lastUpdateTs = patchedState2._lastUpdateTs;
+          patchedState.attributes.put("key2", newKey2Value);
+          patchedState.attributes.put("key3", "value3");
+
+          testRequest(client, HttpMethod.GET, States.PATH + "/users/" + state.userId).expect(resGet2 -> {
+
+            assertThat(resGet2.statusCode()).isEqualTo(Status.OK.getStatusCode());
+            final var gettedState2 = assertThatBodyIs(State.class, resGet2);
+            assertThat(patchedState2).isEqualTo(gettedState2);
+
+          }).send(testContext, checkpoint);
+
+        }).sendJson(newState.toJsonObject(), testContext, checkpoint);
+
+      }).send(testContext, checkpoint);
+
+    }).sendJson(state.toJsonObject(), testContext, checkpoint);
 
   }
 
