@@ -432,14 +432,63 @@ The next predicates refers to facts (constants) that has been set when the norm 
 
 ### Profile manager
 
+The next predicates are used to interact with the profile manager component.
 
-TODO
+ - ``wenet_profile_manager_api_url_to(Url,Paths)`` This predicate is used to obtain the URL to interact
+  with the API of the profile manager. The ``Url`` is the string of the API point and path in an array
+  of strings or variables used to build the URL. For example if ``UserId = '2'`` and the URL of the profile
+  manager API is **https://wenet.u-hopper.com/prod/profile_manager** then
+  ``wenet_profile_manager_api_url_to(Url,['/profiles/',UserId])`` will produce
+  ``URL = 'https://wenet.u-hopper.com/prod/profile_manager/profiles/2'``.
+ - ``wenet_profile_manager_get_profile(Profile,Id)`` This predicate is used to obtain the profile of an user.
+ In the variable ``Profile`` will be  a JSON model with the profile of the user with the identifier 
+ defined as string in ``Id ``.
+ - ``wenet_profile_manager_get_community(Community,Id)`` This predicate is used to obtain a community.
+ In the variable ``Community`` will be  a JSON model with the community profile with the identifier 
+ defined as string in ``Id ``.
+ - ``wenet_id_of_profile(Id, Profile)`` This predicate allow to obtain the identifier as string in ``Id``
+ of a profile JSON model ``Profile``.
+ - ``wenet_id_of_community(Id, Community)`` This predicate allow to obtain the identifier as string in ``Id``
+ of a community JSON model ``Community``.
 
 
 ### Task manager
 
+The next predicates are used to interact with the task manager component.
 
-TODO
+ - ``wenet_task_manager_api_url_to(Url,Paths)`` This predicate is used to obtain the URL to interact
+  with the API of the task manager. The ``Url`` is the string of the API point and path in an array
+  of strings or variables used to build the URL. For example if ``UserId = '2'`` and the URL of the task
+  manager API is **https://wenet.u-hopper.com/prod/task_manager** then
+  ``wenet_task_manager_api_url_to(Url,['/tasks/',UserId])`` will produce
+  ``URL = 'https://wenet.u-hopper.com/prod/task_manager/tasks/2'``.
+ - ``wenet_task_manager_get_task(Task,Id)`` This predicate is used to obtain a task.
+ In the variable ``Task`` will be  a JSON model with the task with the identifier defined as string in ``Id ``.
+ - ``wenet_task_manager_merge_task(MergedTask,TaskId,Task)`` This predicate allow to modify a task model.
+ On the ``MergedTask`` will be a JSON model with the updated task, ``TaskId`` is a string of the task to modify
+ and ``Task`` is the model of the task to merge with the current one.
+ - ``wenet_task_manager_add_transaction_into_task(AddedTaskTransaction,TaskId,Transaction)`` This predicate
+ is used to add a transaction into a task. On ``AddedTaskTransaction`` will the the JSON model with the added
+ transaction, on ``TaskId`` is the string with the task to add the transaction and ``Transaction`` is a JSON
+ model to add into the task.
+ - ``wenet_task_manager_add_message_into_transaction(AddedTransactionMessage,TaskId,TransactionId,Message)`` This predicate
+ is used to add a message into a transaction of a task.
+ 	* ``AddedTransactionMessage`` Output JSON model with the added message.
+ 	* ``TaskId`` Input string 
+ with the added model. The ``TaskId`` is a the identifier where is the transaction, 
+
+ - ``wenet_id_of_task(Id, Task)`` This predicate allow to obtain the identifier as string in ``Id``
+ of a task JSON model ``Task``.
+ - ``wenet_task_type_id_of_task(Id, Task)`` This predicate allow to obtain the task type identifier 
+ as string in ``Id`` of a task JSON model ``Task``.
+ - ``wenet_app_id_of_task(Id, Task)`` This predicate allow to obtain the application identifier 
+ as string in ``Id`` of a task JSON model ``Task``.
+ - ``wenet_community_id_of_task(Id, Task)`` This predicate allow to obtain the community identifier 
+ as string in ``Id`` of a task JSON model ``Task``.
+ - ``wenet_requester_id_of_task(Id, Task)`` This predicate allow to obtain the requester identifier 
+ as string in ``Id`` of a task JSON model ``Task``.
+
+
 
 
 ### Interaction protocol Engine
