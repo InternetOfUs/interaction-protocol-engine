@@ -36,7 +36,8 @@
 	wenet_remove/3,
 	wenet_add/3,
 	wenet_format/3,
-	wenet_math/2
+	wenet_math/2,
+	wenet_delete_to_url/1
 	.
 
 :- autoload(library(http/json)).
@@ -358,4 +359,34 @@ wenet_format(Msg,WeNetFormat,Arguments) :-
 %
 wenet_math(Number,Expr) :-
 	Number is Expr
+	.
+	
+%!	wenet_delete_to_url(+Url)
+%
+%	Delete an URL.
+%
+%	@param Url string to the delete.
+%
+wenet_delete_to_url(Url) :-
+	catch(
+		(
+			(
+				wenet_component_auth_header(AuthHeader),
+				Options = [AuthHeader,request_header('Accept'='application/json; charset=UTF-8'),request_header('Content-Type'='application/json')],
+				http_delete(Url,_,Options)
+			)
+			->
+				true
+			;(
+				wenet_log_error('Cannot DELETE',Url)
+				,false
+			)
+		)
+		,Error
+		,(
+			wenet_log_error('Cannot DELETE',Url,Error)
+			,false
+		)		
+	),
+	wenet_log_trace('DELETE',Url)
 	.

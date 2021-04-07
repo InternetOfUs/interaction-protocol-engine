@@ -37,7 +37,8 @@
 	close_task/0,
 	merge_task/1,
 	merge_community_state/1,
-	put_community_state_attribute/2
+	put_community_state_attribute/2,
+	send_event/4
 	.
 
 
@@ -280,3 +281,42 @@ put_community_state_attribute(Key,Value) :-
 	merge_community_state(json([attributes=json([Key=Value])]))
 	.
 
+
+%!	send_event(+Delay,+Particle,+Content)
+%
+%	Send an event.
+%
+%	@param Id identifier of the send event.
+%	@param Dealy seconds to wait before to send the event.
+%	@param Particle of the event.
+%	@param Content of the event.
+%
+send_event(Id,Delay,Particle,@(null)) :-
+	send_event(Delay,Particle,json([]))
+	.
+send_event(Id,Delay,Particle,Content) :-
+	is_list(Content),
+	send_event(Delay,Particle,json(Content))
+	.
+send_event(Id,Delay,Particle,Content) :-
+	get_profile_id(SenderUserId),
+	(
+		get_app_id(AppId)
+		; AppId = @(null)
+	),
+	(
+		get_community_id(CommunityId)
+		; CommunityId = @(null)
+	),
+	(
+		get_task_id(TaskId)
+		; TaskId = @(null)
+	),
+	(
+		get_transaction_id(TransactionId)
+		; TransactionId = @(null)
+	),
+	wenet_new_protocol_event(Event,AppId,CommunityId,TaskId,TransactionId,SenderUserId,Delay,Particle,Content),
+	!,
+	wenet_interaction_protocol_engine_send_event(Sent,Event)->wenet_id_of_protocol_event(Id,Sent);Id = -1
+	.

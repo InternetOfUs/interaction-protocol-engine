@@ -23,6 +23,7 @@
 :- dynamic
 	wenet_interaction_protocol_engine_api_url_to/2,
 	wenet_interaction_protocol_engine_send_message/2,
+	wenet_interaction_protocol_engine_send_event/2,
 	wenet_interaction_protocol_engine_get_community_user_state/3,
 	wenet_interaction_protocol_engine_merge_community_user_state/4,
 	wenet_app_id_of_protocol_message/2,
@@ -41,7 +42,9 @@
 	wenet_interaction_protocol_engine_get_task_user_state/3,
 	wenet_interaction_protocol_engine_merge_task_user_state/4,
 	wenet_interaction_protocol_engine_get_user_state/2,
-	wenet_interaction_protocol_engine_merge_user_state/3
+	wenet_interaction_protocol_engine_merge_user_state/3,
+	wenet_id_of_protocol_event/2,
+	wenet_interaction_protocol_engine_delete_event/2
 	.
 
 
@@ -305,4 +308,58 @@ wenet_interaction_protocol_engine_get_community_user_state(State,CommunityId,Use
 wenet_interaction_protocol_engine_merge_community_user_state(MergedState,UserId,NewState) :-
 	wenet_interaction_protocol_engine_api_url_to(Url,['/states/users/',UserId]),
 	wenet_patch_json_to_url(MergedState,Url,NewState)
+	.
+
+%!	wenet_interaction_protocol_engine_send_event(-Sent,+Event)
+%
+%	Send an event.
+%
+%	@param Sent the sent event result.
+%	@param Event to send.
+%
+wenet_interaction_protocol_engine_send_event(Sent,Event) :-
+	wenet_interaction_protocol_engine_api_url_to(Url,['/events']),
+	wenet_post_json_to_url(Sent,Url,Event)
+	.
+
+%!	wenet_new_protocol_event(-Event,+AppId,+CommunityId,+TaskId,+TransactionId,+UserId,+Delay,+Particle,+Content)
+%
+%	Create a protocol event.
+%
+%	@param Event that has been created.
+%	@param AppId application identifier of the event.
+%	@param CommunityId community identifier of the event.
+%	@param TaskId task identifier of the event.
+%	@param TransactionId transaction identifier of the event.
+%	@param UserId of the event.
+%	@param Delay of the event.
+%	@param Particle of the event.
+%	@param Content of the event.
+%
+wenet_new_protocol_event(Event,AppId,CommunityId,TaskId,TransactionId,UserId,Delay,Particle,@(null)) :-
+	wenet_new_protocol_event(Event,AppId,CommunityId,TaskId,TransactionId,UserId,Delay,Particle,json([])).
+wenet_new_protocol_event(Event,AppId,CommunityId,TaskId,TransactionId,UserId,Delay,Particle,Content) :-
+	Event = json([appId=AppId,communityId=CommunityId,taskId=TaskId,transactionId=TransactionId,userId=UserId,delay=Delay,particle=Particle,content=Content])
+	.
+
+%!	wenet_id_of_protocol_event(-Id,+Event)
+%
+%	Obtain the identifier associated to a protocol event.
+%
+%	@param Id of the event.
+%	@param Event to get the identifier.
+%
+wenet_id_of_protocol_event(Id, json(Event)) :-
+	member(id=Id,Event)
+	.
+
+%!	wenet_interaction_protocol_engine_delete_event(+Id)
+%
+%	Delete an event.
+%
+%	@param Id identifier of the event to delete.
+%
+wenet_interaction_protocol_engine_delete_event(Id) :-
+	wenet_interaction_proto col_engine_api_url_to(Url,['/events/',Id]),
+	wenet_delete_to_url(Url)
 	.
