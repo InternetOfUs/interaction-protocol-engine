@@ -445,14 +445,16 @@ The next predicates are used to interact with the profile manager component.
   This predicate is used to obtain a profile.
     * ``Profile``  _Output_  JSON model with the obtained profile.
     * ``Id ``  _Input_  string with the identifier of the profile to obtain.
-- ``wenet_community_manager_get_community(Community,Id)``
+- ``wenet_profile_manager_get_community(Community,Id)``
   This predicate is used to obtain a community.
-    * ``Community``  _Output_  JSON model with the obtained community.
+    * ``Profile``  _Output_  JSON model with the obtained community.
     * ``Id ``  _Input_  string with the identifier of the community to obtain.
-- ``wenet_id_of_profile(Id, Profile)`` This predicate allow to obtain the identifier of a profile.
+- ``wenet_id_of_profile(Id, Profile)``
+  This predicate allow to obtain the identifier of a profile.
     * ``Id``  _Output_  string with the identifier of the profile.
     * ``Profile``  _Input_  JSON model of the profile to obtain the identifier.
-- ``wenet_id_of_community(Id, Community)`` This predicate allow to obtain the identifier of a community.
+- ``wenet_id_of_community(Id, Community)``
+  This predicate allow to obtain the identifier of a community.
     * ``Id``  _Output_  string with the identifier of the community.
     * ``Community``  _Input_  JSON model of the community to obtain the identifier.
 
@@ -488,7 +490,8 @@ The next predicates are used to interact with the task manager component.
     * ``TaskId``  _Input_  string with the identifier of the task where is the transaction.
     * ``TransactionId``  _Input_  string with the identifier of the transaction to add the message.
     * ``Message``  _Input_  JSON model with the message to add into the transaction.
-- ``wenet_id_of_task(Id, Task)`` This predicate allow to obtain the identifier of a task.
+- ``wenet_id_of_task(Id, Task)``
+  This predicate allow to obtain the identifier of a task.
     * ``Id``  _Output_  string with the identifier of the task.
     * ``Task``  _Input_  JSON model of the task to obtain the identifier.
 - ``wenet_task_type_id_of_task(Id, Task)`` 
