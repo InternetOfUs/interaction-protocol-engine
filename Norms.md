@@ -320,61 +320,82 @@ to the norm definition.
 
 This action are done over the user that is associated to the norm engine, thus the receiver user of the message.
 
-- ``send_user_message(Label,Content)`` This action post a callback message in the application associated
- in the received message with the label as string defined in ``Label`` and as content the JSON model of ``Content``.
-- ``merge_user_state(State)`` This action merge the current state of the user with the state defined by the JSON
- in ``State``.
-- ``put_user_state_attribute(Key,Value)`` This action change the user state attribute named in ``Key`` with the value
- of any type defined in ``Value``.
+- ``send_user_message(Label,Content)``
+  This action post a callback message to the user.
+    * ``Label`` _Input_  string with the message label.
+    * ``Content`` _Input_  JSON model with the message content.
+- ``merge_user_state(State)``
+  This action merge the current state of the user.
+    * ``State``  _Input_  JSON model with the new state of the user.
+- ``put_user_state_attribute(Key,Value)``
+  This action change an attribute of the state of the user.
+    * ``Key``   _Input_  string with the name of the state attribute.
+    * ``Value``   _Input_  value to put to attribute of the state.
  
 
 ### Community actions
 
 This action are done over the community that is associated to the received message.
 
-- ``merge_community_state(State)`` This action merge the current state of the user for the community with the state
- defined by the JSON in ``State``.
-- ``put_community_state_attribute(Key,Value)`` This action change the community user state attribute named
- in ``Key`` with the value of any type defined in ``Value``.
+- ``merge_community_state(State)``
+  This action merge the current state of the user for the community.
+    * ``State``  _Input_  JSON model with the new state of the user on the community.
+- ``put_community_state_attribute(Key,Value)``
+  This action change an attribute of the state of the user for the community.
+    * ``Key``   _Input_  string with the name of the state attribute.
+    * ``Value``   _Input_  value to put to attribute of the state.
 
 
 ### Task actions
 
 This actions are done in the task that is associated to the received message.
 
-- ``add_created_transaction()`` This action add a new transaction to the task that represents that the creation
+- ``add_created_transaction()``
+ This action add a new transaction to the task that represents that the creation
  of the task.
-- ``add_message_transaction()`` This action add the transaction defined on the received message into the task.
-- ``put_task_attribute(Key,Value)`` This action change the attribute with the string name ``Key`` with the value
- associated to the variable``Value``.
-- ``merge_task(Task)`` This action merge the task associated with the JSON model defined in ``Task``.
-- ``close_task()`` This action mark the task associated to the norm engine as closed.
-- ``merge_task_state(State)`` This action merge the current state of the user for the task with the state
- defined by the JSON in ``State``.
-- ``put_task_state_attribute(Key,Value)`` This action change the task user state attribute named
- in ``Key`` with the value of any type defined in ``Value``.
+- ``add_message_transaction()``
+  This action add the transaction defined on the received message into the task.
+- ``put_task_attribute(Key,Value)``
+  This action change an attribute of the current task model.
+    * ``Key``   _Input_  string with the name of the task attribute.
+    * ``Value``   _Input_  value to put to the task attribute.
+- ``merge_task(Task)``
+  This action modify the current task model.
+    * ``Task``  _Input_  JSON model with the new values for the task.
+- ``close_task()``
+  This action mark the task associated to the norm engine as closed.
+- ``merge_task_state(State)``
+  This action merge the current state of the user for the task.
+    * ``State``  _Input_  JSON model with the new state of the user on the task.
+- ``put_task_state_attribute(Key,Value)``
+  This action change an attribute of the state of the user for the task.
+    * ``Key``   _Input_  string with the name of the state attribute.
+    * ``Value``   _Input_  value to put to attribute of the state.
 
 
 ### Interact with WeNet components
 
 This actions are used to do an action that interact with the other components of the WeNet platform.
 
-- ``send_messages(Users,Particle,Content)`` This action send messages to the norm engines of the users
- defined in the array of strings ``Users`` with the string particle in ``Particle`` and as content
- the JSON defined in ``Content``,
-- ``send_message(UserId,Particle,Content)`` This action send a message to the norm engines of the user
- defined in the string ``UserId`` with the string particle in ``Particle`` and as content
- the JSON defined in ``Content``,
-- ``notify_incentive_server(Action,Message)`` This action notify the incentive server about a change of the task
- associated to the received Message. The notification contains as string an action and a message defined
- on the variables of the same name.
-- ``notify_volunteers_to_social_context_builder(Volunteers,UserId)`` This action notify the social context builder
- that the user identifier by the string at ``UserId`` is offered as volunteer for the task associated
- to the received message. In ``Volunteers`` is the list of string identifiers of the volunteers users for the task.
+- ``send_messages(Users,Particle,Content)``
+  This action send messages to the norm engines of some users.
+    * ``Users``  _Input_  array of strings of the users to receive a message.
+    * ``Particle``  _Input_  string with the message particle.
+    * ``Content``  _Input_  JSON model with the message content.
+- ``send_message(UserId,Particle,Content)``
+  This action send a message to the norm engines of an users.
+    * ``UserId``  _Input_  strings identifier of the user to receive the message.
+    * ``Particle``  _Input_  string with the message particle.
+    * ``Content``  _Input_  JSON model with the message content.
+- ``notify_incentive_server(Action,Message)``
+  This action notify the incentive server about a change of the task.
+    * ``Action``  _Input_  string with the action that has changed the task.
+    * ``Message``  _Input_  string that explains the change.
+- ``notify_volunteers_to_social_context_builder(Volunteers,UserId)``
+  This action notify the social context builder about the volunteers to do a task.
+    * ``Volunteers``  _Input_  array of strings with the user identifiers that has volunteer to do atask.
+    * ``UserId``  _Input_  string user identifier to be volunteer.
  
-
-
-
 
 ## Other Useful Norms predicates
 
