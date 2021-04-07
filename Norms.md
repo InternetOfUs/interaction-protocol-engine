@@ -722,6 +722,37 @@ The next predicates are used to interact with the service component.
   This predicate allow to obtain the URL to post the callback messages of an application.
     * ``Url``  _Output_  string with the URL to post the callback messages.
     * ``App``  _Input_  JSON model of the application to obtain the callback url.
+- ``wenet_service_get_app_users(Users,Id)``
+  This predicate is used to obtain the users that are in an application.
+    * ``Users``  _Output_  array of strings with the identifiers of users defined in the application.
+    * ``Id``  _Input_  string with the identifier of the application to obtain the users.
+- ``wenet_service_get_app_users(Users,App)``
+  This predicate is used to obtain the users that are in an application.
+    * ``Users``  _Output_  array of strings with the identifiers of users defined in the application.
+    * ``App``  _Input_  JSON model with the application model.
+- ``wenet_new_message(Callback,AppId,ReceiverId,Label,Attributes)``
+  This predicate is used to create a callback message to send to an application.
+    * ``Callback``  _Output_  JSON model of strings with the identifiers of users defined in the application.
+    * ``AppId``  _Input_  string with the identifier of the application to post the message.
+    * ``ReceiverId``  _Input_  string with the user identifier to post the message.
+    * ``Label``  _Input_  string with the label of the message.
+    * ``Attributes``  _Input_  JSON model with the attributes of the message.
+- ``wenet_app_id_of_message(Id, Message)``
+  This predicate allow to obtain the application identifier of a message.
+    * ``Id``  _Output_  string with the identifier of the application.
+    * ``Task``  _Input_  JSON model of the message to obtain the application identifier.
+- ``wenet_receiver_id_of_message(Id, Message)``
+  This predicate allow to obtain the receiver identifier of a message.
+    * ``Id``  _Output_  string with the identifier of the receiver.
+    * ``Task``  _Input_  JSON model of the message to obtain the receiver identifier.
+- ``wenet_label_of_message(Label, Message)``
+  This predicate allow to obtain the label of a message.
+    * ``Label``  _Output_  string with the label.
+    * ``Task``  _Input_  JSON model of the message to obtain the label.
+- ``wenet_attributes_of_message(Attributes, Message)``
+  This predicate allow to obtain the attributes of a message.
+    * ``Attributes``  _Output_  JSON model with the attributes.
+    * ``Task``  _Input_  JSON model of the message to obtain the attributes.
 
 
 ### Incentive server
