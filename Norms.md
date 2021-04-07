@@ -816,6 +816,71 @@ The next predicates are used to interact with the social context builder compone
     
 ### Personal context builder
 
+The next predicates are used to interact with the personal context builder component.
 
-TODO
-
+- ``wenet_personal_context_builder_url_to(Url,Paths)``
+  This predicate is used to obtain the URL to interact with the API of the personal context builder.
+  For example if the URL of the personal context builder API is
+  **https://wenet.u-hopper.com/prod/personal_context_builder** , ``Latitude = 0.2`` , ``Longitude = 0.1`` 
+  and ``NumUsers = 4``
+  then ``wenet_personal_context_builder_url_to(Url,['/closest/?latitude=',Latitude,'&longitude=',Longitude,'&nb_user_max=',NumUsers])``
+  will produce ``URL = 'https://wenet.u-hopper.com/prod/personal_context_builder/closest/?latitude=0.2&longitude=0.1&nb_user_max=4'``.
+    * ``Url``  _Output_  string of the API point to the personal context builder.
+    * ``Paths``  _Input_  array of values used to build the API point.
+- ``wenet_personal_context_builder_locations(Locations,Users)``
+  This predicate is used to obtain the locations of a set of users.
+    * ``Locations``  _Output_  array of JSON models with the locations of the users.
+    * ``Users``  _Input_  array of strings with the identifiers of teh users to get the locations.
+- ``wenet_user_id_of_location(UserId,Location)``
+  This predicate is used to obtain the user identifier of a location.
+    * ``UserId``  _Output_  string with the user identifier of the location.
+    * ``Location``  _Input_  JSON model with the location to get the user identifier.
+- ``wenet_users_of_locations(Users,Locations)``
+  This predicate is used to obtain the user identifiers of some locations.
+    * ``Users``  _Output_  array of strings with the user identifiers of the locations.
+    * ``Locations``  _Input_  array of JSON model with the locations to get the user identifiers.
+- ``wenet_longitude_of_location(Longitude,Locations)``
+  This predicate is used to obtain the longitude of a location.
+    * ``Longitude``  _Output_  number with the longitude of the location.
+    * ``Location``  _Input_  JSON model with the location to get the longitude.
+- ``wenet_latitude_of_location(Latitude,Locations)``
+  This predicate is used to obtain the latitude of a location.
+    * ``Latitude``  _Output_  number with the latitude of the location.
+    * ``Location``  _Input_  JSON model with the location to get the latitude.
+- ``wenet_personal_context_builder_closest(ClosestUsers,Latitude,Longitude,NumUsers)``
+  This predicate is used to obtain the closest users into a location.
+    * ``ClosestUsers``  _Output_  array of JSON models with the closest users into a location.
+    * ``Latitude``  _Input_  number with the location latitude.
+    * ``Longitude``  _Input_  number with the location longitude.
+    * ``NumUsers``  _Input_  number with the number maximum users to get.
+- ``wenet_user_id_of_closest(UserId,ClosestUser)``
+  This predicate is used to obtain the identifier of a closest user.
+    * ``UserId``  _Output_  string with the user identifier of the closest user.
+    * ``ClosestUser``  _Input_  JSON model with the closest user.
+- ``wenet_distance_of_closest(Distance,ClosestUser)``
+  This predicate is used to obtain the distance of a closest user to the location.
+    * ``Distance``  _Output_  number distance in meters of the closest user to the location.
+    * ``ClosestUser``  _Input_  JSON model with the closest user.
+- ``wenet_users_of_closest(Users,ClosestUsers)``
+  This predicate is used to obtain the user identifiers of a set of closest users.
+    * ``Users``  _Output_  array of string with the user identifier of the closest users.
+    * ``ClosestUsers``  _Input_  array of JSON models with the closest users.
+- ``wenet_distance_between_locations(Distance,Source,Target)``
+  This predicate is used to calculate the haversine distance between two locations.
+    * ``Distance``  _Output_  number with the distance between the locations in meters.
+    * ``Source``  _Input_  JSON model with the location as source to calculate the distance.
+    * ``Target``  _Input_  JSON model with the location as target to calculate the distance.
+- ``wenet_distance_between_locations(Distance,SourceLatitude,SourceLongitude,TargetLatitude,TargetLongitude)``
+  This predicate is used to calculate the haversine distance between two locations.
+    * ``Distance``  _Output_  number with the distance between the locations in meters.
+    * ``SourceLatitude``  _Input_  number with the source latitude to calculate the distance.
+    * ``SourceLongitude``  _Input_  number with the source longitude to calculate the distance.
+    * ``TargetLatitude``  _Input_  number with the target latitude to calculate the distance.
+    * ``TargetLongitude``  _Input_  number with the target longitude to calculate the distance.
+- ``wenet_filter_locations_by_distance(Filtered,Source,Locations,Min,Max)``
+  This predicate filters a set of locations if they are on a range to another location.
+    * ``Filtered``  _Output_  array of JSON models with the locations that are in the range distance.
+    * ``Source``  _Input_  JSON model with the location to use as origen.
+    * ``Locations``  _Input_  array of JSON models with the locations to filter.
+    * ``Min``  _Input_  number with the minimum distance in meters to the source location. The distance is inclusive.
+    * ``Max``  _Input_  number with the maximum distance in meters to the source location. The distance is inclusive.

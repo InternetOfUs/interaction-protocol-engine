@@ -60,7 +60,7 @@ wenet_personal_context_builder_locations(Locations,Users) :-
 	member(locations=Locations,Data)
 	.
 
-%!	wenet_user_id_of_location(UserId,Location)
+%!	wenet_user_id_of_location(-UserId,+Location)
 %
 %	Get the user identifier of a location.
 %
@@ -71,7 +71,7 @@ wenet_user_id_of_location(UserId,json(Location)) :-
 	member(userId=UserId,Location)
 	.
 
-%!	wenet_users_of_locations(UserId,Locations)
+%!	wenet_users_of_locations(-Users,+Locations)
 %
 %	Get the user identifier of a locations user.
 %
@@ -195,7 +195,7 @@ wenet_distance_between_locations(Distance,SourceLatitude,SourceLongitude,TargetL
 	
 %!	wenet_filter_locations_by_distance(-Filtered,+Source,+Locations,+Min,+Max)
 %
-%	Calculate the distance between two locations.
+%	Filter a set of locations if they are on a range to another location.
 %
 %	@param Filtered the locations of the users that are on the range.
 %	@param Source location to calculate the distance.
