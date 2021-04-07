@@ -758,7 +758,28 @@ The next predicates are used to interact with the service component.
 ### Incentive server
 
 
-TODO
+The next predicates are used to interact with the incentive server component.
+
+- ``wenet_incentive_server_api_url_to(Url,Paths)``
+  This predicate is used to obtain the URL to interact with the API of the incentive server.
+  For example if the URL of the incentive_server API is
+  **https://wenet.u-hopper.com/prod/incentive_server** then ``wenet_incentive_server_api_url_to(Url,['/Tasks/TaskStatus/'])``
+  will produce ``URL = 'https://wenet.u-hopper.com/prod/incentive_server/Tasks/TaskStatus/'``.
+    * ``Url``  _Output_  string of the API point to the incentive server.
+    * ``Paths``  _Input_  array of values used to build the API point.
+- ``wenet_incentive_server_update_task_status(Updated,Status)``
+  This predicate is used to update the task status.
+    * ``Updated``  _Output_  JSON model with the updated status.
+    * ``Status``  _Input_  JSON model with the task status to update.
+- ``wenet_new_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message)``
+  This predicate is used to create the task status.
+    * ``Status``  _Output_  JSON model with the status.
+    * ``AppId``  _Input_  string with the application identifier of the status.
+    * ``UserId``  _Input_  string with the user identifier of the status.
+    * ``CommunityId``  _Input_  string with the community identifier of the status.
+    * ``TaskId``  _Input_  string with the task identifier of the status.
+    * ``Action``  _Input_  string with the action of the status.
+    * ``Message``  _Input_  string with the message of the status.
 
 
 ### Social context builder
