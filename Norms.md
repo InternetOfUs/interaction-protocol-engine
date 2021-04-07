@@ -373,18 +373,6 @@ This actions are used to do an action that interact with the other components of
  to the received message. In ``Volunteers`` is the list of string identifiers of the volunteers users for the task.
  
 
-### Logs messages
-
-The next actions are used to add messages to the logging files of the norm engine.
-
-- ``wenet_log_trace(Text)`` This action print the string defined in ``Text`` into the trace log.
-- ``wenet_log_trace(Text,Terms)`` This action print the string defined in ``Text`` with the ``Terms`` into
-  the trace log.
-- ``wenet_log_error(Text)`` This action print the string defined in ``Text`` into the error log.
-- ``wenet_log_error(Text,Terms)`` This action print the string defined in ``Text`` with the ``Terms`` into
-  the error log.
-- ``wenet_log_error(Text,Terms,Error)`` This action print the string defined in ``Text`` with the ``Terms``
- and exception ``Error`` into  the trace log.
 
 
 
@@ -396,38 +384,112 @@ We provide other predicates that can be used to help to define the conditions an
 
 The next predicates refers to facts (constants) that has been set when the norm engine has been started.
 
-- ``get_message(Message)`` The ``Message`` is a JSON model that contains the received message that has started
-  the norm engine.
-- ``get_now(Time)`` This ``Time`` is a number that represents the difference, measured in seconds, between
-  the time the norm engine is started and midnight, January 1, 1970 UTC.
-- ``wenet_profile_manager_api_url(URL)`` The ``URL`` is a string with the URL to the profile manager API.
-- ``wenet_task_manager_api_url(URL)`` The ``URL`` is a string with the URL to the task manager API.
+- ``get_message(Message)``
+  The fact with the received message that has started the norm engine.
+    * ``Message``  _Output_  JSON model of the received protocol message.
+- ``get_now(Time)``
+  The fact with the difference, measured in seconds, between the time the norm engine is started and
+  midnight, January 1, 1970 UTC.
+    * ``Time``  _Output_  number with the started time in seconds.
+- ``wenet_profile_manager_api_url(URL)``
+  The fact with the URL to the profile manager component.
+    * ``URL``  _Output_  string with the profile manager API URL.
+- ``wenet_task_manager_api_url(URL)``
+  The fact with the URL to the task manager component.
+    * ``URL``  _Output_  string with the task manager API URL.
 - ``wenet_interaction_protocol_engine_api_url(URL)`` The ``URL`` is a string with the URL to the interaction
- protocol engine API.
-- ``wenet_social_context_builder_api_url(URL)`` The ``URL`` is a string with the URL to the social context
- builder API.
-- ``wenet_service_api_url(URL)`` The ``URL`` is a string with the URL to the service API.
-- ``wenet_incentive_server_api_url(URL)`` The ``URL`` is a string with the URL to the incentive server API.
-- ``wenet_personal_context_builder_api_url(URL)`` The ``URL`` is a string with the URL to the personal context
- builder API.
+  The fact with the URL to the interaction protocol engine component.
+    * ``URL``  _Output_  string with the tinteraction protocol engine API URL.
+- ``wenet_social_context_builder_api_url(URL)`` 
+  The fact with the URL to the social context builder component.
+    * ``URL``  _Output_  string with the social context builder API URL.
+- ``wenet_service_api_url(URL)`` 
+  The fact with the URL to the service component.
+    * ``URL``  _Output_  string with the service API URL.
+- ``wenet_incentive_server_api_url(URL)``
+  The fact with the URL to the incentive server component.
+    * ``URL``  _Output_  string with the incentive server API URL.
+- ``wenet_personal_context_builder_api_url(URL)``
+  The fact with the URL to the personal context builder component.
+    * ``URL``  _Output_  string with the personal context builder API URL.
 
+
+### Logs messages
+
+The next predicates are used to add messages to the logging files of the norm engine.
+
+- ``wenet_log_trace(Text)``
+  This predicate add a message to the trace log.
+    * ``Text``  _Input_  string with the trace log message.
+- ``wenet_log_trace(Text,Terms)``
+  This predicate add a message to the trace log with values.
+    * ``Text``  _Input_  string with the trace log message.
+    * ``Terms`` _Input_ value to append to the end of the message.
+- ``wenet_log_error(Text)``
+  This predicate add a message to the error log.
+    * ``Text``  _Input_  string with the error log message.
+- ``wenet_log_error(Text,Terms)``
+  This predicate add a message to the error log with values.
+    * ``Text``  _Input_  string with the error log message.
+    * ``Terms`` _Input_ value to append to the end of the message.
+- ``wenet_log_error(Text,Terms,Error)``
+  This predicate add a message to the error log with an exception.
+    * ``Text``  _Input_  string with the error log message.
+    * ``Terms`` _Input_ value to append to the end of the message.
+    * ``Error`` _Input_ exception to append to the end of the message.
+
+
+### HTTP interaction
+
+The next predicates are used to do HTTP request into an URL.
+
+- ``wenet_get_json_from_url(Json,Url)``
+  Get a model from an URL.
+    * ``Json``  _Output_  JSOM model of the received model.
+    * ``Url``  _Input_  string with the URL to get the model.
+- ``wenet_post_json_to_url(Json, Url, Body)``
+  Post a model into an URL.
+    * ``Json``  _Output_  JSOM model of the posted model.
+    * ``Url``  _Input_  string with the URL to post the model.
+    * ``Body``  _Input_  JSON model with the model to post.
+- ``wenet_put_json_to_url(Json, Url, Body)``
+  Put a model into an URL.
+    * ``Json``  _Output_  JSOM model of the puted model.
+    * ``Url``  _Input_  string with the URL to put the model.
+    * ``Body``  _Input_  JSON model with the model to put.
+- ``wenet_patch_json_to_url(Json, Url, Body)``
+  Patch a model into an URL.
+    * ``Json``  _Output_  JSOM model of the patched model.
+    * ``Url``  _Input_  string with the URL to patch the model.
+    * ``Body``  _Input_  JSON model with the model to patch.
+- ``wenet_delete_to_url(Url)``
+  Delete a model from an URL.
+    * ``Url``  _Input_  string with the URL to delete the model.
 
 
 ### Utils
 
-
-- ``wenet_remove(Result,Element,List)`` This predicate returns as ``Result`` the value of the array defined
- in ``List`` without the value defined in ``Element``.
-- ``wenet_add(Result,Element,List)`` This predicate returns as ``Result`` the value of the array defined
- in ``List`` adding at the end the value defined in ``Element``.
-- ``wenet_format(Msg,WeNetFormat,Arguments)`` This predicate return the ``Msg`` as an string where on 
- the string defined at ``WeNetFormat`` the value **{}** are replaced with the argument ``Arguments``
- on the same position. For example: ``wenet_format('Value One and 2','Value {} and {}',['One',2])``
-
-- ``wenet_math(Number,Expr)`` This predicate evaluates an arithmetical expression defined in ``Expr``
- and return the result in ``Number``. You can read more about the arithmetical expressions
- [here](https://www.swi-prolog.org/pldoc/man?section=functions). For example: ``wenet_format(4,2+2)``
-
+- ``wenet_remove(Result,Element,List)``
+  This predicate remove an element from an array.
+    * ``Result``  _Output_  array of values without the element.
+    * ``Element``  _Input_  value to remove.
+    * ``List``  _Input_  array of values to remove the element.
+- ``wenet_add(Result,Element,List)``
+  This predicate add an element to the end of an array.
+    * ``Result``  _Output_  array of values where the element is added.
+    * ``Element``  _Input_  value to add.
+    * ``List``  _Input_  array of values to add the element.
+- ``wenet_format(Msg,WeNetFormat,Arguments)``
+  This predicate is used to create an string from a pattern. For the pattern **{}** are replaced with
+  the argument on the same position. For example: ``wenet_format('Value One and 2','Value {} and {}',['One',2])``
+    * ``Msg``  _Output_  string where are replaced the values of the pattern.
+    * ``WeNetFormat``  _Input_  string with the pattern to replace **{}** with values.
+    *  ``Arguments`` _Input_  array of values to be replaced on the pattern.
+- ``wenet_math(Result,Expr)``
+  This predicate evaluates an arithmetical expression. You can read more about the arithmetical expressions
+  [here](https://www.swi-prolog.org/pldoc/man?section=functions). For example: ``wenet_format(4,2+2)``
+    * ``Result``  _Output_  number with the result of the arithmetical expression.
+    * ``Expr``  _Input_  mathematical expression to evaluate.
 
 
 ### Profile manager
