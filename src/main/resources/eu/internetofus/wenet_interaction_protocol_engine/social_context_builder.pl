@@ -60,7 +60,7 @@ wenet_social_context_builder_update_preferences(UserId,TaskId,Users) :-
 %	@param TaskId identifier of the task.
 %
 wenet_social_context_builder_retrieve_social_explanation(SocialExplanation,UserId,TaskId) :-
-	wenet_social_context_builder_url_to(Url,['/social/explanations',UserId,'/',TaskId,'/']),
+	wenet_social_context_builder_url_to(Url,['/social/explanations/',UserId,'/',TaskId,'/']),
 	wenet_get_json_from_url(SocialExplanation,Url)
 	.
 

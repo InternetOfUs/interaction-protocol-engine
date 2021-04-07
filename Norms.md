@@ -762,7 +762,7 @@ The next predicates are used to interact with the incentive server component.
 
 - ``wenet_incentive_server_api_url_to(Url,Paths)``
   This predicate is used to obtain the URL to interact with the API of the incentive server.
-  For example if the URL of the incentive_server API is
+  For example if the URL of the incentive server API is
   **https://wenet.u-hopper.com/prod/incentive_server** then ``wenet_incentive_server_api_url_to(Url,['/Tasks/TaskStatus/'])``
   will produce ``URL = 'https://wenet.u-hopper.com/prod/incentive_server/Tasks/TaskStatus/'``.
     * ``Url``  _Output_  string of the API point to the incentive server.
@@ -784,9 +784,36 @@ The next predicates are used to interact with the incentive server component.
 
 ### Social context builder
 
+The next predicates are used to interact with the social context builder component.
 
-TODO
+- ``wenet_social_context_builder_url_to(Url,Paths)``
+  This predicate is used to obtain the URL to interact with the API of the social context builder.
+  For example if the URL of the social context builder API is
+  **https://wenet.u-hopper.com/prod/social_context_builder** , ``UserId = '2'`` and ``TaskId = '1'``
+  then ``wenet_social_context_builder_url_to(Url,['/social/explanations/',UserId,'/',TaskId,'/'])``
+  will produce ``URL = 'https://wenet.u-hopper.com/prod/social_context_builder/social/explanations/2/1'``.
+    * ``Url``  _Output_  string of the API point to the social context builder.
+    * ``Paths``  _Input_  array of values used to build the API point.
+- ``wenet_social_context_builder_update_preferences(UserId,TaskId,Users)``
+  This predicate is used to update the preferences of an user.
+    * ``UserId``  _Input_  string with the user identifier.
+    * ``TaskId``  _Input_  string with the task identifier.
+    * ``Users``  _Input_  array of string with the identifiers of the preferred users.
+- ``wenet_social_context_builder_retrieve_social_explanation(SocialExplanation,UserId,TaskId)``
+  This predicate is used to get the social explanation to choose an user.
+    * ``SocialExplanation``  _Output_  JSON model with the social explanation.
+    * ``UserId``  _Input_  string with the user identifier.
+    * ``TaskId``  _Input_  string with the task identifier.
+- ``wenet_description_of_social_explanation(Description, SocialExplanation)``
+  This predicate is used to get the description of the social explanation.
+    * ``Description``  _Output_  string with the description of the explanation.
+    * ``SocialExplanation``  _Input_  JSON model with the social explanation.
+- ``wenet_summary_of_social_explanation(Summary, SocialExplanation)``
+  This predicate is used to get the summary of the social explanation.
+    * ``Summary``  _Output_  string with the summary of the explanation.
+    * ``SocialExplanation``  _Input_  JSON model with the social explanation.
 
+    
 ### Personal context builder
 
 
