@@ -434,22 +434,27 @@ The next predicates refers to facts (constants) that has been set when the norm 
 
 The next predicates are used to interact with the profile manager component.
 
-- ``wenet_profile_manager_api_url_to(Url,Paths)`` This predicate is used to obtain the URL to interact
-  with the API of the profile manager. The ``Url`` is the string of the API point and path in an array
-  of strings or variables used to build the URL. For example if ``UserId = '2'`` and the URL of the profile
-  manager API is **https://wenet.u-hopper.com/prod/profile_manager** then
-  ``wenet_profile_manager_api_url_to(Url,['/profiles/',UserId])`` will produce
-  ``URL = 'https://wenet.u-hopper.com/prod/profile_manager/profiles/2'``.
-- ``wenet_profile_manager_get_profile(Profile,Id)`` This predicate is used to obtain the profile of an user.
- In the variable ``Profile`` will be  a JSON model with the profile of the user with the identifier 
- defined as string in ``Id ``.
-- ``wenet_profile_manager_get_community(Community,Id)`` This predicate is used to obtain a community.
- In the variable ``Community`` will be  a JSON model with the community profile with the identifier 
- defined as string in ``Id ``.
-- ``wenet_id_of_profile(Id, Profile)`` This predicate allow to obtain the identifier as string in ``Id``
- of a profile JSON model ``Profile``.
-- ``wenet_id_of_community(Id, Community)`` This predicate allow to obtain the identifier as string in ``Id``
- of a community JSON model ``Community``.
+- ``wenet_profile_manager_api_url_to(Url,Paths)``
+  This predicate is used to obtain the URL to interact with the API of the profile manager.
+  For example if ``ProfileId = '2'`` and the URL of the profile manager API is
+  **https://wenet.u-hopper.com/prod/profile_manager** then ``wenet_profile_manager_api_url_to(Url,['/profiles/',ProfileId])``
+  will produce ``URL = 'https://wenet.u-hopper.com/prod/profile_manager/profiles/2'``.
+    * ``Url``  _Output_  string of the API point to the profile manager.
+    * ``Paths``  _Input_  array of values used to build the API point.
+- ``wenet_profile_manager_get_profile(Profile,Id)``
+  This predicate is used to obtain a profile.
+    * ``Profile``  _Output_  JSON model with the obtained profile.
+    * ``Id ``  _Input_  string with the identifier of the profile to obtain.
+- ``wenet_community_manager_get_community(Community,Id)``
+  This predicate is used to obtain a community.
+    * ``Community``  _Output_  JSON model with the obtained community.
+    * ``Id ``  _Input_  string with the identifier of the community to obtain.
+- ``wenet_id_of_profile(Id, Profile)`` This predicate allow to obtain the identifier of a profile.
+    * ``Id``  _Output_  string with the identifier of the profile.
+    * ``Profile``  _Input_  JSON model of the profile to obtain the identifier.
+- ``wenet_id_of_community(Id, Community)`` This predicate allow to obtain the identifier of a community.
+    * ``Id``  _Output_  string with the identifier of the community.
+    * ``Community``  _Input_  JSON model of the community to obtain the identifier.
 
 
 ### Task manager
@@ -458,15 +463,15 @@ The next predicates are used to interact with the task manager component.
 
 - ``wenet_task_manager_api_url_to(Url,Paths)``
   This predicate is used to obtain the URL to interact with the API of the task manager.
-  For example if ``UserId = '2'`` and the URL of the task manager API is
-  **https://wenet.u-hopper.com/prod/task_manager** then ``wenet_task_manager_api_url_to(Url,['/tasks/',UserId])``
+  For example if ``TaskId = '2'`` and the URL of the task manager API is
+  **https://wenet.u-hopper.com/prod/task_manager** then ``wenet_task_manager_api_url_to(Url,['/tasks/',TaskId])``
   will produce ``URL = 'https://wenet.u-hopper.com/prod/task_manager/tasks/2'``.
     * ``Url``  _Output_  string of the API point to the task manager.
     * ``Paths``  _Input_  array of values used to build the API point.
 - ``wenet_task_manager_get_task(Task,Id)``
   This predicate is used to obtain a task.
     * ``Task``  _Output_  JSON model with the obtained task.
-    * ``Id ``  _Input_  string with the idnetifier of the task to obtain.
+    * ``Id ``  _Input_  string with the identifier of the task to obtain.
 - ``wenet_task_manager_merge_task(MergedTask,TaskId,Task)``
   This predicate allow to modify a task model.
     * ``MergedTask``  _Output_  JSON model with the updated task.
@@ -562,15 +567,161 @@ The next predicates are used to interact with the task manager component.
 
 
 
-### Interaction protocol Engine
+### Interaction protocol engine
 
+The next predicates are used to interact with the interaction protocol engine component.
 
-TODO
+- ``wenet_interaction_protocol_engine_api_url_to(Url,Paths)``
+  This predicate is used to obtain the URL to interact with the API of the interaction protocol engine.
+  For example if ``UserId = '2'`` and the URL of the interaction protocol engine API is
+  **https://wenet.u-hopper.com/prod/interaction_protocol_engine** then
+  ``wenet_interaction_protocol_engine_api_url_to(Url,['/states/users/',UserId])``
+  will produce ``URL = 'https://wenet.u-hopper.com/prod/interaction_protocol_engine/states/users/2'``.
+    * ``Url``  _Output_  string of the API point to the interaction protocol engine.
+    * ``Paths``  _Input_  array of values used to build the API point.
+- ``wenet_interaction_protocol_engine_send_message(Sent,Message)``
+  This predicate is used to send a message to the interaction protocol engine of another user.
+    * ``Sent``  _Output_  JSON model with the sent message.
+    * ``Message``  _Input_  JSON model with the message to send.
+- ``wenet_interaction_protocol_engine_get_task_user_state(State,TaskId,UserId)``
+  This predicate is used to obtain the state of an user in a task.
+    * ``State``  _Output_  JSON model with the state of the user on the task.
+    * ``TaskId``  _Input_  string identifier of the task to get the state.
+    * ``UserId``  _Input_  string identifier of the user to get the state.
+- ``wenet_interaction_protocol_engine_merge_task_user_state(MergedState,TaskId,UserId,NewState)``
+  This predicate is used to change the state of an user in a task.
+    * ``MergedState``  _Output_  JSON model with the modified state of the user on the task.
+    * ``TaskId``  _Input_  string identifier of the task to modify the state.
+    * ``UserId``  _Input_  string identifier of the user to modify the state.
+    * ``NewState``  _Input_  JSON model with the new values for the state.
+- ``wenet_interaction_protocol_engine_get_community_user_state(State,CommunityId,UserId)``
+  This predicate is used to obtain the state of an user in a community.
+    * ``State``  _Output_  JSON model with the state of the user on the community.
+    * ``CommunityId``  _Input_  string identifier of the community to get the state.
+    * ``UserId``  _Input_  string identifier of the user to get the state.
+- ``wenet_interaction_protocol_engine_merge_community_user_state(MergedState,CommunityId,UserId,NewState)``
+  This predicate is used to change the state of an user in a community.
+    * ``MergedState``  _Output_  JSON model with the modified state of the user on the community.
+    * ``CommunityId``  _Input_  string identifier of the community to modify the state.
+    * ``UserId``  _Input_  string identifier of the user to modify the state.
+    * ``NewState``  _Input_  JSON model with the new values for the state.
+- ``wenet_interaction_protocol_engine_get_user_state(State,UserId)``
+  This predicate is used to obtain the state of an user.
+    * ``State``  _Output_  JSON model with the state of the user.
+    * ``UserId``  _Input_  string identifier of the user to get the state.
+- ``wenet_interaction_protocol_engine_merge_user_state(MergedState,UserId,NewState)``
+  This predicate is used to change the state of an user.
+    * ``MergedState``  _Output_  JSON model with the modified state of the user.
+    * ``UserId``  _Input_  string identifier of the user to modify the state.
+    * ``NewState``  _Input_  JSON model with the new values for the state.
+- ``wenet_app_id_of_protocol_message(AppId, Message)``
+  This predicate is used to obtain the identifier of the application of a message.
+    * ``AppId``  _Output_  string with the application identifier of the message.
+    * ``Message``  _Input_  JSON model with the message.
+- ``wenet_community_id_of_protocol_message(CommunityId, Message)``
+  This predicate is used to obtain the identifier of the community of a message.
+    * ``CommunityId``  _Output_  string with the community identifier of the message.
+    * ``Message``  _Input_  JSON model with the message.
+- ``wenet_task_id_of_protocol_message(TaskId, Message)``
+  This predicate is used to obtain the identifier of the task of a message.
+    * ``TaskId``  _Output_  string with the task identifier of the message.
+    * ``Message``  _Input_  JSON model with the message.
+- ``wenet_transaction_id_of_protocol_message(TransactionId, Message)``
+  This predicate is used to obtain the identifier of the transaction of a message.
+    * ``TransactionId``  _Output_  string with the transaction identifier of the message.
+    * ``Message``  _Input_  JSON model with the message.
+- ``wenet_sender_of_protocol_message(Sender, Message)``
+  This predicate is used to obtain the sender of a message.
+    * ``SenderComponent``  _Output_  JSON model with the sender of the message.
+    * ``Message``  _Input_  JSON model with the message.
+- ``wenet_sender_component_of_protocol_message(SenderComponent, Message)``
+  This predicate is used to obtain the sender component of a message.
+    * ``SenderComponent``  _Output_  string with the sender component of the message.
+    * ``Message``  _Input_  JSON model with the message.
+- ``wenet_sender_id_of_protocol_message(SenderId, Message)``
+  This predicate is used to obtain the sender identifier of a message.
+    * ``SenderId``  _Output_  string with the sender identifier of the message.
+    * ``Message``  _Input_  JSON model with the message.
+- ``wenet_receiver_of_protocol_message(Receiver, Message)``
+  This predicate is used to obtain the receiver of a message.
+    * ``ReceiverComponent``  _Output_  JSON model with the receiver of the message.
+    * ``Message``  _Input_  JSON model with the message.
+- ``wenet_receiver_component_of_protocol_message(ReceiverComponent, Message)``
+  This predicate is used to obtain the receiver component of a message.
+    * ``ReceiverComponent``  _Output_  string with the receiver component of the message.
+    * ``Message``  _Input_  JSON model with the message.
+- ``wenet_receiver_id_of_protocol_message(ReceiverId, Message)``
+  This predicate is used to obtain the receiver identifier of a message.
+    * ``ReceiverId``  _Output_  string with the receiver identifier of the message.
+    * ``Message``  _Input_  JSON model with the message.
+- ``wenet_particle_of_protocol_message(Particle, Message)``
+  This predicate is used to obtain the particle of a message.
+    * ``Particle``  _Output_  string with the particle of the message.
+    * ``Message``  _Input_  JSON model with the message.
+- ``wenet_content_of_protocol_message(Content, Message)``
+  This predicate is used to obtain the content of a message.
+    * ``Content``  _Output_  JSON model with the content of the message.
+    * ``Message``  _Input_  JSON model with the message.
+- ``wenet_new_protocol_message(Message,AppId,CommunityId,TaskId,TransactionId,SenderComponent,SenderUserId,ReceiverComponent,ReceiverUserId,Particle,Content)``
+  This predicate is used to create a protocol message.
+    * ``Message``  _Output_  JSON model with the created protocol message.
+    * ``AppId``  _Input_  string with the application identifier for the message.
+    * ``CommunityId``  _Input_  string with the community identifier for the message.
+    * ``TaskId``  _Input_  string with the task identifier for the message.
+    * ``TransactionId``  _Input_  string with the transaction identifier for the message.
+    * ``SenderComponent``  _Input_  string with the component for the message sender.
+    * ``SenderUserId``  _Input_  string with the identifier for the message sender.
+    * ``ReceiverComponent``  _Input_  string with the component for the message receiver.
+    * ``ReceiverUserId``  _Input_  string with the identifier for the message receiver.
+    * ``Particle``  _Input_  string with the particle for the message.
+    * ``Content``  _Input_  JSON model with the content for the message.
+- ``wenet_interaction_protocol_engine_send_event(Sent,Event)``
+  This predicate is used to send an event.
+    * ``Sent``  _Output_  JSON model with the sent event.
+    * ``Event``  _Input_  JSON model with the event to send.
+- ``wenet_interaction_protocol_engine_delete_event(Id)``
+  This predicate is used to cancel the send on an event.
+    * ``Id``  _Input_  string with the identifier of the event to delete.
+- ``wenet_id_of_protocol_event(Id, Event)``
+  This predicate is used to obtain the identifier of an event.
+    * ``Id``  _Output_  string with the identifier of the event.
+    * ``Event``  _Input_  JSON model with the event.
+- ``wenet_new_protocol_event(Event,AppId,CommunityId,TaskId,TransactionId,UserId,Delay,Particle,Content)``
+  This predicate is used to create a protocol event.
+    * ``Event``  _Output_  JSON model with the created protocol event.
+    * ``AppId``  _Input_  string with the application identifier for the event.
+    * ``CommunityId``  _Input_  string with the community identifier for the event.
+    * ``TaskId``  _Input_  string with the task identifier for the event.
+    * ``TransactionId``  _Input_  string with the transaction identifier for the event.
+    * ``UserId``  _Input_  string with the component for the event sender.
+    * ``Delay``  _Input_  number with the seconds to wait before send the event.
+    * ``Particle``  _Input_  string with the particle for the event.
+    * ``Content``  _Input_  JSON model with the content for the event.
+
 
 ### Service
 
+The next predicates are used to interact with the service component.
 
-TODO
+- ``wenet_service_api_url_to(Url,Paths)``
+  This predicate is used to obtain the URL to interact with the API of the service.
+  For example if ``AppId = '2'`` and the URL of the service API is
+  **https://wenet.u-hopper.com/prod/service** then ``wenet_service_api_url_to(Url,['/app/',AppId])``
+  will produce ``URL = 'https://wenet.u-hopper.com/prod/service/app/2'``.
+    * ``Url``  _Output_  string of the API point to the service.
+    * ``Paths``  _Input_  array of values used to build the API point.
+- ``wenet_service_manager_get_app(App,Id)``
+  This predicate is used to obtain an application.
+    * ``App``  _Output_  JSON model with the obtained application data.
+    * ``Id ``  _Input_  string with the identifier of the application to obtain.
+- ``wenet_id_of_app(Id, App)``
+  This predicate allow to obtain the identifier of an application.
+    * ``Id``  _Output_  string with the identifier of the application.
+    * ``App``  _Input_  JSON model of the application to obtain the identifier.
+- ``wenet_message_callback_url_of_app(Url, App)``
+  This predicate allow to obtain the URL to post the callback messages of an application.
+    * ``Url``  _Output_  string with the URL to post the callback messages.
+    * ``App``  _Input_  JSON model of the application to obtain the callback url.
 
 
 ### Incentive server
