@@ -9,7 +9,7 @@ the actions of the norms that will be satisfied. In other words, each user on th
 its norm engine to evaluate the actions that a user do or the notification that it can receive.
 The norms are defined on the profile of the user, on the community that the user is, into the task
 that the user is involved in and in the same message. The norm engine of each user decided with norms
-has to be evaluated depending of the interaction and the status of the user. These norm engines are
+has to be evaluated depending on the interaction and the status of the user. These norm engines are
 in rest mode and when a message is received, they collect the necessary norms evaluate them and do 
 the actions of the norms that are satisfied. The messages that start a norm engine are associated
 with one of the next actions:
@@ -66,18 +66,18 @@ as argument of the predicate or a value of a variable can be:
 - A **String** value is a sequence of any characters between single quotes (``'``) or a sequence of characters that
   starts with a lower case followed by letters, numbers or the underscore. For example: ``'String value'`` or ``id``.
 - An **Array** value is a list of values between quadratus and separated by commas. For example: ``['One',2,[3,'three']]``
-- A **Json** value that is mapped as the predicate ``json`` and with an array as argument where its elements
+- A **Json** value that is mapped as the predicate ``json`` and with an array as an argument where its elements
   are pairs of field name and value separated by an equals. For example: ``json([id='1',goal=json([name='Eat together'])])``.
   You can read more about the conversion from JSON to a predicate [here](https://www.swi-prolog.org/pldoc/doc_for?object=json_read/2).
-  Attention if the field name does not start  with a lower case followed for letters, numbers or the underscore,
+  Attention if the field name does not start with a lower case followed for letters, numbers or the underscore,
   it must be written as a string between single quotes. For example: ``json(['Action'='Questions 1','Message'=''])``
 - An underscore (``_``) to mark that it accepts any value. In other words, that the value that matches
   this position is ignored.
 
 As you have read before the norms are defined in different data models in the WeNet platform. The norms that affect
 any interaction that a user is involved in are defined on the profile of the user. You can modify these norms by doing
-HTTP CRUD request over the WeNet profile manager. For the interaction that do any user in a community the norms
-are defined on the community profile. You can modify these norms by doing HTTP CRUD request over the WeNet profile manager.
+an HTTP CRUD request over the WeNet profile manager. For the interaction that does any user in a community, the norms
+are defined on the community profile. You can modify these norms by doing an HTTP CRUD request over the WeNet profile manager.
 For modifying the logic that is involved in a task you must modify the norms defined on the task and its type using
 HTTP CRUD requests over the task manager.
 
@@ -146,7 +146,7 @@ The task transaction validation by the WeNet task manager consists of verifying:
 When the WeNet incentive server wants to send an incentive to a user it posted an HTTP request to the WeNet interaction
 protocol engine with the incentive to send to the user. This component validates the incentive and if it is valid gets
 the norms of the user and the norms of the community of the application with in the incentive. And after that
-start the norm engine to decide what to do next depending of the norms that will be fired. Normally this norms
+start the norm engine to decide what to do next depending on the norms that will be fired. Normally this norms
 converts the incentive into a callback message that is sent to the application of the user, which converts the message
 into an event on the user interface of the user.
 
@@ -167,7 +167,7 @@ associated with the message and validates them to known with actions to do next,
 
 ### Received event
 
-An event is a message that a norm engine that is sent to itself after a delay in seconds. It is used to activate the norm
+An event is a message that a norm engine is sent to itself after a delay in seconds. It is used to activate the norm
 engine and evaluate again the norms. For example: imagine a task that you want to close after a day, then you may define a
 norm that when the task is created send an event to be delivered after a day, and another norm to close the task when
 this event is received.
@@ -177,12 +177,12 @@ this event is received.
 
 The norms are formed by a list of conditions separated by the conjunctions ``and`` or ``or``, or negated using
 the predicate ``not(Condition)``. You can use any predicate defined by the [SWI Prolog](https://www.swi-prolog.org/).
-The next sections shows the most common conditions that has been provided to help to the norm definition.
+The next sections show the most common conditions that have been provided to help to the norm definition.
 
 
 ### Message conditions
 
-The next conditions are used to check the protocol message that has started the norm engine .
+The next conditions are used to check the protocol message that has started the norm engine.
 
 - ``is_received_created_task()``
   This condition is **true** when the message informs that a task is created.
@@ -191,15 +191,15 @@ The next conditions are used to check the protocol message that has started the 
     * ``Label``  _Output_  string with the transaction label.
     * ``Attributes``  _Output_  JSON model with the transaction attributes.
 - ``is_received_send_incentive(Incentive)``
-  This condition is **true** when the message is sent by the incentive server to notify an user.
+  This condition is **true** when the message is sent by the incentive server to notify a user.
     * ``Incentive``  _Output_  JSON model with the incentive to notify to the user.
 - ``is_received(SenderId,Particle,Content)``
   This condition is **true** when the message is from another norm engine.
-    * ``SenderId``  _Output_  string with the user identifier that has send the message.
+    * ``SenderId``  _Output_  string with the user identifier that has sent the message.
     * ``Particle``  _Output_  string with the message particle.
     * ``Content`` _Output_  JSON model with the message content.
 - ``is_received_event(Particle,Content)``
-  This condition is **true** when the message is an event.
+  This condition is **true** when the received message is an event.
     * ``Particle``  _Output_  string with the event particle.
     * ``Content`` _Output_  JSON model with the event content.
 
@@ -214,154 +214,154 @@ to the user of the norm engine that has been started.
     * ``Users``  _Output_  array of strings with the identifiers of the users that are in the application.
 - ``get_app_users_except_me(Users)``
   This condition is used to obtain the users that are on the application removing the identifier of the user
-  associated to the norm engine.
+  associated with the norm engine.
     * ``Users``  _Output_  array of strings with the identifiers of the users.
 - ``get_closest_users_to_me(Users)``
     This condition is used to obtain the users, maximum 10, that are closest to the user associated
     to the norm engine.
     * ``Users``  _Output_  array of strings with the identifiers of the users.
 - ``get_closest_users_to_me(Users,NumUsers)``
-  This condition is used to obtain the users that are closest to the user associated to the norm engine.
+  This condition is used to obtain the users that are closest to the user associated with the norm engine.
     * ``Users``  _Output_  array of strings with the identifiers of the users.
     * ``NumUsers``  _Input_  number maximum of users to return.
 - ``get_app_users_near_me(Users,Min,Max)``
-  This condition is used to obtain the users on the application that are in a range to the user associated to
-  the norm engine. Thus, it return the application users that are in a distance **[Min,Max]** to me.
+  This condition is used to obtain the users on the application that are in a range to the user associated with
+  the norm engine. Thus, it returns the application users that are in a distance **[Min, Max]** to me.
     * ``Users``  _Output_  array of strings with the identifiers of the users.
-    * ``Min``  _Input_  number the minimum distance in meters to user associated to the norm engine.
-    * ``Max``  _Input_  number the maximum distance in meters to user associated to the norm engine.
+    * ``Min``  _Input_  number the minimum distance in meters to the user associated with the norm engine.
+    * ``Max``  _Input_  number the maximum distance in meters to the user associated with the norm engine.
 
 
 ### Me conditions
 
-The next conditions are over the user associated to the norm engine (**me**). 
+The next conditions are over the user associated with the norm engine (**me**). 
 
 - ``get_profile_id(Me)``
-  This condition is used to obtain the identifier to the user associated to the norm engine.
+  This condition is used to obtain the identifier to the user associated with the norm engine.
     * ``Me``  _Output_  string with the identifier of the user.	
 - ``get_profile(Profile)``
-  This condition is used to obtain the profile of the user associated to the norm engine at the moment it is started.
+  This condition is used to obtain the profile of the user associated with the norm engine at the moment it is started.
     * ``Profile``  _Output_   JSON model with the profile.
 - ``get_user_state(State)``
-  This condition allows to obtain the state of the user. This state is shared by all the norm engines
-  associated to **me**.
+  This condition obtains the state of the user. This state is shared by all the norm engines
+  associated with **me**.
     * ``State``  _Output_  JSON model with the user state.
 - ``get_user_state_attribute(Value,Key)``
-  This condition allows to obtain the value of a user state attribute. If it is not defined this predicate fails.
-    * ``Value``  _Output_  value associated to the attribute.
+  This condition obtains the value of a user state attribute. If it is not defined this predicate fails.
+    * ``Value``  _Output_  value associated with the attribute.
     * ``Key``  _Input_  string with the name of the attribute.
 - ``get_user_state_attribute(Value,Key,DefaultValue)``
-  This condition allows to obtain the value of a user state attribute, or a default value if it is not defined.
-    * ``Value``  _Output_  value associated to the attribute or the default one if it is not defined.
+  This condition obtains the value of a user state attribute, or a default value if it is not defined.
+    * ``Value``  _Output_  value associated with the attribute or the default one if it is not defined.
     * ``Key``  _Input_  string with the name of the attribute.
     * ``DefaultValue``  _Input_  value to return if the attribute is not defined.
     
 
 ### Application conditions
 
-The next conditions are over the application associated to the norm engine. 
+The next conditions are over the application associated with the norm engine. 
 
 - ``get_app_id(AppId)``
-  This condition is used to obtain the identifier to the application associated to the norm engine.
+  This condition is used to obtain the identifier to the application associated with the norm engine.
     * ``AppId``  _Output_  string with the identifier of the application.	
 - ``get_app(App)``
-  This condition allows to obtain the model data of the application associated to the norm engine. The data model
+  This condition obtains the model data of the application associated with the norm engine. The data model
   is obtained the first time this condition is called, after that the value is fixed.
     * ``App``  _Output_  JSON model with the application data.
 - ``get_app_message_callback_url(Url)`` 
-  This condition allows to obtain the URL to post the messages to send to the user into the application
-  associated to the norm engine. The URL is obtained the first time this condition is called, after that
+  This condition obtains the URL to post the messages to send to the user into the application
+  associated with the norm engine. The URL is obtained the first time this condition is called, after that
   the value is fixed.
     * ``Url``  _Output_  string to the URL to post the callback messages.
   
   
 ### Community conditions
 
-The next conditions are over the community associated to the norm engine.
+The next conditions are over the community associated with the norm engine.
   
 - ``get_community_id(CommunityId)``
-  This condition is used to obtain the identifier to the community associated to the norm engine.
+  This condition is used to obtain the identifier to the community associated with the norm engine.
     * ``CommunityId``  _Output_  string with the identifier of the community.	
 - ``get_community(Community)``
-  This condition allows to obtain the model data of the community associated to the norm engine. The data model
+  This condition obtains the model data of the community associated with the norm engine. The data model
   is obtained the first time this condition is called, after that the value is fixed.
     * ``Community``  _Output_  JSON model with the community data.
 - ``get_community_state(State)``
-  This condition allows to obtain the state of the user in the community associated to the norm engine.
-  This state is shared by all the norm engines associated to user for the same community.
+  This condition obtains the state of the user in the community associated with the norm engine.
+  This state is shared by all the norm engines associated with the user for the same community.
     * ``State``  _Output_  JSON model with the community user state.
 - ``get_community_state_attribute(Value,Key)``
-  This condition allows to obtain the value of a community user state attribute. If it is not defined this predicate fails.
-    * ``Value``  _Output_  value associated to the attribute.
+  This condition obtains the value of a community user state attribute. If it is not defined this predicate fails.
+    * ``Value``  _Output_  value associated with the attribute.
     * ``Key``  _Input_  string with the name of the attribute.
 - ``get_community_state_attribute(Value,Key,DefaultValue)``
-  This condition allows to obtain the value of a community user state attribute, or a default value if it is not defined.
-    * ``Value``  _Output_  value associated to the attribute or the default one if it is not defined.
+  This condition obtains the value of a community user state attribute, or a default value if it is not defined.
+    * ``Value``  _Output_  value associated with the attribute or the default one if it is not defined.
     * ``Key``  _Input_  string with the name of the attribute.
     * ``DefaultValue``  _Input_  value to return if the attribute is not defined.
 
 
 ### Task conditions
 
-The next conditions are over the task associated to the norm engine. 
+The next conditions are over the task associated with the norm engine. 
 
 - ``get_task_id(TaskId)``
-  This condition is used to obtain the identifier to the task associated to the norm engine.
+  This condition is used to obtain the identifier to the task associated with the norm engine.
     * ``TaskId``  _Output_  string with the identifier of the task.	
 - ``get_task(Task)``
-  This condition is used to obtain the task associated to the norm engine at the moment it is started.
+  This condition is used to obtain the task associated with the norm engine at the moment it is started.
     * ``Task``  _Output_   JSON model with the task.
 - ``get_task_requester_id(RequesterId)``
-  This condition allows to obtain the requester identifier of the task associated to the norm engine.
+  This condition obtains the requester identifier of the task associated with the norm engine.
     * ``RequesterId``  _Output_  string with the task requester identifier.
 - ``get_task_goal_name(Name)``
-  This condition allows to obtain the goal name of the task associated to the norm engine.
+  This condition obtains the goal name of the task associated with the norm engine.
     * ``Name``  _Output_  string with the task goal name.
 - ``is_task_closed()``
-  This condition is **true** when the task associated to the norm engine is closed.
+  This condition is **true** when the task associated with the norm engine is closed.
 - ``get_task_attribute_value(Value,Key)``
-  This condition allows to obtain the value of a task attribute. If it is not defined this predicate fails.
-    * ``Value``  _Output_  value associated to the attribute.
+  This condition obtains the value of a task attribute. If it is not defined this predicate fails.
+    * ``Value``  _Output_  value associated with the attribute.
     * ``Key``  _Input_  string with the name of the attribute.
 - ``get_task_state(State)``
-  This condition allows to obtain the state of the user in the task associated to the norm engine.
-  This state is shared by all the norm engines associated to user for the same task.
+  This condition obtains the state of the user in the task associated with the norm engine.
+  This state is shared by all the norm engines associated with the user for the same task.
     * ``State``  _Output_  JSON model with the task user state.
 - ``get_task_state_attribute(Value,Key)``
-  This condition allows to obtain the value of a task user state attribute. If it is not defined this predicate fails.
-    * ``Value``  _Output_  value associated to the attribute.
+  This condition obtains the value of a task user state attribute. If it is not defined this predicate fails.
+    * ``Value``  _Output_  value associated with the attribute.
     * ``Key``  _Input_  string with the name of the attribute.
 - ``get_task_state_attribute(Value,Key,DefaultValue)``
-  This condition allows to obtain the value of a task user state attribute, or a default value if it is not defined.
-    * ``Value``  _Output_  value associated to the attribute or the default one if it is not defined.
+  This condition obtains the value of a task user state attribute, or a default value if it is not defined.
+    * ``Value``  _Output_  value associated with the attribute or the default one if it is not defined.
     * ``Key``  _Input_  string with the name of the attribute.
     * ``DefaultValue``  _Input_  value to return if the attribute is not defined.
 - ``get_task_type_id(TaskTypeId)``
-  This condition allows to obtain the type identifier for the task associated to the task of the norm engine.
+  This condition obtains the type identifier for the task associated with the task of the norm engine.
     * ``TaskTypeId``  _Output_   string with the task type identifier.
 - ``get_task_type(TaskType)``
-  This condition is used to obtain the type of the task associated to the norm engine at the moment it is started.
+  This condition is used to obtain the type of task associated with the norm engine at the moment it is started.
     * ``TaskType``  _Output_   JSON model with the task type.
 - ``get_transaction_id(TransactionId)``
-  This condition is used to obtain the identifier of the transaction associated to the norm engine, or the identifier
-  of the last transaction added to the task associated to the norm engine.
+  This condition is used to obtain the identifier of the transaction associated with the norm engine or the identifier
+  of the last transaction added to the task associated with the norm engine.
     * ``TransactionId``  _Output_  string transaction identifier.
 - ``get_transaction(Transaction)``
-  This condition is used to obtain the task transaction associated to the norm engine at the moment it is started,
-  or return the last transaction added to the task associated to the norm engine.
+  This condition is used to obtain the task transaction associated with the norm engine at the moment it is started,
+  or return the last transaction added to the task associated with the norm engine.
     * ``Task``  _Output_   JSON model with the task.
 - ``get_transaction(Transaction,TransactionId)``
-  This condition is used to obtain the task transaction defined into the task associated to the norm engine.
+  This condition is used to obtain the task transaction defined into the task associated with the norm engine.
     * ``Transaction``  _Output_  JSON model with the transaction
     * ``TransactionId``  _Input_  string identifier of the task transaction to obtain.
 
   
 ### Social context builder conditions
 
-The next conditions are over the application associated to the norm engine (**me**). 
+The next conditions are over the application associated with the norm engine (**me**). 
   
 - ``get_social_explanation(Explanation,UserId)``
-  This condition allows to obtain the explanation why an user has to be choose to be a volunteer.
+  This condition obtains the explanation why a user has to be chosen to be a volunteer.
     * ``Explanation``  _Output_  JSON model with the explanation provided by the social context builder.
     * ``UserId``  _Input_  string identifier of the user to obtain the explanation.
 
@@ -369,7 +369,7 @@ The next conditions are over the application associated to the norm engine (**me
 ### Time conditions
 
 The next conditions are over the constant **now**, that it is the difference, measured in seconds,
-between the time the norm engine is started and midnight, January 1, 1970 UTC.
+between the time the norm engine is started and midnight, January 1, 1970, UTC.
 
 - ``is_now_less_than(Time)``
   This condition is **true** when **now** is less than a value.
@@ -393,13 +393,13 @@ between the time the norm engine is started and midnight, January 1, 1970 UTC.
 The next conditions are used to manage JSON models.
 
 - ``get_attribute(Value,Key,Json)``
-  This condition allows to obtain an attribute (field) of a JSON model. If the attribute is not defined
-  this conditions fails.
+  This condition obtains an attribute (field) of a JSON model. If the attribute is not defined
+  this condition fails.
     * ``Value``  _Output_  value of the attribute.
     * ``Key``  _Input_  string name of the attribute.
     * ``Json``  _Input_  JSON model to obtain the attribute.
 - ``get_attribute(Value,Key,DefaultValue,Json)``
-  This condition allows to obtain an attribute (field) of a JSON model. If the attribute is not defined
+  This condition obtains an attribute (field) of a JSON model. If the attribute is not defined
   it returns the default value.
     * ``Value``  _Output_  value of the attribute or the default value is not defined.
     * ``Key``  _Input_  string name of the attribute.
@@ -409,91 +409,91 @@ The next conditions are used to manage JSON models.
 
 ## Actions
 
-The norms to do when the conditions of a norm  are predicates separated by the conjunction ``and``. You can use
+The norms to do when the conditions of a norm are predicates separated by the conjunction ``and``. You can use
 any predicate defined by the [SWI Prolog](https://www.swi-prolog.org/), but before you have to mark it as ``dynamic``
-on the ontology of the norm. The next sections shows the most common actions that has been provided to help 
+on the ontology of the norm. The next sections show the most common actions that have been provided to help 
 to the norm definition.
 
 
 ### User actions
 
-This action are done over the user that is associated to the norm engine, thus the receiver user of the message.
+These actions are done over the user that is associated with the norm engine, thus the receiver user of the message.
 
 - ``send_user_message(Label,Content)``
-  This action post a callback message to the user.
+  This action posts a callback message to the user.
     * ``Label`` _Input_  string with the message label.
     * ``Content`` _Input_  JSON model with the message content.
 - ``merge_user_state(State)``
-  This action merge the current state of the user.
+  This action merges the current state of the user.
     * ``State``  _Input_  JSON model with the new state of the user.
 - ``put_user_state_attribute(Key,Value)``
-  This action change an attribute of the state of the user.
+  This action changes an attribute of the state of the user.
     * ``Key``  _Input_  string with the name of the state attribute.
-    * ``Value``  _Input_  value to put to attribute of the state.
+    * ``Value``  _Input_  value to put to the attribute of the state.
  
 
 ### Community actions
 
-This action are done over the community that is associated to the received message.
+These actions are done over the community that is associated with the received message.
 
 - ``merge_community_state(State)``
-  This action merge the current state of the user for the community.
+  This action merges the current state of the user for the community.
     * ``State``  _Input_  JSON model with the new state of the user on the community.
 - ``put_community_state_attribute(Key,Value)``
-  This action change an attribute of the state of the user for the community.
+  This action changes an attribute of the state of the user for the community.
     * ``Key``  _Input_  string with the name of the state attribute.
-    * ``Value``  _Input_  value to put to attribute of the state.
+    * ``Value``  _Input_  value to put to the attribute of the state.
 
 
 ### Task actions
 
-This actions are done in the task that is associated to the received message.
+These actions are done in the task that is associated with the received message.
 
 - ``add_created_transaction()``
- This action add a new transaction to the task that represents that the creation
+ This action adds a new transaction to the task that represents that the creation
  of the task.
 - ``add_message_transaction()``
-  This action add the transaction defined on the received message into the task.
+  This action adds the transaction defined on the received message into the task.
 - ``put_task_attribute(Key,Value)``
-  This action change an attribute of the current task model.
+  This action changes an attribute of the current task model.
     * ``Key``  _Input_  string with the name of the task attribute.
     * ``Value``  _Input_  value to put to the task attribute.
 - ``merge_task(Task)``
-  This action modify the current task model.
+  This action modifies the current task model.
     * ``Task``  _Input_  JSON model with the new values for the task.
 - ``close_task()``
-  This action mark the task associated to the norm engine as closed.
+  This action marks the task associated with the norm engine as closed.
 - ``merge_task_state(State)``
-  This action merge the current state of the user for the task.
+  This action merges the current state of the user for the task.
     * ``State``  _Input_  JSON model with the new state of the user on the task.
 - ``put_task_state_attribute(Key,Value)``
-  This action change an attribute of the state of the user for the task.
+  This action changes an attribute of the state of the user for the task.
     * ``Key``  _Input_  string with the name of the state attribute.
-    * ``Value``  _Input_  value to put to attribute of the state.
+    * ``Value``  _Input_  value to put to the attribute of the state.
 
 
 ### Interact with WeNet components
 
-This actions are used to do an action that interact with the other components of the WeNet platform.
+These actions interact with the other components of the WeNet platform.
 
 - ``send_messages(Users,Particle,Content)``
-  This action send messages to the norm engines of some users.
+  This action sends messages to the norm engines of some users.
     * ``Users``  _Input_  array of strings of the users to receive a message.
     * ``Particle``  _Input_  string with the message particle.
     * ``Content``  _Input_  JSON model with the message content.
 - ``send_message(UserId,Particle,Content)``
-  This action send a message to the norm engines of an users.
+  This action sends a message to the norm engines of a user.
     * ``UserId``  _Input_  strings identifier of the user to receive the message.
     * ``Particle``  _Input_  string with the message particle.
     * ``Content``  _Input_  JSON model with the message content.
 - ``notify_incentive_server(Action,Message)``
-  This action notify the incentive server about a change of the task.
+  This action notifies the incentive server about a change of the task.
     * ``Action``  _Input_  string with the action that has changed the task.
     * ``Message``  _Input_  string that explains the change.
 - ``notify_volunteers_to_social_context_builder(Volunteers,UserId)``
-  This action notify the social context builder about the volunteers to do a task.
+  This action notifies the social context builder about the volunteers to do a task.
     * ``Volunteers``  _Input_  array of strings with the user identifiers that has volunteer to do a task.
-    * ``UserId``  _Input_  string user identifier to be volunteer.
+    * ``UserId``  _Input_  string user identifier to be a volunteer.
  
 
 ## Other Useful Norms predicates
@@ -502,14 +502,14 @@ We provide other predicates that can be used to help to define the conditions an
 
 ### Facts
 
-The next predicates refers to facts (constants) that has been set when the norm engine has been started.
+The next predicates refer to facts (constants) that have been set when the norm engine has been started.
 
 - ``get_message(Message)``
   The fact with the received message that has started the norm engine.
     * ``Message``  _Output_  JSON model of the received protocol message.
 - ``get_now(Time)``
   The fact with the difference, measured in seconds, between the time the norm engine is started and
-  midnight, January 1, 1970 UTC.
+  midnight, January 1, 1970, UTC.
     * ``Time``  _Output_  number with the started time in seconds.
 - ``wenet_profile_manager_api_url(URL)``
   The fact with the URL to the profile manager component.
@@ -539,21 +539,21 @@ The next predicates refers to facts (constants) that has been set when the norm 
 The next predicates are used to add messages to the logging files of the norm engine.
 
 - ``wenet_log_trace(Text)``
-  This predicate add a message to the trace log.
+  This predicate adds a message to the trace log.
     * ``Text``  _Input_  string with the trace log message.
 - ``wenet_log_trace(Text,Terms)``
-  This predicate add a message to the trace log with values.
+  This predicate adds a message to the trace log with values.
     * ``Text``  _Input_  string with the trace log message.
     * ``Terms`` _Input_ value to append to the end of the message.
 - ``wenet_log_error(Text)``
-  This predicate add a message to the error log.
+  This predicate adds a message to the error log.
     * ``Text``  _Input_  string with the error log message.
 - ``wenet_log_error(Text,Terms)``
-  This predicate add a message to the error log with values.
+  This predicate adds a message to the error log with values.
     * ``Text``  _Input_  string with the error log message.
     * ``Terms`` _Input_ value to append to the end of the message.
 - ``wenet_log_error(Text,Terms,Error)``
-  This predicate add a message to the error log with an exception.
+  This predicate adds a message to the error log with an exception.
     * ``Text``  _Input_  string with the error log message.
     * ``Terms`` _Input_ value to append to the end of the message.
     * ``Error`` _Input_ exception to append to the end of the message.
@@ -590,12 +590,12 @@ The next predicates are used to do HTTP request into an URL.
 ### Utils
 
 - ``wenet_remove(Result,Element,List)``
-  This predicate remove an element from an array.
+  This predicate removes an element from an array.
     * ``Result``  _Output_  array of values without the element.
     * ``Element``  _Input_  value to remove.
     * ``List``  _Input_  array of values to remove the element.
 - ``wenet_add(Result,Element,List)``
-  This predicate add an element to the end of an array.
+  This predicate adds an element to the end of an array.
     * ``Result``  _Output_  array of values where the element is added.
     * ``Element``  _Input_  value to add.
     * ``List``  _Input_  array of values to add the element.
@@ -632,11 +632,11 @@ The next predicates are used to interact with the profile manager component.
     * ``Profile``  _Output_  JSON model with the obtained community.
     * ``Id ``  _Input_  string with the identifier of the community to obtain.
 - ``wenet_id_of_profile(Id, Profile)``
-  This predicate allow to obtain the identifier of a profile.
+  This predicate obtains the identifier of a profile.
     * ``Id``  _Output_  string with the identifier of the profile.
     * ``Profile``  _Input_  JSON model of the profile to obtain the identifier.
 - ``wenet_id_of_community(Id, Community)``
-  This predicate allow to obtain the identifier of a community.
+  This predicate obtains the identifier of a community.
     * ``Id``  _Output_  string with the identifier of the community.
     * ``Community``  _Input_  JSON model of the community to obtain the identifier.
 
@@ -657,7 +657,7 @@ The next predicates are used to interact with the task manager component.
     * ``Task``  _Output_  JSON model with the obtained task.
     * ``Id ``  _Input_  string with the identifier of the task to obtain.
 - ``wenet_task_manager_merge_task(MergedTask,TaskId,Task)``
-  This predicate allow to modify a task model.
+  This predicate modifies a task model.
     * ``MergedTask``  _Output_  JSON model with the updated task.
     * ``TaskId``  _Input_  string with the identifier of the task to modify.
     * ``Task``  _Input_  JSON model of the task to merge with the current one.
@@ -665,7 +665,7 @@ The next predicates are used to interact with the task manager component.
  This predicate is used to add a transaction into a task.
     * ``AddedTaskTransaction``  _Output_  JSON model with the added transaction.
     * ``TaskId``  _Input_  string with the identifier of the task to add the transaction.
-    * ``Transaction``  _Output_  JSON model of teh transaction to add.
+    * ``Transaction``  _Output_  JSON model of the transaction to add.
 - ``wenet_task_manager_add_message_into_transaction(AddedTransactionMessage,TaskId,TransactionId,Message)``
   This predicate is used to add a message into a transaction of a task.
     * ``AddedTransactionMessage``  _Output_  JSON model with the added message.
@@ -673,80 +673,80 @@ The next predicates are used to interact with the task manager component.
     * ``TransactionId``  _Input_  string with the identifier of the transaction to add the message.
     * ``Message``  _Input_  JSON model with the message to add into the transaction.
 - ``wenet_id_of_task(Id, Task)``
-  This predicate allow to obtain the identifier of a task.
+  This predicate obtains the identifier of a task.
     * ``Id``  _Output_  string with the identifier of the task.
     * ``Task``  _Input_  JSON model of the task to obtain the identifier.
 - ``wenet_task_type_id_of_task(Id, Task)`` 
-  This predicate allow to obtain the task type identifier of a task.
+  This predicate obtains the task type identifier of a task.
     * ``Id``  _Output_  string with the identifier of the task type.
     * ``Task``  _Input_  JSON model of the task to obtain the task type identifier.
 - ``wenet_app_id_of_task(Id, Task)``
-  This predicate allow to obtain the application identifier of a task.
+  This predicate obtains the application identifier of a task.
     * ``Id``  _Output_  string with the identifier of the application.
     * ``Task``  _Input_  JSON model of the task to obtain the application identifier.
 - ``wenet_community_id_of_task(Id, Task)``
-  This predicate allow to obtain the community identifier of a task.
+  This predicate obtains the community identifier of a task.
     * ``Id``  _Output_  string with the identifier of the community.
     * ``Task``  _Input_  JSON model of the task to obtain the community identifier.
 - ``wenet_requester_id_of_task(Id, Task)``
-  This predicate allow to obtain the requester identifier of a task.
-    * ``Id``  _Output_  string with the identifier of the requester. Thus, the user that wants to do the task.
+  This predicate obtains the requester identifier of a task.
+    * ``Id``  _Output_  string with the identifier of the requester.
     * ``Task``  _Input_  JSON model of the task to obtain the requester identifier.
 - ``wenet_goal_of_task(Goal, Task)``
-  This predicate allow to obtain the goal of a task.
+  This predicate obtains the goal of a task.
     * ``Goal``  _Output_  JSON model with the task goal.
     * ``Task``  _Input_  JSON model of the task to obtain the goal.
 - ``wenet_goal_name_of_task(GoalName, Task)``
-  This predicate allow to obtain the goal name of a task.
+  This predicate obtains the goal name of a task.
     * ``GoalName``  _Output_  string with the task goal name.
     * ``Task``  _Input_  JSON model of the task to obtain the goal name.
 - ``wenet_goal_description_of_task(GoalDescription, Task)``
-  This predicate allow to obtain the goal description of a task.
+  This predicate obtains the goal description of a task.
     * ``GoalDescription``  _Output_  string with the task goal description.
     * ``Task``  _Input_  JSON model of the task to obtain the goal description.
 - ``wenet_goal_keywords_of_task(GoalKeywords, Task)``
-  This predicate allow to obtain the goal keywords of a task.
+  This predicate obtains the goal keywords of a task.
     * ``GoalKeywords``  _Output_  array of strings with the task goal keywords.
     * ``Task``  _Input_  JSON model of the task to obtain the goal keywords.
 - ``wenet_is_closed_task(Task)``
   This predicate is **true** if the task is closed.
     * ``Task``  _Input_  JSON model of the task to check if it is closed.
 - ``wenet_close_ts_of_task(CloseTs, Task)``
-  This predicate allow to obtain the time-stamp when the task is closed.
-    * ``CloseTs``  _Output_  integer with the difference, in seconds ,between the time when the task is closed
-    and midnight, January 1, 1970 UTC.
+  This predicate obtains the time-stamp when the task is closed.
+    * ``CloseTs``  _Output_  integer with the difference, in seconds, between the time when the task is closed
+    and midnight, January 1, 1970, UTC.
     * ``Task``  _Input_  JSON model of the task to obtain the close time-stamp.
 - ``wenet_attributes_of_task(Attributes, Task)``
-  This predicate allow to obtain the attributes of a task.
+  This predicate obtains the attributes of a task.
     * ``Attributes``  _Output_  JSON model with the task attributes.
     * ``Task``  _Input_  JSON model of the task to obtain the attributes.
 - ``wenet_transactions_of_task(Transactions, Task)``
-  This predicate allow to obtain the transaction of a task.
+  This predicate obtains the transaction of a task.
     * ``Transactions``  _Output_  array of JSON models with the task transactions.
     * ``Task``  _Input_  JSON model of the task to obtain the transactions.
 - ``wenet_id_of_transaction(Id, Transaction)``
-  This predicate allow to obtain the identifier of a transaction.
+  This predicate obtains the identifier of a transaction.
     * ``Id``  _Output_  string with the transaction identifier.
     * ``Transaction``  _Input_  JSON model of the transaction to obtain the identifier.
 - ``wenet_task_id_of_transaction(TaskId, Transaction)``
-  This predicate allow to obtain the task identifier of a transaction.
+  This predicate obtains the task identifier of a transaction.
     * ``TaskId``  _Output_  string with the task identifier.
     * ``Transaction``  _Input_  JSON model of the transaction to obtain the task identifier.
 - ``wenet_label_of_transaction(Label, Transaction)``
-  This predicate allow to obtain the label of a transaction.
+  This predicate obtains the label of a transaction.
     * ``Label``  _Output_  string with the transaction label.
     * ``Transaction``  _Input_  JSON model of the transaction to obtain the label.
 - ``wenet_attributes_of_transaction(Attributes, Transaction)``
-  This predicate allow to obtain the attributes of a transaction.
+  This predicate obtains the attributes of a transaction.
     * ``Attributes``  _Output_  JSON model with the transaction attributes.
     * ``Transaction``  _Input_  JSON model of the transaction to obtain the attributes.
 - ``wenet_actioneer_id_of_transaction(ActioneerId,, Transaction)``
-  This predicate allow to obtain the actioneer of a transaction.
+  This predicate obtains the user that does a transaction.
     * ``ActioneerId``  _Output_  string with the transaction actioneer. Thus, the identifier
     of the user that has done the transaction.
     * ``Transaction``  _Input_  JSON model of the transaction to obtain the identifier.
 - ``wenet_messages_of_transaction(Messages, Transaction)``
-  This predicate allow to obtain the messages of a transaction.
+  This predicate obtains the messages of a transaction.
     * ``Messages``  _Output_  array of JSON models with the transaction messages.
     * ``Transaction``  _Input_  JSON model of the transaction to obtain the messages.
 
@@ -769,33 +769,33 @@ The next predicates are used to interact with the interaction protocol engine co
     * ``Sent``  _Output_  JSON model with the sent message.
     * ``Message``  _Input_  JSON model with the message to send.
 - ``wenet_interaction_protocol_engine_get_task_user_state(State,TaskId,UserId)``
-  This predicate is used to obtain the state of an user in a task.
+  This predicate is used to obtain the state of a user in a task.
     * ``State``  _Output_  JSON model with the state of the user on the task.
     * ``TaskId``  _Input_  string identifier of the task to get the state.
     * ``UserId``  _Input_  string identifier of the user to get the state.
 - ``wenet_interaction_protocol_engine_merge_task_user_state(MergedState,TaskId,UserId,NewState)``
-  This predicate is used to change the state of an user in a task.
+  This predicate is used to change the state of a user in a task.
     * ``MergedState``  _Output_  JSON model with the modified state of the user on the task.
     * ``TaskId``  _Input_  string identifier of the task to modify the state.
     * ``UserId``  _Input_  string identifier of the user to modify the state.
     * ``NewState``  _Input_  JSON model with the new values for the state.
 - ``wenet_interaction_protocol_engine_get_community_user_state(State,CommunityId,UserId)``
-  This predicate is used to obtain the state of an user in a community.
+  This predicate is used to obtain the state of a user in a community.
     * ``State``  _Output_  JSON model with the state of the user on the community.
     * ``CommunityId``  _Input_  string identifier of the community to get the state.
     * ``UserId``  _Input_  string identifier of the user to get the state.
 - ``wenet_interaction_protocol_engine_merge_community_user_state(MergedState,CommunityId,UserId,NewState)``
-  This predicate is used to change the state of an user in a community.
+  This predicate is used to change the state of a user in a community.
     * ``MergedState``  _Output_  JSON model with the modified state of the user on the community.
     * ``CommunityId``  _Input_  string identifier of the community to modify the state.
     * ``UserId``  _Input_  string identifier of the user to modify the state.
     * ``NewState``  _Input_  JSON model with the new values for the state.
 - ``wenet_interaction_protocol_engine_get_user_state(State,UserId)``
-  This predicate is used to obtain the state of an user.
+  This predicate is used to obtain the state of a user.
     * ``State``  _Output_  JSON model with the state of the user.
     * ``UserId``  _Input_  string identifier of the user to get the state.
 - ``wenet_interaction_protocol_engine_merge_user_state(MergedState,UserId,NewState)``
-  This predicate is used to change the state of an user.
+  This predicate is used to change the state of a user.
     * ``MergedState``  _Output_  JSON model with the modified state of the user.
     * ``UserId``  _Input_  string identifier of the user to modify the state.
     * ``NewState``  _Input_  JSON model with the new values for the state.
@@ -879,7 +879,7 @@ The next predicates are used to interact with the interaction protocol engine co
     * ``TaskId``  _Input_  string with the task identifier for the event.
     * ``TransactionId``  _Input_  string with the transaction identifier for the event.
     * ``UserId``  _Input_  string with the component for the event sender.
-    * ``Delay``  _Input_  number with the seconds to wait before send the event.
+    * ``Delay``  _Input_  number with the seconds to wait before sending the event.
     * ``Particle``  _Input_  string with the particle for the event.
     * ``Content``  _Input_  JSON model with the content for the event.
 
@@ -900,13 +900,13 @@ The next predicates are used to interact with the service component.
     * ``App``  _Output_  JSON model with the obtained application data.
     * ``Id ``  _Input_  string with the identifier of the application to obtain.
 - ``wenet_id_of_app(Id, App)``
-  This predicate allow to obtain the identifier of an application.
+  This predicate obtains the identifier of an application.
     * ``Id``  _Output_  string with the identifier of the application.
     * ``App``  _Input_  JSON model of the application to obtain the identifier.
 - ``wenet_message_callback_url_of_app(Url, App)``
-  This predicate allow to obtain the URL to post the callback messages of an application.
+  This predicate obtains the URL to post the callback messages of an application.
     * ``Url``  _Output_  string with the URL to post the callback messages.
-    * ``App``  _Input_  JSON model of the application to obtain the callback url.
+    * ``App``  _Input_  JSON model of the application to obtain the callback URL.
 - ``wenet_service_get_app_users(Users,Id)``
   This predicate is used to obtain the users that are in an application.
     * ``Users``  _Output_  array of strings with the identifiers of users defined in the application.
@@ -923,19 +923,19 @@ The next predicates are used to interact with the service component.
     * ``Label``  _Input_  string with the label of the message.
     * ``Attributes``  _Input_  JSON model with the attributes of the message.
 - ``wenet_app_id_of_message(Id, Message)``
-  This predicate allow to obtain the application identifier of a message.
+  This predicate obtains the application identifier of a message.
     * ``Id``  _Output_  string with the identifier of the application.
     * ``Task``  _Input_  JSON model of the message to obtain the application identifier.
 - ``wenet_receiver_id_of_message(Id, Message)``
-  This predicate allow to obtain the receiver identifier of a message.
+  This predicate obtains the receiver identifier of a message.
     * ``Id``  _Output_  string with the identifier of the receiver.
     * ``Task``  _Input_  JSON model of the message to obtain the receiver identifier.
 - ``wenet_label_of_message(Label, Message)``
-  This predicate allow to obtain the label of a message.
+  This predicate obtains the label of a message.
     * ``Label``  _Output_  string with the label.
     * ``Task``  _Input_  JSON model of the message to obtain the label.
 - ``wenet_attributes_of_message(Attributes, Message)``
-  This predicate allow to obtain the attributes of a message.
+  This predicate obtains the attributes of a message.
     * ``Attributes``  _Output_  JSON model with the attributes.
     * ``Task``  _Input_  JSON model of the message to obtain the attributes.
 
@@ -980,12 +980,12 @@ The next predicates are used to interact with the social context builder compone
     * ``Url``  _Output_  string of the API point to the social context builder.
     * ``Paths``  _Input_  array of values used to build the API point.
 - ``wenet_social_context_builder_update_preferences(UserId,TaskId,Users)``
-  This predicate is used to update the preferences of an user.
+  This predicate is used to update the preferences of a user.
     * ``UserId``  _Input_  string with the user identifier.
     * ``TaskId``  _Input_  string with the task identifier.
     * ``Users``  _Input_  array of string with the identifiers of the preferred users.
 - ``wenet_social_context_builder_retrieve_social_explanation(SocialExplanation,UserId,TaskId)``
-  This predicate is used to get the social explanation to choose an user.
+  This predicate is used to get the social explanation to choose a user.
     * ``SocialExplanation``  _Output_  JSON model with the social explanation.
     * ``UserId``  _Input_  string with the user identifier.
     * ``TaskId``  _Input_  string with the task identifier.
@@ -1015,7 +1015,7 @@ The next predicates are used to interact with the personal context builder compo
 - ``wenet_personal_context_builder_locations(Locations,Users)``
   This predicate is used to obtain the locations of a set of users.
     * ``Locations``  _Output_  array of JSON models with the locations of the users.
-    * ``Users``  _Input_  array of strings with the identifiers of teh users to get the locations.
+    * ``Users``  _Input_  array of strings with the identifiers of the users to get the locations.
 - ``wenet_user_id_of_location(UserId,Location)``
   This predicate is used to obtain the user identifier of a location.
     * ``UserId``  _Output_  string with the user identifier of the location.
@@ -1039,11 +1039,11 @@ The next predicates are used to interact with the personal context builder compo
     * ``Longitude``  _Input_  number with the location longitude.
     * ``NumUsers``  _Input_  number with the number maximum users to get.
 - ``wenet_user_id_of_closest(UserId,ClosestUser)``
-  This predicate is used to obtain the identifier of a closest user.
+  This predicate is used to obtain the identifier of the user in the closest user location.
     * ``UserId``  _Output_  string with the user identifier of the closest user.
     * ``ClosestUser``  _Input_  JSON model with the closest user.
 - ``wenet_distance_of_closest(Distance,ClosestUser)``
-  This predicate is used to obtain the distance of a closest user to the location.
+  This predicate is used to obtain the distance in the closest user location.
     * ``Distance``  _Output_  number distance in meters of the closest user to the location.
     * ``ClosestUser``  _Input_  JSON model with the closest user.
 - ``wenet_users_of_closest(Users,ClosestUsers)``
@@ -1065,7 +1065,7 @@ The next predicates are used to interact with the personal context builder compo
 - ``wenet_filter_locations_by_distance(Filtered,Source,Locations,Min,Max)``
   This predicate filters a set of locations if they are on a range to another location.
     * ``Filtered``  _Output_  array of JSON models with the locations that are in the range distance.
-    * ``Source``  _Input_  JSON model with the location to use as origen.
+    * ``Source``  _Input_  JSON model with the location to calculate the distance to.
     * ``Locations``  _Input_  array of JSON models with the locations to filter.
     * ``Min``  _Input_  number with the minimum distance in meters to the source location. The distance is inclusive.
     * ``Max``  _Input_  number with the maximum distance in meters to the source location. The distance is inclusive.
