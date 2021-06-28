@@ -26,7 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.tasks;
 
-import eu.internetofus.common.components.ErrorMessage;
+import eu.internetofus.common.model.ErrorMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -78,8 +78,8 @@ public interface Tasks {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Initialize a created task", description = "Start the process to initialize the task execution. Thus, this verify the norms that will be used for example to initialize the task state or decide witch of the WeNet users will participate on the task.")
-  @RequestBody(description = "The norm to publish", required = true, content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/99249b00800807c94cb973b08c265e0a37f820ab/sources/wenet-models-openapi.yaml#/components/schemas/Task")))
-  @ApiResponse(responseCode = "202", description = "The creation task has accepted to be processed", content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/99249b00800807c94cb973b08c265e0a37f820ab/sources/wenet-models-openapi.yaml#/components/schemas/Task")))
+  @RequestBody(description = "The norm to publish", required = true, content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/7af902b41c0d088f33ba35efd095624aa8aa6a6a/sources/wenet-models-openapi.yaml#/components/schemas/Task")))
+  @ApiResponse(responseCode = "202", description = "The creation task has accepted to be processed", content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/7af902b41c0d088f33ba35efd095624aa8aa6a6a/sources/wenet-models-openapi.yaml#/components/schemas/Task")))
   @ApiResponse(responseCode = "400", description = "Cannot process the created task", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   public void taskCreated(@Parameter(hidden = true, required = false) JsonObject body,
       @Parameter(hidden = true, required = false) ServiceRequest context,
@@ -97,8 +97,8 @@ public interface Tasks {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Do a transaction over a task", description = "Start the process to do a task transaction. Thus, verify that it fulfill the norms, change the task state and notify the necessary WeNet users.")
-  @RequestBody(description = "The norm to publish", required = true, content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/99249b00800807c94cb973b08c265e0a37f820ab/sources/wenet-models-openapi.yaml#/components/schemas/TaskTransaction")))
-  @ApiResponse(responseCode = "202", description = "The transaction is accepted to be processed", content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/99249b00800807c94cb973b08c265e0a37f820ab/sources/wenet-models-openapi.yaml#/components/schemas/TaskTransaction")))
+  @RequestBody(description = "The norm to publish", required = true, content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/7af902b41c0d088f33ba35efd095624aa8aa6a6a/sources/wenet-models-openapi.yaml#/components/schemas/TaskTransaction")))
+  @ApiResponse(responseCode = "202", description = "The transaction is accepted to be processed", content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/7af902b41c0d088f33ba35efd095624aa8aa6a6a/sources/wenet-models-openapi.yaml#/components/schemas/TaskTransaction")))
   @ApiResponse(responseCode = "400", description = "Cannot process the task transaction", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   public void doTransaction(@Parameter(hidden = true, required = false) JsonObject body,
       @Parameter(hidden = true, required = false) ServiceRequest context,

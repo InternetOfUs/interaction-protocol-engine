@@ -30,7 +30,7 @@ import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
 import static io.reactiverse.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import eu.internetofus.common.components.ErrorMessage;
+import eu.internetofus.common.model.ErrorMessage;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolEvent;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolEventTest;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;

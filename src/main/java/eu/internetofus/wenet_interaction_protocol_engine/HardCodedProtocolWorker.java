@@ -26,18 +26,18 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import eu.internetofus.common.TimeManager;
-import eu.internetofus.common.components.Model;
-import eu.internetofus.common.components.incentive_server.Incentive;
+import eu.internetofus.common.model.TimeManager;
+import eu.internetofus.common.model.Model;
+import eu.internetofus.common.components.models.Incentive;
 import eu.internetofus.common.components.incentive_server.TaskStatus;
 import eu.internetofus.common.components.incentive_server.WeNetIncentiveServer;
 import eu.internetofus.common.components.interaction_protocol_engine.State;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
-import eu.internetofus.common.components.service.Message;
+import eu.internetofus.common.components.models.Message;
 import eu.internetofus.common.components.service.WeNetService;
 import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilder;
-import eu.internetofus.common.components.task_manager.Task;
-import eu.internetofus.common.components.task_manager.TaskTransaction;
+import eu.internetofus.common.components.models.Task;
+import eu.internetofus.common.components.models.TaskTransaction;
 import eu.internetofus.common.components.task_manager.WeNetTaskManager;
 import eu.internetofus.common.vertx.Worker;
 import io.vertx.core.AbstractVerticle;

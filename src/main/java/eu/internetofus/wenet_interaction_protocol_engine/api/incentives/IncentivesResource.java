@@ -26,8 +26,8 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.incentives;
 
-import eu.internetofus.common.components.Model;
-import eu.internetofus.common.components.incentive_server.Incentive;
+import eu.internetofus.common.model.Model;
+import eu.internetofus.common.components.models.Incentive;
 import eu.internetofus.common.vertx.ServiceResponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker;
 import eu.internetofus.wenet_interaction_protocol_engine.HardCodedProtocolWorker;

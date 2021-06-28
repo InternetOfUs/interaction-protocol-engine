@@ -26,18 +26,18 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import eu.internetofus.common.components.Model;
-import eu.internetofus.common.components.ReflectionModel;
-import eu.internetofus.common.components.incentive_server.Incentive;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
-import eu.internetofus.common.components.profile_manager.CommunityProfile;
+import eu.internetofus.common.components.models.CommunityProfile;
+import eu.internetofus.common.components.models.Incentive;
+import eu.internetofus.common.components.models.Task;
+import eu.internetofus.common.components.models.TaskTransaction;
+import eu.internetofus.common.components.models.TaskType;
+import eu.internetofus.common.components.models.WeNetUserProfile;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
-import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
 import eu.internetofus.common.components.service.App;
-import eu.internetofus.common.components.task_manager.Task;
-import eu.internetofus.common.components.task_manager.TaskTransaction;
-import eu.internetofus.common.components.task_manager.TaskType;
 import eu.internetofus.common.components.task_manager.WeNetTaskManager;
+import eu.internetofus.common.model.Model;
+import eu.internetofus.common.model.ReflectionModel;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;

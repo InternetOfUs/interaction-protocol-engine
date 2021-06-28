@@ -26,20 +26,19 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
-import static eu.internetofus.common.components.MergeAsserts.assertCanMerge;
-import static eu.internetofus.common.components.MergeAsserts.assertCannotMerge;
-import static eu.internetofus.common.components.UpdatesTest.assertCanUpdate;
-import static eu.internetofus.common.components.UpdatesTest.assertCannotUpdate;
-import static eu.internetofus.common.components.ValidationsTest.assertIsNotValid;
-import static eu.internetofus.common.components.ValidationsTest.assertIsValid;
+import static eu.internetofus.common.model.MergeAsserts.assertCanMerge;
+import static eu.internetofus.common.model.MergeAsserts.assertCannotMerge;
+import static eu.internetofus.common.model.UpdateAsserts.assertCanUpdate;
+import static eu.internetofus.common.model.UpdateAsserts.assertCannotUpdate;
+import static eu.internetofus.common.model.ValidableAsserts.assertIsNotValid;
+import static eu.internetofus.common.model.ValidableAsserts.assertIsValid;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import eu.internetofus.common.components.Model;
-import eu.internetofus.common.components.ModelTestCase;
 import eu.internetofus.common.components.StoreServices;
-import eu.internetofus.common.components.ValidationsTest;
-import eu.internetofus.common.components.profile_manager.NormTest;
-import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
+import eu.internetofus.common.components.models.ProtocolNormTest;
+import eu.internetofus.common.components.models.WeNetUserProfile;
+import eu.internetofus.common.model.Model;
+import eu.internetofus.common.model.ModelTestCase;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import io.vertx.core.Future;
@@ -78,8 +77,7 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
       model.keywords.add("keyword " + i);
     }
     model.publisherId = "Published_identifier_" + index;
-    model.norm = new NormTest().createModelExample(index);
-    model.norm.id = "norm_" + index;
+    model.norm = new ProtocolNormTest().createModelExample(index);
 
     return model;
   }
@@ -185,63 +183,6 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
   }
 
   /**
-   * Check that a model with a large name is not valid.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext context to test.
-   *
-   * @see WeNetUserProfile#validate(String, Vertx)
-   */
-  @Test
-  public void shouldModelWithLargeNameNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
-
-    this.createModelExample(1, vertx, testContext).onSuccess(model -> {
-
-      model.name = ValidationsTest.STRING_256;
-      assertIsNotValid(model, "name", vertx, testContext);
-    });
-
-  }
-
-  /**
-   * Check that a model with a large description is not valid.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext context to test.
-   *
-   * @see WeNetUserProfile#validate(String, Vertx)
-   */
-  @Test
-  public void shouldModelWithLargeDescriptionNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
-
-    this.createModelExample(1, vertx, testContext).onSuccess(model -> {
-
-      model.description = ValidationsTest.STRING_1024;
-      assertIsNotValid(model, "description", vertx, testContext);
-    });
-
-  }
-
-  /**
-   * Check that a model with a large keyword is not valid.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext context to test.
-   *
-   * @see WeNetUserProfile#validate(String, Vertx)
-   */
-  @Test
-  public void shouldModelWithLargeKeywordNotBeValid(final Vertx vertx, final VertxTestContext testContext) {
-
-    this.createModelExample(1, vertx, testContext).onSuccess(model -> {
-
-      model.keywords.add(3, ValidationsTest.STRING_256);
-      assertIsNotValid(model, "keywords[3]", vertx, testContext);
-    });
-
-  }
-
-  /**
    * Check that a model without a norm is not valid.
    *
    * @param vertx       event bus to use.
@@ -321,75 +262,10 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
           assertThat(merged).isNotEqualTo(target);
           source._creationTs = merged._creationTs;
           source._lastUpdateTs = merged._lastUpdateTs;
-          source.norm.id = merged.norm.id;
           assertThat(merged).isEqualTo(source);
 
         }));
       });
-    });
-
-  }
-
-  /**
-   * Check not merge with invalid name.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext context to test.
-   *
-   * @see PublishedNorm#merge(PublishedNorm, String, Vertx)
-   */
-  @Test
-  public void shouldNotMergeWithABadName(final Vertx vertx, final VertxTestContext testContext) {
-
-    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
-
-      final var source = new PublishedNorm();
-      source.name = ValidationsTest.STRING_256;
-      assertCannotMerge(target, source, "name", vertx, testContext);
-    });
-
-  }
-
-  /**
-   * Check not merge with invalid description.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext context to test.
-   *
-   * @see PublishedNorm#merge(PublishedNorm, String, Vertx)
-   */
-  @Test
-  public void shouldNotMergeWithABadDescription(final Vertx vertx, final VertxTestContext testContext) {
-
-    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
-
-      final var source = new PublishedNorm();
-      source.description = ValidationsTest.STRING_1024;
-      assertCannotMerge(target, source, "description", vertx, testContext);
-    });
-
-  }
-
-  /**
-   * Check not merge with invalid keyword.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext context to test.
-   *
-   * @see PublishedNorm#merge(PublishedNorm, String, Vertx)
-   */
-  @Test
-  public void shouldNotMergeWithABadKeyword(final Vertx vertx, final VertxTestContext testContext) {
-
-    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
-
-      final var source = new PublishedNorm();
-      source.keywords = new ArrayList<>();
-      source.keywords.add(" key1 ");
-      source.keywords.add(null);
-      source.keywords.add("");
-      source.keywords.add(ValidationsTest.STRING_256);
-      assertCannotMerge(target, source, "keywords[3]", vertx, testContext);
     });
 
   }
@@ -456,75 +332,10 @@ public class PublishedNormTest extends ModelTestCase<PublishedNorm> {
           assertThat(updated).isNotEqualTo(target);
           source._creationTs = updated._creationTs;
           source._lastUpdateTs = updated._lastUpdateTs;
-          source.norm.id = updated.norm.id;
           assertThat(updated).isEqualTo(source);
 
         }));
       });
-    });
-
-  }
-
-  /**
-   * Check not update with invalid name.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext context to test.
-   *
-   * @see PublishedNorm#update(PublishedNorm, String, Vertx)
-   */
-  @Test
-  public void shouldNotUpdateWithABadName(final Vertx vertx, final VertxTestContext testContext) {
-
-    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
-
-      final var source = Model.fromJsonObject(target.toJsonObject(), PublishedNorm.class);
-      source.name = ValidationsTest.STRING_256;
-      assertCannotUpdate(target, source, "name", vertx, testContext);
-    });
-
-  }
-
-  /**
-   * Check not update with invalid description.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext context to test.
-   *
-   * @see PublishedNorm#update(PublishedNorm, String, Vertx)
-   */
-  @Test
-  public void shouldNotUpdateWithABadDescription(final Vertx vertx, final VertxTestContext testContext) {
-
-    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
-
-      final var source = Model.fromJsonObject(target.toJsonObject(), PublishedNorm.class);
-      source.description = ValidationsTest.STRING_1024;
-      assertCannotUpdate(target, source, "description", vertx, testContext);
-    });
-
-  }
-
-  /**
-   * Check not update with invalid keyword.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext context to test.
-   *
-   * @see PublishedNorm#update(PublishedNorm, String, Vertx)
-   */
-  @Test
-  public void shouldNotUpdateWithABadKeyword(final Vertx vertx, final VertxTestContext testContext) {
-
-    this.createModelExample(1, vertx, testContext).onSuccess(target -> {
-
-      final var source = Model.fromJsonObject(target.toJsonObject(), PublishedNorm.class);
-      source.keywords = new ArrayList<>();
-      source.keywords.add(" key1 ");
-      source.keywords.add(null);
-      source.keywords.add("");
-      source.keywords.add(ValidationsTest.STRING_256);
-      assertCannotUpdate(target, source, "keywords[3]", vertx, testContext);
     });
 
   }

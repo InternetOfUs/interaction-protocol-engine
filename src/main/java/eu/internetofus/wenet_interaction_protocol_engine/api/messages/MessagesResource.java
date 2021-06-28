@@ -26,7 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.messages;
 
-import eu.internetofus.common.components.Model;
+import eu.internetofus.common.model.Model;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
 import eu.internetofus.common.vertx.ServiceResponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker;

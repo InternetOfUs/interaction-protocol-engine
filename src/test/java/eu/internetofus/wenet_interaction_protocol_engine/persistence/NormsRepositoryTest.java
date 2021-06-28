@@ -34,7 +34,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
-import eu.internetofus.common.components.ValidationErrorException;
+import eu.internetofus.common.model.ValidationErrorException;
 import eu.internetofus.common.vertx.ModelsPageContext;
 import eu.internetofus.wenet_interaction_protocol_engine.api.norms.PublishedNorm;
 import io.vertx.core.AsyncResult;

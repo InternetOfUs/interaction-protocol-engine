@@ -28,7 +28,7 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
 import java.util.ArrayList;
 
-import eu.internetofus.common.components.ModelTestCase;
+import eu.internetofus.common.model.ModelTestCase;
 
 /**
  * Test the {@link PublishedNormsPage}.

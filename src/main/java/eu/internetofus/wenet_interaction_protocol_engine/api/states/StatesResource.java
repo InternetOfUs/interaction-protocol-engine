@@ -25,8 +25,8 @@
  */
 package eu.internetofus.wenet_interaction_protocol_engine.api.states;
 
-import eu.internetofus.common.TimeManager;
-import eu.internetofus.common.components.Merges;
+import eu.internetofus.common.model.TimeManager;
+import eu.internetofus.common.model.Merges;
 import eu.internetofus.common.components.interaction_protocol_engine.State;
 import eu.internetofus.common.components.interaction_protocol_engine.StatesPage;
 import eu.internetofus.common.vertx.ModelContext;

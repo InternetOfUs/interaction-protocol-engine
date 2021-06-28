@@ -26,8 +26,8 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.tasks;
 
-import eu.internetofus.common.components.task_manager.Task;
-import eu.internetofus.common.components.task_manager.TaskTransaction;
+import eu.internetofus.common.components.models.Task;
+import eu.internetofus.common.components.models.TaskTransaction;
 import eu.internetofus.common.vertx.ModelContext;
 import eu.internetofus.common.vertx.ModelResources;
 import eu.internetofus.common.vertx.ServiceContext;

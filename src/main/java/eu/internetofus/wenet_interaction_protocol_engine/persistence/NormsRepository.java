@@ -26,8 +26,8 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import eu.internetofus.common.components.Model;
-import eu.internetofus.common.components.ValidationErrorException;
+import eu.internetofus.common.model.Model;
+import eu.internetofus.common.model.ValidationErrorException;
 import eu.internetofus.common.vertx.ModelsPageContext;
 import eu.internetofus.common.vertx.QueryBuilder;
 import eu.internetofus.common.vertx.Repository;

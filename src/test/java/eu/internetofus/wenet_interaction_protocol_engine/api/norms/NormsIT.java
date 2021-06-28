@@ -31,7 +31,7 @@ import static io.reactiverse.junit5.web.TestRequest.queryParam;
 import static io.reactiverse.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import eu.internetofus.common.components.ErrorMessage;
+import eu.internetofus.common.model.ErrorMessage;
 import eu.internetofus.common.vertx.AbstractModelResourcesIT;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
@@ -104,7 +104,6 @@ public class NormsIT extends AbstractModelResourcesIT<PublishedNorm, String> {
     source.id = target.id;
     source._creationTs = target._creationTs;
     source._lastUpdateTs = target._lastUpdateTs;
-    source.norm.id = target.norm.id;
     assertThat(source).isEqualTo(target);
 
   }

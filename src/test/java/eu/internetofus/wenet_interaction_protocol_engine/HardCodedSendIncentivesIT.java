@@ -28,10 +28,10 @@ package eu.internetofus.wenet_interaction_protocol_engine;
 
 import static eu.internetofus.common.components.service.WeNetServiceSimulators.waitUntilCallbacks;
 
-import eu.internetofus.common.components.Model;
-import eu.internetofus.common.components.incentive_server.IncentiveTest;
+import eu.internetofus.common.model.Model;
+import eu.internetofus.common.components.models.IncentiveTest;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
-import eu.internetofus.common.components.service.Message;
+import eu.internetofus.common.components.models.Message;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxTestContext;

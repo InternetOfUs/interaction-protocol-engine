@@ -26,15 +26,15 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import eu.internetofus.common.TimeManager;
-import eu.internetofus.common.components.Model;
+import eu.internetofus.common.model.TimeManager;
+import eu.internetofus.common.model.Model;
 import eu.internetofus.common.components.incentive_server.WeNetIncentiveServerClient;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
 import eu.internetofus.common.components.personal_context_builder.WeNetPersonalContextBuilderClient;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManagerClient;
 import eu.internetofus.common.components.service.WeNetServiceClient;
 import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilderClient;
-import eu.internetofus.common.components.task_manager.ProtocolNorm;
+import eu.internetofus.common.components.models.ProtocolNorm;
 import eu.internetofus.common.components.task_manager.WeNetTaskManagerClient;
 import eu.internetofus.common.vertx.AbstractServicesVerticle;
 import eu.internetofus.common.vertx.Worker;

@@ -26,7 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import eu.internetofus.common.components.Model;
+import eu.internetofus.common.model.Model;
 import eu.internetofus.common.components.interaction_protocol_engine.State;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;

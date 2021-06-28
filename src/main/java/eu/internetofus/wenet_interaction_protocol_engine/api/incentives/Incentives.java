@@ -26,7 +26,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.incentives;
 
-import eu.internetofus.common.components.ErrorMessage;
+import eu.internetofus.common.model.ErrorMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -79,7 +79,7 @@ public interface Incentives {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Send a incentive to an user that is involved in a protocol.", description = "Publish a incentive to encourage an user to participate on a protocol.")
-  @RequestBody(description = "The incentive to send to the user", required = true, content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/99249b00800807c94cb973b08c265e0a37f820ab/sources/wenet-models-openapi.yaml#/components/schemas/Incentive")))
+  @RequestBody(description = "The incentive to send to the user", required = true, content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/7af902b41c0d088f33ba35efd095624aa8aa6a6a/sources/wenet-models-openapi.yaml#/components/schemas/Incentive")))
   @ApiResponse(responseCode = "202", description = "If the accepted to be processed")
   @ApiResponse(responseCode = "400", description = "Bad incentive", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   void sendIncentive(@Parameter(hidden = true, required = false) JsonObject body,

@@ -28,7 +28,7 @@ package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import eu.internetofus.common.components.Model;
+import eu.internetofus.common.model.Model;
 import eu.internetofus.common.components.interaction_protocol_engine.State;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import io.vertx.core.Vertx;

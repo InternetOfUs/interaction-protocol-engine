@@ -27,7 +27,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
-import eu.internetofus.common.components.profile_manager.WeNetUserProfile;
+import eu.internetofus.common.components.models.WeNetUserProfile;
 import eu.internetofus.common.vertx.ModelContext;
 import eu.internetofus.common.vertx.ModelResources;
 import eu.internetofus.common.vertx.ServiceContext;

@@ -26,15 +26,15 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
 
-import eu.internetofus.common.components.CreateUpdateTsDetails;
-import eu.internetofus.common.components.Mergeable;
-import eu.internetofus.common.components.Merges;
-import eu.internetofus.common.components.Updateable;
-import eu.internetofus.common.components.Validable;
-import eu.internetofus.common.components.ValidationErrorException;
-import eu.internetofus.common.components.Validations;
-import eu.internetofus.common.components.profile_manager.Norm;
+import eu.internetofus.common.components.models.ProtocolNorm;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
+import eu.internetofus.common.model.CreateUpdateTsDetails;
+import eu.internetofus.common.model.Mergeable;
+import eu.internetofus.common.model.Merges;
+import eu.internetofus.common.model.Updateable;
+import eu.internetofus.common.model.Validable;
+import eu.internetofus.common.model.ValidationErrorException;
+import eu.internetofus.common.model.Validations;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.NormsRepository;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -85,8 +85,8 @@ public class PublishedNorm extends CreateUpdateTsDetails
   /**
    * The norm.
    */
-  @Schema(description = "The published norm.", ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/99249b00800807c94cb973b08c265e0a37f820ab/sources/wenet-models-openapi.yaml#/components/schemas/Norm")
-  public Norm norm;
+  @Schema(description = "The published norm.", ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/7af902b41c0d088f33ba35efd095624aa8aa6a6a/sources/wenet-models-openapi.yaml#/components/schemas/ProtocolNorm")
+  public ProtocolNorm norm;
 
   /**
    * {@inheritDoc}
@@ -95,68 +95,28 @@ public class PublishedNorm extends CreateUpdateTsDetails
   public Future<Void> validate(final String codePrefix, final Vertx vertx) {
 
     final Promise<Void> promise = Promise.promise();
-    Future<Void> future = promise.future();
-    try {
+    var future = promise.future();
 
-      this.id = Validations.validateNullableStringField(codePrefix, "id", 255, this.id);
-      if (this.id != null) {
+    if (this.id != null) {
 
-        future = future.compose(mapper -> {
+      future = Validations.composeValidateId(future, codePrefix, "id", this.id, false,
+          NormsRepository.createProxy(vertx)::searchPublishedNorm);
+    }
 
-          final Promise<Void> verifyNotRepeatedIdPromise = Promise.promise();
-          NormsRepository.createProxy(vertx).searchPublishedNorm(this.id, search -> {
+    if (this.publisherId != null) {
 
-            if (search.failed()) {
+      future = Validations.composeValidateId(future, codePrefix, "publisherId", this.publisherId, true,
+          WeNetProfileManager.createProxy(vertx)::retrieveProfile);
+    }
 
-              verifyNotRepeatedIdPromise.complete();
+    if (this.norm == null) {
 
-            } else {
+      promise.fail(new ValidationErrorException(codePrefix + ".norm", "you must specify a norm."));
 
-              verifyNotRepeatedIdPromise.fail(new ValidationErrorException(codePrefix + ".id",
-                  "The '" + this.id + "' is already used by a published norm."));
-            }
-          });
-          return verifyNotRepeatedIdPromise.future();
-        });
-      }
+    } else {
 
-      this.name = Validations.validateNullableStringField(codePrefix, "name", 255, this.name);
-      this.description = Validations.validateNullableStringField(codePrefix, "description", 1023, this.description);
-      this.keywords = Validations.validateNullableListStringField(codePrefix, "keywords", 255, this.keywords);
-      this.publisherId = Validations.validateNullableStringField(codePrefix, "publisherId", 255, this.publisherId);
-      if (this.publisherId != null) {
-
-        future = future.compose(mapper -> {
-
-          final Promise<Void> verifyPublishedExistPromise = Promise.promise();
-          WeNetProfileManager.createProxy(vertx).retrieveProfile(this.publisherId, profile -> {
-
-            if (profile.failed()) {
-
-              verifyPublishedExistPromise.fail(new ValidationErrorException(codePrefix + ".publisherId",
-                  "The '" + this.publisherId + "' is not defined as an user."));
-
-            } else {
-              verifyPublishedExistPromise.complete();
-            }
-          });
-          return verifyPublishedExistPromise.future();
-        });
-      }
-
-      if (this.norm == null) {
-
-        promise.fail(new ValidationErrorException(codePrefix + ".norm", "you must specify a norm."));
-
-      } else {
-
-        future = future.compose(map -> this.norm.validate(codePrefix + ".norm", vertx));
-        promise.complete();
-      }
-
-    } catch (final ValidationErrorException validationError) {
-
-      promise.fail(validationError);
+      future = future.compose(map -> this.norm.validate(codePrefix + ".norm", vertx));
+      promise.complete();
     }
 
     return future;
@@ -169,7 +129,7 @@ public class PublishedNorm extends CreateUpdateTsDetails
   public Future<PublishedNorm> merge(final PublishedNorm source, final String codePrefix, final Vertx vertx) {
 
     final Promise<PublishedNorm> promise = Promise.promise();
-    Future<PublishedNorm> future = promise.future();
+    var future = promise.future();
     if (source != null) {
 
       final var merged = new PublishedNorm();
@@ -195,15 +155,9 @@ public class PublishedNorm extends CreateUpdateTsDetails
         merged.publisherId = this.publisherId;
       }
 
-      merged.norm = source.norm;
-      if (merged.norm == null) {
-
-        merged.norm = new Norm();
-      }
-
-      future = future.compose(Validations.validateChain(codePrefix, vertx));
       future = future.compose(Merges.mergeField(this.norm, source.norm, codePrefix + ".norm", vertx,
           (model, mergedNorm) -> model.norm = mergedNorm));
+      future = future.compose(Validations.validateChain(codePrefix, vertx));
 
       promise.complete(merged);
       future = future.map(mergedValidatedModel -> {
@@ -228,7 +182,7 @@ public class PublishedNorm extends CreateUpdateTsDetails
   public Future<PublishedNorm> update(final PublishedNorm source, final String codePrefix, final Vertx vertx) {
 
     final Promise<PublishedNorm> promise = Promise.promise();
-    Future<PublishedNorm> future = promise.future();
+    var future = promise.future();
     if (source != null) {
 
       final var updated = new PublishedNorm();
