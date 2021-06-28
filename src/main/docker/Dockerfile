@@ -5,12 +5,11 @@ FROM maven:3.6.3-jdk-11-slim AS build
 LABEL stage=build
 ENV MAVEN_OPTS="-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
 RUN mkdir -p /build
+RUN mkdir -p /build
 WORKDIR /build
 COPY pom.xml .
-RUN mkdir -p /root/.m2
-RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn dependency:go-offline
 COPY src/ /build/src/
-RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn -DfinalName=wenet-interaction-protocol-engine -DskipTests install
+RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn -DskipTests -DfinalName=wenet-interaction-protocol-engine clean install -U
 
 # --- Run the code
 FROM ubuntu:latest
@@ -102,13 +101,13 @@ RUN chmod +x /wait
 
 EXPOSE ${API_PORT}
 CMD /wait && java -jar wenet-interaction-protocol-engine.jar -c etc \
-  -papi.host=${API_HOST} -papi.port=${API_PORT}\
-  -ppersistence.host=${DB_HOST} -ppersistence.port=${DB_PORT} -ppersistence.db_name=${DB_NAME} -ppersistence.username=${DB_USER_NAME} -ppersistence.password=${DB_USER_PASSWORD}\
-  -pwenetComponents.profileManager=${WENET_PROFILE_MANAGER_API}\
-  -pwenetComponents.taskManager=${WENET_TASK_MANAGER_API}\
-  -pwenetComponents.service=${WENET_SERVICE_API}\
-  -pwenetComponents.incentiveServer=${WENET_INCENTIVE_SERVER_API}\
-  -pwenetComponents.socialContextBuilder=${WENET_SOCIAL_CONTEXT_BUILDER_API}\
-  -pwenetComponents.personalContextBuilder=${WENET_PERSONAL_CONTEXT_BUILDER_API}\
-  -pwebClient.wenetComponentApikey=${COMP_AUTH_KEY}\
-  ${RUN_ARGS}
+	-papi.host=${API_HOST} -papi.port=${API_PORT}\
+	-ppersistence.host=${DB_HOST} -ppersistence.port=${DB_PORT} -ppersistence.db_name=${DB_NAME} -ppersistence.username=${DB_USER_NAME} -ppersistence.password=${DB_USER_PASSWORD}\
+	-pwenetComponents.profileManager=${WENET_PROFILE_MANAGER_API}\
+	-pwenetComponents.taskManager=${WENET_TASK_MANAGER_API}\
+	-pwenetComponents.service=${WENET_SERVICE_API}\
+	-pwenetComponents.incentiveServer=${WENET_INCENTIVE_SERVER_API}\
+	-pwenetComponents.socialContextBuilder=${WENET_SOCIAL_CONTEXT_BUILDER_API}\
+	-pwenetComponents.personalContextBuilder=${WENET_PERSONAL_CONTEXT_BUILDER_API}\
+	-pwebClient.wenetComponentApikey=${COMP_AUTH_KEY}\
+	${RUN_ARGS}
