@@ -25,10 +25,9 @@
   <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   <require-maven-version>3.6</require-maven-version>
-  <maven.test.failure.ignore>true</maven.test.failure.ignore>
   <finalName>${project.artifactId}-${project.version}</finalName>
   <!-- application properties -->
-  <api-version>0.15.0</api-version>
+  <api-version>0.14.0</api-version>
   <!-- Maven plugins versions -->
   <io.swagger.core.v3-version>2.1.9</io.swagger.core.v3-version>
   <maven-clean-plugin-version>3.1.0</maven-clean-plugin-version>
@@ -72,10 +71,10 @@
   <dependencies>
    <dependency>
     <groupId>eu.internetofus</groupId>
-    <artifactId>common</artifactId>
+    <artifactId>common-bom</artifactId>
     <version>${eu.internetofus.common-version}</version>
     <type>pom</type>
-    <scope>test</scope>
+    <scope>import</scope>
    </dependency>
   </dependencies>
  </dependencyManagement>
@@ -83,37 +82,31 @@
   <dependency>
    <groupId>eu.internetofus</groupId>
    <artifactId>common-vertx</artifactId>
-   <version>${eu.internetofus.common-version}</version>
   </dependency>
   <dependency>
    <groupId>eu.internetofus</groupId>
    <artifactId>common-components</artifactId>
-   <version>${eu.internetofus.common-version}</version>
   </dependency>
   <dependency>
    <groupId>eu.internetofus</groupId>
    <artifactId>common-test</artifactId>
-   <version>${eu.internetofus.common-version}</version>
    <scope>test</scope>
   </dependency>
   <dependency>
    <groupId>eu.internetofus</groupId>
    <artifactId>common-model</artifactId>
-   <version>${eu.internetofus.common-version}</version>
    <type>test-jar</type>
    <scope>test</scope>
   </dependency>
   <dependency>
    <groupId>eu.internetofus</groupId>
    <artifactId>common-vertx</artifactId>
-   <version>${eu.internetofus.common-version}</version>
    <type>test-jar</type>
    <scope>test</scope>
   </dependency>
   <dependency>
    <groupId>eu.internetofus</groupId>
    <artifactId>common-components</artifactId>
-   <version>${eu.internetofus.common-version}</version>
    <type>test-jar</type>
    <scope>test</scope>
   </dependency>
@@ -268,8 +261,7 @@
     <version>${maven-pmd-plugin-version}</version>
     <executions>
      <execution>
-      <id>named-logging-enforcement</id>
-      <phase>compile</phase>
+      <phase>verify</phase>
       <goals>
        <goal>check</goal>
        <goal>cpd-check</goal>
@@ -280,7 +272,7 @@
      </execution>
     </executions>
     <configuration>
-     <linkXref>true</linkXref>
+     <linkXRef>true</linkXRef>
      <sourceEncoding>utf-8</sourceEncoding>
      <minimumTokens>100</minimumTokens>
      <targetJdk>${java.version}</targetJdk>

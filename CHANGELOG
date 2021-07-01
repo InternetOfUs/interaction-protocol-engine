@@ -3,10 +3,11 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
-## Version 0.20.0 (2021-06-28)
+## Version 0.20.0 (2021-07-01)
 
  * Manage the states of the user and the task.
  * Change license from MIT to Apache V2.
+ * Add the norms form the profile and the task when evaluate the norms of a task.
  
 
 ## Version 0.19.0 (2021-03-31)

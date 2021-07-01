@@ -26,16 +26,16 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import eu.internetofus.common.model.TimeManager;
-import eu.internetofus.common.model.Model;
 import eu.internetofus.common.components.incentive_server.WeNetIncentiveServerClient;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
+import eu.internetofus.common.components.models.ProtocolNorm;
 import eu.internetofus.common.components.personal_context_builder.WeNetPersonalContextBuilderClient;
 import eu.internetofus.common.components.profile_manager.WeNetProfileManagerClient;
 import eu.internetofus.common.components.service.WeNetServiceClient;
 import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilderClient;
-import eu.internetofus.common.components.models.ProtocolNorm;
 import eu.internetofus.common.components.task_manager.WeNetTaskManagerClient;
+import eu.internetofus.common.model.Model;
+import eu.internetofus.common.model.TimeManager;
 import eu.internetofus.common.vertx.AbstractServicesVerticle;
 import eu.internetofus.common.vertx.Worker;
 import io.vertx.core.AbstractVerticle;
@@ -329,8 +329,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
       if (protocol.profile != null) {
 
-        // TODO add profile norms but now are not ProtocolNorm
         this.appendToInitAssertaModel(protocol.profile.toJsonObject(), "profile");
+        this.appendNorms(protocol.profile.norms, "Norms of profile ", protocol.profile.id);
       }
 
       if (protocol.community != null) {
@@ -341,17 +341,18 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
       }
 
-      if (protocol.task != null) {
-
-        this.appendToInitAssertaModel(protocol.task.toJsonObject(), "task");
-
-      }
-
       if (protocol.taskType != null) {
 
         this.appendToInitAssertaModel(protocol.taskType.toJsonObject(), "task_type");
         this.appendNorms(protocol.taskType.norms, "Norms of task type ", protocol.taskType.name, " (",
             protocol.taskType.id, ")");
+
+      }
+
+      if (protocol.task != null) {
+
+        this.appendToInitAssertaModel(protocol.task.toJsonObject(), "task");
+        this.appendNorms(protocol.task.norms, "Norms of task  ", protocol.task.id);
 
       }
 
