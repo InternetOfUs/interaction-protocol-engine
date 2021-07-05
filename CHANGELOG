@@ -3,8 +3,9 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
-## Version 0.21.0 (2021-)
+## Version 0.21.0 (2021-07-05)
 
+ * Upgrade common version that fix migrate collections stack overflow error.
 
 
 ## Version 0.20.0 (2021-07-01)
