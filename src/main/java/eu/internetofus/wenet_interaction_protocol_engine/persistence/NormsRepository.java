@@ -63,7 +63,7 @@ public interface NormsRepository {
    */
   static Future<Void> register(final Vertx vertx, final MongoClient pool, final String version) {
 
-    final var repository = new NormsRepositoryImpl(pool, version);
+    final var repository = new NormsRepositoryImpl(vertx, pool, version);
     new ServiceBinder(vertx).setAddress(NormsRepository.ADDRESS).register(NormsRepository.class, repository);
     return repository.migrateDocumentsToCurrentVersions();
 
@@ -90,7 +90,7 @@ public interface NormsRepository {
   @GenIgnore
   default Future<PublishedNorm> searchPublishedNorm(final String id) {
 
-    Promise<JsonObject> promise = Promise.promise();
+    final Promise<JsonObject> promise = Promise.promise();
     this.searchPublishedNorm(id, promise);
     return Model.fromFutureJsonObject(promise.future(), PublishedNorm.class);
 
@@ -114,7 +114,7 @@ public interface NormsRepository {
   @GenIgnore
   default Future<PublishedNorm> storePublishedNorm(final PublishedNorm norm) {
 
-    Promise<JsonObject> promise = Promise.promise();
+    final Promise<JsonObject> promise = Promise.promise();
     final var object = norm.toJsonObject();
     if (object == null) {
 
@@ -147,7 +147,7 @@ public interface NormsRepository {
   @GenIgnore
   default Future<Void> updatePublishedNorm(final PublishedNorm norm) {
 
-    Promise<Void> promise = Promise.promise();
+    final Promise<Void> promise = Promise.promise();
     final var object = norm.toJsonObject();
     if (object == null) {
 
@@ -185,9 +185,9 @@ public interface NormsRepository {
    * @return the future status of the delete action.
    */
   @GenIgnore
-  default Future<Void> deletePublishedNorm(String id) {
+  default Future<Void> deletePublishedNorm(final String id) {
 
-    Promise<Void> promise = Promise.promise();
+    final Promise<Void> promise = Promise.promise();
     this.deletePublishedNorm(id, promise);
     return promise.future();
 
@@ -272,7 +272,7 @@ public interface NormsRepository {
   default Future<PublishedNormsPage> retrievePublishedNormsPage(final JsonObject query, final JsonObject sort,
       final int offset, final int limit) {
 
-    Promise<JsonObject> promise = Promise.promise();
+    final Promise<JsonObject> promise = Promise.promise();
     this.retrievePublishedNormsPage(query, sort, offset, limit, promise);
     return Model.fromFutureJsonObject(promise.future(), PublishedNormsPage.class);
 

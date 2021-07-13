@@ -65,7 +65,7 @@ public class NormsRepositoryTest {
   @Test
   public void shouldNotFoundPublishedNormBecauseReturnedJsonObjectIsNotRight(final VertxTestContext testContext) {
 
-    final NormsRepository repository = new NormsRepositoryImpl(null, null) {
+    final NormsRepository repository = new NormsRepositoryImpl(null, null, null) {
 
       @Override
       public void searchPublishedNorm(final String id, final Handler<AsyncResult<JsonObject>> searchHandler) {
@@ -91,7 +91,7 @@ public class NormsRepositoryTest {
   @Test
   public void shouldNotStorePublishedNormBecauseReturnedJsonObjectIsNotRight(final VertxTestContext testContext) {
 
-    final NormsRepository repository = new NormsRepositoryImpl(null, null) {
+    final NormsRepository repository = new NormsRepositoryImpl(null, null, null) {
 
       @Override
       public void storePublishedNorm(final JsonObject publishednorm,
@@ -118,7 +118,7 @@ public class NormsRepositoryTest {
   public void shouldNotStorePublishedNormBecauseStoreFailed(final VertxTestContext testContext) {
 
     final Throwable cause = new IllegalArgumentException("Cause that can not be stored");
-    final NormsRepository repository = new NormsRepositoryImpl(null, null) {
+    final NormsRepository repository = new NormsRepositoryImpl(null, null, null) {
 
       @Override
       public void storePublishedNorm(final JsonObject publishednorm,
@@ -149,7 +149,7 @@ public class NormsRepositoryTest {
   public void shouldNotUpdatePublishedNormBecauseUpdateFailed(final VertxTestContext testContext) {
 
     final Throwable cause = new IllegalArgumentException("Cause that can not be updated");
-    final NormsRepository repository = new NormsRepositoryImpl(null, null) {
+    final NormsRepository repository = new NormsRepositoryImpl(null, null, null) {
 
       @Override
       public void updatePublishedNorm(final JsonObject publishednorm, final Handler<AsyncResult<Void>> updateHandler) {
@@ -177,7 +177,7 @@ public class NormsRepositoryTest {
   @Test
   public void shouldFailretrievePublishedNormsPageWhenSearchFail(final VertxTestContext testContext) {
 
-    final DummyNormsRepository repository = spy(new DummyNormsRepository());
+    final var repository = spy(new DummyNormsRepository());
     final var context = new ModelsPageContext();
     context.query = NormsRepository.createPublishedNormsPageQuery("name", "description", null, null, null, null);
     context.sort = NormsRepository.createPublishedNormsPageSort(Arrays.asList("name", "-description"));
@@ -204,7 +204,7 @@ public class NormsRepositoryTest {
   @Test
   public void shouldFailRetrievePublishedNormsPageWhenObjectNotMatch(final VertxTestContext testContext) {
 
-    final DummyNormsRepository repository = spy(new DummyNormsRepository());
+    final var repository = spy(new DummyNormsRepository());
     final var context = new ModelsPageContext();
     context.query = NormsRepository.createPublishedNormsPageQuery("name", "description", List.of("Keywords"),
         "publisherId", 0l, Long.MAX_VALUE);
@@ -232,7 +232,7 @@ public class NormsRepositoryTest {
   @Test
   public void shouldFailRetrievePublishedNormsPageWhenObjectNotFound(final VertxTestContext testContext) {
 
-    final DummyNormsRepository repository = spy(new DummyNormsRepository());
+    final var repository = spy(new DummyNormsRepository());
     final var context = new ModelsPageContext();
     context.query = NormsRepository.createPublishedNormsPageQuery("name", "description", List.of("Keywords"),
         "publisherId", null, Long.MAX_VALUE);

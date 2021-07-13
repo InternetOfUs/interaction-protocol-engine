@@ -20,8 +20,8 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import eu.internetofus.common.model.Model;
 import eu.internetofus.common.components.interaction_protocol_engine.State;
+import eu.internetofus.common.model.Model;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
@@ -57,7 +57,7 @@ public interface StatesRepository {
    */
   static Future<Void> register(final Vertx vertx, final MongoClient pool, final String version) {
 
-    final var repository = new StatesRepositoryImpl(pool, version);
+    final var repository = new StatesRepositoryImpl(vertx, pool, version);
     new ServiceBinder(vertx).setAddress(StatesRepository.ADDRESS).register(StatesRepository.class, repository);
     return repository.migrateDocumentsToCurrentVersions();
 
@@ -84,9 +84,9 @@ public interface StatesRepository {
    * @return the future search model.
    */
   @GenIgnore
-  default Future<State> searchState(final String communityId, String taskId, String userId) {
+  default Future<State> searchState(final String communityId, final String taskId, final String userId) {
 
-    Promise<JsonObject> promise = Promise.promise();
+    final Promise<JsonObject> promise = Promise.promise();
     this.searchState(communityId, taskId, userId, promise);
     return Model.fromFutureJsonObject(promise.future(), State.class);
 
@@ -113,7 +113,7 @@ public interface StatesRepository {
   @GenIgnore
   default Future<State> storeState(final State state) {
 
-    Promise<JsonObject> promise = Promise.promise();
+    final Promise<JsonObject> promise = Promise.promise();
     final var object = state.toJsonObject();
     if (object == null) {
 
@@ -146,7 +146,7 @@ public interface StatesRepository {
   @GenIgnore
   default Future<Void> updateState(final State state) {
 
-    Promise<Void> promise = Promise.promise();
+    final Promise<Void> promise = Promise.promise();
     final var object = state.toJsonObject();
     if (object == null) {
 

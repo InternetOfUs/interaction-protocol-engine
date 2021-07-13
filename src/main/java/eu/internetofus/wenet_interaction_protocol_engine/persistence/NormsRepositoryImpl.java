@@ -24,6 +24,7 @@ import eu.internetofus.common.vertx.Repository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.mongo.MongoClient;
@@ -43,12 +44,13 @@ public class NormsRepositoryImpl extends Repository implements NormsRepository {
   /**
    * Create a new service.
    *
+   * @param vertx   event bus to use.
    * @param pool    to create the connections.
    * @param version of the schemas.
    */
-  public NormsRepositoryImpl(final MongoClient pool, final String version) {
+  public NormsRepositoryImpl(final Vertx vertx, final MongoClient pool, final String version) {
 
-    super(pool, version);
+    super(vertx, pool, version);
 
   }
 

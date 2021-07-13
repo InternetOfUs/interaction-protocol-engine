@@ -20,12 +20,9 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api;
 
-import org.junit.jupiter.api.extension.ExtendWith;
-
 import eu.internetofus.common.vertx.AbstractAPIVerticleIntegrationTestCase;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
-import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
-import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Integration tests of the {@link APIVerticle}.
@@ -35,21 +32,4 @@ import io.vertx.core.json.JsonObject;
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
 public class APIVerticleIT extends AbstractAPIVerticleIntegrationTestCase {
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected String getBadRequestPostPath() {
-
-    return Norms.PATH;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected JsonObject createBadRequestPostBody() {
-
-    return new JsonObject().put("id", new JsonObject().put("key", "value"));
-  }
 }

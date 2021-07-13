@@ -26,6 +26,7 @@ import eu.internetofus.common.vertx.Repository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 
@@ -44,12 +45,13 @@ public class StatesRepositoryImpl extends Repository implements StatesRepository
   /**
    * Create a new service.
    *
+   * @param vertx   event bus to use.
    * @param pool    to create the connections.
    * @param version of the schemas.
    */
-  public StatesRepositoryImpl(final MongoClient pool, final String version) {
+  public StatesRepositoryImpl(final Vertx vertx, final MongoClient pool, final String version) {
 
-    super(pool, version);
+    super(vertx, pool, version);
 
   }
 
@@ -57,7 +59,7 @@ public class StatesRepositoryImpl extends Repository implements StatesRepository
    * {@inheritDoc}
    */
   @Override
-  public void searchState(final String communityId, String taskId, String userId,
+  public void searchState(final String communityId, final String taskId, final String userId,
       final Handler<AsyncResult<JsonObject>> searchHandler) {
 
     final var query = new QueryBuilder().withNoExistNullEqOrRegex("communityId", communityId)
