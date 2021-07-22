@@ -6,6 +6,8 @@ All notable changes to `wenet-interaction-protocol-engine` will be documented in
 ## Version 0.21.0 (2021-07-05)
 
  * Upgrade common version that fix migrate collections stack overflow error.
+ * Use new task status notification to the incentive server that inform the times
+   an action is doen by an user in a community by task type.
 
 
 ## Version 0.20.0 (2021-07-01)

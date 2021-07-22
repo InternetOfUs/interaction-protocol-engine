@@ -251,7 +251,7 @@ get_task_type(TaskType) :-
 %
 get_task_type_id(TaskTypeId) :-
 	get_task(Task),
-	wenet_task_type_of_task(TaskTypeId,Task),
+	wenet_task_type_id_of_task(TaskTypeId,Task),
 	!,
 	retractall(get_task_type_id(_)),
 	asserta(get_task_type_id(TaskTypeId))

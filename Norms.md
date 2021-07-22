@@ -486,10 +486,10 @@ These actions interact with the other components of the WeNet platform.
     * ``UserId``  _Input_  strings identifier of the user to receive the message.
     * ``Particle``  _Input_  string with the message particle.
     * ``Content``  _Input_  JSON model with the message content.
-- ``notify_incentive_server(Action,Message)``
+- ``notify_incentive_server(Action,Count)``
   This action notifies the incentive server about a change of the task.
     * ``Action``  _Input_  string with the action that has changed the task.
-    * ``Message``  _Input_  string that explains the change.
+    * ``Count``  _Input_  integer the number of times the user has done the action on the task type.
 - ``notify_volunteers_to_social_context_builder(Volunteers,UserId)``
   This action notifies the social context builder about the volunteers to do a task.
     * ``Volunteers``  _Input_  array of strings with the user identifiers that has volunteer to do a task.
@@ -956,15 +956,15 @@ The next predicates are used to interact with the incentive server component.
   This predicate is used to update the task status.
     * ``Updated``  _Output_  JSON model with the updated status.
     * ``Status``  _Input_  JSON model with the task status to update.
-- ``wenet_new_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message)``
+- ``wenet_new_task_status(Status,UserId,CommunityId,AppId,TaskId,Action,Count)``
   This predicate is used to create the task status.
     * ``Status``  _Output_  JSON model with the status.
-    * ``AppId``  _Input_  string with the application identifier of the status.
     * ``UserId``  _Input_  string with the user identifier of the status.
     * ``CommunityId``  _Input_  string with the community identifier of the status.
+    * ``AppId``  _Input_  string with the application identifier of the status.
     * ``TaskId``  _Input_  string with the task identifier of the status.
-    * ``Action``  _Input_  string with the action of the status.
-    * ``Message``  _Input_  string with the message of the status.
+    * ``Action``  _Input_  string with the action that has changes the task.
+    * ``Count``  _Input_  integer with the times the action is done by the user on the task type.
 
 
 ### Social context builder

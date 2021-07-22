@@ -48,7 +48,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
-import org.apache.commons.io.FileUtils;
 import org.tinylog.Logger;
 
 /**
@@ -509,11 +508,11 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     @Override
     public void close() throws IOException {
 
-      if (!FileUtils.deleteQuietly(this.work.toFile())) {
-
-        Logger.error("Cannot remove the working directory {}", this.work);
-
-      }
+//       if (!FileUtils.deleteQuietly(this.work.toFile())) {
+//
+//       Logger.error("Cannot remove the working directory {}", this.work);
+//
+//       }
 
     }
 

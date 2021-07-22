@@ -72,7 +72,7 @@ wenet_interaction_protocol_engine_send_message(Sent,Message) :-
 	wenet_post_json_to_url(Sent,Url,Message)
 	.
 
-%!	wenet_interaction_protocol_engine_merge_community_user_state(-State,+CommunityId,+UserId)
+%!	wenet_interaction_protocol_engine_get_community_user_state(-State,+CommunityId,+UserId)
 %
 %	Retrieve the state of an user for a community.
 %
@@ -285,15 +285,15 @@ wenet_interaction_protocol_engine_merge_task_user_state(MergedState,TaskId,UserI
 	wenet_patch_json_to_url(MergedState,Url,NewState)
 	.
 
-%!	wenet_interaction_protocol_engine_merge_community_user_state(-State,+UserId)
+%!	wenet_interaction_protocol_engine_get_user_state(-State,+UserId)
 %
 %	Retrieve the state of an user.
 %
 %	@param State of the user on the community.
 %	@param UserId identifier of the user to get the state.
 %
-wenet_interaction_protocol_engine_get_community_user_state(State,CommunityId,UserId) :-
-	wenet_interaction_protocol_engine_api_url_to(Url,['/states/users/',UserId]),
+wenet_interaction_protocol_engine_get_user_state(State,UserId) :-
+	wenet_interaction_protocol_engine_api_url_to(Url,['/users/',UserId]),
 	wenet_get_json_from_url(State,Url)
 	.
 	
@@ -305,8 +305,8 @@ wenet_interaction_protocol_engine_get_community_user_state(State,CommunityId,Use
 %	@param UserId identifier of the user to change the state.
 %	@param NewState the value to set the community user state.
 %
-wenet_interaction_protocol_engine_merge_community_user_state(MergedState,UserId,NewState) :-
-	wenet_interaction_protocol_engine_api_url_to(Url,['/states/users/',UserId]),
+wenet_interaction_protocol_engine_merge_user_state(MergedState,UserId,NewState) :-
+	wenet_interaction_protocol_engine_api_url_to(Url,['/users/',UserId]),
 	wenet_patch_json_to_url(MergedState,Url,NewState)
 	.
 
@@ -360,6 +360,6 @@ wenet_id_of_protocol_event(Id, json(Event)) :-
 %	@param Id identifier of the event to delete.
 %
 wenet_interaction_protocol_engine_delete_event(Id) :-
-	wenet_interaction_proto col_engine_api_url_to(Url,['/events/',Id]),
+	wenet_interaction_protocol_engine_api_url_to(Url,['/events/',Id]),
 	wenet_delete_to_url(Url)
 	.

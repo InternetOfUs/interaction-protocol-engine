@@ -180,8 +180,8 @@ public class ProtocolData extends ReflectionModel implements Model {
       if (protocolData.task != null) {
 
         return loadTaskTypeIn(protocolData.task.taskTypeId, protocolData, vertx)
-            .compose(protocol -> loadCommunityIn(protocolData.task.communityId, protocolData, vertx))
-            .compose(protocol -> loadProfileIn(protocolData.task.requesterId, protocolData, vertx));
+            .compose(protocol -> loadCommunityIn(protocolData.task.communityId, protocol, vertx))
+            .compose(protocol -> loadProfileIn(protocolData.task.requesterId, protocol, vertx));
 
       } else {
 
@@ -193,8 +193,8 @@ public class ProtocolData extends ReflectionModel implements Model {
 
             protocolData.task = task;
             loadTaskTypeIn(task.taskTypeId, protocolData, vertx)
-                .compose(protocol -> loadCommunityIn(task.communityId, protocolData, vertx))
-                .compose(protocol -> loadProfileIn(task.requesterId, protocolData, vertx)).onComplete(promise);
+                .compose(protocol -> loadCommunityIn(task.communityId, protocol, vertx))
+                .compose(protocol -> loadProfileIn(task.requesterId, protocol, vertx)).onComplete(promise);
 
           } else {
 

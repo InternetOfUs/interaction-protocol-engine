@@ -20,19 +20,19 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import eu.internetofus.common.model.TimeManager;
-import eu.internetofus.common.model.Model;
-import eu.internetofus.common.components.models.Incentive;
-import eu.internetofus.common.components.incentive_server.TaskStatus;
+import eu.internetofus.common.components.incentive_server.TaskTransactionStatusBody;
+import eu.internetofus.common.components.incentive_server.TaskTypeStatusBody;
 import eu.internetofus.common.components.incentive_server.WeNetIncentiveServer;
-import eu.internetofus.common.components.interaction_protocol_engine.State;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
+import eu.internetofus.common.components.models.Incentive;
 import eu.internetofus.common.components.models.Message;
-import eu.internetofus.common.components.service.WeNetService;
-import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilder;
 import eu.internetofus.common.components.models.Task;
 import eu.internetofus.common.components.models.TaskTransaction;
+import eu.internetofus.common.components.service.WeNetService;
+import eu.internetofus.common.components.social_context_builder.WeNetSocialContextBuilder;
 import eu.internetofus.common.components.task_manager.WeNetTaskManager;
+import eu.internetofus.common.model.Model;
+import eu.internetofus.common.model.TimeManager;
 import eu.internetofus.common.vertx.Worker;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -282,6 +282,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
                       Logger.trace("App[{}]: Added {} into the transaction {} of the task {}", this.task.appId, msg,
                           this.transactionId, this.task.id);
+                      HardCodedProtocolWorker.this.notifyIncentiveServerTaskChanged(this, msg.receiverId, msg.label);
                     }
 
                   });
@@ -322,6 +323,17 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
               final var addedTransaction = added.result();
               this.transactionId = addedTransaction.id;
+              if (TaskTransaction.CREATE_TASK_LABEL.equals(transaction.label)) {
+
+                HardCodedProtocolWorker.this.notifyIncentiveServerTaskCreated(this);
+
+              } else {
+
+                HardCodedProtocolWorker.this.notifyIncentiveServerTaskChanged(this, transaction.actioneerId,
+                    transaction.label);
+
+              }
+
             }
             promise.complete();
 
@@ -572,7 +584,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
     final var transaction = new TaskTransaction();
     transaction.taskId = env.task.id;
     transaction.actioneerId = env.task.requesterId;
-    transaction.label = "CREATE_TASK";
+    transaction.label = TaskTransaction.CREATE_TASK_LABEL;
     return transaction;
 
   }
@@ -604,7 +616,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           final var notification = this.createMessageWithCommunityAndTaskIds(env);
           notification.label = "TaskProposalNotification";
           env.sendTo(appUsers, notification);
-          this.notifyIncentiveServerTaskCreated(env);
 
         });
       });
@@ -656,12 +667,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
 
             });
 
-            final var status = this.createTaskStatus(env);
-            status.user_id = volunteerId;
-            status.Action = "volunteerForTask";
-            status.Message = "An user has offered to be a volunteer for a task.";
-            this.notifyIncentiveServerTaskStatusChanged(status);
-
             socialContextBuilder.retrieveSocialExplanation(volunteerId, env.task.id).onComplete(retrieve -> {
 
               final var notification = this.createMessageWithCommunityAndTaskIds(env);
@@ -705,40 +710,115 @@ public class HardCodedProtocolWorker extends AbstractVerticle
   }
 
   /**
+   * Increase the count for a key and
+   *
+   * @param communityId identifier of the community
+   * @param userId      identifier of the user.
+   * @param key         that identify the count to update.
+   *
+   * @return the future value of the updated value.
+   */
+  private Future<Integer> increasseCountFor(final String communityId, final String userId, final String key) {
+
+    return WeNetInteractionProtocolEngine.createProxy(this.vertx).retrieveCommunityUserState(communityId, userId)
+        .compose(state -> {
+
+          var attributes = state.attributes;
+          if (attributes == null) {
+
+            attributes = new JsonObject();
+          }
+          final var count = state.attributes.getInteger(key, 0) + 1;
+          state.attributes.put(key, count);
+          return WeNetInteractionProtocolEngine.createProxy(this.vertx)
+              .mergeCommunityUserState(communityId, userId, state).map(updated -> state.attributes.getInteger(key));
+        });
+
+  }
+
+  /**
    * Notify the incentive server that the task is created.
    *
    * @param env to use.
    */
   private void notifyIncentiveServerTaskCreated(final HardCodedProtocolEnvironment env) {
 
-    final var status = this.createTaskStatus(env);
-    status.user_id = env.task.requesterId;
-    status.Action = "taskCreated";
-    status.Message = "A task is created";
-    this.notifyIncentiveServerTaskStatusChanged(status);
+    this.increasseCountFor(env.task.communityId, env.task.requesterId, "incentiveServer#" + env.task.taskTypeId)
+        .onComplete(update -> {
+
+          if (update.failed()) {
+
+            Logger.trace(update.cause(), "Cannot obtain the count of created tasks.");
+
+          } else {
+
+            final var status = new TaskTypeStatusBody();
+            status.app_id = env.task.appId;
+            status.community_id = env.task.communityId;
+            status.taskTypeId = env.task.taskTypeId;
+            status.user_id = env.task.requesterId;
+            status.count = update.result();
+            WeNetIncentiveServer.createProxy(this.vertx).updateTaskTypeStatus(status).onComplete(notify -> {
+
+              if (notify.failed()) {
+
+                Logger.trace(notify.cause(), "Cannot notify incentive server that the task is created.");
+
+              } else {
+
+                Logger.trace("Incentive server notified of task created, returning {}", () -> notify.result());
+              }
+
+            });
+
+          }
+
+        });
 
   }
 
   /**
-   * Called when want to notify to the incentive server that the task status has
-   * changed.
+   * Notify the incentive server that an event happens on the task.
    *
-   * @param status to notify to the incentive server.
+   * @param env    to use.
+   * @param userId identifier of the user that has done the change.
+   * @param label  of the event.
    */
-  private void notifyIncentiveServerTaskStatusChanged(final TaskStatus status) {
+  private void notifyIncentiveServerTaskChanged(final HardCodedProtocolEnvironment env, final String userId,
+      final String label) {
 
-    WeNetIncentiveServer.createProxy(this.vertx).updateTaskStatus(status.toJsonObjectWithEmptyValues(), update -> {
+    this.increasseCountFor(env.task.communityId, userId, "incentiveServer#" + env.task.taskTypeId + "#" + label)
+        .onComplete(update -> {
 
-      if (update.failed()) {
+          if (update.failed()) {
 
-        Logger.trace(update.cause(), "Cannot notify incentive server about  {}.", status);
+            Logger.trace(update.cause(), "Cannot obtain the count of times the {} is done.", label);
 
-      } else {
+          } else {
 
-        Logger.trace("Incentive server notified of {} returning", () -> status, () -> update.result());
-      }
+            final var status = new TaskTransactionStatusBody();
+            status.app_id = env.task.appId;
+            status.community_id = env.task.communityId;
+            status.taskTypeId = env.task.taskTypeId;
+            status.user_id = userId;
+            status.label = label;
+            status.count = update.result();
+            WeNetIncentiveServer.createProxy(this.vertx).updateTaskTransactionStatus(status).onComplete(notify -> {
 
-    });
+              if (notify.failed()) {
+
+                Logger.trace(notify.cause(), "Cannot notify incentive server that the task is changed by {}.", label);
+
+              } else {
+
+                Logger.trace("Incentive server notified of task changed, returning {}", () -> notify.result());
+              }
+
+            });
+
+          }
+
+        });
 
   }
 
@@ -771,11 +851,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           env.updateTask().onComplete(update -> {
 
             Logger.trace("Added declined users {} into task {}", () -> volunteerId, () -> env.task.id);
-            final var status = this.createTaskStatus(env);
-            status.user_id = volunteerId;
-            status.Action = "refuseTask";
-            status.Message = "An user has declined to be a volunteer for a task.";
-            this.notifyIncentiveServerTaskStatusChanged(status);
 
           });
         });
@@ -824,12 +899,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           notification.attributes.put("outcome", "accepted");
           env.sendTo(notification);
 
-          final var status = this.createTaskStatus(env);
-          status.user_id = volunteerId;
-          status.Action = "acceptVolunteer";
-          status.Message = "An user is selected to provide help.";
-          this.notifyIncentiveServerTaskStatusChanged(status);
-
         });
       });
     }
@@ -867,13 +936,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           notification.receiverId = volunteerId;
           notification.attributes.put("outcome", "refused");
           env.sendTo(notification);
-
-          final var status = this.createTaskStatus(env);
-          status.user_id = volunteerId;
-          status.Action = "refuseVolunteer";
-          status.Message = "An user is refused as volunteer.";
-          this.notifyIncentiveServerTaskStatusChanged(status);
-
         });
       });
 
@@ -907,12 +969,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
         env.sendTo(volunteers, notification);
         final var accepted = env.task.attributes.getJsonArray("accepted");
         env.sendTo(accepted, notification);
-
-        final var status = this.createTaskStatus(env);
-        status.user_id = env.task.requesterId;
-        status.Action = "taskCompleted";
-        status.Message = "A task is completed with the outcome:" + outcome;
-        this.notifyIncentiveServerTaskStatusChanged(status);
 
       });
     });
@@ -988,10 +1044,7 @@ public class HardCodedProtocolWorker extends AbstractVerticle
       final var msg = this.createMessageWithTaskId(env);
       msg.label = "QuestionToAnswerMessage";
       msg.attributes.put("question", env.task.goal.name).put("userId", env.task.requesterId);
-
       env.sendTo(appUsers, msg);
-
-      this.notifyIncentiveServerAsk4HelpChanged(env, env.task.requesterId, Ask4HelkpIncentiveAction.Questions);
 
     });
 
@@ -1014,80 +1067,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
      * When an answer of an user has been selected.
      */
     AnswersAccepted;
-  }
-
-  /**
-   * Inform the incentive server that an action is done in the Q&A protocol.
-   *
-   * @param env    protocol environment.
-   * @param userId identifier of the user that has done the action.
-   * @param action that has been done.
-   */
-  protected void notifyIncentiveServerAsk4HelpChanged(final HardCodedProtocolEnvironment env, final String userId,
-      final Ask4HelkpIncentiveAction action) {
-
-    WeNetInteractionProtocolEngine.createProxy(this.vertx).retrieveCommunityUserState(env.task.communityId, userId)
-        .onComplete(search -> {
-
-          if (search.failed()) {
-
-            Logger.trace(search.cause(), "For the user {} not found community state", userId);
-          }
-          var state = search.result();
-          final var defaultCount = new JsonObject().put(Ask4HelkpIncentiveAction.Questions.name(), 0)
-              .put(Ask4HelkpIncentiveAction.Answers.name(), 0).put(Ask4HelkpIncentiveAction.AnswersAccepted.name(), 0);
-          if (state == null) {
-
-            state = new State();
-            state.communityId = env.task.communityId;
-            state.userId = userId;
-            state.attributes.put("incentives", defaultCount);
-
-          }
-
-          var incentives = state.attributes.getJsonObject("incentives", null);
-          if (incentives == null) {
-
-            state.attributes.put("incentives", defaultCount);
-            incentives = defaultCount;
-          }
-
-          final var count = incentives.getLong(action.name(), 0l) + 1;
-          incentives.put(action.name(), count);
-          WeNetInteractionProtocolEngine.createProxy(this.vertx)
-              .mergeCommunityUserState(env.task.communityId, userId, state).onComplete(merged -> {
-
-                if (merged.failed()) {
-
-                  Logger.trace(search.cause(), "For the user {} can not update community state ", userId);
-                }
-
-                final var status = this.createTaskStatus(env);
-                status.user_id = userId;
-                status.Action = action.name() + " " + count;
-                status.Message = "";
-                this.notifyIncentiveServerTaskStatusChanged(status);
-
-              });
-        });
-
-  }
-
-  /**
-   * Create the task status for the specified environment.
-   *
-   * @param env environment to get the data.
-   *
-   * @return the status with.
-   */
-  protected TaskStatus createTaskStatus(final HardCodedProtocolEnvironment env) {
-
-    final var status = new TaskStatus();
-    status.app_id = env.task.appId;
-    status.task_id = env.task.id;
-    status.community_id = env.task.communityId;
-    return status;
-
   }
 
   /**
@@ -1162,8 +1141,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           transaction.actioneerId);
       env.sendTo(msg);
 
-      this.notifyIncentiveServerAsk4HelpChanged(env, transaction.actioneerId, Ask4HelkpIncentiveAction.Answers);
-
     });
 
   }
@@ -1236,9 +1213,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
         env.sendTo(msg);
 
         Logger.trace("Closed task {} because selected {}, because {}", env.task.id, transactionId, reason);
-
-        this.notifyIncentiveServerAsk4HelpChanged(env, answerTransaction.actioneerId,
-            Ask4HelkpIncentiveAction.AnswersAccepted);
 
       });
 
