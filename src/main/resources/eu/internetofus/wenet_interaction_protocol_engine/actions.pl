@@ -57,7 +57,8 @@ add_created_transaction() :-
 	wenet_id_of_transaction(AddedTransactionId,AddedTransaction),
 	get_task_type_id(TaskTypeId),
 	atomics_to_string(["incentiveServer",TaskTypeId],'#',Key),
-	get_community_state_attribute(Count,Key,0),
+	atom_string(AtomKey,Key),
+	get_community_state_attribute(Count,AtomKey,0),
 	wenet_math(NewCount,Count + 1),
 	!,
 	put_community_state_attribute(Key,NewCount),
@@ -236,7 +237,8 @@ notify_incentive_server(Label,Count) :-
 notify_incentive_server(Label) :-
 	get_task_type_id(TaskTypeId),
 	atomics_to_string(["incentiveServer",TaskTypeId,Label],'#',Key),
-	get_community_state_attribute(Count,Key,0),
+	atom_string(AtomKey,Key),
+	get_community_state_attribute(Count,AtomKey,0),
 	wenet_math(NewCount,Count + 1),
 	put_community_state_attribute(Key,NewCount),
 	ignore(notify_incentive_server(Label,NewCount))
