@@ -727,11 +727,12 @@ public class HardCodedProtocolWorker extends AbstractVerticle
           if (attributes == null) {
 
             attributes = new JsonObject();
+            state.attributes = attributes;
           }
-          final var count = state.attributes.getInteger(key, 0) + 1;
-          state.attributes.put(key, count);
+          final var count = attributes.getInteger(key, 0) + 1;
+          attributes.put(key, count);
           return WeNetInteractionProtocolEngine.createProxy(this.vertx)
-              .mergeCommunityUserState(communityId, userId, state).map(updated -> state.attributes.getInteger(key));
+              .mergeCommunityUserState(communityId, userId, state).map(updated -> updated.attributes.getInteger(key));
         });
 
   }
