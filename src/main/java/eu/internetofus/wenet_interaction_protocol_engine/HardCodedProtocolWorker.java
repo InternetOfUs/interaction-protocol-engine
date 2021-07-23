@@ -1052,25 +1052,6 @@ public class HardCodedProtocolWorker extends AbstractVerticle
   }
 
   /**
-   * The possible action to notify the incentive server.
-   */
-  protected enum Ask4HelkpIncentiveAction {
-
-    /**
-     * When inform that an user has done an action.
-     */
-    Questions,
-    /**
-     * When the user has send and answer.
-     */
-    Answers,
-    /**
-     * When an answer of an user has been selected.
-     */
-    AnswersAccepted;
-  }
-
-  /**
    * Handle a task transaction over the questions and answers protocol.
    *
    * @param env         protocol environment.
