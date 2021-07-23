@@ -20,12 +20,6 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.help;
 
-import java.nio.charset.Charset;
-
-import javax.ws.rs.core.Response.Status;
-
-import org.apache.commons.io.IOUtils;
-
 import eu.internetofus.common.vertx.ServiceResponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.api.APIVerticle;
 import io.vertx.core.AsyncResult;
@@ -38,6 +32,9 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.service.ServiceRequest;
 import io.vertx.ext.web.api.service.ServiceResponse;
+import java.nio.charset.Charset;
+import javax.ws.rs.core.Response.Status;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Resource to provide the help about the API.
@@ -66,12 +63,13 @@ public class HelpResource implements Help {
   public HelpResource(final APIVerticle apiVerticle) {
 
     this.info = new APIInfo();
-    final var conf = apiVerticle.config().getJsonObject("help", new JsonObject()).getJsonObject("info", new JsonObject());
+    final var conf = apiVerticle.config().getJsonObject("help", new JsonObject()).getJsonObject("info",
+        new JsonObject());
     this.info.name = conf.getString("name", "wenet/interaction-protocol-engine");
     this.info.apiVersion = conf.getString("apiVersion", "Undefined");
     this.info.softwareVersion = conf.getString("softwareVersion", "Undefined");
     this.info.vendor = conf.getString("vendor", "UDT-IA, IIIA-CSIC");
-    this.info.license = conf.getString("license", "MIT");
+    this.info.license = conf.getString("license", "Apache v2");
 
   }
 
@@ -108,12 +106,14 @@ public class HelpResource implements Help {
 
       if (res.failed()) {
 
-        ServiceResponseHandlers.responseWithErrorMessage(resultHandler, Status.INTERNAL_SERVER_ERROR, "no_read_openapi", "Cannot read the OpenAPI description.");
+        ServiceResponseHandlers.responseWithErrorMessage(resultHandler, Status.INTERNAL_SERVER_ERROR, "no_read_openapi",
+            "Cannot read the OpenAPI description.");
 
       } else {
 
         final String openapi = res.result();
-        resultHandler.handle(Future.succeededFuture(new ServiceResponse().setStatusCode(Status.OK.getStatusCode()).putHeader(HttpHeaders.CONTENT_TYPE.toString(), "application/yaml").setPayload(Buffer.buffer(openapi))));
+        resultHandler.handle(Future.succeededFuture(new ServiceResponse().setStatusCode(Status.OK.getStatusCode())
+            .putHeader(HttpHeaders.CONTENT_TYPE.toString(), "application/yaml").setPayload(Buffer.buffer(openapi))));
 
       }
     });

@@ -58,7 +58,7 @@ public class APIInfo extends ReflectionModel implements Model {
   /**
    * The current vendor of the API.
    */
-  @Schema(description = "Contain information of the license of the API", example = "MIT")
+  @Schema(description = "Contain information of the license of the API", example = "Apache v2")
   public String license;
 
   /**
