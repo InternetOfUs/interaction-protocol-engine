@@ -24,7 +24,6 @@ import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAdd
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAddress.Component;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
 import eu.internetofus.common.components.models.Incentive;
-import eu.internetofus.common.components.models.Task;
 import eu.internetofus.common.components.models.TaskTransaction;
 import io.vertx.core.json.JsonObject;
 
@@ -66,19 +65,6 @@ public interface MessageForWorkerBuilder {
   /**
    * Create the message to inform that a task is created.
    *
-   * @param task that has been created.
-   *
-   * @return the message to send to the worker.
-   */
-  public static JsonObject buildCreatedTaskMessage(final Task task) {
-
-    return new JsonObject().put("type", Type.CREATED_TASK.name()).put("task", task.toJsonObject());
-
-  }
-
-  /**
-   * Create the message to inform that a task is created.
-   *
    * @param protocol information of the protocol to use.
    *
    * @return the message to send to the worker.
@@ -86,19 +72,6 @@ public interface MessageForWorkerBuilder {
   public static JsonObject buildCreatedTaskMessage(final ProtocolData protocol) {
 
     return new JsonObject().put("type", Type.CREATED_TASK.name()).put("protocol", protocol.toJsonObject());
-
-  }
-
-  /**
-   * Create the message to inform about a task transaction that has to be done.
-   *
-   * @param transaction to do.
-   *
-   * @return the message to send to the worker.
-   */
-  public static JsonObject buildDoTaskTransactionMessage(final TaskTransaction transaction) {
-
-    return new JsonObject().put("type", Type.DO_TASK_TRANSACTION.name()).put("transaction", transaction.toJsonObject());
 
   }
 
@@ -115,19 +88,6 @@ public interface MessageForWorkerBuilder {
 
     return new JsonObject().put("type", Type.DO_TASK_TRANSACTION.name()).put("transaction", transaction.toJsonObject())
         .put("protocol", protocol.toJsonObject());
-
-  }
-
-  /**
-   * Create the message to inform about an incentive to inform to the user.
-   *
-   * @param incentive to send.
-   *
-   * @return the message to send to the worker.
-   */
-  public static JsonObject buildSendIncentiveMessage(final Incentive incentive) {
-
-    return new JsonObject().put("type", Type.SEND_INCENTIVE.name()).put("incentive", incentive.toJsonObject());
 
   }
 
