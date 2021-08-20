@@ -27,7 +27,6 @@ import eu.internetofus.common.vertx.ModelResources;
 import eu.internetofus.common.vertx.ServiceContext;
 import eu.internetofus.common.vertx.ServiceResponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker;
-import eu.internetofus.wenet_interaction_protocol_engine.HardCodedProtocolWorker;
 import eu.internetofus.wenet_interaction_protocol_engine.MessageForWorkerBuilder;
 import eu.internetofus.wenet_interaction_protocol_engine.ProtocolData;
 import io.vertx.core.AsyncResult;
@@ -79,17 +78,8 @@ public class TasksResource implements Tasks {
 
       ProtocolData.createWith(model.source, this.vertx).onSuccess(protocol -> {
 
-        if (!protocol.hasProtocolNorms()) {
-          // it is a hard-coded protocol
-          final var message = MessageForWorkerBuilder.buildCreatedTaskMessage(model.source);
-          this.vertx.eventBus().publish(HardCodedProtocolWorker.ADDRESSS, message);
-
-        } else {
-          // process the message
-          final var message = MessageForWorkerBuilder.buildProtocolMessageForCreatedTask(protocol);
-          this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
-
-        }
+        final var message = MessageForWorkerBuilder.buildProtocolMessageForCreatedTask(protocol);
+        this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
 
       }).onFailure(cause -> {
 
@@ -118,17 +108,9 @@ public class TasksResource implements Tasks {
 
       ProtocolData.createWith(model.source, this.vertx).onSuccess(protocol -> {
 
-        if (!protocol.hasProtocolNorms()) {
-          // it is a hard-coded protocol
-          final var message = MessageForWorkerBuilder.buildDoTaskTransactionMessage(model.source);
-          this.vertx.eventBus().publish(HardCodedProtocolWorker.ADDRESSS, message);
-
-        } else {
-          // process the message
-          final var message = MessageForWorkerBuilder.buildProtocolMessageForDoTaskTransaction(model.source, protocol);
-          this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
-
-        }
+        // process the message
+        final var message = MessageForWorkerBuilder.buildProtocolMessageForDoTaskTransaction(model.source, protocol);
+        this.vertx.eventBus().publish(EngineWorker.ADDRESSS, message);
 
       }).onFailure(cause -> {
 

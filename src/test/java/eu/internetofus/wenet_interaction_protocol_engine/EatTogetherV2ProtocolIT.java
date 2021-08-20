@@ -20,17 +20,18 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import eu.internetofus.common.components.HardcodedEatTogetherProtocolITC;
+import eu.internetofus.common.protocols.DefaultProtocols;
+import eu.internetofus.common.protocols.EatTogetherV2ProtocolITC;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Interaction test over the hardcoded eat together protocol. ATTENTION: This
+ * Check the {@link DefaultProtocols#EAT_TOGETHER_V2} protocol. ATTENTION: This
  * test is sequential and maintains the state between methods. In other words,
  * you must to run the entire test methods on the specified order to work.
  *
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class HardcodedEatTogetherProtocolIT extends HardcodedEatTogetherProtocolITC {
+public class EatTogetherV2ProtocolIT extends EatTogetherV2ProtocolITC {
 
 }

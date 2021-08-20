@@ -150,7 +150,9 @@ get_message(Message) :-
 %	@param Profile json definition of the profile.
 %
 get_profile(Profile) :-
-	wenet_protocol_profile_file(FilePath),
+	(
+		current_predicate(wenet_protocol_profile_file/1)->wenet_protocol_profile_file(FilePath);false
+	),
 	wenet_read_json_from_file(Profile,FilePath),
 	!,
 	retractall(get_profile(_)),
@@ -178,7 +180,9 @@ get_profile_id(ProfileId) :-
 %	@param Community json definition of the community.
 %
 get_community(Community) :-
-	wenet_protocol_community_file(FilePath),
+	(
+		current_predicate(wenet_protocol_community_file/1)->wenet_protocol_community_file(FilePath);false
+	),
 	wenet_read_json_from_file(Community,FilePath),
 	!,
 	retractall(get_community(_)),
@@ -207,7 +211,9 @@ get_community_id(CommunityId) :-
 %	@param Task json definition of the task.
 %
 get_task(Task) :-
-	wenet_protocol_task_file(FilePath),
+	(
+		current_predicate(wenet_protocol_task_file/1)->wenet_protocol_task_file(FilePath);false
+	),
 	wenet_read_json_from_file(Task,FilePath),
 	!,
 	retractall(get_task(_)),
@@ -236,7 +242,9 @@ get_task_id(TaskId) :-
 %	@param TaskType json definition of the task type.
 %
 get_task_type(TaskType) :-
-	wenet_protocol_task_type_file(FilePath),
+	(
+		current_predicate(wenet_protocol_task_type_file/1)->wenet_protocol_task_type_file(FilePath);false
+	),
 	wenet_read_json_from_file(TaskType,FilePath),
 	!,
 	retractall(get_task_type(_)),

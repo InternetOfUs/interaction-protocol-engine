@@ -20,10 +20,10 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import eu.internetofus.common.components.models.Incentive;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAddress;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAddress.Component;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
+import eu.internetofus.common.components.models.Incentive;
 import eu.internetofus.common.components.models.Task;
 import eu.internetofus.common.components.models.TaskTransaction;
 import io.vertx.core.json.JsonObject;
@@ -31,7 +31,6 @@ import io.vertx.core.json.JsonObject;
 /**
  * Component used to create the messages that can be wend to a worker.
  *
- * @see HardCodedProtocolWorker
  * @see EngineWorker
  *
  * @author UDT-IA, IIIA-CSIC
