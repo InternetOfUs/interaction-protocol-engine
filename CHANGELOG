@@ -3,6 +3,11 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
+## Version 0.22.0 (2021--)
+
+ * Add new social context builder ranking by answers.
+
+
 ## Version 0.21.0 (2021-08-23)
 
  * Upgrade common version that fix migrate collections stack overflow error.
