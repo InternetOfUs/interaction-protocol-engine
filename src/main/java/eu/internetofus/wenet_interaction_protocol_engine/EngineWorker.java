@@ -75,7 +75,8 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
    */
   public static final String[] PROLOG_FILE_NAMES = { "common.pl", "profile_manager.pl", "task_manager.pl",
       "interaction_protocol_engine.pl", "social_context_builder.pl", "service.pl", "incentive_server.pl",
-      "personal_context_builder.pl", "conditions.pl", "actions.pl", "engine.pl", "main.pl", "ontology.pl", "norms.pl" };
+      "personal_context_builder.pl", "conditions.pl", "actions.pl", "engine.pl", "main.pl", "ontology.pl", "norms.pl",
+      "deprecated.pl" };
 
   /**
    * The component that will consume the messages.

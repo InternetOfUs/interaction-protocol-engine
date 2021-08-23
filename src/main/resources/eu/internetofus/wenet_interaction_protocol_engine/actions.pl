@@ -1,23 +1,17 @@
 %
 % Copyright (c) 2019 - 2022 UDT-IA, IIIA-CSIC
 %
-% Permission is hereby granted, free of charge, to any person obtaining a copy
-% of this software and associated documentation files (the "Software"), to deal
-% in the Software without restriction, including without limitation the rights
-% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-% copies of the Software, and to permit persons to whom the Software is
-% furnished to do so, subject to the following conditions:
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
 %
-% The above copyright notice and this permission notice shall be included in all
-% copies or substantial portions of the Software.
+%     http://www.apache.org/licenses/LICENSE-2.0
 %
-% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-% SOFTWARE.
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
 %
 
 %
@@ -33,8 +27,13 @@
 	put_task_attribute/2,
 	send_messages/3,
 	send_message/3,
-	notify_incentive_server/1,
-	notify_incentive_server/2,
+	notify_incentive_server_transaction_done/1,
+	notify_incentive_server_transaction_done/2,
+	notify_incentive_server_message_sent/1,
+	notify_incentive_server_message_sent/2,
+	notify_incentive_server_task_created/0,
+	notify_incentive_server_task_created/1,
+	notify_incentive_server_task_created/2,
 	notify_volunteers_to_social_context_builder/2,
 	close_task/0,
 	merge_task/1,
@@ -55,21 +54,54 @@ add_created_transaction() :-
 	InitialTransaction = json([taskId=TaskId,actioneerId=ProfileId,label='CREATE_TASK']),
 	ignore(wenet_task_manager_add_transaction_into_task(AddedTransaction,TaskId,InitialTransaction)),
 	wenet_id_of_transaction(AddedTransactionId,AddedTransaction),
-	get_task_type_id(TaskTypeId),
-	atomics_to_string(["incentiveServer",TaskTypeId],'#',Key),
-	atom_string(AtomKey,Key),
-	get_community_state_attribute(Count,AtomKey,0),
-	wenet_math(NewCount,Count + 1),
-	!,
-	put_community_state_attribute(Key,NewCount),
-	get_community_id(CommunityId),
-	get_app_id(AppId),
-	wenet_new_task_type_status(Status,ProfileId,CommunityId,AppId,TaskTypeId,NewCount),
-	ignore(wenet_incentive_server_update_task_type_status(_,Status)),
+	ignore(notify_incentive_server_task_created()),
 	!,
 	asserta(get_transaction(AddedTransaction)),
 	asserta(get_transaction_id(AddedTransactionId)),
 	asserta(add_created_transaction())
+	.
+
+%!	notify_incentive_server_task_created(+Label,+Count)
+%
+%	Notify the incentive server that a task of the specified task type is
+%	created Count times.
+%
+%	@param TaskTypeId the identifier of the task type of the created task.
+%	@param Count of the task types that has bene created.
+%
+notify_incentive_server_task_created(TaskTypeId,Count) :-
+	get_profile_id(ProfileId),
+	get_community_id(CommunityId),
+	get_app_id(AppId),
+	wenet_new_task_type_status(Status,ProfileId,CommunityId,AppId,TaskTypeId,Count),
+	!,
+	ignore(wenet_incentive_server_update_task_type_status(_,Status))
+	.
+
+%!	notify_incentive_server_task_created(+TaskTypeId)
+%
+%	Notify the incentive server that a task of the specific task type is created.
+%   The number of times is counted as a community user property per user and task type.
+%
+%	@param TaskTypeId the identifier of the task type of the created task.
+%
+notify_incentive_server_task_created(TaskTypeId) :-
+	atomics_to_string(["incentiveServer",TaskTypeId],'#',Key),
+	atom_string(AtomKey,Key),
+	get_community_state_attribute(Count,AtomKey,0),
+	wenet_math(NewCount,Count + 1),
+	put_community_state_attribute(Key,NewCount),
+	ignore(notify_incentive_server_task_created(TaskTypeId,NewCount))
+	.
+
+%!	notify_incentive_server_task_created()
+%
+%	Notify the incentive server that the current task is created.
+%   The number of times is counted as a community user property per user.
+%
+notify_incentive_server_task_created() :-
+	get_task_type_id(TaskTypeId),
+	ignore(notify_incentive_server_task_created(TaskTypeId))
 	.
 
 %!	add_message_transaction()
@@ -96,7 +128,7 @@ add_transaction(Transaction) :-
 	ignore(wenet_task_manager_add_transaction_into_task(AddedTransaction,TaskId,Transaction)),
 	wenet_id_of_transaction(AddedTransactionId,AddedTransaction),
 	wenet_label_of_transaction(Label,AddedTransaction),
-	ignore(notify_incentive_server(Label)),
+	ignore(notify_incentive_server_transaction_done(Label)),
 	!,
 	asserta(get_transaction(AddedTransaction)),
 	asserta(get_transaction_id(AddedTransactionId))
@@ -143,7 +175,7 @@ send_user_message(Label,Content) :-
 		->ignore(wenet_task_manager_add_message_into_transaction(_,TaskId,TransactionId,Message))
 		;true
 	),
-	ignore(notify_incentive_server(Label)),
+	ignore(notify_incentive_server_message_sent(Label)),
 	!
 	.
 
@@ -210,14 +242,14 @@ send_message(ReceiverUserId,Particle,Content) :-
 	ignore(wenet_interaction_protocol_engine_send_message(_,Message))
 	.
 
-%!	notify_incentive_server(+Label,+Count)
+%!	notify_incentive_server_transaction_done(+Label,+Count)
 %
-%	Notify the incentive server that an action is done in a task a number of times.
+%	Notify the incentive server that a transaction is done Count times in a task.
 %
-%	@param Label that has changed the task.
-%	@param Count of the action.
+%	@param Label of the transaction that has been done.
+%	@param Count the number of times the user has done the transaction on the community for the current task type.
 %
-notify_incentive_server(Label,Count) :-
+notify_incentive_server_transaction_done(Label,Count) :-
 	get_profile_id(UserId),
 	get_community_id(CommunityId),
 	get_app_id(AppId),
@@ -227,21 +259,43 @@ notify_incentive_server(Label,Count) :-
 	ignore(wenet_incentive_server_update_task_transaction_status(_,Status))
 	.
 
-%!	notify_incentive_server(+Label)
+%!	notify_incentive_server_transaction_done(+Label)
 %
-%	Notify the incentive server that an action is done in a task. The number
-%	of times is counted as a community user property per user and task type.
+%	Notify the incentive server that a transaction has been done in a task.
+%   The number of times is counted as a community user property per user and task type.
 %
 %	@param Label that has changed the task.
 %
-notify_incentive_server(Label) :-
+notify_incentive_server_transaction_done(Label) :-
 	get_task_type_id(TaskTypeId),
 	atomics_to_string(["incentiveServer",TaskTypeId,Label],'#',Key),
 	atom_string(AtomKey,Key),
 	get_community_state_attribute(Count,AtomKey,0),
 	wenet_math(NewCount,Count + 1),
 	put_community_state_attribute(Key,NewCount),
-	ignore(notify_incentive_server(Label,NewCount))
+	ignore(notify_incentive_server_transaction_done(Label,NewCount))
+	.
+
+%!	notify_incentive_server_message_sent(+Label,+Count)
+%
+%	Notify the incentive server that a message is sent Count times in a task.
+%
+%	@param Label that has changed the task.
+%	@param Count of the action.
+%
+notify_incentive_server_message_sent(Label,Count) :-
+	notify_incentive_server_transaction_done(Label,Count)
+	.
+
+%!	notify_incentive_server_message_sent(+Label)
+%
+%	Notify the incentive server that a message has been sent to a user in a task.
+%   The number of times is counted as a community user property per user and task type.
+%
+%	@param Label that has changed the task.
+%
+notify_incentive_server_message_sent(Label) :-
+	notify_incentive_server_transaction_done(Label)
 	.
 
 %!	notify_social_context_builder
