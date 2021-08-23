@@ -1,36 +1,24 @@
 /*
  * -----------------------------------------------------------------------------
  *
- * Copyright (c) 2019 - 2022 UDT-IA, IIIA-CSIC
+ * Copyright 2019 - 2022 UDT-IA, IIIA-CSIC
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  * -----------------------------------------------------------------------------
  */
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.help;
-
-import java.nio.charset.Charset;
-
-import javax.ws.rs.core.Response.Status;
-
-import org.apache.commons.io.IOUtils;
 
 import eu.internetofus.common.vertx.ServiceResponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.api.APIVerticle;
@@ -44,6 +32,9 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.service.ServiceRequest;
 import io.vertx.ext.web.api.service.ServiceResponse;
+import java.nio.charset.Charset;
+import javax.ws.rs.core.Response.Status;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Resource to provide the help about the API.
@@ -72,12 +63,13 @@ public class HelpResource implements Help {
   public HelpResource(final APIVerticle apiVerticle) {
 
     this.info = new APIInfo();
-    final var conf = apiVerticle.config().getJsonObject("help", new JsonObject()).getJsonObject("info", new JsonObject());
+    final var conf = apiVerticle.config().getJsonObject("help", new JsonObject()).getJsonObject("info",
+        new JsonObject());
     this.info.name = conf.getString("name", "wenet/interaction-protocol-engine");
     this.info.apiVersion = conf.getString("apiVersion", "Undefined");
     this.info.softwareVersion = conf.getString("softwareVersion", "Undefined");
     this.info.vendor = conf.getString("vendor", "UDT-IA, IIIA-CSIC");
-    this.info.license = conf.getString("license", "MIT");
+    this.info.license = conf.getString("license", "Apache v2");
 
   }
 
@@ -114,12 +106,14 @@ public class HelpResource implements Help {
 
       if (res.failed()) {
 
-        ServiceResponseHandlers.responseWithErrorMessage(resultHandler, Status.INTERNAL_SERVER_ERROR, "no_read_openapi", "Cannot read the OpenAPI description.");
+        ServiceResponseHandlers.responseWithErrorMessage(resultHandler, Status.INTERNAL_SERVER_ERROR, "no_read_openapi",
+            "Cannot read the OpenAPI description.");
 
       } else {
 
         final String openapi = res.result();
-        resultHandler.handle(Future.succeededFuture(new ServiceResponse().setStatusCode(Status.OK.getStatusCode()).putHeader(HttpHeaders.CONTENT_TYPE.toString(), "application/yaml").setPayload(Buffer.buffer(openapi))));
+        resultHandler.handle(Future.succeededFuture(new ServiceResponse().setStatusCode(Status.OK.getStatusCode())
+            .putHeader(HttpHeaders.CONTENT_TYPE.toString(), "application/yaml").setPayload(Buffer.buffer(openapi))));
 
       }
     });

@@ -49,24 +49,14 @@
   <gmavenplus-plugin-version>1.12.1</gmavenplus-plugin-version>
   <groovy-version>3.0.8</groovy-version>
   <!-- Library versions -->
-  <eu.internetofus.common-version>0.7.0</eu.internetofus.common-version>
+  <eu.internetofus.common-version>0.10.0</eu.internetofus.common-version>
  </properties>
  <repositories>
   <repository>
    <id>gitlab-maven</id>
-   <url>https://gitlab.iiia.csic.es/api/v4/projects/443/packages/maven</url>
+   <url>https://gitlab.iiia.csic.es/api/v4/groups/internetofus/-/packages/maven</url>
   </repository>
  </repositories>
- <distributionManagement>
-  <repository>
-   <id>gitlab-maven</id>
-   <url>https://gitlab.iiia.csic.es/api/v4/projects/443/packages/maven</url>
-  </repository>
-  <snapshotRepository>
-   <id>gitlab-maven</id>
-   <url>https://gitlab.iiia.csic.es/api/v4/projects/443/packages/maven</url>
-  </snapshotRepository>
- </distributionManagement>
  <dependencyManagement>
   <dependencies>
    <dependency>
@@ -107,6 +97,17 @@
   <dependency>
    <groupId>eu.internetofus</groupId>
    <artifactId>common-components</artifactId>
+   <type>test-jar</type>
+   <scope>test</scope>
+  </dependency>
+  <dependency>
+   <groupId>eu.internetofus</groupId>
+   <artifactId>common-protocols</artifactId>
+   <scope>test</scope>
+  </dependency>
+  <dependency>
+   <groupId>eu.internetofus</groupId>
+   <artifactId>common-protocols</artifactId>
    <type>test-jar</type>
    <scope>test</scope>
   </dependency>

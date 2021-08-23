@@ -1,23 +1,17 @@
 %
 % Copyright (c) 2019 - 2022 UDT-IA, IIIA-CSIC
 %
-% Permission is hereby granted, free of charge, to any person obtaining a copy
-% of this software and associated documentation files (the "Software"), to deal
-% in the Software without restriction, including without limitation the rights
-% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-% copies of the Software, and to permit persons to whom the Software is
-% furnished to do so, subject to the following conditions:
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
 %
-% The above copyright notice and this permission notice shall be included in all
-% copies or substantial portions of the Software.
+%     http://www.apache.org/licenses/LICENSE-2.0
 %
-% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-% SOFTWARE.
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
 %
 
 %
@@ -150,7 +144,9 @@ get_message(Message) :-
 %	@param Profile json definition of the profile.
 %
 get_profile(Profile) :-
-	wenet_protocol_profile_file(FilePath),
+	(
+		current_predicate(wenet_protocol_profile_file/1)->wenet_protocol_profile_file(FilePath);false
+	),
 	wenet_read_json_from_file(Profile,FilePath),
 	!,
 	retractall(get_profile(_)),
@@ -178,7 +174,9 @@ get_profile_id(ProfileId) :-
 %	@param Community json definition of the community.
 %
 get_community(Community) :-
-	wenet_protocol_community_file(FilePath),
+	(
+		current_predicate(wenet_protocol_community_file/1)->wenet_protocol_community_file(FilePath);false
+	),
 	wenet_read_json_from_file(Community,FilePath),
 	!,
 	retractall(get_community(_)),
@@ -207,7 +205,9 @@ get_community_id(CommunityId) :-
 %	@param Task json definition of the task.
 %
 get_task(Task) :-
-	wenet_protocol_task_file(FilePath),
+	(
+		current_predicate(wenet_protocol_task_file/1)->wenet_protocol_task_file(FilePath);false
+	),
 	wenet_read_json_from_file(Task,FilePath),
 	!,
 	retractall(get_task(_)),
@@ -236,7 +236,9 @@ get_task_id(TaskId) :-
 %	@param TaskType json definition of the task type.
 %
 get_task_type(TaskType) :-
-	wenet_protocol_task_type_file(FilePath),
+	(
+		current_predicate(wenet_protocol_task_type_file/1)->wenet_protocol_task_type_file(FilePath);false
+	),
 	wenet_read_json_from_file(TaskType,FilePath),
 	!,
 	retractall(get_task_type(_)),
@@ -251,7 +253,7 @@ get_task_type(TaskType) :-
 %
 get_task_type_id(TaskTypeId) :-
 	get_task(Task),
-	wenet_task_type_of_task(TaskTypeId,Task),
+	wenet_task_type_id_of_task(TaskTypeId,Task),
 	!,
 	retractall(get_task_type_id(_)),
 	asserta(get_task_type_id(TaskTypeId))

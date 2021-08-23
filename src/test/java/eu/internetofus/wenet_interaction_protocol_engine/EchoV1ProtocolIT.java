@@ -18,9 +18,20 @@
  * -----------------------------------------------------------------------------
  */
 
+package eu.internetofus.wenet_interaction_protocol_engine;
+
+import eu.internetofus.common.protocols.DefaultProtocols;
+import eu.internetofus.common.protocols.EchoV1ProtocolITC;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 /**
- * The web services used to manage the received messages.
+ * Check the {@link DefaultProtocols#ECHO_V1} protocol. ATTENTION: This test is
+ * sequential and maintains the state between methods. In other words, you must
+ * to run the entire test methods on the specified order to work.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-package eu.internetofus.wenet_interaction_protocol_engine.api.messages;
+@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
+public class EchoV1ProtocolIT extends EchoV1ProtocolITC {
+
+}

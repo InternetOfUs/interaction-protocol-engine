@@ -18,9 +18,21 @@
  * -----------------------------------------------------------------------------
  */
 
+package eu.internetofus.wenet_interaction_protocol_engine;
+
+import eu.internetofus.common.protocols.Ask4HelpV2ProtocolITC;
+import eu.internetofus.common.protocols.DefaultProtocols;
+
+import org.junit.jupiter.api.extension.ExtendWith;
+
 /**
- * The web services used to manage the received messages.
+ * Check the {@link DefaultProtocols#ASK_4_HELP_V2} protocol. ATTENTION: This
+ * test is sequential and maintains the state between methods. In other words,
+ * you must to run the entire test methods on the specified order to work.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-package eu.internetofus.wenet_interaction_protocol_engine.api.messages;
+@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
+public class Ask4HelpV2ProtocolIT extends Ask4HelpV2ProtocolITC {
+
+}

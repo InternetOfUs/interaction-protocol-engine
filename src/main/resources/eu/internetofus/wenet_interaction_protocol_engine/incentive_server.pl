@@ -1,29 +1,25 @@
 %
 % Copyright (c) 2019 - 2022 UDT-IA, IIIA-CSIC
 %
-% Permission is hereby granted, free of charge, to any person obtaining a copy
-% of this software and associated documentation files (the "Software"), to deal
-% in the Software without restriction, including without limitation the rights
-% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-% copies of the Software, and to permit persons to whom the Software is
-% furnished to do so, subject to the following conditions:
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
 %
-% The above copyright notice and this permission notice shall be included in all
-% copies or substantial portions of the Software.
+%     http://www.apache.org/licenses/LICENSE-2.0
 %
-% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-% SOFTWARE.
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
 %
 
 :- dynamic
 	wenet_incentive_server_api_url_to/2,
-	wenet_incentive_server_update_task_status/2,
-	wenet_new_task_status/8
+	wenet_incentive_server_update_task_transaction_status/2,
+	wenet_new_task_transaction_status/7,
+	wenet_incentive_server_update_task_type_status/2,
+	wenet_new_task_type_status/6
 	.
 
 %!	wenet_incentive_server_api_url_to(-Url,+Paths)
@@ -35,30 +31,57 @@ wenet_incentive_server_api_url_to(Url,Paths) :-
 	atomics_to_string([Api|Paths],Url)
 	.
 
-%!	wenet_incentive_server_update_task_status(-Updated,+Status)
+%!	wenet_incentive_server_update_task_transaction_status(-Updated,+Status)
 %
-%	Update the task status.
+%	Update the task transaction status.
 %
 %	@param Updated the updated status.
 %	@param Status to update.
 %
-wenet_incentive_server_update_task_status(Updated,Status) :-
-	wenet_incentive_server_api_url_to(Url,['/Tasks/TaskStatus/']),
+wenet_incentive_server_update_task_transaction_status(Updated,Status) :-
+	wenet_incentive_server_api_url_to(Url,['/Tasks/TaskTransactionStatus/']),
 	wenet_post_json_to_url(Updated,Url,Status)
 	.
 
-%!	wenet_new_task_status(-Status,+AppId,+UserId,+CommunityId,+TaskId,+Action,+Message)
+%!	wenet_new_task_transaction_status(-Status,+UserId,+CommunityId,+AppId,+TaskTypeId,+Label,+Count)
 %
 %	Create a task status.
 %
 %	@param Status that has been created.
-%	@param AppId of the status.
 %	@param UserId of the status.
 %	@param CommunityId of the status.
-%	@param TaskId of the status.
-%	@param Action of the status.
-%	@param Message of the status.
+%	@param AppId of the status.
+%	@param TaskTypeId of the status.
+%	@param Label that change the task.
+%	@param Count of the action.
 %
-wenet_new_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message) :-
-	Status = json([app_id=AppId,user_id=UserId,community_id=CommunityId,task_id=TaskId,'Action'=Action,'Message'=Message])
+wenet_new_task_transaction_status(Status,UserId,CommunityId,AppId,TaskTypeId,Label,Count) :-
+	Status = json([user_id=UserId,community_id=CommunityId,app_id=AppId,taskTypeId=TaskTypeId,label=Label,count=Count])
+	.
+
+%!	wenet_incentive_server_update_task_type_status(-Updated,+Status)
+%
+%	Update the task type status.
+%
+%	@param Updated the updated status.
+%	@param Status to update.
+%
+wenet_incentive_server_update_task_type_status(Updated,Status) :-
+	wenet_incentive_server_api_url_to(Url,['/Tasks/TaskTypeStatus/']),
+	wenet_post_json_to_url(Updated,Url,Status)
+	.
+
+%!	wenet_new_task_type_status(-Status,+UserId,+CommunityId,+AppId,+TaskTypeId,+Count)
+%
+%	Create a task status.
+%
+%	@param Status that has been created.
+%	@param UserId of the status.
+%	@param CommunityId of the status.
+%	@param AppId of the status.
+%	@param TaskTypeId of the status.
+%	@param Count of the action.
+%
+wenet_new_task_type_status(Status,UserId,CommunityId,AppId,TaskTypeId,Count) :-
+	Status = json([user_id=UserId,community_id=CommunityId,app_id=AppId,taskTypeId=TaskTypeId,count=Count])
 	.

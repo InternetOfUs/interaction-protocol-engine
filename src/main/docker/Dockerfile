@@ -5,7 +5,6 @@ FROM maven:3.6.3-jdk-11-slim AS build
 LABEL stage=build
 ENV MAVEN_OPTS="-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
 RUN mkdir -p /build
-RUN mkdir -p /build
 WORKDIR /build
 COPY pom.xml .
 COPY src/ /build/src/

@@ -1,43 +1,35 @@
 /*
  * -----------------------------------------------------------------------------
  *
- * Copyright (c) 2019 - 2022 UDT-IA, IIIA-CSIC
+ * Copyright 2019 - 2022 UDT-IA, IIIA-CSIC
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  * -----------------------------------------------------------------------------
  */
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import eu.internetofus.common.components.models.Incentive;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAddress;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolAddress.Component;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
-import eu.internetofus.common.components.models.Task;
+import eu.internetofus.common.components.models.Incentive;
 import eu.internetofus.common.components.models.TaskTransaction;
 import io.vertx.core.json.JsonObject;
 
 /**
  * Component used to create the messages that can be wend to a worker.
  *
- * @see HardCodedProtocolWorker
  * @see EngineWorker
  *
  * @author UDT-IA, IIIA-CSIC
@@ -73,19 +65,6 @@ public interface MessageForWorkerBuilder {
   /**
    * Create the message to inform that a task is created.
    *
-   * @param task that has been created.
-   *
-   * @return the message to send to the worker.
-   */
-  public static JsonObject buildCreatedTaskMessage(final Task task) {
-
-    return new JsonObject().put("type", Type.CREATED_TASK.name()).put("task", task.toJsonObject());
-
-  }
-
-  /**
-   * Create the message to inform that a task is created.
-   *
    * @param protocol information of the protocol to use.
    *
    * @return the message to send to the worker.
@@ -93,19 +72,6 @@ public interface MessageForWorkerBuilder {
   public static JsonObject buildCreatedTaskMessage(final ProtocolData protocol) {
 
     return new JsonObject().put("type", Type.CREATED_TASK.name()).put("protocol", protocol.toJsonObject());
-
-  }
-
-  /**
-   * Create the message to inform about a task transaction that has to be done.
-   *
-   * @param transaction to do.
-   *
-   * @return the message to send to the worker.
-   */
-  public static JsonObject buildDoTaskTransactionMessage(final TaskTransaction transaction) {
-
-    return new JsonObject().put("type", Type.DO_TASK_TRANSACTION.name()).put("transaction", transaction.toJsonObject());
 
   }
 
@@ -122,19 +88,6 @@ public interface MessageForWorkerBuilder {
 
     return new JsonObject().put("type", Type.DO_TASK_TRANSACTION.name()).put("transaction", transaction.toJsonObject())
         .put("protocol", protocol.toJsonObject());
-
-  }
-
-  /**
-   * Create the message to inform about an incentive to inform to the user.
-   *
-   * @param incentive to send.
-   *
-   * @return the message to send to the worker.
-   */
-  public static JsonObject buildSendIncentiveMessage(final Incentive incentive) {
-
-    return new JsonObject().put("type", Type.SEND_INCENTIVE.name()).put("incentive", incentive.toJsonObject());
 
   }
 
