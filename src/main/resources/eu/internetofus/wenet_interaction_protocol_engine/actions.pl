@@ -34,12 +34,13 @@
 	notify_incentive_server_task_created/0,
 	notify_incentive_server_task_created/1,
 	notify_incentive_server_task_created/2,
-	notify_volunteers_to_social_context_builder/2,
 	close_task/0,
 	merge_task/1,
 	merge_community_state/1,
 	put_community_state_attribute/2,
-	send_event/4
+	send_event/4,
+	volunteers_ranking/2,
+	answers_ranking/2
 	.
 
 
@@ -298,19 +299,6 @@ notify_incentive_server_message_sent(Label) :-
 	notify_incentive_server_transaction_done(Label)
 	.
 
-%!	notify_social_context_builder
-%
-%	Notify the social context builder about the user preferences in a task.
-%
-%	@param Volunteers list of volunteers.
-%	@param UserId identifier of the users.
-%
-notify_volunteers_to_social_context_builder(Volunteers,UserId):-
-	get_task_id(TaskId),
-	!,
-	ignore(wenet_social_context_builder_update_preferences(UserId,TaskId,Volunteers))
-	.
-
 %!	close_task()
 %
 %	Mark the current task as closed.
@@ -417,4 +405,33 @@ send_event(Id,Delay,Particle,Content) :-
 	wenet_new_protocol_event(Event,AppId,CommunityId,TaskId,TransactionId,SenderUserId,Delay,Particle,Content),
 	!,
 	wenet_interaction_protocol_engine_send_event(Sent,Event)->wenet_id_of_protocol_event(Id,Sent);Id = -1
+	.
+
+%!	volunteers_ranking(-Ranking,+Volunteers)
+%
+%	This action calls the social context builder to obtain a ranking for some volunteers.
+%
+%	@param Ranking array of strings with the ranked answers.
+%	@param Volunteers array of strings with the user identifiers that has volunteer.
+%
+volunteers_ranking(Ranking,Volunteers):-
+	get_profile_id(Me),
+	get_task_id(TaskId),
+	!,
+	ignore(wenet_social_context_builder_post_preferences(Ranking,Me,TaskId,Volunteers))
+	.
+
+%!	answers_ranking(-Ranking,+Answers)
+%
+%	This action calls the social context builder to obtain a ranking for some answers.
+%
+%	@param Ranking array of strings with the ranked answers.
+%	@param UserAnswers array of JSON models with the user answers. This array elements
+%						can be created using the wenet_new_user_answer.
+%
+answers_ranking(Ranking,UserAnswers):-
+	get_profile_id(Me),
+	get_task_id(TaskId),
+	!,
+	ignore(wenet_social_context_builder_post_preferences_answers(Ranking,Me,TaskId,UserAnswers))
 	.

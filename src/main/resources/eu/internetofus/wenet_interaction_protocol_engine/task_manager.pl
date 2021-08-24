@@ -41,7 +41,6 @@
 	wenet_messages_of_transaction/2
 	.
 
-
 %!	wenet_task_manager_api_url_to(+Url,-Paths)
 %
 %	Calculate the URL from a path

@@ -18,6 +18,8 @@
 % Contains the high level conditions that can be used on the norms.
 %
 
+:- use_module(library(apply)).
+
 :- dynamic
 	get_now/1,
 	is_now_less_than/1,
@@ -65,7 +67,9 @@
 	get_task_state_attribute/3,
 	get_user_state/1,
 	get_user_state_attribute/2,
-	get_user_state_attribute/3
+	get_user_state_attribute/3,
+	filter_transactions/3,
+	filter_transactions_/4
 	.
 
 %!	is_now_less_than(+Time)
@@ -767,4 +771,32 @@ get_user_state_attribute(Value,Key) :-
 %
 get_user_state_attribute(Value,Key,DefaultValue) :-
 	get_user_state_attribute(Value,Key) -> true ; Value = DefaultValue
+	.
+
+	
+%!	filter_transactions(-Transactions,+Test,+Map)
+%
+%	This condition is used to obtain a sub set of the transactions that
+%	has been done in the task and map them to a new value. In other words, for
+%   each transaction of the current task if call(Test,Transaction) is True,
+%	it transforms the transaction with call(Map,Value,Transaction) and it adds
+%	the obtained Value to the result list.  
+%
+%	@param Result the filtered and mapped task transactions.
+%	@param Test predicate to call to known if the transaction is accepted.
+%	@param Map predicate to call to convert the accepted transaction.
+%
+filter_transactions(Result,Test,Map):-
+	get_task(Task),
+	wenet_transactions_of_task(DoneTransactions,Task),
+	filter_transactions_(Result,DoneTransactions,Test,Map)
+	.
+filter_transactions_([],[],_,_).
+filter_transactions_(Target,[Head|Tail],Test,Map):-
+	(
+		call(Test,Head)
+		-> call(Map,NewHead,Head), Target = [NewHead|NewTarget]
+		; Target = NewTarget
+	),
+	filter_transactions_(Tail,NewTarget,Test,Map)
 	.

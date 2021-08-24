@@ -28,7 +28,8 @@
 :- dynamic
 	wenet_incentive_server_update_task_status/2,
 	wenet_new_task_status/8,
-	notify_incentive_server/2
+	notify_incentive_server/2,
+	notify_volunteers_to_social_context_builder/2
 	.
 	
 %!	wenet_incentive_server_update_task_status(-Updated,+Status)
@@ -75,4 +76,34 @@ wenet_new_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message) :-
 %
 notify_incentive_server(Action,Message) :-
 	wenet_log_warning('Called deprecated notify_incentive_server with:',[Action,Message])
+	.
+	
+%!	wenet_social_context_builder_update_preferences(+UserId,+TaskId,+Users)
+%
+%	Update the preferences of an user.
+%
+%	@param UserId identifier of the user.
+%	@param TaskId identifier of the task.
+%	@param Users the identifier of the volunteers of the task.
+%
+%   @deprecated use wenet_social_context_builder_post_preferences instead.
+%
+wenet_social_context_builder_update_preferences(UserId,TaskId,Users):-
+	wenet_social_context_builder_post_preferences(UserId,TaskId,Users)
+	.
+
+	
+%!	notify_volunteers_to_social_context_builder(+Volunteers,+UserId)
+%
+%	Notify the social context builder about the user preferences in a task.
+%
+%	@param Volunteers list of volunteers.
+%	@param UserId identifier of the users.
+%
+%   @deprecated use volunteers_ranking instead.
+%
+notify_volunteers_to_social_context_builder(Volunteers,UserId):-
+	get_task_id(TaskId),
+	!,
+	ignore(wenet_social_context_builder_post_preferences(_,UserId,TaskId,Volunteers))
 	.
