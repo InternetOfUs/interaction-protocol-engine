@@ -96,7 +96,7 @@ wenet_summary_of_social_explanation(Summary,json(SocialExplanation)) :-
 %
 wenet_social_context_builder_post_preferences_answers(Ranking,UserId,TaskId,UserAnswers) :-
 	wenet_social_context_builder_url_to(Url,['/social/preferences/answers/',UserId,'/',TaskId,'/']),
-	wenet_post_json_to_url(Ranking,Url,UserAnswers)
+	wenet_post_json_to_url(Ranking,Url,json([data=UserAnswers]))
 	.
 
 %!	wenet_user_id_of_user_answer(-UserId,+UserAnswer)
