@@ -789,14 +789,20 @@ get_user_state_attribute(Value,Key,DefaultValue) :-
 filter_transactions(Result,Test,Map):-
 	get_task(Task),
 	wenet_transactions_of_task(DoneTransactions,Task),
+	!,
 	filter_transactions_(Result,DoneTransactions,Test,Map)
 	.
 filter_transactions_([],[],_,_).
 filter_transactions_(Target,[Head|Tail],Test,Map):-
+	wenet_log_trace('Head:',[Head]),
 	(
-		call(Test,Head)
-		-> call(Map,NewHead,Head), Target = [NewHead|NewTarget]
+		call(Test,Head) 
+		-> (
+			call(Map,NewHead,Head)
+			-> Target = [NewHead|NewTarget]
+			; !,fail
+			)
 		; Target = NewTarget
 	),
-	filter_transactions_(Tail,NewTarget,Test,Map)
+	filter_transactions_(NewTarget,Tail,Test,Map)
 	.
