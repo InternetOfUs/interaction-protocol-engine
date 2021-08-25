@@ -89,7 +89,7 @@ wenet_summary_of_social_explanation(Summary,json(SocialExplanation)) :-
 %
 %	Post the preferences answers of an user. This is used to calculate the ranking of the answers.
 %
-%   @param Ranking list of the user identifiers ranked by the answers.
+%   @param Ranking of the user answers, sorted from the best to the worst.
 %	@param UserId identifier of the user.
 %	@param TaskId identifier of the task.
 %	@param UserAnswers the list of users answers tuple to rank.
