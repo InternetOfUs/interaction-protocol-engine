@@ -18,25 +18,36 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.persistence;
+package eu.internetofus.wenet_interaction_protocol_engine.api.stats;
 
-import eu.internetofus.common.vertx.AbstractPersistenceVerticle;
-import io.vertx.core.Future;
+import eu.internetofus.common.model.ModelTestCase;
+import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * The verticle that provide the persistence services.
+ * Test the {@link TotalInteractions}
+ *
+ * @see TotalInteractions
+ *
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticle extends AbstractPersistenceVerticle {
+@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
+public class TotalInteractionsTest extends ModelTestCase<TotalInteractions> {
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected Future<Void> registerRepositoriesFor(final String schemaVersion) {
+  public TotalInteractions createModelExample(final int index) {
 
-    return StatesRepository.register(this.vertx, this.pool, schemaVersion);
+    final var model = new TotalInteractions();
+    model.sourceId = "source of " + index;
+    model.targetId = "target of " + index;
+    model.firstTs = (long) index;
+    model.lastTs = (long) index + 10000;
+    model.total = (long) index;
+    return model;
   }
 
 }

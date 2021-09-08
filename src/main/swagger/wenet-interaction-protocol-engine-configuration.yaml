@@ -10,8 +10,8 @@ openAPI:
       description: The functionality provided allows to send messages.
     - name: States
       description: The functionality to manage the states necessaries on the norm engine.
-    - name: Norms
-      description: The functionality provided allows to publish norms, and manage the user and community norms.
+    - name: Stats
+      description: The functionality to obtain stats about the interaction between users.
   info:
     # The verion of the API has to be synchonized with the 'api-version' property of the 'pom.xml'
     version: '0.14.0'
@@ -42,8 +42,6 @@ openAPI:
 
 
       ## Norm
-
-      The functionality provided allows to publish norms, and manage the user and community norms.
 
       There are norms on the individual (user level), the task level, and the community level.
       An individual’s norm might be “Suppress incoming messages at night” (and this will

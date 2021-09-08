@@ -18,25 +18,34 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.persistence;
+package eu.internetofus.wenet_interaction_protocol_engine.api.stats;
 
-import eu.internetofus.common.vertx.AbstractPersistenceVerticle;
-import io.vertx.core.Future;
+import eu.internetofus.common.model.ModelTestCase;
+import java.util.ArrayList;
 
 /**
- * The verticle that provide the persistence services.
+ * Test the {@link InteractionBetweenUsersPage}.
+ *
+ * @see InteractionBetweenUsersPage
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticle extends AbstractPersistenceVerticle {
+public class InteractionBetweenUsersPageTest extends ModelTestCase<InteractionBetweenUsersPage> {
 
   /**
    * {@inheritDoc}
    */
   @Override
-  protected Future<Void> registerRepositoriesFor(final String schemaVersion) {
+  public InteractionBetweenUsersPage createModelExample(final int index) {
 
-    return StatesRepository.register(this.vertx, this.pool, schemaVersion);
+    final var model = new InteractionBetweenUsersPage();
+    model.offset = index;
+    model.total = 100 + index;
+    model.interactions = new ArrayList<>();
+    model.interactions.add(new InteractionBetweenUsersTest().createModelExample(index - 1));
+    model.interactions.add(new InteractionBetweenUsersTest().createModelExample(index));
+    model.interactions.add(new InteractionBetweenUsersTest().createModelExample(index + 1));
+    return model;
   }
 
 }

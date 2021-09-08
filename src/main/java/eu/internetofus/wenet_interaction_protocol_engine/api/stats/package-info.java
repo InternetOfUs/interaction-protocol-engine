@@ -19,8 +19,6 @@
  */
 
 /**
- * Service to maintains norms.
- *
- * @author UDT-IA, IIIA-CSIC
+ * Provide stats of the interaction between users.
  */
-package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
+package eu.internetofus.wenet_interaction_protocol_engine.api.stats;

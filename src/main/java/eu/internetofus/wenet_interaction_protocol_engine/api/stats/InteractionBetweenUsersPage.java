@@ -18,7 +18,7 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
+package eu.internetofus.wenet_interaction_protocol_engine.api.stats;
 
 import java.util.List;
 
@@ -28,29 +28,29 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * Contains the found published norms.
+ * Contains the interactions between two users.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@Schema(description = "Contains a set of published norms found")
-public class PublishedNormsPage extends ReflectionModel implements Model {
+@Schema(description = "Contains a set of interactions between users")
+public class InteractionBetweenUsersPage extends ReflectionModel implements Model {
 
   /**
-   * The index of the first community returned.
+   * The index of the first interaction returned.
    */
-  @Schema(description = "The index of the first published norm returned.", example = "0")
+  @Schema(description = "The index of the first interaction returned.", example = "0")
   public int offset;
 
   /**
-   * The number total of communities that satisfies the search.
+   * The number total of interactions that satisfies the search.
    */
-  @Schema(description = "The number total of published norms that satisfies the search.", example = "100")
+  @Schema(description = "The number total of interactions that satisfies the search.", example = "100")
   public long total;
 
   /**
-   * The published norms.
+   * The found interactions.
    */
-  @ArraySchema(schema = @Schema(implementation = PublishedNorm.class), arraySchema = @Schema(description = "The set of published norms found"))
-  public List<PublishedNorm> norms;
+  @ArraySchema(schema = @Schema(implementation = InteractionBetweenUsers.class), arraySchema = @Schema(description = "The set of interactions found"))
+  public List<InteractionBetweenUsers> interactions;
 
 }

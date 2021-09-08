@@ -33,10 +33,10 @@ import eu.internetofus.wenet_interaction_protocol_engine.api.incentives.Incentiv
 import eu.internetofus.wenet_interaction_protocol_engine.api.incentives.IncentivesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.Messages;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.MessagesResource;
-import eu.internetofus.wenet_interaction_protocol_engine.api.norms.Norms;
-import eu.internetofus.wenet_interaction_protocol_engine.api.norms.NormsResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.states.States;
 import eu.internetofus.wenet_interaction_protocol_engine.api.states.StatesResource;
+import eu.internetofus.wenet_interaction_protocol_engine.api.stats.Stats;
+import eu.internetofus.wenet_interaction_protocol_engine.api.stats.StatsResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.tasks.Tasks;
 import eu.internetofus.wenet_interaction_protocol_engine.api.tasks.TasksResource;
 import io.vertx.core.json.JsonObject;
@@ -69,8 +69,8 @@ public class APIVerticle extends AbstractAPIVerticle {
     routerBuilder.mountServiceInterface(Help.class, Help.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Help.ADDRESS).register(Help.class, new HelpResource(this));
 
-    routerBuilder.mountServiceInterface(Norms.class, Norms.ADDRESS);
-    new ServiceBinder(this.vertx).setAddress(Norms.ADDRESS).register(Norms.class, new NormsResource(this.vertx));
+    routerBuilder.mountServiceInterface(Stats.class, Stats.ADDRESS);
+    new ServiceBinder(this.vertx).setAddress(Stats.ADDRESS).register(Stats.class, new StatsResource(this.vertx));
 
     routerBuilder.mountServiceInterface(Messages.class, Messages.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Messages.ADDRESS).register(Messages.class,
