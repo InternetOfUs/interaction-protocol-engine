@@ -279,7 +279,7 @@ get_transaction(json(Transaction)) :-
 
 %!	get_transaction(-Transaction,+TransactionId)
 %
-%	Return the current transaction defined on the norm engine.
+%	Return the transaction associated to an identifer.
 %
 %	@param Transaction json transaction on the norm engine.
 %	@param TransactionId string identifier of the transaction to return.

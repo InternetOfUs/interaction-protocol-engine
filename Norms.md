@@ -430,7 +430,7 @@ These actions are done over the user that is associated with the norm engine, th
 - ``send_user_message(Label,Content)``
   This action posts a callback message to the user.
   If it is done over an active transaction it is stored in it and notify
-  the incentive server that the message is sent.
+  the incentive server and the social context builder that the message is sent.
     * ``Label`` _Input_  string with the message label.
     * ``Content`` _Input_  JSON model with the message content.
 - ``merge_user_state(State)``
@@ -534,6 +534,9 @@ These actions interact with the other components of the WeNet platform.
     * ``Ranking``  _Output_  array of strings with the ranked answers.
     * ``UserAnswers``  _Input_  array of JSON models with the user answers. This array elements
     can be created using the ``wenet_new_user_answer``.
+- ``notify_social_context_builder_message_sent(Message)``
+  This action notifies the social context builder that a message is sent to the user.
+    * ``Message``  _Input_  JSON model with the sent message.
  
 
 ## Other Useful Norms predicates
@@ -1068,7 +1071,18 @@ The next predicates are used to interact with the social context builder compone
   This predicate is used to create a new user answer.
     * ``UserAnswer``  _Output_  JSON model with the user answer.
     * ``UserId``  _Input_  string model with the user identifier.
-    * ``Answer``  _Output_  string with the answer.
+    * ``Answer``  _Input_  string with the answer.
+- ``wenet_social_context_builder_post_social_notification(Message)``
+  This predicate is used to notify the social context builder about an interaction between users.
+    * ``Message``  _Input_  JSON model with the interaction message between users.
+- ``wenet_new_user_answer(UserAnswer, UserId, Answer)``
+  This predicate is used to create a user message that can be used to notify about the interaction between users.
+    * ``UserMessage``  _Output_  JSON model with the interaction message between the users.
+    * ``TaskId``  _Input_  string with the identifier of the task where the interaciton is done.
+    * ``TransactionId``  _Input_  string with the identifier of the task transaction.
+    * ``Timestamp``  _Input_  number with the UTC epoch timestamp when the interaction is done.
+    * ``SenderId``  _Input_  string with the identifier of the user that started the interaction.
+    * ``Message``  _Input_  JSON model with the message that is sent to the user.
 
     
 ### Personal context builder

@@ -23,7 +23,9 @@
 	wenet_social_context_builder_post_preferences_answers/4,
 	wenet_user_id_of_user_answer/2,
 	wenet_answer_of_user_answer/2,
-	wenet_new_user_answer/3
+	wenet_new_user_answer/3,
+	wenet_social_context_builder_post_social_notification/1,
+	wenet_new_user_message/6
 	.
 
 
@@ -132,4 +134,31 @@ wenet_answer_of_user_answer(Answer,json(UserAnswer)) :-
 %
 wenet_new_user_answer(UserAnswer, UserId, Answer) :-
 	UserAnswer = json([userId=UserId,answer=Answer])
+	.
+
+%!	wenet_social_context_builder_post_social_notification(+Message)
+%
+%	This predicate is used to notify the social context builder about
+%	an interaction between users.
+%
+%   @param Message JSON model with the interaction user message.
+%
+wenet_social_context_builder_post_social_notification(Message) :-
+	wenet_social_context_builder_url_to(Url,['/social/notification/']),
+	wenet_post_json_to_url(_,Url,Message)
+	.
+
+%!	wenet_new_user_message(-UserMessage,+TaskId,+TransactionId,+Timestamp,+SenderId,+Message)
+%
+%	Create a user message that can be used to notify about the interaction between users.
+%
+%	@param UserMessage the interaction message between the users.
+%	@param TaskId the identifier of the task where the interaction is done.
+%	@param TransactionId the identifier of the transaction that the message refers.
+%	@param Timestamp the UTC epoch timestamp when the interaction is done.
+%	@param SenderId the identifier of the user that has started the interaction.
+%	@param Message that has sent to the user.
+%
+wenet_new_user_message(UserMessage,TaskId,TransactionId,Timestamp,SenderId,Message) :-
+	UserMessage = json([taskId=TaskId,transactionId=TransactionId,timestamp=Timestamp,senderId=SenderId,message=Message])
 	.

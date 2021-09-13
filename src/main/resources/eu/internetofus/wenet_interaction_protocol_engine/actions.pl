@@ -40,7 +40,10 @@
 	put_community_state_attribute/2,
 	send_event/4,
 	volunteers_ranking/2,
-	answers_ranking/2
+	answers_ranking/2,
+	notify_social_context_builder_message_sent/1,
+	merge_task_state/1,
+	put_task_state_attribute/2
 	.
 
 
@@ -177,6 +180,7 @@ send_user_message(Label,Content) :-
 		;true
 	),
 	ignore(notify_incentive_server_message_sent(Label)),
+	ignore(notify_social_context_builder_message_sent(Message)),
 	!
 	.
 
@@ -332,7 +336,7 @@ merge_task(json(Task)) :-
 			true
 	.
 
-%!	merge_community_state()
+%!	merge_community_state(-CommunityState)
 %
 %	Merge the data with the current community user state.
 %
@@ -434,4 +438,59 @@ answers_ranking(Ranking,UserAnswers):-
 	get_task_id(TaskId),
 	!,
 	ignore(wenet_social_context_builder_post_preferences_answers(Ranking,Me,TaskId,UserAnswers))
+	.
+
+%!	notify_social_context_builder_message_sent(+Message)
+%
+%	Notify the social context builder about an interaction between users.
+%
+%	@param Message that has been sent.
+%
+notify_social_context_builder_message_sent(Message) :-
+	!,
+	(
+		get_task_id(TaskId),
+		get_transaction_id(TransactionId),
+		get_now(Timestamp),
+		get_transaction(Transaction),
+		wenet_actioneer_id_of_transaction(SenderId,Transaction),
+		wenet_new_user_message(UserMessage,TaskId,TransactionId,Timestamp,SenderId,Message)		
+	)->
+	wenet_social_context_builder_post_social_notification(UserMessage)
+	;true
+	.
+
+%!	merge_task_state(-TaskState)
+%
+%	Merge the data with the current task user state.
+%
+%	@param TaskState list/json to merge
+%
+merge_task_state(TaskState) :-
+	is_list(TaskState),
+	merge_task_state(json(TaskState))
+	.
+merge_task_state(json(TaskState)) :-
+	get_profile_id(ProfileId),
+	get_task_id(TaskId),
+	!,
+	wenet_interaction_protocol_engine_merge_task_user_state(MergedTaskUserState,TaskId,ProfileId,json(TaskState))
+		->
+			(
+				retractall(get_task_state(_)),
+				asserta(get_task_state(MergedTaskUserState))
+			)
+		;
+			true
+	.
+
+%!	put_task_state_attribute(+Key,+Value)
+%
+%	Change the value of a task attribute.
+%
+%	@param Key name of the attribute to put.
+%	@param Value of the attribute.
+%
+put_task_state_attribute(Key,Value) :-
+	merge_task_state(json([attributes=json([Key=Value])]))
 	.
