@@ -22,21 +22,13 @@ package eu.internetofus.wenet_interaction_protocol_engine;
 import static eu.internetofus.common.components.AbstractComponentMocker.createClientWithDefaultSession;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import eu.internetofus.common.model.ModelTestCase;
 import eu.internetofus.common.components.StoreServices;
-import eu.internetofus.common.components.models.Incentive;
-import eu.internetofus.common.components.models.IncentiveTest;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessageTest;
 import eu.internetofus.common.components.models.CommunityProfile;
 import eu.internetofus.common.components.models.CommunityProfileTest;
-import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
-import eu.internetofus.common.components.profile_manager.WeNetProfileManagerMocker;
-import eu.internetofus.common.components.models.WeNetUserProfile;
-import eu.internetofus.common.components.models.WeNetUserProfileTest;
-import eu.internetofus.common.components.service.WeNetService;
-import eu.internetofus.common.components.service.WeNetServiceSimulator;
-import eu.internetofus.common.components.service.WeNetServiceSimulatorMocker;
+import eu.internetofus.common.components.models.Incentive;
+import eu.internetofus.common.components.models.IncentiveTest;
 import eu.internetofus.common.components.models.ProtocolNorm;
 import eu.internetofus.common.components.models.Task;
 import eu.internetofus.common.components.models.TaskTest;
@@ -44,8 +36,16 @@ import eu.internetofus.common.components.models.TaskTransaction;
 import eu.internetofus.common.components.models.TaskTransactionTest;
 import eu.internetofus.common.components.models.TaskType;
 import eu.internetofus.common.components.models.TaskTypeTest;
+import eu.internetofus.common.components.models.WeNetUserProfile;
+import eu.internetofus.common.components.models.WeNetUserProfileTest;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManagerMocker;
+import eu.internetofus.common.components.service.WeNetService;
+import eu.internetofus.common.components.service.WeNetServiceSimulator;
+import eu.internetofus.common.components.service.WeNetServiceSimulatorMocker;
 import eu.internetofus.common.components.task_manager.WeNetTaskManager;
 import eu.internetofus.common.components.task_manager.WeNetTaskManagerMocker;
+import eu.internetofus.common.model.ModelTestCase;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -240,8 +240,7 @@ public class ProtocolDataTest extends ModelTestCase<ProtocolData> {
    * @param testContext test context to use.
    *
    * @see ProtocolData#createWith(String, String, String, String, Vertx)
-   * @see ProtocolData#createWith(eu.internetofus.common.components.task_manager.Task,
-   *      Vertx)
+   * @see ProtocolData#createWith(Task, Vertx)
    */
   @Test
   public void shouldCreateWithTask(final Vertx vertx, final VertxTestContext testContext) {
@@ -278,8 +277,7 @@ public class ProtocolDataTest extends ModelTestCase<ProtocolData> {
    * @param testContext test context to use.
    *
    * @see ProtocolData#createWith(String, String, String, String, Vertx)
-   * @see ProtocolData#createWith(eu.internetofus.common.components.task_manager.TaskTransaction,
-   *      Vertx)
+   * @see ProtocolData#createWith(TaskTransaction, Vertx)
    */
   @Test
   public void shouldCreateWithTaskTransaction(final Vertx vertx, final VertxTestContext testContext) {
