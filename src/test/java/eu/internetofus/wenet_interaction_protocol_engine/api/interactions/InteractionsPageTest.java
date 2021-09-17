@@ -18,19 +18,34 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.stats;
+package eu.internetofus.wenet_interaction_protocol_engine.api.interactions;
 
-import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
+import eu.internetofus.common.model.ModelTestCase;
+import java.util.ArrayList;
 
 /**
- * The integration test over the {@link Stats}.
+ * Test the {@link InteractionsPage}.
  *
- * @see Stats
+ * @see InteractionsPage
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class StatsIT {
+public class InteractionsPageTest extends ModelTestCase<InteractionsPage> {
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public InteractionsPage createModelExample(final int index) {
+
+    final var model = new InteractionsPage();
+    model.offset = index;
+    model.total = 100 + index;
+    model.interactions = new ArrayList<>();
+    model.interactions.add(new InteractionTest().createModelExample(index - 1));
+    model.interactions.add(new InteractionTest().createModelExample(index));
+    model.interactions.add(new InteractionTest().createModelExample(index + 1));
+    return model;
+  }
 
 }

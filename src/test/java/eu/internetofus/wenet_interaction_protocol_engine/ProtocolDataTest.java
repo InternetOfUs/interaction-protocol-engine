@@ -22,7 +22,6 @@ package eu.internetofus.wenet_interaction_protocol_engine;
 import static eu.internetofus.common.components.AbstractComponentMocker.createClientWithDefaultSession;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import eu.internetofus.common.components.StoreServices;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessageTest;
 import eu.internetofus.common.components.models.CommunityProfile;
@@ -33,7 +32,6 @@ import eu.internetofus.common.components.models.ProtocolNorm;
 import eu.internetofus.common.components.models.Task;
 import eu.internetofus.common.components.models.TaskTest;
 import eu.internetofus.common.components.models.TaskTransaction;
-import eu.internetofus.common.components.models.TaskTransactionTest;
 import eu.internetofus.common.components.models.TaskType;
 import eu.internetofus.common.components.models.TaskTypeTest;
 import eu.internetofus.common.components.models.WeNetUserProfile;
@@ -137,176 +135,6 @@ public class ProtocolDataTest extends ModelTestCase<ProtocolData> {
     model.community = new CommunityProfileTest().createModelExample(index);
     model.profile = new WeNetUserProfileTest().createModelExample(index);
     return model;
-  }
-
-  /**
-   * Check that create empty protocol with {@code null} identifiers.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext test context to use.
-   *
-   * @see ProtocolData#createWith(String, String, String, String, Vertx)
-   */
-  @Test
-  public void shouldCreateEmptyDataWithNullIdentifiers(final Vertx vertx, final VertxTestContext testContext) {
-
-    testContext.assertComplete(ProtocolData.createWith(null, null, null, null, vertx))
-        .onSuccess(protocol -> testContext.verify(() -> {
-
-          assertThat(protocol).isEqualTo(new ProtocolData());
-          testContext.completeNow();
-
-        }));
-
-  }
-
-  /**
-   * Check that create empty protocol with undefined identifiers.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext test context to use.
-   *
-   * @see ProtocolData#createWith(String, String, String, String, Vertx)
-   */
-  @Test
-  public void shouldCreateEmptyDataWithUndefinedIdentifiers(final Vertx vertx, final VertxTestContext testContext) {
-
-    testContext.assertComplete(ProtocolData.createWith("undefined", "undefined", "undefined", "undefined", vertx))
-        .onSuccess(protocol -> testContext.verify(() -> {
-
-          assertThat(protocol).isEqualTo(new ProtocolData());
-          testContext.completeNow();
-
-        }));
-
-  }
-
-  /**
-   * Check that protocol with community.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext test context to use.
-   *
-   * @see ProtocolData#createWith(String, String, String, String, Vertx)
-   */
-  @Test
-  public void shouldCreateWithCommunity(final Vertx vertx, final VertxTestContext testContext) {
-
-    StoreServices.storeCommunityExample(1, vertx, testContext).onSuccess(community -> {
-      testContext.assertComplete(ProtocolData.createWith(null, null, community.id, null, vertx))
-          .onSuccess(protocol -> testContext.verify(() -> {
-
-            final var expected = new ProtocolData();
-            expected.community = community;
-            assertThat(protocol).isEqualTo(expected);
-            testContext.completeNow();
-
-          }));
-
-    });
-
-  }
-
-  /**
-   * Check that protocol with profile.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext test context to use.
-   *
-   * @see ProtocolData#createWith(String, String, String, String, Vertx)
-   */
-  @Test
-  public void shouldCreateWithProfile(final Vertx vertx, final VertxTestContext testContext) {
-
-    StoreServices.storeProfileExample(1, vertx, testContext).onSuccess(profile -> {
-      testContext.assertComplete(ProtocolData.createWith(null, null, null, profile.id, vertx))
-          .onSuccess(protocol -> testContext.verify(() -> {
-
-            final var expected = new ProtocolData();
-            expected.profile = profile;
-            assertThat(protocol).isEqualTo(expected);
-            testContext.completeNow();
-
-          }));
-
-    });
-
-  }
-
-  /**
-   * Check that protocol with task.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext test context to use.
-   *
-   * @see ProtocolData#createWith(String, String, String, String, Vertx)
-   * @see ProtocolData#createWith(Task, Vertx)
-   */
-  @Test
-  public void shouldCreateWithTask(final Vertx vertx, final VertxTestContext testContext) {
-
-    StoreServices.storeTaskExample(1, vertx, testContext).onSuccess(task -> {
-      testContext.assertComplete(ProtocolData.createWith(task.id, null, null, null, vertx))
-          .onSuccess(protocol -> testContext.verify(() -> {
-
-            assertThat(protocol.task).isEqualTo(task);
-            assertThat(protocol.taskType).isNotNull();
-            assertThat(protocol.taskType.id).isEqualTo(task.taskTypeId);
-            assertThat(protocol.community).isNotNull();
-            assertThat(protocol.community.id).isEqualTo(task.communityId);
-            assertThat(protocol.profile).isNotNull();
-            assertThat(protocol.profile.id).isEqualTo(task.requesterId);
-            testContext.assertComplete(ProtocolData.createWith(task, vertx))
-                .onSuccess(protocolWithTask -> testContext.verify(() -> {
-
-                  assertThat(protocol).isEqualTo(protocolWithTask);
-                  testContext.completeNow();
-
-                }));
-
-          }));
-
-    });
-
-  }
-
-  /**
-   * Check that protocol with task transaction.
-   *
-   * @param vertx       event bus to use.
-   * @param testContext test context to use.
-   *
-   * @see ProtocolData#createWith(String, String, String, String, Vertx)
-   * @see ProtocolData#createWith(TaskTransaction, Vertx)
-   */
-  @Test
-  public void shouldCreateWithTaskTransaction(final Vertx vertx, final VertxTestContext testContext) {
-
-    testContext.assertComplete(new TaskTransactionTest().createModelExample(1, vertx, testContext))
-        .onSuccess(taskTransaction -> {
-          testContext
-              .assertComplete(
-                  ProtocolData.createWith(taskTransaction.taskId, null, null, taskTransaction.actioneerId, vertx))
-              .onSuccess(protocol -> testContext.verify(() -> {
-
-                assertThat(protocol.task).isNotNull();
-                assertThat(protocol.task.id).isEqualTo(taskTransaction.taskId);
-                assertThat(protocol.taskType).isNotNull();
-                assertThat(protocol.community).isNotNull();
-                assertThat(protocol.profile).isNotNull();
-                assertThat(protocol.profile.id).isEqualTo(taskTransaction.actioneerId);
-                testContext.assertComplete(ProtocolData.createWith(taskTransaction, vertx))
-                    .onSuccess(protocolWithTaskTransaction -> testContext.verify(() -> {
-
-                      assertThat(protocol).isEqualTo(protocolWithTaskTransaction);
-                      testContext.completeNow();
-
-                    }));
-
-              }));
-
-        });
-
   }
 
   /**

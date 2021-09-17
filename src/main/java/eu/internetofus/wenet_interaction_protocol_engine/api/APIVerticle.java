@@ -31,12 +31,12 @@ import eu.internetofus.wenet_interaction_protocol_engine.api.help.Help;
 import eu.internetofus.wenet_interaction_protocol_engine.api.help.HelpResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.incentives.Incentives;
 import eu.internetofus.wenet_interaction_protocol_engine.api.incentives.IncentivesResource;
+import eu.internetofus.wenet_interaction_protocol_engine.api.interactions.Interactions;
+import eu.internetofus.wenet_interaction_protocol_engine.api.interactions.InteractionsResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.Messages;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.MessagesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.states.States;
 import eu.internetofus.wenet_interaction_protocol_engine.api.states.StatesResource;
-import eu.internetofus.wenet_interaction_protocol_engine.api.stats.Stats;
-import eu.internetofus.wenet_interaction_protocol_engine.api.stats.StatsResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.tasks.Tasks;
 import eu.internetofus.wenet_interaction_protocol_engine.api.tasks.TasksResource;
 import io.vertx.core.json.JsonObject;
@@ -69,9 +69,6 @@ public class APIVerticle extends AbstractAPIVerticle {
     routerBuilder.mountServiceInterface(Help.class, Help.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Help.ADDRESS).register(Help.class, new HelpResource(this));
 
-    routerBuilder.mountServiceInterface(Stats.class, Stats.ADDRESS);
-    new ServiceBinder(this.vertx).setAddress(Stats.ADDRESS).register(Stats.class, new StatsResource(this.vertx));
-
     routerBuilder.mountServiceInterface(Messages.class, Messages.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Messages.ADDRESS).register(Messages.class,
         new MessagesResource(this.vertx));
@@ -88,6 +85,10 @@ public class APIVerticle extends AbstractAPIVerticle {
 
     routerBuilder.mountServiceInterface(Events.class, Events.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Events.ADDRESS).register(Events.class, new EventsResource(this.vertx));
+
+    routerBuilder.mountServiceInterface(Interactions.class, Interactions.ADDRESS);
+    new ServiceBinder(this.vertx).setAddress(Interactions.ADDRESS).register(Interactions.class,
+        new InteractionsResource(this.vertx));
 
   }
 

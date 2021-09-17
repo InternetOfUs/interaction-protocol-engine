@@ -21,4 +21,4 @@
 /**
  * Provide stats of the interaction between users.
  */
-package eu.internetofus.wenet_interaction_protocol_engine.api.stats;
+package eu.internetofus.wenet_interaction_protocol_engine.api.interactions;

@@ -18,35 +18,43 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.stats;
+package eu.internetofus.wenet_interaction_protocol_engine.api.interactions;
 
 import eu.internetofus.common.model.ModelTestCase;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
+import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Test the {@link TotalInteractions}
+ * Test the {@link Interaction}
  *
- * @see TotalInteractions
+ * @see Interaction
  *
  *
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class TotalInteractionsTest extends ModelTestCase<TotalInteractions> {
+public class InteractionTest extends ModelTestCase<Interaction> {
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public TotalInteractions createModelExample(final int index) {
+  public Interaction createModelExample(final int index) {
 
-    final var model = new TotalInteractions();
-    model.sourceId = "source of " + index;
-    model.targetId = "target of " + index;
-    model.firstTs = (long) index;
-    model.lastTs = (long) index + 10000;
-    model.total = (long) index;
+    final var model = new Interaction();
+    model.appId = "App id " + index;
+    model.communityId = "Community id " + index;
+    model.taskTypeId = "Task type id " + index;
+    model.taskId = "Task id " + index;
+    model.senderId = "Sender id " + index;
+    model.receiverId = "Receiver id " + index;
+    model.transactionLabel = "Label " + index;
+    model.transactionAttributes = new JsonObject().put("transactionAttibuteIndex", index);
+    model.transactionTs = (long) index;
+    model.messageLabel = "Label " + index;
+    model.messageAttributes = new JsonObject().put("messageAttibuteIndex", index);
+    model.messageTs = (long) index;
     return model;
   }
 

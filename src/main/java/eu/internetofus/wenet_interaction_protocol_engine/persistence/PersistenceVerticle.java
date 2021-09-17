@@ -36,7 +36,8 @@ public class PersistenceVerticle extends AbstractPersistenceVerticle {
   @Override
   protected Future<Void> registerRepositoriesFor(final String schemaVersion) {
 
-    return StatesRepository.register(this.vertx, this.pool, schemaVersion);
+    return StatesRepository.register(this.vertx, this.pool, schemaVersion)
+        .compose(empty -> InteractionsRepository.register(this.vertx, this.pool, schemaVersion));
   }
 
 }

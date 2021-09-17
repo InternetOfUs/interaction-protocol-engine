@@ -18,7 +18,7 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.stats;
+package eu.internetofus.wenet_interaction_protocol_engine.api.interactions;
 
 import java.util.List;
 
@@ -33,7 +33,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @author UDT-IA, IIIA-CSIC
  */
 @Schema(description = "Contains a set of interactions between users")
-public class InteractionBetweenUsersPage extends ReflectionModel implements Model {
+public class InteractionsPage extends ReflectionModel implements Model {
 
   /**
    * The index of the first interaction returned.
@@ -50,7 +50,7 @@ public class InteractionBetweenUsersPage extends ReflectionModel implements Mode
   /**
    * The found interactions.
    */
-  @ArraySchema(schema = @Schema(implementation = InteractionBetweenUsers.class), arraySchema = @Schema(description = "The set of interactions found"))
-  public List<InteractionBetweenUsers> interactions;
+  @ArraySchema(schema = @Schema(implementation = Interaction.class), arraySchema = @Schema(description = "The set of interactions found"))
+  public List<Interaction> interactions;
 
 }
