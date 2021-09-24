@@ -20,13 +20,13 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
+import eu.internetofus.common.components.interaction_protocol_engine.Interaction;
+import eu.internetofus.common.components.interaction_protocol_engine.InteractionsPage;
 import eu.internetofus.common.model.Model;
 import eu.internetofus.common.model.ValidationErrorException;
 import eu.internetofus.common.vertx.ModelsPageContext;
 import eu.internetofus.common.vertx.QueryBuilder;
 import eu.internetofus.common.vertx.Repository;
-import eu.internetofus.wenet_interaction_protocol_engine.api.interactions.Interaction;
-import eu.internetofus.wenet_interaction_protocol_engine.api.interactions.InteractionsPage;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;

@@ -24,6 +24,9 @@ import static io.reactiverse.junit5.web.TestRequest.queryParam;
 import static io.reactiverse.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import eu.internetofus.common.components.interaction_protocol_engine.Interaction;
+import eu.internetofus.common.components.interaction_protocol_engine.InteractionTest;
+import eu.internetofus.common.components.interaction_protocol_engine.InteractionsPage;
 import eu.internetofus.common.model.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import eu.internetofus.wenet_interaction_protocol_engine.persistence.InteractionsRepository;

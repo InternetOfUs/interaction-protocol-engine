@@ -19,6 +19,7 @@
  */
 package eu.internetofus.wenet_interaction_protocol_engine.api.interactions;
 
+import eu.internetofus.common.components.interaction_protocol_engine.Interaction;
 import eu.internetofus.common.model.Model;
 import eu.internetofus.common.vertx.ServiceRequests;
 import eu.internetofus.common.vertx.ServiceResponseHandlers;

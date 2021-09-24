@@ -97,7 +97,7 @@ wenet_summary_of_social_explanation(Summary,json(SocialExplanation)) :-
 %	@param UserAnswers the list of users answers tuple to rank.
 %
 wenet_social_context_builder_post_preferences_answers(Ranking,UserId,TaskId,UserAnswers) :-
-	wenet_social_context_builder_url_to(Url,['/social/preferences/answers/',UserId,'/',TaskId,'/']),
+	wenet_social_context_builder_url_to(Url,['/social/preferences/answers/',UserId,'/',TaskId]),
 	wenet_post_json_to_url(Ranking,Url,json([data=UserAnswers]))
 	.
 
@@ -161,4 +161,20 @@ wenet_social_context_builder_post_social_notification(Message) :-
 %
 wenet_new_user_message(UserMessage,TaskId,TransactionId,Timestamp,SenderId,Message) :-
 	UserMessage = json([taskId=TaskId,transactionId=TransactionId,timestamp=Timestamp,senderId=SenderId,message=Message])
+	.
+
+%!	wenet_social_context_builder_put_preferences_answers_update(-Updated,+UserId,+TaskId,+Selection,+UserAnswers)
+%
+%	Put the selected preferences answers of an user. This is used to notify witch
+%	answer of the ranking is selected by the user.
+%
+%   @param Updated the result of the update.
+%	@param UserId identifier of the user.
+%	@param TaskId identifier of the task.
+%	@param Selection identifier of the selected answer.
+%	@param UserAnswers the ranked list of users answers where is the selected answer.
+%
+wenet_social_context_builder_put_preferences_answers_update(Updated,UserId,TaskId,Selection,UserAnswers) :-
+	wenet_social_context_builder_url_to(Url,['/social/preferences/answers/',UserId,'/',TaskId,'/',Selection]),
+	wenet_put_json_to_url(Updated,Url,json([data=UserAnswers]))
 	.

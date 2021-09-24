@@ -20,8 +20,8 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
+import eu.internetofus.common.components.interaction_protocol_engine.Interaction;
 import eu.internetofus.common.vertx.Repository;
-import eu.internetofus.wenet_interaction_protocol_engine.api.interactions.Interaction;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;

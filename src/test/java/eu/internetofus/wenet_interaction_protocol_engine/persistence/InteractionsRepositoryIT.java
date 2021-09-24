@@ -22,8 +22,8 @@ package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import eu.internetofus.common.components.interaction_protocol_engine.InteractionTest;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
-import eu.internetofus.wenet_interaction_protocol_engine.api.interactions.InteractionTest;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxTestContext;
 import java.util.UUID;

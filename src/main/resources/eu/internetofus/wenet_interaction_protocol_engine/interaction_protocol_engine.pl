@@ -38,7 +38,10 @@
 	wenet_interaction_protocol_engine_get_user_state/2,
 	wenet_interaction_protocol_engine_merge_user_state/3,
 	wenet_id_of_protocol_event/2,
-	wenet_interaction_protocol_engine_delete_event/2
+	wenet_interaction_protocol_engine_delete_event/1,
+	wenet_interaction_protocol_engine_add_interaction/1,
+	wenet_new_interaction/13,
+	wenet_interaction_protocol_engine_get_interactions_page/18
 	.
 
 
@@ -356,4 +359,68 @@ wenet_id_of_protocol_event(Id, json(Event)) :-
 wenet_interaction_protocol_engine_delete_event(Id) :-
 	wenet_interaction_protocol_engine_api_url_to(Url,['/events/',Id]),
 	wenet_delete_to_url(Url)
+	.
+
+	
+%!	wenet_interaction_protocol_engine_add_interaction(+Interaction)
+%
+%	Add a new interaction.
+%
+%	@param Interaction to add.
+%
+wenet_interaction_protocol_engine_add_interaction(Interaction):-
+	wenet_interaction_protocol_engine_api_url_to(Url,['/interactions']),
+	wenet_post_json_to_url(_,Url,Interaction)
+	.
+
+%!	wenet_new_interaction(-Interaction,+AppId,+CommunityId,+TaskTypeId,+TaskId,+SenderId,+ReceiverId,+TransactionLabel,+TransactionAttributes,+TransactionTs,+MessageLabel,+MessageAttributes,+MessageTs)
+%
+%	Create a new interaction.
+%
+%	@param Interaction that has been created.
+%	@param AppId application identifier of the interaction.
+%	@param CommunityId community identifier of the interaction.
+%	@param TaskTypeId task type identifier of the interaction.
+%	@param TaskId task identifier of the interaction.
+%	@param SenderId identifier of the user that starts the interaction.
+%	@param ReceiverId identifier of the user that ends the interaction.
+%	@param SenderUserId of the message.
+%	@param TransactionLabel label of the transaction that has started the interaction.
+%	@param TransactionAttributes attributes of the transaction that has started the interaction.
+%	@param TransactionTs UTC epoch timestamp representing the time when the transaction has been done.
+%	@param MessageLabel label of the message that has started the interaction.
+%	@param MessageAttributes attributes of the message that has started the interaction.
+%	@param MessageTs UTC epoch timestamp representing the time when the message has been done.
+%
+wenet_new_interaction(Interaction,AppId,CommunityId,TaskTypeId,TaskId,SenderId,ReceiverId,TransactionLabel,TransactionAttributes,TransactionTs,MessageLabel,MessageAttributes,MessageTs) :-
+	Message = json([appId=AppId,communityId=CommunityId,taskTypeId=TaskTypeId,taskId=TaskId,senderId=SenderId,receiverId=ReceiverId,transactionLabel=TransactionLabel,transactionAttributes=TransactionAttributes,transactionTs=TransactionTs,messageLabel=MessageLabel,messageAttributes=MessageAttributes,messageTs=MessageTs])
+	.
+
+%!	wenet_interaction_protocol_engine_get_interactions_page(-Page,+AppId,+CommunityId,+TaskTypeId,+TaskId,+SenderId,+ReceiverId,+HasTransaction,+TransactionLabel,+TransactionAttributes,+TransactionFrom,+TransactionTo,+HasMessage,+MessageLabel,+MessageAttributes,+MessageFrom,+MessageTo,+Offset,+Limit)
+%
+%	Add a new interaction.
+%
+%	@param Page with the interaction that match the wuery.
+%	@param AppId application identifier of the interactions to return.
+%	@param CommunityId community identifier of the interactions to return.
+%	@param TaskTypeId task type identifier of the interactions to return.
+%	@param TaskId task identifier of the interactions to return.
+%	@param SenderId identifier of the user that starts the interactions to return.
+%	@param ReceiverId identifier of the user that ends the interactions to return.
+%	@param HasTransaction This is 'true' if the interactions requires a transaction, 'false if not or 'null' if does not matter.
+%	@param TransactionLabel label of the transaction that has started the interactions to return.
+%	@param TransactionFrom the minimum time stamp, inclusive, where the interaction has to be started, or {@code null} to start at midnight, January 1, 1970 UTC.
+%	@param TransactionTo the maximum time stamp, inclusive, where the interaction has to be started or {@code null} to be the current time.
+%	@param HasMessage This is 'true' if the interactions requires a message, 'false if not or 'null' if does not matter.
+%	@param MessageLabel label of the message that has started the interactions to return.
+%	@param MessageFrom the minimum time stamp, inclusive, where the interaction has to be end, or {@code null} to start at midnight, January 1, 1970 UTC.
+%	@param MessageTo the maximum time stamp, inclusive, where the interaction has to be end or {@code null} to be the current time.
+%	@param Order in witch the interactions has to be returned. For each field it has be separated by a ',' and each field can start with '+' (or without it) to order on ascending order, or with the prefix '-' to do on descendant order.
+%	@param Offset the index of the first interaction to return.
+%	@param Limit the number maximum of interactions to return.
+%
+wenet_interaction_protocol_engine_get_interactions_page(Page,AppId,CommunityId,TaskTypeId,TaskId,SenderId,ReceiverId,HasTransaction,TransactionLabel,TransactionFrom,TransactionTo,HasMessage,MessageLabel,MessageFrom,MessageTo,Order,Offset,Limit):-
+	wenet_interaction_protocol_engine_api_url_to(Url,['/interactions']),
+	wenet_add_query_params_to_url(UrlWithParams,Url,[appId=AppId,communityId=CommunityId,taskTypeId=TaskTypeId,taskId=TaskId,senderId=SenderId,receiverId=ReceiverId,hasTransaction=HasTransaction,transactionLabel=TransactionLabel,transactionFrom=TransactionFrom,transactionTo=TransactionTo,hasMessage=HasMessage,messageLabel=MessageLabel,messageFrom=MessageFrom,messageTo=MessageTo,order=Order,offset=Offset,limit=Limit]),
+	wenet_get_json_from_url(Page,UrlWithParams)
 	.

@@ -43,7 +43,8 @@
 	answers_ranking/2,
 	notify_social_context_builder_message_sent/1,
 	merge_task_state/1,
-	put_task_state_attribute/2
+	put_task_state_attribute/2,
+	notify_message_interaction/1
 	.
 
 
@@ -181,6 +182,7 @@ send_user_message(Label,Content) :-
 	),
 	ignore(notify_incentive_server_message_sent(Label)),
 	ignore(notify_social_context_builder_message_sent(Message)),
+	ignore(notify_message_interaction(Message)),
 	!
 	.
 
@@ -493,4 +495,78 @@ merge_task_state(json(TaskState)) :-
 %
 put_task_state_attribute(Key,Value) :-
 	merge_task_state(json([attributes=json([Key=Value])]))
+	.
+
+%!	notify_message_interaction(+Message)
+%
+%	Notfy that has been done a message interaction.
+%
+%	@param Message of the interaction.
+% 
+notify_message_interaction(Message) :-
+	(
+		get_app_id(AppId)
+		; AppId = @(null)
+	),
+	(
+		get_community_id(CommunityId)
+		; CommunityId = @(null)
+	),
+	(
+		get_task_type_id(TaskTypeId)
+		; TaskTypeId = @(null)
+	),
+	(
+		get_task_id(TaskId)
+		; TaskId = @(null)
+	),
+	(
+		(
+			get_transaction(Transaction),
+			(
+				wenet_actioneer_id_of_transaction(SenderId,Transaction)
+				; SenderId = @(null)
+			),
+			(
+				wenet_label_of_transaction(TransactionLabel,Transaction)
+				; TransactionLabel = @(null)
+			),
+			(
+				wenet_attributes_of_transaction(TransactionAttributes,Transaction)
+				; TransactionAttributes = @(null)
+			),
+			(
+				wenet_creation_ts_of_transaction(TransactionTs,Transaction)
+				; TransactionTs = @(null)
+			)
+		)
+		; SenderId = @(null),TransactionLabel = @(null),TransactionAttributes = @(null), TransactionTs =  @(null) 
+	),
+	(
+		(
+			wenet_is_json_null(Message),
+			ReceiverId = @(null),
+			MessageLabel = @(null),
+			MessageAttributes = @(null), 
+			MessageTs =  @(null)
+		)
+		;
+		(
+			(
+				wenet_receiver_id_of_message(ReceiverId,Message)
+				; ReceiverId = @(null)
+			),
+			(
+				wenet_label_of_message(MessageLabel,Message)
+				; MessageLabel = @(null)
+			),
+			(
+				wenet_attributes_of_message(MessageAttributes,Message)
+				; MessageAttributes = @(null)
+			),
+			get_now(MessageTs)			
+		)
+	),
+	wenet_new_interaction(Interaction,AppId,CommunityId,TaskTypeId,TaskId,SenderId,ReceiverId,TransactionLabel,TransactionAttributes,TransactionTs,MessageLabel,MessageAttributes,MessageTs),
+	ignore(wenet_interaction_protocol_engine_add_interaction(Interaction))
 	.

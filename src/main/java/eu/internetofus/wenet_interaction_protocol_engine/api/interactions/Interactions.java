@@ -19,6 +19,8 @@
  */
 package eu.internetofus.wenet_interaction_protocol_engine.api.interactions;
 
+import eu.internetofus.common.components.interaction_protocol_engine.Interaction;
+import eu.internetofus.common.components.interaction_protocol_engine.InteractionsPage;
 import eu.internetofus.common.model.ErrorMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

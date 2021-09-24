@@ -783,16 +783,19 @@ The next predicates are used to interact with the task manager component.
   This predicate obtains the attributes of a transaction.
     * ``Attributes``  _Output_  JSON model with the transaction attributes.
     * ``Transaction``  _Input_  JSON model of the transaction to obtain the attributes.
-- ``wenet_actioneer_id_of_transaction(ActioneerId,, Transaction)``
+- ``wenet_actioneer_id_of_transaction(ActioneerId, Transaction)``
   This predicate obtains the user that does a transaction.
     * ``ActioneerId``  _Output_  string with the transaction actioneer. Thus, the identifier
     of the user that has done the transaction.
     * ``Transaction``  _Input_  JSON model of the transaction to obtain the identifier.
-- ``wenet_messages_of_transaction(Messages, Transaction)``
-  This predicate obtains the messages of a transaction.
-    * ``Messages``  _Output_  array of JSON models with the transaction messages.
-    * ``Transaction``  _Input_  JSON model of the transaction to obtain the messages.
-
+- ``wenet_creation_ts_of_transaction(CreationTs, Transaction)``
+  This predicate obtains the creation timestamp of a transaction.
+    * ``CreationTs``  _Output_  integer with the transaction creation timestamp.
+    * ``Transaction``  _Input_  JSON model of the transaction to obtain the timestamp.
+- ``wenet_last_update_ts_of_transaction(LastUpdateTs, Transaction)``
+  This predicate obtains the last update timestamp of a transaction.
+    * ``LastUpdateTs``  _Output_  onteger with the transaction last update timestamp.
+    * ``Transaction``  _Input_  JSON model of the transaction to obtain the timestamp.
 
 
 ### Interaction protocol engine
@@ -925,6 +928,24 @@ The next predicates are used to interact with the interaction protocol engine co
     * ``Delay``  _Input_  number with the seconds to wait before sending the event.
     * ``Particle``  _Input_  string with the particle for the event.
     * ``Content``  _Input_  JSON model with the content for the event.
+- ``wenet_new_interaction(Interaction,AppId,CommunityId,TaskTypeId,TaskId,SenderId,ReceiverId,TransactionLabel,TransactionAttributes,TransactionTs,MessageLabel,MessageAttributes,MessageTs)``
+  This predicate is used to create a new interaction.
+    * ``Interaction``  _Output_  JSON model with the created interaction.
+    * ``AppId``  _Input_  string with the application identifier for the interaction.
+    * ``CommunityId``  _Input_  string with the community identifier for the interaction.
+    * ``TaskTypeId``  _Input_  string with the task type identifier for the interaction.
+    * ``TaskId``  _Input_  string with the task identifier for the interaction.
+    * ``SenderId``  _Input_  string with the identifier of the user that starts the interaction.
+    * ``ReceiverId``  _Input_  string withthe identifier of the user that ends the interaction.
+    * ``TransactionLabel``  _Input_  string with the label of the transaction that has started the interaction.
+    * ``TransactionAttributes``  _Input_  JSON with the attributes of the transaction that has started the interaction.
+    * ``TransactionTs``  _Input_  integer with the UTC epoch timestamp representing the time when the transaction has been done.
+    * ``MessageLabel``  _Input_  string with the label of the message that has started the interaction.
+    * ``MessageAttributes``  _Input_  JSON with the attributes of the message that has started the interaction.
+    * ``MessageTs``  _Input_  integer with the UTC epoch timestamp representing the time when the message has been done.
+- ``wenet_interaction_protocol_engine_add_interaction(Interaction)``
+  This predicate is used to add a new interaction.
+    * ``Interaction``  _Input_  JSON model with the interaction to add.
 
 
 ### Service

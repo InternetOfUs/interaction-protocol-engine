@@ -31,7 +31,9 @@
 	wenet_add/3,
 	wenet_format/3,
 	wenet_math/2,
-	wenet_delete_to_url/1
+	wenet_delete_to_url/1,
+	wenet_is_json_null/1,
+	wenet_add_query_params_to_url/3
 	.
 
 :- autoload(library(http/json)).
@@ -431,4 +433,29 @@ wenet_delete_to_url(Url) :-
 		)		
 	),
 	wenet_log_trace('DELETE',Url)
+	.
+
+%!	wenet_is_json_null(+V)
+%
+%	Check if a json value is a {@code null}.
+%
+wenet_is_json_null(V) :-
+	V = @(null)
+	.
+	
+%!	wenet_add_query_params_to_url(-UrlWithParams,+Url,+Params)
+%
+%	Create an URL with the query parameters.
+%
+%	@param UrlWithParams the url with the parameters.
+%	@param Url to add the query parameters.
+%	@param Params the query parameters.
+%
+wenet_add_query_params_to_url(UrlWithParams,Url,Params) :-
+	exclude(wenet_is_json_null,Params,NoNullParams),
+	(length(NoNullParams, 0)
+		-> UrlWithParams = Url
+		; uri_query_components(QueryParams,NoNullParams),
+		 atomics_to_string([Url|['?',QueryParams]],UrlWithParams)
+	)
 	.
