@@ -25,7 +25,8 @@
 	wenet_answer_of_user_answer/2,
 	wenet_new_user_answer/3,
 	wenet_social_context_builder_post_social_notification/1,
-	wenet_new_user_message/6
+	wenet_new_user_message/6,
+	wenet_social_context_builder_put_preferences_answers_update/4
 	.
 
 
@@ -178,3 +179,19 @@ wenet_social_context_builder_put_preferences_answers_update(Updated,UserId,TaskI
 	wenet_social_context_builder_url_to(Url,['/social/preferences/answers/',UserId,'/',TaskId,'/',Selection]),
 	wenet_put_json_to_url(Updated,Url,json([data=UserAnswers]))
 	.
+
+%!	wenet_social_context_builder_put_preferences_answers_update(+UserId,+TaskId,+Selected,+Ranking)
+%
+%	Update the selected answers of a ranked answers.
+%
+%	@param UserId identifier of the user.
+%	@param TaskId identifier of the task.
+%	@param Selected index of the selected answers of the ranking.
+%   @param Ranking where is the selected answer.
+%
+wenet_social_context_builder_put_preferences_answers_update(UserId,TaskId,Selected,Ranking) :-
+	wenet_social_context_builder_url_to(Url,['/social/preferences/answers/',UserId,'/',TaskId,'/',Selected,'/update']),
+	wenet_put_json_to_url(_,Url,Ranking)
+	.
+	
+
