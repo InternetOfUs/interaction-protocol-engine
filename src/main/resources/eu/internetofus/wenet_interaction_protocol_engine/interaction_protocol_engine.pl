@@ -393,7 +393,7 @@ wenet_interaction_protocol_engine_add_interaction(Interaction):-
 %	@param MessageTs UTC epoch timestamp representing the time when the message has been done.
 %
 wenet_new_interaction(Interaction,AppId,CommunityId,TaskTypeId,TaskId,SenderId,ReceiverId,TransactionLabel,TransactionAttributes,TransactionTs,MessageLabel,MessageAttributes,MessageTs) :-
-	Message = json([appId=AppId,communityId=CommunityId,taskTypeId=TaskTypeId,taskId=TaskId,senderId=SenderId,receiverId=ReceiverId,transactionLabel=TransactionLabel,transactionAttributes=TransactionAttributes,transactionTs=TransactionTs,messageLabel=MessageLabel,messageAttributes=MessageAttributes,messageTs=MessageTs])
+	Interaction = json([appId=AppId,communityId=CommunityId,taskTypeId=TaskTypeId,taskId=TaskId,senderId=SenderId,receiverId=ReceiverId,transactionLabel=TransactionLabel,transactionAttributes=TransactionAttributes,transactionTs=TransactionTs,messageLabel=MessageLabel,messageAttributes=MessageAttributes,messageTs=MessageTs])
 	.
 
 %!	wenet_interaction_protocol_engine_get_interactions_page(-Page,+AppId,+CommunityId,+TaskTypeId,+TaskId,+SenderId,+ReceiverId,+HasTransaction,+TransactionLabel,+TransactionAttributes,+TransactionFrom,+TransactionTo,+HasMessage,+MessageLabel,+MessageAttributes,+MessageFrom,+MessageTo,+Offset,+Limit)
