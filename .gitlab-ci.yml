@@ -26,12 +26,14 @@ build_docker_dev:
 build_docker:
   stage: build
   script:
-    - COMPONENT_VERSION=$(grep --max-count=1 '<version>' pom.xml | awk -F '>' '{ print $2 }' | awk -F '<' '{ print $1 }')
+    - COMPONENT_VERSION=$(grep '<version>' pom.xml |head -n1| awk -F '>' '{ print $2 }' | awk -F '<' '{ print $1 }')
     - DOCKER_BUILDKIT=1 docker build -f src/main/docker/Dockerfile -t $COMPONENT_NAME:$COMPONENT_VERSION .
     - docker push $COMPONENT_NAME:$COMPONENT_VERSION
 
 buil_test_site:
   stage: test
+  dependencies:
+    - build_docker_dev
   script:
     - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $CI_PROJECT_DIR:/app -v $CI_PROJECT_DIR/.m2/repository:/root/.m2/repository -t $COMPONENT_NAME:dev mvn -B -fn clean compile test-compile javadoc:javadoc javadoc:test-javadoc verify site post-site
     - awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, "instructions covered"; print 100*covered/instructions, "% covered" }' target/site/jacoco/jacoco.csv
