@@ -44,7 +44,8 @@
 	notify_social_context_builder_message_sent/1,
 	merge_task_state/1,
 	put_task_state_attribute/2,
-	notify_message_interaction/1
+	notify_message_interaction/1,
+	selected_answer_from_last_ranking/1
 	.
 
 
@@ -439,7 +440,37 @@ answers_ranking(Ranking,UserAnswers):-
 	get_profile_id(Me),
 	get_task_id(TaskId),
 	!,
-	ignore(wenet_social_context_builder_post_preferences_answers(Ranking,Me,TaskId,UserAnswers))
+	ignore(wenet_social_context_builder_post_preferences_answers(Ranking,Me,TaskId,UserAnswers)),
+	ignore(put_task_state_attribute('social_context_builder_ranking',Ranking))
+	.
+
+%!	selected_answer_from_last_ranking(+UserAnswer)
+%
+%	This action update the  the social context builder to obtain a ranking for some answers.
+%
+%	@param UserAnswer the selected answer.
+%	@param UserAnswers array of JSON models with the user answers. This array elements
+%						can be created using the wenet_new_user_answer.
+%
+selected_answer_from_last_ranking(UserAnswer):-
+	!,
+	ignore(
+		(
+			get_profile_id(UserId),
+			get_task_id(TaskId),
+			get_task_state_attribute(Ranking,'social_context_builder_ranking'),
+			(
+				nth0(Selected,Ranking,UserAnswer)
+				-> wenet_social_context_builder_put_preferences_answers_update(UserId,TaskId,Selected,Ranking)
+				; 	(
+					length(Ranking,Selected),
+					wenet_add(NewRanking,UserAnswer,Ranking),
+					wenet_social_context_builder_put_preferences_answers_update(UserId,TaskId,Selected,NewRanking)
+				)  
+			)
+		
+		)
+	)
 	.
 
 %!	notify_social_context_builder_message_sent(+Message)
@@ -459,7 +490,7 @@ notify_social_context_builder_message_sent(Message) :-
 		wenet_new_user_message(UserMessage,TaskId,TransactionId,Timestamp,SenderId,Message)		
 	)->
 	wenet_social_context_builder_post_social_notification(UserMessage)
-	;true
+	; true
 	.
 
 %!	merge_task_state(-TaskState)

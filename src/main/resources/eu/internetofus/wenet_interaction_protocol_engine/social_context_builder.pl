@@ -191,7 +191,7 @@ wenet_social_context_builder_put_preferences_answers_update(Updated,UserId,TaskI
 %
 wenet_social_context_builder_put_preferences_answers_update(UserId,TaskId,Selected,Ranking) :-
 	wenet_social_context_builder_url_to(Url,['/social/preferences/answers/',UserId,'/',TaskId,'/',Selected,'/update']),
-	wenet_put_json_to_url(_,Url,Ranking)
+	wenet_put_json_to_url(_,Url,json([data=Ranking]))
 	.
 	
 
