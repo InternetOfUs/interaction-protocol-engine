@@ -799,6 +799,10 @@ The next predicates are used to interact with the task manager component.
   This predicate obtains the last update timestamp of a transaction.
     * ``LastUpdateTs``  _Output_  onteger with the transaction last update timestamp.
     * ``Transaction``  _Input_  JSON model of the transaction to obtain the timestamp.
+- ``wenet_messages_of_transaction(Messages, Transaction)``
+  This predicate obtains the messages of a transaction.
+    * ``Messages``  _Output_  array of JSON models with the transaction messages.
+    * ``Transaction``  _Input_  JSON model of the transaction to obtain the messages.
 
 
 ### Interaction protocol engine
