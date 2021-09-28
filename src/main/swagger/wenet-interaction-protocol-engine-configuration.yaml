@@ -61,7 +61,5 @@ openAPI:
       description: Production instance
     - url: https://wenet.u-hopper.com/dev/interaction_protocol_engine
       description: Staging instance
-    - url: http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/prod/
-      description: IIIA production server
-    - url: http://ardid.iiia.csic.es/wenet/interaction-protocol-engine/dev/
+    - url: https://ardid.iiia.csic.es/wenet/interaction-protocol-engine
       description: IIIA development server
