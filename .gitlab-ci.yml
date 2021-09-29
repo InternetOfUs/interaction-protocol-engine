@@ -25,7 +25,7 @@ build_docker_dev:
 build_docker:
   stage: build
   script:
-    - COMPONENT_VERSION=$(grep '<version>' pom.xml |head -n1| awk -F '>' '{ print $2 }' | awk -F '<' '{ print $1 }')
+    - COMPONENT_VERSION=$(grep '<version>' $CI_PROJECT_DIR/pom.xml |head -n1| awk -F '>' '{ print $2 }' | awk -F '<' '{ print $1 }')
     - docker pull $CI_REGISTRY_IMAGE:$COMPONENT_VERSION  || true
     - DOCKER_BUILDKIT=1 docker build -f src/main/docker/Dockerfile --cache-from $CI_REGISTRY_IMAGE:$COMPONENT_VERSION -t $CI_REGISTRY_IMAGE:$COMPONENT_VERSION .
     - docker push $CI_REGISTRY_IMAGE:$COMPONENT_VERSION
