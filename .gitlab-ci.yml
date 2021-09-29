@@ -8,13 +8,10 @@ variables:
   DOCKER_TLS_CERTDIR: ""
   COMPONENT_NAME: "internetofus/$CI_PROJECT_NAME"
   
-cache:
-  key: "maven-cache"
-  paths:
-    - .m2/repository
-
 before_script:
-  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  - docker info
+  - echo $CI_REGISTRY_IMAGE
+  - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
 
 build_docker_dev:
   stage: build
