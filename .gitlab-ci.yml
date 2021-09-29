@@ -32,13 +32,14 @@ build_docker:
     
 buil_test_site:
   stage: test
+  needs: ["build_docker_dev"]
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:dev || true
+    - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $CI_PROJECT_DIR:/app -v $CI_PROJECT_DIR/.m2/repository:/root/.m2/repository -t $CI_REGISTRY_IMAGE:dev mvn -B -fn clean compile test-compile javadoc:javadoc javadoc:test-javadoc verify site post-site
+    - awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, "instructions covered"; print 100*covered/instructions, "% covered" }' target/site/jacoco/jacoco.csv || true
+    - cp -r target/site public
   dependencies:
     - build_docker_dev
-  script:
-    - docker pull $CI_REGISTRY_IMAGE:dev  || true
-    - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $CI_PROJECT_DIR:/app -v $CI_PROJECT_DIR/.m2/repository:/root/.m2/repository -t $CI_REGISTRY_IMAGE:dev mvn -B -fn clean compile test-compile javadoc:javadoc javadoc:test-javadoc verify site post-site
-    - awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, "instructions covered"; print 100*covered/instructions, "% covered" }' target/site/jacoco/jacoco.csv
-    - cp -r target/site public
   artifacts:
     when: always
     reports:
@@ -48,3 +49,15 @@ buil_test_site:
     paths:
       - public
       - target/site/jacoco/jacoco.xml
+
+coverage:
+  stage: deploy
+  image: registry.gitlab.com/haynes/jacoco2cobertura:1.0.7
+  script:
+    - python /opt/cover2cover.py target/site/jacoco/jacoco.xml $CI_PROJECT_DIR/src/main/java/ > target/site/cobertura.xml
+  needs: ["buil_test_site"]
+  dependencies:
+    - buil_test_site
+  artifacts:
+    reports:
+      cobertura: target/site/cobertura.xml
