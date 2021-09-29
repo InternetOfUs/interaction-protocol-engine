@@ -3,21 +3,23 @@ image: docker:latest
 services:
   - docker:dind
 
+cache:
+  key: "maven-cache"
+  paths:
+    - .m2/repository
+
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
-  COMPONENT_NAME: "internetofus/$CI_PROJECT_NAME"
   
 before_script:
-  - docker info
-  - echo $CI_REGISTRY_IMAGE
   - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
 
 build_docker_dev:
   stage: build
   script:
     - docker pull $CI_REGISTRY_IMAGE:dev  || true
-    - DOCKER_BUILDKIT=1 docker build -f src/dev/docker/Dockerfile --cache-from $CI_REGISTRY_IMAGE:dev -t $COMPONENT_NAME:dev .
+    - DOCKER_BUILDKIT=1 docker build -f src/dev/docker/Dockerfile --cache-from $CI_REGISTRY_IMAGE:dev -t $CI_REGISTRY_IMAGE:dev .
     - docker push $CI_REGISTRY_IMAGE:dev
 
 build_docker:
@@ -25,7 +27,7 @@ build_docker:
   script:
     - COMPONENT_VERSION=$(grep '<version>' pom.xml |head -n1| awk -F '>' '{ print $2 }' | awk -F '<' '{ print $1 }')
     - docker pull $CI_REGISTRY_IMAGE:$COMPONENT_VERSION  || true
-    - DOCKER_BUILDKIT=1 docker build -f src/main/docker/Dockerfile --cache-from $CI_REGISTRY_IMAGE:$COMPONENT_VERSION -t $COMPONENT_NAME:$COMPONENT_VERSION .
+    - DOCKER_BUILDKIT=1 docker build -f src/main/docker/Dockerfile --cache-from $CI_REGISTRY_IMAGE:$COMPONENT_VERSION -t $CI_REGISTRY_IMAGE:$COMPONENT_VERSION .
     - docker push $CI_REGISTRY_IMAGE:$COMPONENT_VERSION
     
 buil_test_site:
@@ -33,7 +35,7 @@ buil_test_site:
   dependencies:
     - build_docker_dev
   script:
-    - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $CI_PROJECT_DIR:/app -v $CI_PROJECT_DIR/.m2/repository:/root/.m2/repository -t $COMPONENT_NAME:dev mvn -B -fn clean compile test-compile javadoc:javadoc javadoc:test-javadoc verify site post-site
+    - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $CI_PROJECT_DIR:/app -v $CI_PROJECT_DIR/.m2/repository:/root/.m2/repository -t $CI_REGISTRY_IMAGE:dev mvn -B -fn clean compile test-compile javadoc:javadoc javadoc:test-javadoc verify site post-site
     - awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, "instructions covered"; print 100*covered/instructions, "% covered" }' target/site/jacoco/jacoco.csv
     - cp -r target/site public
   artifacts:
