@@ -3,9 +3,10 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
-## Version 0.22.0 (2021--)
+## Version 0.22.0 (2021-10-)
 
  * Add new social context builder ranking by answers.
+ * Fix new social context builder notify interaction.
 
 
 ## Version 0.21.0 (2021-08-23)
