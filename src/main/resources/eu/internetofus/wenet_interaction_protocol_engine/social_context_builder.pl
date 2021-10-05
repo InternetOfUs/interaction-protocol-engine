@@ -145,7 +145,7 @@ wenet_new_user_answer(UserAnswer, UserId, Answer) :-
 %   @param Message JSON model with the interaction user message.
 %
 wenet_social_context_builder_post_social_notification(Message) :-
-	wenet_social_context_builder_url_to(Url,['/social/notification/']),
+	wenet_social_context_builder_url_to(Url,['/social/notification/interaction']),
 	wenet_post_json_to_url(_,Url,Message)
 	.
 
