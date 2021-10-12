@@ -70,8 +70,10 @@
 	get_user_state_attribute/3,
 	filter_transactions/3,
 	filter_transactions_/4,
-	normalized_closeness/4,
-	normalized_closeness_/5
+	normalized_closeness/3,
+	normalized_closeness_/5,
+	normalized_socialness/2,
+	normalized_socialness_/4
 	.
 
 %!	is_now_less_than(+Time)
@@ -814,12 +816,12 @@ filter_transactions_(Target,[Head|Tail],Test,Map):-
 %	Calculate the closeness (in distance) of a user repect some others.
 %
 %	@param Closeness a list with the closeness between a user and some others.
-%	@param UseId identifier of the user to calculate the closeness.
 %	@param Users identifiers of the users to calculate the closeness.
 %	@param MaxDistance the maximum distance in meters that any user can be.
 %
-normalized_closeness(Closeness,UserId,Users,MaxDistance) :-
+normalized_closeness(Closeness,Users,MaxDistance) :-
 	(
+		get_profile_id(UserId),
 		wenet_personal_context_builder_locations(Locations,[UserId|Users]),
 		!,
 		member(SourceLocation,Locations),
@@ -845,4 +847,38 @@ normalized_closeness_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,L
 	!,
 	wenet_new_normalized_value(UserCloseness,UserId,Distance),
 	normalized_closeness_(ClosenessRest,Users,MaxDistance,Locations,SourceLocation)
+	.
+
+%!	normalized_socialness(-Socialness,+UserId,+Users,+MaxDistance)
+%
+%	Calculate the socialness of a user repect some others.
+%
+%	@param Socialness a list with the socialness between a user and some others.
+%	@param Users identifiers of the users to calculate the socialness.
+%
+normalized_socialness(Socialness,Users) :-
+	(
+		get_profile(Profile),
+		get_app_id(AppId),
+		wenet_relationships_of_profile(Relationships,Profile),
+		!,
+		normalized_socialness_(Socialness,Users,Relationships,AppId)
+	)
+	-> true
+	; wenet_initialize_normalized_users(Socialness,Users,0.0)
+	.
+normalized_socialness_([],[],_,_).
+normalized_socialness_([UserSocialness|SocialnessRest],[UserId|Users],Relationships,AppId) :-
+	(
+		(
+			member(Relationship,Relationships),
+			wenet_user_id_of_relationship(UserId,Relationship),
+			wenet_app_id_of_relationship(AppId,Relationship)
+		)
+		-> wenet_weight_of_relationship(Weight,Relationship)
+		; Weight = 0.0
+	),
+	!,
+	wenet_new_normalized_value(UserSocialness,UserId,Weight),
+	normalized_socialness_(SocialnessRest,Users,Relationships,AppId)
 	.

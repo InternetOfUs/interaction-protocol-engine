@@ -19,7 +19,11 @@
 	wenet_profile_manager_get_profile/2,
 	wenet_profile_manager_get_community/2,
 	wenet_id_of_profile/2,
-	wenet_id_of_community/2
+	wenet_id_of_community/2,
+	wenet_relationships_of_profile/2,
+	wenet_user_id_of_relationship/2,
+	wenet_app_id_of_relationship/2,
+	wenet_weight_id_of_relationship/2
 	.
 
 
@@ -65,7 +69,7 @@ wenet_profile_manager_get_community(Community,Id) :-
 %	@param Profile to get the identifier.
 %
 wenet_id_of_profile(Id, json(Profile)) :-
-	member(appId=Id,Profile)
+	member(id=Id,Profile)
 	.
 
 %!	wenet_id_of_community(-Id,+Community)
@@ -76,5 +80,49 @@ wenet_id_of_profile(Id, json(Profile)) :-
 %	@param Community to get the identifier.
 %
 wenet_id_of_community(Id, json(Community)) :-
-	member(appId=Id,Community)
+	member(id=Id,Community)
+	.
+
+%!	wenet_relationships_of_profile(-Relationships,+Profile)
+%
+%	Obtain the relationshipsentifier of a profile.
+%
+%	@param Relationships of a profile.
+%	@param Profile to get the relationshipsentifier.
+%
+wenet_relationships_of_profile(Relationships, json(Profile)) :-
+	member(relationships=Relationships,Profile)
+	.
+
+%!	wenet_user_id_of_relationship(-UserId,+Relationship)
+%
+%	Obtain the user identifier defined on a social relationship.
+%
+%	@param UserId of a relationship.
+%	@param Relationship to get the user identifier.
+%
+wenet_user_id_of_relationship(UserId, json(Relationship)) :-
+	member(userId=UserId,Relationship)
+	.
+
+%!	wenet_app_id_of_relationship(-AppId,+Relationship)
+%
+%	Obtain the app identifier defined on a social relationship.
+%
+%	@param AppId of a relationship.
+%	@param Relationship to get the app identifier.
+%
+wenet_app_id_of_relationship(AppId, json(Relationship)) :-
+	member(appId=AppId,Relationship)
+	.
+
+%!	wenet_weight_of_relationship(-Weight,+Relationship)
+%
+%	Obtain the weight defined on a social relationship.
+%
+%	@param Weight of a relationship.
+%	@param Relationship to get the weight.
+%
+wenet_weight_of_relationship(Weight, json(Relationship)) :-
+	member(weight=Weight,Relationship)
 	.

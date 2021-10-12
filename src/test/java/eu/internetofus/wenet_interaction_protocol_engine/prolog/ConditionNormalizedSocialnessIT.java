@@ -20,10 +20,10 @@
 package eu.internetofus.wenet_interaction_protocol_engine.prolog;
 
 import eu.internetofus.common.components.models.Message;
+import eu.internetofus.common.components.models.SocialNetworkRelationship;
+import eu.internetofus.common.components.models.SocialNetworkRelationshipType;
 import eu.internetofus.common.components.models.TaskType;
-import eu.internetofus.common.components.personal_context_builder.UserDistance;
-import eu.internetofus.common.components.personal_context_builder.UserLocation;
-import eu.internetofus.common.components.personal_context_builder.WeNetPersonalContextBuilderSimulator;
+import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.components.service.MessagePredicates;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -34,11 +34,11 @@ import java.util.ArrayList;
 import java.util.function.Predicate;
 
 /**
- * Test the condition to calculate the normalized closeness.
+ * Test the condition to calculate the normalized socialness.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class ConditionNormalizedClosenessIT extends AbstractPrologITC {
+public class ConditionNormalizedSocialnessIT extends AbstractPrologITC {
 
   /**
    * {@inheritDoc}
@@ -49,7 +49,7 @@ public class ConditionNormalizedClosenessIT extends AbstractPrologITC {
     return super.createTaskTypeForProtocol(vertx, testContext).map(taskType -> {
 
       taskType.callbacks = new JsonObject().put("result",
-          new JsonObject().put("type", "object").put("properties", new JsonObject().put("closeness",
+          new JsonObject().put("type", "object").put("properties", new JsonObject().put("socialness",
               new JsonObject().put("type", "array").put("items", new JsonObject().put("type", "object")))));
       return taskType;
 
@@ -72,7 +72,7 @@ public class ConditionNormalizedClosenessIT extends AbstractPrologITC {
   @Override
   protected String getThenceforthCode() {
 
-    return "normalized_closeness(Result,Users,10000) and send_user_message(\"result\",json([closeness=Result]))";
+    return "normalized_socialness(Result,Users) and send_user_message(\"result\",json([socialness=Result]))";
   }
 
   /**
@@ -81,30 +81,26 @@ public class ConditionNormalizedClosenessIT extends AbstractPrologITC {
   @Override
   protected Future<?> doBeforeTaskCreated(final Vertx vertx, final VertxTestContext testContext) {
 
-    Future<?> future = Future.succeededFuture();
+    final var profile = this.users.get(0);
+    profile.relationships = new ArrayList<>();
     for (var i = 0; i < this.users.size(); i++) {
 
       if (i % 2 == 0) {
 
-        final var location = new UserLocation();
-        location.userId = this.users.get(i).id;
-        if (i % 3 == 0) {
-
-          location.latitude = i;
-          location.longitude = i;
-
-        } else {
-
-          location.latitude = i * 0.001;
-          location.longitude = i * 0.001;
-        }
-        future = future
-            .compose(ignored -> WeNetPersonalContextBuilderSimulator.createProxy(vertx).addUserLocation(location));
-
+        final var relationship = new SocialNetworkRelationship();
+        relationship.appId = this.app.appId;
+        relationship.type = SocialNetworkRelationshipType.values()[i % SocialNetworkRelationshipType.values().length];
+        relationship.userId = this.users.get(i).id;
+        relationship.weight = Math.max(0.0, 1.0 - 0.1 * i);
+        profile.relationships.add(relationship);
       }
 
     }
-    return future;
+    return WeNetProfileManager.createProxy(vertx).updateProfile(profile).map(updated -> {
+      this.users.remove(0);
+      this.users.add(0, updated);
+      return null;
+    });
   }
 
   /**
@@ -113,21 +109,21 @@ public class ConditionNormalizedClosenessIT extends AbstractPrologITC {
   @Override
   protected Future<?> doAfterTaskCreated(final Vertx vertx, final VertxTestContext testContext) {
 
-    final var closeness = new JsonArray();
+    final var socialness = new JsonArray();
     for (var i = 1; i < this.users.size(); i++) {
 
       final var normalized = new JsonObject();
       normalized.put("userId", this.users.get(i).id);
-      var distance = 0.0;
-      if (i % 2 == 0 && i % 3 != 0) {
+      var value = 0.0;
+      if (i % 2 == 0) {
 
-        distance = 1.0 - UserDistance.calculateDistance(0, 0, i * 0.001, i * 0.001) / 10000.0;
+        value = Math.max(0.0, 1.0 - 0.1 * i);
       }
-      normalized.put("value", distance);
-      closeness.add(normalized);
+      normalized.put("value", value);
+      socialness.add(normalized);
 
     }
-    final var result = new JsonObject().put("closeness", closeness);
+    final var result = new JsonObject().put("socialness", socialness);
     final var checkMessages = new ArrayList<Predicate<Message>>();
     checkMessages.add(this.createMessagePredicate().and(MessagePredicates.labelIs("result"))
         .and(MessagePredicates.attributesAre(result)));
