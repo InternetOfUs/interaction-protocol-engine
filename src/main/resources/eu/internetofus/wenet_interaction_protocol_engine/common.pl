@@ -36,7 +36,9 @@
 	wenet_add_query_params_to_url/3,
 	wenet_new_normalized_value/3,
 	wenet_user_id_from_normalized/2,
-	wenet_value_from_normalized/2
+	wenet_value_from_normalized/2,
+	wenet_initialize_normalized_users/3,
+	wenet_negate_normalized/2
 	.
 
 :- autoload(library(http/json)).
@@ -499,7 +501,7 @@ wenet_value_from_normalized(Value,json(Normalized)) :-
 
 %!	wenet_initialize_normalized_users(-List,+Users,-Value)
 %
-%	Create a list of normalized vlaues for some users.
+%	Create a list of normalized values for some users.
 %
 %	@param List with the normalized values.
 %	@param Users to the user.
@@ -510,5 +512,20 @@ wenet_initialize_normalized_users([Normalized|List],[UserId|Users],Value) :-
 	wenet_new_normalized_value(Normalized,UserId,Value),
 	wenet_initialize_normalized_users(List,Users,Value)
 	.
-	
+
+%!	wenet_negate_normalized(-Target,+Source)
+%
+%	REverse the value sof a normalized list.
+%
+%	@param Target list where the normalized vlaues are negated (1 - value).
+%	@param Source list to get the values to negate.
+%
+wenet_negate_normalized([],[]).
+wenet_negate_normalized([Target|TargetRest],[Source|SourceRest]) :-
+	wenet_user_id_from_normalized(UserId,Source),
+	wenet_value_from_normalized(Value,Source),
+	Negate is 1.0 - Value,
+	wenet_new_normalized_value(Target,UserId,Negate),
+	wenet_negate_normalized(TargetRest,SourceRest)
+	.
 	
