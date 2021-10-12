@@ -33,7 +33,10 @@
 	wenet_math/2,
 	wenet_delete_to_url/1,
 	wenet_is_json_null/1,
-	wenet_add_query_params_to_url/3
+	wenet_add_query_params_to_url/3,
+	wenet_new_normalized_value/3,
+	wenet_user_id_from_normalized/2,
+	wenet_value_from_normalized/2
 	.
 
 :- autoload(library(http/json)).
@@ -459,3 +462,53 @@ wenet_add_query_params_to_url(UrlWithParams,Url,Params) :-
 		 atomics_to_string([Url|['?',QueryParams]],UrlWithParams)
 	)
 	.
+
+%!	wenet_normalized_value(-Normalized,+UserId,+Value)
+%
+%	Create a new normlaized value.
+%
+%	@param Normalized the JSON normalized value.
+%	@param UserId identifier of the user.
+%	@param Value normalized value of the user.
+%
+wenet_new_normalized_value(Normalized,UserId,Value) :-
+	Normalized = json([userId=UserId,value=Value])
+	.
+	
+%!	wenet_user_id_from_normalized(-UserId,+Normalized)
+%
+%	Get the normlaized user identifier of the model.
+%
+%	@param UserId identifier of the user.
+%	@param Normalized the JSON normalized value.
+%
+wenet_user_id_from_normalized(UserId,json(Normalized)) :-
+	member(userId=UserId,Normalized)
+	.
+
+%!	wenet_value_from_normalized(-Value,+Normalized)
+%
+%	Get the normlaized value of the model.
+%
+%	@param Value of the user.
+%	@param Normalized the JSON normalized value.
+%
+wenet_value_from_normalized(Value,json(Normalized)) :-
+	member(value=Value,Normalized)
+	.
+
+%!	wenet_initialize_normalized_users(-List,+Users,-Value)
+%
+%	Create a list of normalized vlaues for some users.
+%
+%	@param List with the normalized values.
+%	@param Users to the user.
+%	@param Value to set for all the users.
+%
+wenet_initialize_normalized_users([],[],_).
+wenet_initialize_normalized_users([Normalized|List],[UserId|Users],Value) :-
+	wenet_new_normalized_value(Normalized,UserId,Value),
+	wenet_initialize_normalized_users(List,Users,Value)
+	.
+	
+	

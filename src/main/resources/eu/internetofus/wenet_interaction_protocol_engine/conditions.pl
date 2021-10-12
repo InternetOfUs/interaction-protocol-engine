@@ -69,7 +69,9 @@
 	get_user_state_attribute/2,
 	get_user_state_attribute/3,
 	filter_transactions/3,
-	filter_transactions_/4
+	filter_transactions_/4,
+	normalized_closeness/4,
+	normalized_closeness_/5
 	.
 
 %!	is_now_less_than(+Time)
@@ -805,4 +807,42 @@ filter_transactions_(Target,[Head|Tail],Test,Map):-
 		; Target = NewTarget
 	),
 	filter_transactions_(NewTarget,Tail,Test,Map)
+	.
+
+%!	normalized_closeness(-Closeness,+UserId,+Users,+MaxDistance)
+%
+%	Calculate the closeness (in distance) of a user repect some others.
+%
+%	@param Closeness a list with the closeness between a user and some others.
+%	@param UseId identifier of the user to calculate the closeness.
+%	@param Users identifiers of the users to calculate the closeness.
+%	@param MaxDistance the maximum distance in meters that any user can be.
+%
+normalized_closeness(Closeness,UserId,Users,MaxDistance) :-
+	(
+		wenet_personal_context_builder_locations(Locations,[UserId|Users]),
+		!,
+		member(SourceLocation,Locations),
+		wenet_user_id_of_location(UserId,SourceLocation),
+		!,
+		normalized_closeness_(Closeness,Users,MaxDistance,Locations,SourceLocation)
+	)
+	-> true
+	; wenet_initialize_normalized_users(Closeness,Users,0.0)
+	.
+normalized_closeness_([],[],_,_,_).
+normalized_closeness_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,Locations,SourceLocation) :-
+	(
+		(
+			member(TargetLocation,Locations),
+			wenet_user_id_of_location(UserId,TargetLocation),
+			!,
+			wenet_distance_between_locations(DistanceInMeters,SourceLocation,TargetLocation)
+		)
+		-> Distance is 1.0 - min(DistanceInMeters,MaxDistance) / MaxDistance
+		; Distance = 0.0
+	),
+	!,
+	wenet_new_normalized_value(UserCloseness,UserId,Distance),
+	normalized_closeness_(ClosenessRest,Users,MaxDistance,Locations,SourceLocation)
 	.
