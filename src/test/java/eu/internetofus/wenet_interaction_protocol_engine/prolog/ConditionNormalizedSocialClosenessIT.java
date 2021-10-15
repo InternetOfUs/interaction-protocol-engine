@@ -38,7 +38,7 @@ import java.util.function.Predicate;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class ConditionNormalizedSocialnessIT extends AbstractPrologITC {
+public class ConditionNormalizedSocialClosenessIT extends AbstractPrologITC {
 
   /**
    * {@inheritDoc}

@@ -32,8 +32,6 @@
 	notify_incentive_server_message_sent/1,
 	notify_incentive_server_message_sent/2,
 	notify_incentive_server_task_created/0,
-	notify_incentive_server_task_created/1,
-	notify_incentive_server_task_created/2,
 	close_task/0,
 	merge_task/1,
 	merge_community_state/1,
@@ -67,39 +65,6 @@ add_created_transaction() :-
 	asserta(add_created_transaction())
 	.
 
-%!	notify_incentive_server_task_created(+Label,+Count)
-%
-%	Notify the incentive server that a task of the specified task type is
-%	created Count times.
-%
-%	@param TaskTypeId the identifier of the task type of the created task.
-%	@param Count of the task types that has bene created.
-%
-notify_incentive_server_task_created(TaskTypeId,Count) :-
-	get_profile_id(ProfileId),
-	get_community_id(CommunityId),
-	get_app_id(AppId),
-	wenet_new_task_type_status(Status,ProfileId,CommunityId,AppId,TaskTypeId,Count),
-	!,
-	ignore(wenet_incentive_server_update_task_type_status(_,Status))
-	.
-
-%!	notify_incentive_server_task_created(+TaskTypeId)
-%
-%	Notify the incentive server that a task of the specific task type is created.
-%   The number of times is counted as a community user property per user and task type.
-%
-%	@param TaskTypeId the identifier of the task type of the created task.
-%
-notify_incentive_server_task_created(TaskTypeId) :-
-	atomics_to_string(["incentiveServer",TaskTypeId],'#',Key),
-	atom_string(AtomKey,Key),
-	get_community_state_attribute(Count,AtomKey,0),
-	wenet_math(NewCount,Count + 1),
-	put_community_state_attribute(Key,NewCount),
-	ignore(notify_incentive_server_task_created(TaskTypeId,NewCount))
-	.
-
 %!	notify_incentive_server_task_created()
 %
 %	Notify the incentive server that the current task is created.
@@ -107,7 +72,18 @@ notify_incentive_server_task_created(TaskTypeId) :-
 %
 notify_incentive_server_task_created() :-
 	get_task_type_id(TaskTypeId),
-	ignore(notify_incentive_server_task_created(TaskTypeId))
+	atomics_to_string(["incentiveServer",TaskTypeId],'#',Key),
+	atom_string(AtomKey,Key),
+	get_community_state_attribute(Count,AtomKey,0),
+	wenet_math(NewCount,Count + 1),
+	put_community_state_attribute(Key,NewCount),
+	get_profile_id(ProfileId),
+	get_community_id(CommunityId),
+	get_app_id(AppId),
+	get_task_id(TaskId),
+	wenet_new_task_type_status(Status,ProfileId,CommunityId,AppId,TaskTypeId,TaskId,NewCount),
+	!,
+	ignore(wenet_incentive_server_update_task_type_status(_,Status))
 	.
 
 %!	add_message_transaction()
@@ -262,7 +238,8 @@ notify_incentive_server_transaction_done(Label,Count) :-
 	get_community_id(CommunityId),
 	get_app_id(AppId),
 	get_task_type_id(TaskTypeId),
-	wenet_new_task_transaction_status(Status,UserId,CommunityId,AppId,TaskTypeId,Label,Count),
+	get_task_id(TaskId),
+	wenet_new_task_transaction_status(Status,UserId,CommunityId,AppId,TaskTypeId,TaskId,Label,Count),
 	!,
 	ignore(wenet_incentive_server_update_task_transaction_status(_,Status))
 	.

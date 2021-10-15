@@ -49,7 +49,7 @@
   <gmavenplus-plugin-version>1.12.1</gmavenplus-plugin-version>
   <groovy-version>3.0.8</groovy-version>
   <!-- Library versions -->
-  <eu.internetofus.common-version>0.14.1</eu.internetofus.common-version>
+  <eu.internetofus.common-version>0.15.0</eu.internetofus.common-version>
  </properties>
  <repositories>
   <repository>

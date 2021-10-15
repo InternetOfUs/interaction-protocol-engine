@@ -498,14 +498,6 @@ These actions interact with the other components of the WeNet platform.
     * ``UserId``  _Input_  strings identifier of the user to receive the message.
     * ``Particle``  _Input_  string with the message particle.
     * ``Content``  _Input_  JSON model with the message content.
-- ``notify_incentive_server_task_created(TaskTypeId,Count)``
-  This action notifies the incentive server that a user has created a task of the specific task type.
-	* ``TaskTypeId``  _Input_  string with the identifier of the task type associated with the created task.
-    * ``Count``  _Input_  integer the number of times the user has created a task of the specific task type in the community.
-- ``notify_incentive_server_task_created(TaskTypeId)``
-  This action notifies the incentive server that a user has created a task of the specific task type.
-  The number of times the task is created is counted by the user, task type and community.
-	* ``TaskTypeId``  _Input_  string with the identifier of the task type associated with the created task.
 - ``notify_incentive_server_task_created()``
   This action notifies the incentive server that a user has created a task.
   The number of times the task is created is counted by the user, task type and community.

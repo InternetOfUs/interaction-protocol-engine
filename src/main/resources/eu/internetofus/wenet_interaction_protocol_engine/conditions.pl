@@ -72,8 +72,8 @@
 	filter_transactions_/4,
 	normalized_closeness/3,
 	normalized_closeness_/5,
-	normalized_socialness/2,
-	normalized_socialness_/4
+	normalized_social_closeness/2,
+	normalized_social_closeness_/4
 	.
 
 %!	is_now_less_than(+Time)
@@ -830,7 +830,7 @@ normalized_closeness(Closeness,Users,MaxDistance) :-
 		normalized_closeness_(Closeness,Users,MaxDistance,Locations,SourceLocation)
 	)
 	-> true
-	; wenet_initialize_normalized_users(Closeness,Users,0.0)
+	; wenet_initialize_user_values(Closeness,Users,0.0)
 	.
 normalized_closeness_([],[],_,_,_).
 normalized_closeness_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,Locations,SourceLocation) :-
@@ -845,30 +845,30 @@ normalized_closeness_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,L
 		; Distance = 0.0
 	),
 	!,
-	wenet_new_normalized_value(UserCloseness,UserId,Distance),
+	wenet_new_user_value(UserCloseness,UserId,Distance),
 	normalized_closeness_(ClosenessRest,Users,MaxDistance,Locations,SourceLocation)
 	.
 
-%!	normalized_socialness(-Socialness,+UserId,+Users,+MaxDistance)
+%!	normalized_social_closeness(-Socialness,+UserId,+Users,+MaxDistance)
 %
 %	Calculate the socialness of a user repect some others.
 %
 %	@param Socialness a list with the socialness between a user and some others.
 %	@param Users identifiers of the users to calculate the socialness.
 %
-normalized_socialness(Socialness,Users) :-
+normalized_social_closeness(Socialness,Users) :-
 	(
 		get_profile(Profile),
 		get_app_id(AppId),
 		wenet_relationships_of_profile(Relationships,Profile),
 		!,
-		normalized_socialness_(Socialness,Users,Relationships,AppId)
+		normalized_social_closeness_(Socialness,Users,Relationships,AppId)
 	)
 	-> true
-	; wenet_initialize_normalized_users(Socialness,Users,0.0)
+	; wenet_initialize_user_values(Socialness,Users,0.0)
 	.
-normalized_socialness_([],[],_,_).
-normalized_socialness_([UserSocialness|SocialnessRest],[UserId|Users],Relationships,AppId) :-
+normalized_social_closeness_([],[],_,_).
+normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Relationships,AppId) :-
 	(
 		(
 			member(Relationship,Relationships),
@@ -879,6 +879,6 @@ normalized_socialness_([UserSocialness|SocialnessRest],[UserId|Users],Relationsh
 		; Weight = 0.0
 	),
 	!,
-	wenet_new_normalized_value(UserSocialness,UserId,Weight),
-	normalized_socialness_(SocialnessRest,Users,Relationships,AppId)
+	wenet_new_user_value(UserSocialness,UserId,Weight),
+	normalized_social_closeness_(SocialnessRest,Users,Relationships,AppId)
 	.

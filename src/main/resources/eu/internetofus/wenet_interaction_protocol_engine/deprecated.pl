@@ -59,7 +59,7 @@ wenet_incentive_server_update_task_status(Updated,Status) :-
 %	@param Action of the status.
 %	@param Message of the status.
 %
-%   @deprecated this function is not more necessary becaus ethis model is not more used on the API.
+%   @deprecated this function is not more necessary because this model is not more used on the API.
 %
 wenet_new_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message) :-
 	Status = json([app_id=AppId,user_id=UserId,community_id=CommunityId,task_id=TaskId,'Action'=Action,'Message'=Message])

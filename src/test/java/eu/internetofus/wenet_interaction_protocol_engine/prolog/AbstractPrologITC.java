@@ -72,6 +72,7 @@ public abstract class AbstractPrologITC extends AbstractProtocolITC {
     taskType.norms.get(0).whenever = "is_received_created_task() and " + wheneverCode;
     final var thenceforthCode = this.getThenceforthCode();
     taskType.norms.get(0).thenceforth = "add_created_transaction() and " + thenceforthCode;
+    taskType.norms.get(0).ontology = this.getOntologyCode();
 
     return Future.succeededFuture(taskType);
   }
@@ -89,6 +90,16 @@ public abstract class AbstractPrologITC extends AbstractProtocolITC {
    * @return the action code to test.
    */
   protected abstract String getThenceforthCode();
+
+  /**
+   * Return the ontology for the created norm.
+   *
+   * @return the ontology code to test.
+   */
+  protected String getOntologyCode() {
+
+    return null;
+  }
 
   /**
    * Check that a task is created.

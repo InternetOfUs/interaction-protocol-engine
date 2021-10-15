@@ -17,9 +17,9 @@
 :- dynamic
 	wenet_incentive_server_api_url_to/2,
 	wenet_incentive_server_update_task_transaction_status/2,
-	wenet_new_task_transaction_status/7,
+	wenet_new_task_transaction_status/8,
 	wenet_incentive_server_update_task_type_status/2,
-	wenet_new_task_type_status/6
+	wenet_new_task_type_status/7
 	.
 
 %!	wenet_incentive_server_api_url_to(-Url,+Paths)
@@ -52,11 +52,12 @@ wenet_incentive_server_update_task_transaction_status(Updated,Status) :-
 %	@param CommunityId of the status.
 %	@param AppId of the status.
 %	@param TaskTypeId of the status.
+%	@param TaskId of the status.
 %	@param Label that change the task.
 %	@param Count of the action.
 %
-wenet_new_task_transaction_status(Status,UserId,CommunityId,AppId,TaskTypeId,Label,Count) :-
-	Status = json([user_id=UserId,community_id=CommunityId,app_id=AppId,taskTypeId=TaskTypeId,label=Label,count=Count])
+wenet_new_task_transaction_status(Status,UserId,CommunityId,AppId,TaskTypeId,TaskId,Label,Count) :-
+	Status = json([user_id=UserId,community_id=CommunityId,app_id=AppId,taskTypeId=TaskTypeId,taskId=TaskId,label=Label,count=Count])
 	.
 
 %!	wenet_incentive_server_update_task_type_status(-Updated,+Status)
@@ -80,8 +81,9 @@ wenet_incentive_server_update_task_type_status(Updated,Status) :-
 %	@param CommunityId of the status.
 %	@param AppId of the status.
 %	@param TaskTypeId of the status.
+%	@param TaskId of the status.
 %	@param Count of the action.
 %
-wenet_new_task_type_status(Status,UserId,CommunityId,AppId,TaskTypeId,Count) :-
-	Status = json([user_id=UserId,community_id=CommunityId,app_id=AppId,taskTypeId=TaskTypeId,count=Count])
+wenet_new_task_type_status(Status,UserId,CommunityId,AppId,TaskTypeId,TaskId,Count) :-
+	Status = json([user_id=UserId,community_id=CommunityId,app_id=AppId,taskTypeId=TaskTypeId,taskId=TaskId,count=Count])
 	.

@@ -8,6 +8,7 @@ All notable changes to `wenet-interaction-protocol-engine` will be documented in
  * Add new social context builder ranking by answers.
  * Fix new social context builder notify interaction.
  * Update common API models references.
+ * Update incentive server notifications adding task identifier. 
 
 
 ## Version 0.21.0 (2021-08-23)
