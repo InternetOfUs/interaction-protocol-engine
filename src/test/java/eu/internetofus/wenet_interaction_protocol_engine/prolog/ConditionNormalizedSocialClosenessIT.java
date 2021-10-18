@@ -49,7 +49,7 @@ public class ConditionNormalizedSocialClosenessIT extends AbstractPrologITC {
     return super.createTaskTypeForProtocol(vertx, testContext).map(taskType -> {
 
       taskType.callbacks = new JsonObject().put("result",
-          new JsonObject().put("type", "object").put("properties", new JsonObject().put("socialness",
+          new JsonObject().put("type", "object").put("properties", new JsonObject().put("socialCloseness",
               new JsonObject().put("type", "array").put("items", new JsonObject().put("type", "object")))));
       return taskType;
 
@@ -72,7 +72,7 @@ public class ConditionNormalizedSocialClosenessIT extends AbstractPrologITC {
   @Override
   protected String getThenceforthCode() {
 
-    return "normalized_socialness(Result,Users) and send_user_message(\"result\",json([socialness=Result]))";
+    return "normalized_social_closeness(Result,Users) and send_user_message(\"result\",json([socialCloseness=Result]))";
   }
 
   /**
@@ -123,7 +123,7 @@ public class ConditionNormalizedSocialClosenessIT extends AbstractPrologITC {
       socialness.add(normalized);
 
     }
-    final var result = new JsonObject().put("socialness", socialness);
+    final var result = new JsonObject().put("socialCloseness", socialness);
     final var checkMessages = new ArrayList<Predicate<Message>>();
     checkMessages.add(this.createMessagePredicate().and(MessagePredicates.labelIs("result"))
         .and(MessagePredicates.attributesAre(result)));
