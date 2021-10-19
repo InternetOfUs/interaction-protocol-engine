@@ -43,9 +43,6 @@ public class WhoToAskNearbyClosenessWithoutRequestLocationIT extends AbstractWho
     for (var i = 1; i < this.users.size(); i++) {
 
       final var userId = this.users.get(i).id;
-      future = future
-          .compose(ignored -> WeNetPersonalContextBuilderSimulator.createProxy(vertx).deleteLocation(userId));
-
       final var location = new UserLocation();
       location.userId = userId;
       location.latitude = 0.4 * i;

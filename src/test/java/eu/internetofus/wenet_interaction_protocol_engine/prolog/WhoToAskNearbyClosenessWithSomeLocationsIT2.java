@@ -53,9 +53,6 @@ public class WhoToAskNearbyClosenessWithSomeLocationsIT2 extends AbstractWhoToAs
     for (var i = 0; i < this.users.size(); i++) {
 
       final var userId = this.users.get(i).id;
-      future = future
-          .compose(ignored -> WeNetPersonalContextBuilderSimulator.createProxy(vertx).deleteLocation(userId));
-
       if (i % 2 != 0) {
 
         final var location = new UserLocation();

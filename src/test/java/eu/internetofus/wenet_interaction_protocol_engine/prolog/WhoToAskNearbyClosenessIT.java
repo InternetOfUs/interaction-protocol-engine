@@ -53,9 +53,6 @@ public class WhoToAskNearbyClosenessIT extends AbstractWhoToAskITC {
     for (var i = 0; i < this.users.size(); i++) {
 
       final var userId = this.users.get(i).id;
-      future = future
-          .compose(ignored -> WeNetPersonalContextBuilderSimulator.createProxy(vertx).deleteLocation(userId));
-
       final var location = new UserLocation();
       location.userId = userId;
       location.latitude = 0.3 * i;
