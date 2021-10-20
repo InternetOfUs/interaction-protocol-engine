@@ -23,7 +23,9 @@
 	wenet_relationships_of_profile/2,
 	wenet_user_id_of_relationship/2,
 	wenet_app_id_of_relationship/2,
-	wenet_weight_id_of_relationship/2
+	wenet_weight_id_of_relationship/2,
+	wenet_profile_manager_operations_calculate_diversity/2,
+	wenet_new_diversity_data/3
 	.
 
 
@@ -126,3 +128,30 @@ wenet_app_id_of_relationship(AppId, json(Relationship)) :-
 wenet_weight_of_relationship(Weight, json(Relationship)) :-
 	member(weight=Weight,Relationship)
 	.
+
+%!	wenet_profile_manager_operations_calculate_diversity(-Diversity,+Data)
+%
+%	Obtain the diversity form a set of users.
+%
+%	@param Diversity of the users.
+%	@param Data JSON with the information of the users to calculate the diversity.
+%
+wenet_profile_manager_operations_calculate_diversity(Diversity,Data) :-
+	wenet_profile_manager_api_url_to(Url,['/operations/diversity']),
+	wenet_post_json_to_url(json(Result),Url,Data),
+	member(diversity=Diversity,Result)
+	.
+	
+	
+%!	wenet_new_diversity_data(-Data,+UserIds,+AttributeNames)
+%
+%	reate the data necessary to calculate the diversity for some users.
+%
+%	@param Data JSON with the information of the users to calculate the diversity.
+%	@param UserIds list of strings with the identifier of teh users to calculate the diversity.
+%	@param AttributeNames list of strings with the names for the attributes to calculate the diversity.
+%
+wenet_new_diversity_data(Data,UserIds,AttributeNames) :-
+	Data = json([userIds=UserIds,attributes=AttributeNames])
+	.
+	
