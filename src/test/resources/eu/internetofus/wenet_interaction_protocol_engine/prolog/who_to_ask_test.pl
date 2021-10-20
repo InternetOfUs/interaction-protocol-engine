@@ -3,8 +3,12 @@
 :- dynamic who_to_ask/1,
 	users_by_closeness/2,
 	users_by_social_closeness/2,
-	users_by_belief_and_values/2,
-	users_by_domain_interest/2.
+	users_by_beliefs_and_values/2,
+	users_by_domain_interest/2,
+	get_profile_attribues_by_beliefs_and_values/1,
+	get_profile_attribues_by_domain_interest/1,
+	attributes_by_domain/2
+	.
 	
 who_to_ask(Users) :-
 	(
@@ -17,7 +21,7 @@ who_to_ask(Users) :-
 			users_by_closeness(ClosenessUsers,AppUsers),
 			users_by_social_closeness(SocialClosenessUsers,AppUsers),
 			wenet_product_user_values(Tmp1,ClosenessUsers,SocialClosenessUsers),
-			users_by_belief_and_values(BeliefsAndValuesUsers,AppUsers),
+			users_by_beliefs_and_values(BeliefsAndValuesUsers,AppUsers),
 			wenet_product_user_values(Tmp2,Tmp1,BeliefsAndValuesUsers),
 			users_by_domain_interest(DomainInterestUsers,AppUsers),
 			wenet_product_user_values(Tmp3,Tmp2,DomainInterestUsers),
@@ -63,10 +67,55 @@ users_by_social_closeness(SocialClosenessUsers,Users) :-
 	),
 	put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
-users_by_belief_and_values(BeliefsAndValuesUsers,Users) :-
-	wenet_initialize_user_values(BeliefsAndValuesUsers,Users,1.0),
+users_by_beliefs_and_values(BeliefsAndValuesUsers,Users) :-
+	(
+		( get_task_attribute_value(BeliefsAndValuesAttr,'beliefsAndValues'), not(=(BeliefsAndValuesAttr,'indifferent')) )
+		-> (
+			get_profile_attribues_by_beliefs_and_values(Attributes),
+			normalized_diversity(Diversity,Users,Attributes),
+			(
+				=(BeliefsAndValuesAttr,'similar')
+				-> BeliefsAndValuesUsers = Diversity
+				; wenet_negate_user_value(BeliefsAndValuesUsers,Diversity)
+			)
+		) 
+		; wenet_initialize_user_values(BeliefsAndValuesUsers,Users,1.0)
+	),
 	put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
 	
+get_profile_attribues_by_beliefs_and_values(['gender','nationality','occupation']).
+	
 users_by_domain_interest(DomainInterestUsers,Users) :-
-	wenet_initialize_user_values(DomainInterestUsers,Users,1.0),
+	(
+		( get_task_attribute_value(DomainInterestAttr,'domainInterest'), not(=(DomainInterestAttr,'indifferent')) )
+		-> (
+			get_profile_attribues_by_domain_interest(Attributes),
+			normalized_diversity(Diversity,Users,Attributes),
+			(
+				=(DomainInterestAttr,'similar')
+				-> DomainInterestUsers = Diversity
+				; wenet_negate_user_value(DomainInterestUsers,Diversity)
+			)
+		) 
+		; wenet_initialize_user_values(DomainInterestUsers,Users,1.0)
+	),
 	put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
+
+	
+get_profile_attribues_by_domain_interest(Attributes) :-
+	get_task_attribute_value(Domain,'domain'),
+	attributes_by_domain(Attributes,Domain).
+	
+attributes_by_domain('studying_career',['gender','nationality','occupation']).
+attributes_by_domain('local_university',['gender','nationality','occupation']).
+attributes_by_domain('local_things',['gender','nationality','occupation']).
+attributes_by_domain('physical_activity',['gender','nationality','occupation']).
+attributes_by_domain('cultural_interests',['gender','nationality','occupation']).
+attributes_by_domain('food_and_cooking',['gender','nationality','occupation']).
+attributes_by_domain('cinema_theatre',['gender','nationality','occupation']).
+attributes_by_domain('music',['gender','nationality','occupation']).
+attributes_by_domain('arts_and_crafts',['gender','nationality','occupation']).
+attributes_by_domain('life_ponders',['gender','nationality','occupation']).
+attributes_by_domain('varia_misc',Attributes) :-
+	Attributes = []
+	.
