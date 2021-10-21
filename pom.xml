@@ -51,12 +51,6 @@
   <!-- Library versions -->
   <eu.internetofus.common-version>0.15.0</eu.internetofus.common-version>
  </properties>
- <repositories>
-  <repository>
-   <id>gitlab-maven</id>
-   <url>https://gitlab.iiia.csic.es/api/v4/groups/internetofus/-/packages/maven</url>
-  </repository>
- </repositories>
  <dependencyManagement>
   <dependencies>
    <dependency>
@@ -501,4 +495,27 @@
    </plugin>
   </plugins>
  </reporting>
+ <profiles>
+  <profile>
+   <id>gitlab</id>
+   <activation>
+    <activeByDefault>true</activeByDefault>
+   </activation>
+   <repositories>
+    <repository>
+     <id>gitlab-maven</id>
+     <url>https://gitlab.iiia.csic.es/api/v4/groups/internetofus/-/packages/maven</url>
+    </repository>
+   </repositories>
+  </profile>
+  <profile>
+   <id>docker-nexus</id>
+   <repositories>
+    <repository>
+     <id>docker-nexus-maven</id>
+     <url>http://host.docker.internal:8081/repository/maven-public/</url>
+    </repository>
+   </repositories>
+  </profile>
+ </profiles>
 </project>

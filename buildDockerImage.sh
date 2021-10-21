@@ -8,6 +8,7 @@ else
 	COMPONENT_VERSION=$(grep --max-count=1 '<version>' pom.xml | awk -F '>' '{ print $2 }' | awk -F '<' '{ print $1 }')
 	COMPONENT_NAME="internetofus/interaction-protocol-engine"
 	DOCKER_TAG="$COMPONENT_NAME:$COMPONENT_VERSION"
-	DOCKER_BUILDKIT=1 docker build -f src/main/docker/Dockerfile -t $DOCKER_TAG .
+	PROFILE=${1:-"gitlab"}
+	DOCKER_BUILDKIT=1 docker build --build-arg DEFAULT_PROFILE=$PROFILE -f src/main/docker/Dockerfile -t $DOCKER_TAG .
 	popd >/dev/null
 fi
