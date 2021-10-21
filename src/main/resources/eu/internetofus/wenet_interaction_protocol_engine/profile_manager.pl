@@ -170,14 +170,14 @@ wenet_profile_manager_operations_calculate_similarity(Similarity,Data) :-
 	member(attributes=Similarity,Result)
 	.
 
-%!	wenet_new_diversity_data(-Data,+UserId,+Source)
+%!	wenet_new_similarity_data(-Data,+UserId,+Source)
 %
-%	reate the data necessary to calculate the diversity for some attributes.
+%	Create the data necessary to calculate the similarity for some attributes.
 %
 %	@param Data JSON with the information of the attributes to calculate the diversity.
 %	@param UserId string with the user identifier.
 %	@param Source string with the text to compare.
 %
-wenet_new_diversity_data(Data,UserId,Source) :-
+wenet_new_similarity_data(Data,UserId,Source) :-
 	Data = json([userId=UserId,source=Source])
 	.
