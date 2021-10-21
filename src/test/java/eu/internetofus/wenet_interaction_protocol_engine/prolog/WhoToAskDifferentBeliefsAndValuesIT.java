@@ -76,14 +76,13 @@ public class WhoToAskDifferentBeliefsAndValuesIT extends AbstractWhoToAskITC {
         for (var i = this.users.size() - 1; i > 0; i--) {
 
           final var userId = this.users.get(i).id;
-          final var value = 100 - (9 - i) * 10;
           var found = false;
           for (var j = 0; j < socialClosenessUsers.size(); j++) {
 
             final var element = socialClosenessUsers.getJsonObject(j);
             if (userId.equals(element.getString("userId"))) {
 
-              found = Math.round(element.getDouble("value") * 100) == value;
+              found = element.getDouble("value", -1d) == 1d;
               break;
             }
           }
