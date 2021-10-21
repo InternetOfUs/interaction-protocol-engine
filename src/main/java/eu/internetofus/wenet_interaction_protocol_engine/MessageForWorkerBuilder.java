@@ -63,50 +63,6 @@ public interface MessageForWorkerBuilder {
   }
 
   /**
-   * Create the message to inform that a task is created.
-   *
-   * @param protocol information of the protocol to use.
-   *
-   * @return the message to send to the worker.
-   */
-  public static JsonObject buildCreatedTaskMessage(final ProtocolData protocol) {
-
-    return new JsonObject().put("type", Type.CREATED_TASK.name()).put("protocol", protocol.toJsonObject());
-
-  }
-
-  /**
-   * Create the message to inform about a task transaction that has to be done.
-   *
-   * @param transaction to do.
-   * @param protocol    information of the protocol to use.
-   *
-   * @return the message to send to the worker.
-   */
-  public static JsonObject buildDoTaskTransactionMessage(final TaskTransaction transaction,
-      final ProtocolData protocol) {
-
-    return new JsonObject().put("type", Type.DO_TASK_TRANSACTION.name()).put("transaction", transaction.toJsonObject())
-        .put("protocol", protocol.toJsonObject());
-
-  }
-
-  /**
-   * Create the message to inform about an incentive to inform to the user.
-   *
-   * @param incentive to send.
-   * @param protocol  information of the protocol to use.
-   *
-   * @return the message to send to the worker.
-   */
-  public static JsonObject buildSendIncentiveMessage(final Incentive incentive, final ProtocolData protocol) {
-
-    return new JsonObject().put("type", Type.SEND_INCENTIVE.name()).put("incentive", incentive.toJsonObject())
-        .put("protocol", protocol.toJsonObject());
-
-  }
-
-  /**
    * Create the message for the worker with the protocol message to process.
    *
    * @param message  to send.

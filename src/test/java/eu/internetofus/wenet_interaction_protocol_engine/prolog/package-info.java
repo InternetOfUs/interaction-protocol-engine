@@ -19,8 +19,8 @@
  */
 
 /**
- * Service to maintains norms.
+ * The test over the prolog language.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
+package eu.internetofus.wenet_interaction_protocol_engine.prolog;

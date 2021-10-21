@@ -18,6 +18,8 @@
 % Contains the high level conditions that can be used on the norms.
 %
 
+:- use_module(library(apply)).
+
 :- dynamic
 	get_now/1,
 	is_now_less_than/1,
@@ -65,7 +67,15 @@
 	get_task_state_attribute/3,
 	get_user_state/1,
 	get_user_state_attribute/2,
-	get_user_state_attribute/3
+	get_user_state_attribute/3,
+	filter_transactions/3,
+	filter_transactions_/4,
+	normalized_closeness/3,
+	normalized_closeness_/5,
+	normalized_social_closeness/2,
+	normalized_social_closeness_/4,
+	normalized_diversity/3,
+	normalized_diversity_/4
 	.
 
 %!	is_now_less_than(+Time)
@@ -275,7 +285,7 @@ get_transaction(json(Transaction)) :-
 
 %!	get_transaction(-Transaction,+TransactionId)
 %
-%	Return the current transaction defined on the norm engine.
+%	Return the transaction associated to an identifer.
 %
 %	@param Transaction json transaction on the norm engine.
 %	@param TransactionId string identifier of the transaction to return.
@@ -767,4 +777,141 @@ get_user_state_attribute(Value,Key) :-
 %
 get_user_state_attribute(Value,Key,DefaultValue) :-
 	get_user_state_attribute(Value,Key) -> true ; Value = DefaultValue
+	.
+
+	
+%!	filter_transactions(-Transactions,+Test,+Map)
+%
+%	This condition is used to obtain a sub set of the transactions that
+%	has been done in the task and map them to a new value. In other words, for
+%   each transaction of the current task if call(Test,Transaction) is True,
+%	it transforms the transaction with call(Map,Value,Transaction) and it adds
+%	the obtained Value to the result list.  
+%
+%	@param Result the filtered and mapped task transactions.
+%	@param Test predicate to call to known if the transaction is accepted.
+%	@param Map predicate to call to convert the accepted transaction.
+%
+filter_transactions(Result,Test,Map):-
+	get_task(Task),
+	wenet_transactions_of_task(DoneTransactions,Task),
+	!,
+	filter_transactions_(Result,DoneTransactions,Test,Map)
+	.
+filter_transactions_([],[],_,_).
+filter_transactions_(Target,[Head|Tail],Test,Map):-
+	wenet_log_trace('Head:',[Head]),
+	(
+		call(Test,Head) 
+		-> (
+			call(Map,NewHead,Head)
+			-> Target = [NewHead|NewTarget]
+			; !,fail
+			)
+		; Target = NewTarget
+	),
+	filter_transactions_(NewTarget,Tail,Test,Map)
+	.
+
+%!	normalized_closeness(-Closeness,+Users,+MaxDistance)
+%
+%	Calculate the closeness (in distance) of a user repect some others.
+%
+%	@param Closeness a list with the closeness between a user and some others.
+%	@param Users identifiers of the users to calculate the closeness.
+%	@param MaxDistance the maximum distance in meters that any user can be.
+%
+normalized_closeness(Closeness,Users,MaxDistance) :-
+	(
+		get_profile_id(UserId),
+		wenet_personal_context_builder_locations(Locations,[UserId|Users]),
+		!,
+		member(SourceLocation,Locations),
+		wenet_user_id_of_location(UserId,SourceLocation),
+		!,
+		normalized_closeness_(Closeness,Users,MaxDistance,Locations,SourceLocation)
+	)
+	-> true
+	; wenet_initialize_user_values(Closeness,Users,0.0)
+	.
+normalized_closeness_([],[],_,_,_).
+normalized_closeness_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,Locations,SourceLocation) :-
+	(
+		(
+			member(TargetLocation,Locations),
+			wenet_user_id_of_location(UserId,TargetLocation),
+			!,
+			wenet_distance_between_locations(DistanceInMeters,SourceLocation,TargetLocation)
+		)
+		-> Distance is 1.0 - min(DistanceInMeters,MaxDistance) / MaxDistance
+		; Distance = 0.0
+	),
+	!,
+	wenet_new_user_value(UserCloseness,UserId,Distance),
+	normalized_closeness_(ClosenessRest,Users,MaxDistance,Locations,SourceLocation)
+	.
+
+%!	normalized_social_closeness(-Socialness,+Users)
+%
+%	Calculate the socialness of a user repect some others.
+%
+%	@param Socialness a list with the socialness between a user and some others.
+%	@param Users identifiers of the users to calculate the socialness.
+%
+normalized_social_closeness(Socialness,Users) :-
+	(
+		get_profile(Profile),
+		get_app_id(AppId),
+		wenet_relationships_of_profile(Relationships,Profile),
+		!,
+		normalized_social_closeness_(Socialness,Users,Relationships,AppId)
+	)
+	-> true
+	; wenet_initialize_user_values(Socialness,Users,0.0)
+	.
+normalized_social_closeness_([],[],_,_).
+normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Relationships,AppId) :-
+	(
+		(
+			member(Relationship,Relationships),
+			wenet_user_id_of_relationship(UserId,Relationship),
+			wenet_app_id_of_relationship(AppId,Relationship)
+		)
+		-> wenet_weight_of_relationship(Weight,Relationship)
+		; Weight = 0.0
+	),
+	!,
+	wenet_new_user_value(UserSocialness,UserId,Weight),
+	normalized_social_closeness_(SocialnessRest,Users,Relationships,AppId)
+	.
+
+%!	normalized_diversity(-Diversity,+Users,+Attributes)
+%
+%	Calculate the socialness of a user repect some others.
+%
+%	@param Socialness a list with the socialness between a user and some others.
+%	@param Users identifiers of the users to calculate the socialness.
+%
+normalized_diversity(Diversity,Users,Attributes) :-
+	(
+		get_profile_id(Me),
+		normalized_diversity_(Diversity,Users,Attributes,Me)
+	)
+	-> true
+	; wenet_initialize_user_values(Diversity,Users,0.0)
+	.
+normalized_diversity_([],[],_,_).
+normalized_diversity_([UserDiversity|UsersDiversity],[User|Users],Attributes,Me) :-
+	(
+		(
+			wenet_new_diversity_data(Data,[Me,User],Attributes),
+			!,
+			wenet_profile_manager_operations_calculate_diversity(Diversity,Data)
+		)
+		-> true
+		; Diversity = 0.0
+	),
+	!,
+	wenet_new_user_value(UserDiversity,User,Diversity),
+	normalized_diversity_(UsersDiversity,Users,Attributes,Me)
 	.

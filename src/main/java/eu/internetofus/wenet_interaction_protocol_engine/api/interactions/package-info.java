@@ -18,33 +18,7 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.api.norms;
-
-import java.util.ArrayList;
-
-import eu.internetofus.common.model.ModelTestCase;
-
 /**
- * Test the {@link PublishedNormsPage}.
- *
- * @see PublishedNormsPage
- *
- * @author UDT-IA, IIIA-CSIC
+ * Provide stats of the interaction between users.
  */
-public class PublishedNormPageTest extends ModelTestCase<PublishedNormsPage> {
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public PublishedNormsPage createModelExample(final int index) {
-
-    final var model = new PublishedNormsPage();
-    model.offset = index;
-    model.total = 100 + index;
-    model.norms = new ArrayList<>();
-    model.norms.add(new PublishedNormTest().createModelExample(index));
-    return model;
-  }
-
-}
+package eu.internetofus.wenet_interaction_protocol_engine.api.interactions;

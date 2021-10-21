@@ -19,7 +19,15 @@
 	wenet_profile_manager_get_profile/2,
 	wenet_profile_manager_get_community/2,
 	wenet_id_of_profile/2,
-	wenet_id_of_community/2
+	wenet_id_of_community/2,
+	wenet_relationships_of_profile/2,
+	wenet_user_id_of_relationship/2,
+	wenet_app_id_of_relationship/2,
+	wenet_weight_id_of_relationship/2,
+	wenet_profile_manager_operations_calculate_diversity/2,
+	wenet_new_diversity_data/3,
+	wenet_profile_manager_operations_calculate_similarity/2,
+	wenet_new_similarity_data/3
 	.
 
 
@@ -65,7 +73,7 @@ wenet_profile_manager_get_community(Community,Id) :-
 %	@param Profile to get the identifier.
 %
 wenet_id_of_profile(Id, json(Profile)) :-
-	member(appId=Id,Profile)
+	member(id=Id,Profile)
 	.
 
 %!	wenet_id_of_community(-Id,+Community)
@@ -76,5 +84,100 @@ wenet_id_of_profile(Id, json(Profile)) :-
 %	@param Community to get the identifier.
 %
 wenet_id_of_community(Id, json(Community)) :-
-	member(appId=Id,Community)
+	member(id=Id,Community)
+	.
+
+%!	wenet_relationships_of_profile(-Relationships,+Profile)
+%
+%	Obtain the relationshipsentifier of a profile.
+%
+%	@param Relationships of a profile.
+%	@param Profile to get the relationshipsentifier.
+%
+wenet_relationships_of_profile(Relationships, json(Profile)) :-
+	member(relationships=Relationships,Profile)
+	.
+
+%!	wenet_user_id_of_relationship(-UserId,+Relationship)
+%
+%	Obtain the user identifier defined on a social relationship.
+%
+%	@param UserId of a relationship.
+%	@param Relationship to get the user identifier.
+%
+wenet_user_id_of_relationship(UserId, json(Relationship)) :-
+	member(userId=UserId,Relationship)
+	.
+
+%!	wenet_app_id_of_relationship(-AppId,+Relationship)
+%
+%	Obtain the app identifier defined on a social relationship.
+%
+%	@param AppId of a relationship.
+%	@param Relationship to get the app identifier.
+%
+wenet_app_id_of_relationship(AppId, json(Relationship)) :-
+	member(appId=AppId,Relationship)
+	.
+
+%!	wenet_weight_of_relationship(-Weight,+Relationship)
+%
+%	Obtain the weight defined on a social relationship.
+%
+%	@param Weight of a relationship.
+%	@param Relationship to get the weight.
+%
+wenet_weight_of_relationship(Weight, json(Relationship)) :-
+	member(weight=Weight,Relationship)
+	.
+
+%!	wenet_profile_manager_operations_calculate_diversity(-Diversity,+Data)
+%
+%	Obtain the diversity form a set of users.
+%
+%	@param Diversity of the users.
+%	@param Data JSON with the information of the users to calculate the diversity.
+%
+wenet_profile_manager_operations_calculate_diversity(Diversity,Data) :-
+	wenet_profile_manager_api_url_to(Url,['/operations/diversity']),
+	wenet_post_json_to_url(json(Result),Url,Data),
+	member(diversity=Diversity,Result)
+	.
+	
+	
+%!	wenet_new_diversity_data(-Data,+UserIds,+AttributeNames)
+%
+%	reate the data necessary to calculate the diversity for some users.
+%
+%	@param Data JSON with the information of the users to calculate the diversity.
+%	@param UserIds list of strings with the identifier of the users to calculate the diversity.
+%	@param AttributeNames list of strings with the names for the attributes to calculate the diversity.
+%
+wenet_new_diversity_data(Data,UserIds,AttributeNames) :-
+	Data = json([userIds=UserIds,attributes=AttributeNames])
+	.
+	
+%!	wenet_profile_manager_operations_calculate_similarity(-Similarity,+Data)
+%
+%	Obtain the similarity form a set of attributes.
+%
+%	@param Similarity JSON with the attribute as name and a value its similarity.
+%	@param Data JSON with the information of the attributes to calculate the similarity.
+%
+wenet_profile_manager_operations_calculate_similarity(Similarity,Data) :-
+	wenet_profile_manager_api_url_to(Url,['/operations/similarity']),
+	wenet_post_json_to_url(json(Result),Url,Data),
+	member(attributes=Similarity,Result)
+	.
+
+%!	wenet_new_diversity_data(-Data,+UserId,+Source)
+%
+%	reate the data necessary to calculate the diversity for some attributes.
+%
+%	@param Data JSON with the information of the attributes to calculate the diversity.
+%	@param UserId string with the user identifier.
+%	@param Source string with the text to compare.
+%
+wenet_new_diversity_data(Data,UserId,Source) :-
+	Data = json([userId=UserId,source=Source])
 	.

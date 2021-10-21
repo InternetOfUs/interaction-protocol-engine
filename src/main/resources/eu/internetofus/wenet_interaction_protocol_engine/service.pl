@@ -101,7 +101,7 @@ wenet_service_get_app_users(Users,Id) :-
 %
 %	Create an callback message.
 %
-%	@param Callback_message the create callback message.
+%	@param Callback the create callback message.
 %	@param AppId the application identifier for the callback message.
 %	@param ReceiverId the identifier of the receiver for the callback message.
 %	@param Label the label for the callback message.

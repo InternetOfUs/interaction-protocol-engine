@@ -31,7 +31,19 @@
 	wenet_add/3,
 	wenet_format/3,
 	wenet_math/2,
-	wenet_delete_to_url/1
+	wenet_delete_to_url/1,
+	wenet_is_json_null/1,
+	wenet_add_query_params_to_url/3,
+	wenet_new_user_value/3,
+	wenet_user_id_from_user_value/2,
+	wenet_value_from_user_value/2,
+	wenet_initialize_user_values/3,
+	wenet_negate_user_value/2,
+	wenet_user_values_to_value_user_id_pairs/2,
+	wenet_value_user_id_pairs_to_user_values/2,
+	wenet_sort_user_values_by_value/2,
+	wenet_user_values_to_user_ids/2,
+	wenet_product_user_values/3
 	.
 
 :- autoload(library(http/json)).
@@ -42,6 +54,7 @@
 :- autoload(library(prolog_stack)).
 :- autoload(library(lists)).
 :- autoload(library(pcre)).
+:- autoload(library(pairs)).
 
 
 %!	wenet_log_trace(-Text)
@@ -431,4 +444,168 @@ wenet_delete_to_url(Url) :-
 		)		
 	),
 	wenet_log_trace('DELETE',Url)
+	.
+
+%!	wenet_is_json_null(+V)
+%
+%	Check if a json value is a {@code null}.
+%
+wenet_is_json_null(V) :-
+	V = @(null)
+	.
+	
+%!	wenet_add_query_params_to_url(-UrlWithParams,+Url,+Params)
+%
+%	Create an URL with the query parameters.
+%
+%	@param UrlWithParams the url with the parameters.
+%	@param Url to add the query parameters.
+%	@param Params the query parameters.
+%
+wenet_add_query_params_to_url(UrlWithParams,Url,Params) :-
+	exclude(wenet_is_json_null,Params,NoNullParams),
+	(length(NoNullParams, 0)
+		-> UrlWithParams = Url
+		; uri_query_components(QueryParams,NoNullParams),
+		 atomics_to_string([Url|['?',QueryParams]],UrlWithParams)
+	)
+	.
+
+%!	wenet_user_value(-UserValue,+UserId,+Value)
+%
+%	Create a new user value JSON model.
+%
+%	@param UserValue the JSON user value.
+%	@param UserId identifier of the user.
+%	@param Value of the user.
+%
+wenet_new_user_value(UserValue,UserId,Value) :-
+	UserValue = json([userId=UserId,value=Value])
+	.
+	
+%!	wenet_user_id_from_user_value(-UserId,+UserValue)
+%
+%	Get the user identifier of the JSON user value model.
+%
+%	@param UserId identifier of the user.
+%	@param UserValue the JSON user value.
+%
+wenet_user_id_from_user_value(UserId,json(UserValue)) :-
+	member(userId=UserId,UserValue)
+	.
+
+%!	wenet_value_from_user_value(-Value,+UserValue)
+%
+%	Get the normlaized value of the JSON user value model.
+%
+%	@param Value of the user.
+%	@param UserValue the JSON user value.
+%
+wenet_value_from_user_value(Value,json(UserValue)) :-
+	member(value=Value,UserValue)
+	.
+
+%!	wenet_initialize_user_values(-List,+Users,-Value)
+%
+%	Create a list of user values for some users with the same value.
+%
+%	@param List with the user values.
+%	@param Users to the user.
+%	@param Value to set for all the users.
+%
+wenet_initialize_user_values([],[],_).
+wenet_initialize_user_values([UserValue|List],[UserId|Users],Value) :-
+	wenet_new_user_value(UserValue,UserId,Value),
+	wenet_initialize_user_values(List,Users,Value)
+	.
+
+%!	wenet_negate_user_value(-Target,+Source)
+%
+%	Negate the values of all the users. So convert the value sto 1 - Value.
+%
+%	@param Target list where the user values to be negated (1 - value).
+%	@param Source list to get the values to negate.
+%
+wenet_negate_user_value([],[]).
+wenet_negate_user_value([Target|TargetRest],[Source|SourceRest]) :-
+	wenet_user_id_from_user_value(UserId,Source),
+	wenet_value_from_user_value(Value,Source),
+	Negate is 1.0 - Value,
+	wenet_new_user_value(Target,UserId,Negate),
+	wenet_negate_user_value(TargetRest,SourceRest)
+	.
+
+%!	wenet_user_values_to_pairs(-Target,+Source)
+%
+%	Convert a list of JSON user values to a list of pairs. A pair is UserId-Value.
+%
+%	@param Target list with the pairs.
+%	@param Source list with the JSON models to convert to pairs.
+%
+wenet_user_values_to_value_user_id_pairs([],[]).
+wenet_user_values_to_value_user_id_pairs([Pair|Pairs],[User|Users]) :-
+	wenet_user_id_from_user_value(UserId,User),
+	wenet_value_from_user_value(Value,User),
+	Pair = Value-UserId,
+	wenet_user_values_to_value_user_id_pairs(Pairs,Users)
+	.
+
+%!	wenet_value_user_id_pairs_to_user_values(-Target,+Source)
+%
+%	Convert a list of pairs to a list of JSON user values. A pair is UserId-Value.
+%
+%	@param Target list with the JSON models to convert to pairs.
+%	@param Source list with the pairs.
+%
+wenet_value_user_id_pairs_to_user_values([],[]).
+wenet_value_user_id_pairs_to_user_values([User|Users],[Value-UserId|Pairs]) :-
+	wenet_new_user_value(User,UserId,Value),
+	wenet_value_user_id_pairs_to_user_values(Users,Pairs)
+	.
+
+%!	wenet_sort_user_values_by_value(-Target,+Source)
+%
+%	Sort a list user values.
+%
+%	@param Target the sorted list of user values.
+%	@param Source user vlaues list to sort.
+%
+wenet_sort_user_values_by_value(Target,Source) :-
+	wenet_user_values_to_value_user_id_pairs(Pairs,Source),
+	keysort(Pairs,Sorted),
+	wenet_value_user_id_pairs_to_user_values(Target,Sorted)
+	.
+
+%!	wenet_user_values_to_users(-Target,+Source)
+%
+%	Convert a list of user values to a list of user identifiers.
+%
+%	@param Target list with the user identifiers.
+%	@param Source list with the JSON models to get the user identifiers.
+%
+wenet_user_values_to_user_ids([],[]).
+wenet_user_values_to_user_ids([UserId|UserIds],[User|Users]) :-
+	wenet_user_id_from_user_value(UserId,User),
+	wenet_user_values_to_user_ids(UserIds,Users)
+	.
+
+%!	wenet_product_user_values(-Target,+Source)
+%
+%	Do the product of the values of the first and second user values lists.
+%
+%	@param Product list with the JSON models.
+%	@param Source list with the JSON models to get the user identifiers.
+%
+wenet_product_user_values([],[],_).
+wenet_product_user_values([Product|Products],[User|Users],Source) :-
+	wenet_user_id_from_user_value(UserId,User),
+	wenet_value_from_user_value(Value,User),
+	(
+		( member(SourceUser,Source), wenet_user_id_from_user_value(UserId,SourceUser), wenet_value_from_user_value(SourceValue,SourceUser) )
+		-> ProductValue is Value * SourceValue
+		; ProductValue = 0.0
+	),
+	!,
+	wenet_new_user_value(Product,UserId,ProductValue),
+	wenet_product_user_values(Products,Users,Source)
 	.

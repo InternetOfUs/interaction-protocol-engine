@@ -2,13 +2,14 @@
 
 # --- Build the code
 FROM maven:3.6.3-jdk-11-slim AS build
+ARG DEFAULT_PROFILE="gitlab"
 LABEL stage=build
 ENV MAVEN_OPTS="-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
 RUN mkdir -p /build
 WORKDIR /build
 COPY pom.xml .
 COPY src/ /build/src/
-RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn -DskipTests -DfinalName=wenet-interaction-protocol-engine clean install -U
+RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn -P ${DEFAULT_PROFILE} -DskipTests -DfinalName=wenet-interaction-protocol-engine clean install -U
 
 # --- Run the code
 FROM ubuntu:latest

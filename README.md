@@ -204,8 +204,7 @@ This software is under the [Apache V2 license](LICENSE)
 
 ### Social context builder
 
- - Inform every time a new user accept to provide help. (POST {{social_context_builder_api}}/social/preferences/{{userId}}/{{taskId}})
- - When an user offer as volunteer add to the text of the notification the explanation why the user is selected. (GET {{social_context_builder_api}}/social/explanations/{{userID}}/{{taskID}})
+ - Inform every time a message is sent to an user in a task. (POST {{social_context_builder_api}}/social/notification/})
 
 
 ### Incentive server
@@ -215,8 +214,9 @@ This software is under the [Apache V2 license](LICENSE)
 
 ### Personal context builder
 
- - Inform about the locations of a set of users. (POST {{personal_context_builder_api}}/locations)
+ - Get the locations of a set of users. (POST {{personal_context_builder_api}}/locations)
  - Get the closest users into a location. (GET {{personal_context_builder_api}}/closest)
+
 
 ## Contact
 

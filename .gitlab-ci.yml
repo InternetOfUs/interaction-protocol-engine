@@ -3,49 +3,43 @@ image: docker:latest
 services:
   - docker:dind
 
-variables:
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-  COMPONENT_NAME: "internetofus/$CI_PROJECT_NAME"
-  MONGO_IMAGE: "mongo:4.4.1"
-  PROFILE_MANAGER_IMAGE: "internetofus/profile-manager:0.15.0"
-  TASK_MANAGER_IMAGE: "internetofus/task-manager:0.6.0"
-
 cache:
   key: "maven-cache"
   paths:
     - .m2/repository
 
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  
 before_script:
-  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  - docker pull docker.io/$MONGO_IMAGE
-  - docker tag docker.io/$MONGO_IMAGE $MONGO_IMAGE
-  - docker pull $CI_REGISTRY/$PROFILE_MANAGER_IMAGE
-  - docker tag $CI_REGISTRY/$PROFILE_MANAGER_IMAGE $PROFILE_MANAGER_IMAGE
-  - docker pull $CI_REGISTRY/$TASK_MANAGER_IMAGE
-  - docker tag $CI_REGISTRY/$TASK_MANAGER_IMAGE  $TASK_MANAGER_IMAGE
+  - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
 
-build_development_environment:
+build_docker_dev:
   stage: build
   script:
     - docker pull $CI_REGISTRY_IMAGE:dev  || true
-    - DOCKER_BUILDKIT=1 docker build -f src/dev/docker/Dockerfile --cache-from $CI_REGISTRY_IMAGE:dev -t $CI_REGISTRY/$COMPONENT_NAME:dev .
+    - DOCKER_BUILDKIT=1 docker build -f src/dev/docker/Dockerfile --cache-from $CI_REGISTRY_IMAGE:dev -t $CI_REGISTRY_IMAGE:dev .
     - docker push $CI_REGISTRY_IMAGE:dev
 
-build_component_docker:
+build_docker:
   stage: build
   script:
-    - COMPONENT_VERSION=$(grep -m1 '<version>' pom.xml |cut -d '<' -f2  |cut -d '>' -f2)
-    - docker pull $CI_REGISTRY/$COMPONENT_NAME:$COMPONENT_VERSION  || true
-    - DOCKER_BUILDKIT=1 docker build -f src/dev/docker/Dockerfile --cache-from $CI_REGISTRY/$COMPONENT_NAME:$COMPONENT_VERSION -t $CI_REGISTRY/$COMPONENT_NAME:$COMPONENT_VERSION .
-    - docker push $CI_REGISTRY/$COMPONENT_NAME:$COMPONENT_VERSION
-
+    - export COMPONENT_VERSION=$(grep '<version>' $CI_PROJECT_DIR/pom.xml |head -n1| awk -F '>' '{ print $2 }' | awk -F '<' '{ print $1 }')
+    - docker pull $CI_REGISTRY_IMAGE:$COMPONENT_VERSION  || true
+    - DOCKER_BUILDKIT=1 docker build -f src/main/docker/Dockerfile --cache-from $CI_REGISTRY_IMAGE:$COMPONENT_VERSION -t $CI_REGISTRY_IMAGE:$COMPONENT_VERSION .
+    - docker push $CI_REGISTRY_IMAGE:$COMPONENT_VERSION
+    
 buil_test_site:
   stage: test
+  needs: ["build_docker_dev"]
   script:
-    - docker run -v /var/run/docker.sock:/var/run/docker.sock -v $CI_PROJECT_DIR:/app -v $CI_PROJECT_DIR/.m2/repository:/root/.m2/repository $CI_REGISTRY_IMAGE:dev mvn -B -fn clean compile test-compile javadoc:javadoc javadoc:test-javadoc verify site post-site
-    - awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, "instructions covered"; print 100*covered/instructions, "% covered" }' target/site/jacoco/jacoco.csv
+    - docker pull $CI_REGISTRY_IMAGE:dev || true
+    - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $CI_PROJECT_DIR:/app -v $CI_PROJECT_DIR/.m2/repository:/root/.m2/repository -t $CI_REGISTRY_IMAGE:dev mvn -B -fn clean compile test-compile javadoc:javadoc javadoc:test-javadoc verify site post-site
+    - awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, "instructions covered"; print 100*covered/instructions, "% covered" }' target/site/jacoco/jacoco.csv || true
     - cp -r target/site public
+  dependencies:
+    - build_docker_dev
   artifacts:
     when: always
     reports:
@@ -56,22 +50,14 @@ buil_test_site:
       - public
       - target/site/jacoco/jacoco.xml
 
-deploy_tag:
+coverage:
   stage: deploy
+  image: registry.gitlab.com/haynes/jacoco2cobertura:1.0.7
   script:
-    - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-    - docker pull $COMPONENT_NAME:$CI_COMMIT_TAG  || true
-    - DOCKER_BUILDKIT=1 docker build -f src/main/docker/Dockerfile --cache-from $COMPONENT_NAME:$CI_COMMIT_TAG -t $COMPONENT_NAME:$CI_COMMIT_TAG .
-    - docker push $COMPONENT_NAME:$CI_COMMIT_TAG
-  only:
-    - tags
-
-deploy_stable:
-  stage: deploy
-  script:
-    - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-    - docker pull $COMPONENT_NAME:latest  || true
-    - DOCKER_BUILDKIT=1 docker build -f src/main/docker/Dockerfile --cache-from $COMPONENT_NAME:latest -t $COMPONENT_NAME:latest .
-    - docker push $COMPONENT_NAME:latest
-  only:
-    - master
+    - python /opt/cover2cover.py target/site/jacoco/jacoco.xml $CI_PROJECT_DIR/src/main/java/ > target/site/cobertura.xml
+  needs: ["buil_test_site"]
+  dependencies:
+    - buil_test_site
+  artifacts:
+    reports:
+      cobertura: target/site/cobertura.xml

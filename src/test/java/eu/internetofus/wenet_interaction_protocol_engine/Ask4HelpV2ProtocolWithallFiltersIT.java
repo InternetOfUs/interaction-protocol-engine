@@ -18,26 +18,20 @@
  * -----------------------------------------------------------------------------
  */
 
-package eu.internetofus.wenet_interaction_protocol_engine.persistence;
+package eu.internetofus.wenet_interaction_protocol_engine;
 
-import eu.internetofus.common.vertx.AbstractPersistenceVerticle;
-import io.vertx.core.Future;
+import eu.internetofus.common.protocols.Ask4HelpV2ProtocolWithAllFiltersITC;
+import eu.internetofus.common.protocols.DefaultProtocols;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * The verticle that provide the persistence services.
+ * Check the {@link DefaultProtocols#ASK_4_HELP_V2} protocol. ATTENTION: This
+ * test is sequential and maintains the state between methods. In other words,
+ * you must to run the entire test methods on the specified order to work.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class PersistenceVerticle extends AbstractPersistenceVerticle {
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected Future<Void> registerRepositoriesFor(final String schemaVersion) {
-
-    return StatesRepository.register(this.vertx, this.pool, schemaVersion)
-        .compose(empty -> InteractionsRepository.register(this.vertx, this.pool, schemaVersion));
-  }
+@ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
+public class Ask4HelpV2ProtocolWithallFiltersIT extends Ask4HelpV2ProtocolWithAllFiltersITC {
 
 }

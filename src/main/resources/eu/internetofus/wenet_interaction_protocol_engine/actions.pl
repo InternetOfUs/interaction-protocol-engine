@@ -32,14 +32,18 @@
 	notify_incentive_server_message_sent/1,
 	notify_incentive_server_message_sent/2,
 	notify_incentive_server_task_created/0,
-	notify_incentive_server_task_created/1,
-	notify_incentive_server_task_created/2,
-	notify_volunteers_to_social_context_builder/2,
 	close_task/0,
 	merge_task/1,
 	merge_community_state/1,
 	put_community_state_attribute/2,
-	send_event/4
+	send_event/4,
+	volunteers_ranking/2,
+	answers_ranking/2,
+	notify_social_context_builder_message_sent/1,
+	merge_task_state/1,
+	put_task_state_attribute/2,
+	notify_message_interaction/1,
+	selected_answer_from_last_ranking/1
 	.
 
 
@@ -61,39 +65,6 @@ add_created_transaction() :-
 	asserta(add_created_transaction())
 	.
 
-%!	notify_incentive_server_task_created(+Label,+Count)
-%
-%	Notify the incentive server that a task of the specified task type is
-%	created Count times.
-%
-%	@param TaskTypeId the identifier of the task type of the created task.
-%	@param Count of the task types that has bene created.
-%
-notify_incentive_server_task_created(TaskTypeId,Count) :-
-	get_profile_id(ProfileId),
-	get_community_id(CommunityId),
-	get_app_id(AppId),
-	wenet_new_task_type_status(Status,ProfileId,CommunityId,AppId,TaskTypeId,Count),
-	!,
-	ignore(wenet_incentive_server_update_task_type_status(_,Status))
-	.
-
-%!	notify_incentive_server_task_created(+TaskTypeId)
-%
-%	Notify the incentive server that a task of the specific task type is created.
-%   The number of times is counted as a community user property per user and task type.
-%
-%	@param TaskTypeId the identifier of the task type of the created task.
-%
-notify_incentive_server_task_created(TaskTypeId) :-
-	atomics_to_string(["incentiveServer",TaskTypeId],'#',Key),
-	atom_string(AtomKey,Key),
-	get_community_state_attribute(Count,AtomKey,0),
-	wenet_math(NewCount,Count + 1),
-	put_community_state_attribute(Key,NewCount),
-	ignore(notify_incentive_server_task_created(TaskTypeId,NewCount))
-	.
-
 %!	notify_incentive_server_task_created()
 %
 %	Notify the incentive server that the current task is created.
@@ -101,7 +72,18 @@ notify_incentive_server_task_created(TaskTypeId) :-
 %
 notify_incentive_server_task_created() :-
 	get_task_type_id(TaskTypeId),
-	ignore(notify_incentive_server_task_created(TaskTypeId))
+	atomics_to_string(["incentiveServer",TaskTypeId],'#',Key),
+	atom_string(AtomKey,Key),
+	get_community_state_attribute(Count,AtomKey,0),
+	wenet_math(NewCount,Count + 1),
+	put_community_state_attribute(Key,NewCount),
+	get_profile_id(ProfileId),
+	get_community_id(CommunityId),
+	get_app_id(AppId),
+	get_task_id(TaskId),
+	wenet_new_task_type_status(Status,ProfileId,CommunityId,AppId,TaskTypeId,TaskId,NewCount),
+	!,
+	ignore(wenet_incentive_server_update_task_type_status(_,Status))
 	.
 
 %!	add_message_transaction()
@@ -176,6 +158,8 @@ send_user_message(Label,Content) :-
 		;true
 	),
 	ignore(notify_incentive_server_message_sent(Label)),
+	ignore(notify_social_context_builder_message_sent(Message)),
+	ignore(notify_message_interaction(Message)),
 	!
 	.
 
@@ -254,7 +238,8 @@ notify_incentive_server_transaction_done(Label,Count) :-
 	get_community_id(CommunityId),
 	get_app_id(AppId),
 	get_task_type_id(TaskTypeId),
-	wenet_new_task_transaction_status(Status,UserId,CommunityId,AppId,TaskTypeId,Label,Count),
+	get_task_id(TaskId),
+	wenet_new_task_transaction_status(Status,UserId,CommunityId,AppId,TaskTypeId,TaskId,Label,Count),
 	!,
 	ignore(wenet_incentive_server_update_task_transaction_status(_,Status))
 	.
@@ -298,19 +283,6 @@ notify_incentive_server_message_sent(Label) :-
 	notify_incentive_server_transaction_done(Label)
 	.
 
-%!	notify_social_context_builder
-%
-%	Notify the social context builder about the user preferences in a task.
-%
-%	@param Volunteers list of volunteers.
-%	@param UserId identifier of the users.
-%
-notify_volunteers_to_social_context_builder(Volunteers,UserId):-
-	get_task_id(TaskId),
-	!,
-	ignore(wenet_social_context_builder_update_preferences(UserId,TaskId,Volunteers))
-	.
-
 %!	close_task()
 %
 %	Mark the current task as closed.
@@ -344,7 +316,7 @@ merge_task(json(Task)) :-
 			true
 	.
 
-%!	merge_community_state()
+%!	merge_community_state(-CommunityState)
 %
 %	Merge the data with the current community user state.
 %
@@ -417,4 +389,192 @@ send_event(Id,Delay,Particle,Content) :-
 	wenet_new_protocol_event(Event,AppId,CommunityId,TaskId,TransactionId,SenderUserId,Delay,Particle,Content),
 	!,
 	wenet_interaction_protocol_engine_send_event(Sent,Event)->wenet_id_of_protocol_event(Id,Sent);Id = -1
+	.
+
+%!	volunteers_ranking(-Ranking,+Volunteers)
+%
+%	This action calls the social context builder to obtain a ranking for some volunteers.
+%
+%	@param Ranking array of strings with the ranked answers.
+%	@param Volunteers array of strings with the user identifiers that has volunteer.
+%
+volunteers_ranking(Ranking,Volunteers):-
+	get_profile_id(Me),
+	get_task_id(TaskId),
+	!,
+	ignore(wenet_social_context_builder_post_preferences(Ranking,Me,TaskId,Volunteers))
+	.
+
+%!	answers_ranking(-Ranking,+Answers)
+%
+%	This action calls the social context builder to obtain a ranking for some answers.
+%
+%	@param Ranking array of strings with the ranked answers.
+%	@param UserAnswers array of JSON models with the user answers. This array elements
+%						can be created using the wenet_new_user_answer.
+%
+answers_ranking(Ranking,UserAnswers):-
+	get_profile_id(Me),
+	get_task_id(TaskId),
+	!,
+	ignore(wenet_social_context_builder_post_preferences_answers(Ranking,Me,TaskId,UserAnswers)),
+	ignore(put_task_state_attribute('social_context_builder_ranking',Ranking))
+	.
+
+%!	selected_answer_from_last_ranking(+UserAnswer)
+%
+%	This action update the  the social context builder to obtain a ranking for some answers.
+%
+%	@param UserAnswer the selected answer.
+%	@param UserAnswers array of JSON models with the user answers. This array elements
+%						can be created using the wenet_new_user_answer.
+%
+selected_answer_from_last_ranking(UserAnswer):-
+	!,
+	ignore(
+		(
+			get_profile_id(UserId),
+			get_task_id(TaskId),
+			get_task_state_attribute(Ranking,'social_context_builder_ranking'),
+			(
+				nth0(Selected,Ranking,UserAnswer)
+				-> wenet_social_context_builder_put_preferences_answers_update(UserId,TaskId,Selected,Ranking)
+				; 	(
+					length(Ranking,Selected),
+					wenet_add(NewRanking,UserAnswer,Ranking),
+					wenet_social_context_builder_put_preferences_answers_update(UserId,TaskId,Selected,NewRanking)
+				)  
+			)
+		
+		)
+	)
+	.
+
+%!	notify_social_context_builder_message_sent(+Message)
+%
+%	Notify the social context builder about an interaction between users.
+%
+%	@param Message that has been sent.
+%
+notify_social_context_builder_message_sent(Message) :-
+	!,
+	(
+		get_task_id(TaskId),
+		get_transaction_id(TransactionId),
+		get_now(Timestamp),
+		get_transaction(Transaction),
+		wenet_actioneer_id_of_transaction(SenderId,Transaction),
+		wenet_new_user_message(UserMessage,TaskId,TransactionId,Timestamp,SenderId,Message)		
+	)->
+	wenet_social_context_builder_post_social_notification(UserMessage)
+	; true
+	.
+
+%!	merge_task_state(-TaskState)
+%
+%	Merge the data with the current task user state.
+%
+%	@param TaskState list/json to merge
+%
+merge_task_state(TaskState) :-
+	is_list(TaskState),
+	merge_task_state(json(TaskState))
+	.
+merge_task_state(json(TaskState)) :-
+	get_profile_id(ProfileId),
+	get_task_id(TaskId),
+	!,
+	wenet_interaction_protocol_engine_merge_task_user_state(MergedTaskUserState,TaskId,ProfileId,json(TaskState))
+		->
+			(
+				retractall(get_task_state(_)),
+				asserta(get_task_state(MergedTaskUserState))
+			)
+		;
+			true
+	.
+
+%!	put_task_state_attribute(+Key,+Value)
+%
+%	Change the value of a task attribute.
+%
+%	@param Key name of the attribute to put.
+%	@param Value of the attribute.
+%
+put_task_state_attribute(Key,Value) :-
+	merge_task_state(json([attributes=json([Key=Value])]))
+	.
+
+%!	notify_message_interaction(+Message)
+%
+%	Notfy that has been done a message interaction.
+%
+%	@param Message of the interaction.
+% 
+notify_message_interaction(Message) :-
+	(
+		get_app_id(AppId)
+		; AppId = @(null)
+	),
+	(
+		get_community_id(CommunityId)
+		; CommunityId = @(null)
+	),
+	(
+		get_task_type_id(TaskTypeId)
+		; TaskTypeId = @(null)
+	),
+	(
+		get_task_id(TaskId)
+		; TaskId = @(null)
+	),
+	(
+		(
+			get_transaction(Transaction),
+			(
+				wenet_actioneer_id_of_transaction(SenderId,Transaction)
+				; SenderId = @(null)
+			),
+			(
+				wenet_label_of_transaction(TransactionLabel,Transaction)
+				; TransactionLabel = @(null)
+			),
+			(
+				wenet_attributes_of_transaction(TransactionAttributes,Transaction)
+				; TransactionAttributes = @(null)
+			),
+			(
+				wenet_creation_ts_of_transaction(TransactionTs,Transaction)
+				; TransactionTs = @(null)
+			)
+		)
+		; SenderId = @(null),TransactionLabel = @(null),TransactionAttributes = @(null), TransactionTs =  @(null) 
+	),
+	(
+		(
+			wenet_is_json_null(Message),
+			ReceiverId = @(null),
+			MessageLabel = @(null),
+			MessageAttributes = @(null), 
+			MessageTs =  @(null)
+		)
+		;
+		(
+			(
+				wenet_receiver_id_of_message(ReceiverId,Message)
+				; ReceiverId = @(null)
+			),
+			(
+				wenet_label_of_message(MessageLabel,Message)
+				; MessageLabel = @(null)
+			),
+			(
+				wenet_attributes_of_message(MessageAttributes,Message)
+				; MessageAttributes = @(null)
+			),
+			get_now(MessageTs)			
+		)
+	),
+	wenet_new_interaction(Interaction,AppId,CommunityId,TaskTypeId,TaskId,SenderId,ReceiverId,TransactionLabel,TransactionAttributes,TransactionTs,MessageLabel,MessageAttributes,MessageTs),
+	ignore(wenet_interaction_protocol_engine_add_interaction(Interaction))
 	.

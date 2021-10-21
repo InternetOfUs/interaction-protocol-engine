@@ -66,30 +66,25 @@ public class ProtocolData extends ReflectionModel implements Model {
   public WeNetUserProfile profile;
 
   /**
-   * Load the protocol data.
+   * Load the protocol for the task transaction.
    *
-   * @param taskId      identifier of the task.
-   * @param taskTypeId  identifier of the task type.
-   * @param communityId identifier of the community.
-   * @param userId      identifier of the user.
+   * @param transaction to extract the data.
    * @param vertx       event bus to use.
    *
    * @return the future protocol data.
    */
-  public static Future<ProtocolData> createWith(final String taskId, final String taskTypeId, final String communityId,
-      final String userId, final Vertx vertx) {
+  public static Future<ProtocolData> createWith(@NotNull final TaskTransaction transaction, final Vertx vertx) {
 
-    return loadTaskIn(taskId, new ProtocolData(), vertx)
-        .compose(protocol -> loadTaskTypeIn(taskTypeId, protocol, vertx))
-        .compose(protocol -> loadCommunityIn(communityId, protocol, vertx))
-        .compose(protocol -> loadProfileIn(userId, protocol, vertx));
+    return loadTaskIn(transaction.taskId, new ProtocolData(), vertx)
+        .compose(protocol -> loadTaskTypeIn(protocol, vertx)).compose(protocol -> loadCommunityIn(protocol, vertx))
+        .compose(protocol -> loadProfileIn(transaction.actioneerId, protocol, vertx));
 
   }
 
   /**
-   * Create the protocol for the task.
+   * Load the protocol for the task.
    *
-   * @param task  for the data.
+   * @param task  to extract the data.
    * @param vertx event bus to use.
    *
    * @return the future protocol data.
@@ -101,20 +96,6 @@ public class ProtocolData extends ReflectionModel implements Model {
     return loadTaskTypeIn(task.taskTypeId, data, vertx)
         .compose(protocol -> loadCommunityIn(task.communityId, protocol, vertx))
         .compose(protocol -> loadProfileIn(task.requesterId, protocol, vertx));
-
-  }
-
-  /**
-   * Load the protocol for the task transaction.
-   *
-   * @param transaction to extract the data.
-   * @param vertx       event bus to use.
-   *
-   * @return the future protocol data.
-   */
-  public static Future<ProtocolData> createWith(@NotNull final TaskTransaction transaction, final Vertx vertx) {
-
-    return createWith(transaction.taskId, null, null, transaction.actioneerId, vertx);
 
   }
 
@@ -172,41 +153,52 @@ public class ProtocolData extends ReflectionModel implements Model {
 
     } else {
 
+      final Promise<ProtocolData> promise = Promise.promise();
       if (protocolData.task != null && !taskId.equals(protocolData.task.id)) {
 
         protocolData.task = null;
       }
-
       if (protocolData.task != null) {
 
-        return loadTaskTypeIn(protocolData.task.taskTypeId, protocolData, vertx)
-            .compose(protocol -> loadCommunityIn(protocolData.task.communityId, protocol, vertx))
-            .compose(protocol -> loadProfileIn(protocolData.task.requesterId, protocol, vertx));
+        promise.complete(protocolData);
 
       } else {
 
-        final Promise<ProtocolData> promise = Promise.promise();
         WeNetTaskManager.createProxy(vertx).retrieveTask(taskId).onComplete(retrieve -> {
 
           final var task = retrieve.result();
           if (task != null) {
 
             protocolData.task = task;
-            loadTaskTypeIn(task.taskTypeId, protocolData, vertx)
-                .compose(protocol -> loadCommunityIn(task.communityId, protocol, vertx))
-                .compose(protocol -> loadProfileIn(task.requesterId, protocol, vertx)).onComplete(promise);
 
           } else {
 
             Logger.warn(retrieve.cause(), "Not found task {}", taskId);
-            promise.complete(protocolData);
           }
+          promise.complete(protocolData);
 
         });
-
-        return promise.future();
       }
+      return promise.future();
     }
+  }
+
+  /**
+   * Load the data of a task type into a protocol.
+   *
+   * @param protocolData data to fill in.
+   * @param vertx        event bus to use.
+   *
+   * @return the future protocol data with the task type.
+   */
+  public static Future<ProtocolData> loadTaskTypeIn(final ProtocolData protocolData, final Vertx vertx) {
+
+    String taskTypeId = null;
+    if (protocolData.task != null) {
+
+      taskTypeId = protocolData.task.taskTypeId;
+    }
+    return loadTaskTypeIn(taskTypeId, protocolData, vertx);
   }
 
   /**
@@ -258,6 +250,24 @@ public class ProtocolData extends ReflectionModel implements Model {
 
       return promise.future();
     }
+  }
+
+  /**
+   * Load the data of a task type into a protocol.
+   *
+   * @param protocolData data to fill in.
+   * @param vertx        event bus to use.
+   *
+   * @return the future protocol data with the task type.
+   */
+  public static Future<ProtocolData> loadCommunityIn(final ProtocolData protocolData, final Vertx vertx) {
+
+    String communityId = null;
+    if (protocolData.task != null) {
+
+      communityId = protocolData.task.communityId;
+    }
+    return loadCommunityIn(communityId, protocolData, vertx);
   }
 
   /**
@@ -384,12 +394,20 @@ public class ProtocolData extends ReflectionModel implements Model {
    */
   public static Future<ProtocolData> createWith(@NotNull final ProtocolMessage message, final Vertx vertx) {
 
-    String userId = null;
-    if (message.receiver != null) {
+    final var data = new ProtocolData();
+    return loadTaskIn(message.taskId, data, vertx).compose(protocol -> loadTaskTypeIn(protocol, vertx))
+        .compose(protocol -> loadCommunityIn(message.communityId, protocol, vertx)).compose(protocol -> {
 
-      userId = message.receiver.userId;
-    }
-    return createWith(message.taskId, null, message.communityId, userId, vertx);
+          if (message.receiver != null) {
+
+            return loadProfileIn(message.receiver.userId, protocol, vertx);
+
+          } else {
+
+            return Future.succeededFuture(protocol);
+          }
+
+        });
 
   }
 

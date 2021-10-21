@@ -38,9 +38,10 @@
 	wenet_label_of_transaction/2,
 	wenet_attributes_of_transaction/2,
 	wenet_actioneer_id_of_transaction/2,
+	wenet_creation_ts_of_transaction/2,
+	wenet_last_update_ts_of_transaction/2,
 	wenet_messages_of_transaction/2
 	.
-
 
 %!	wenet_task_manager_api_url_to(+Url,-Paths)
 %
@@ -298,7 +299,7 @@ wenet_attributes_of_transaction(Attributes,json(Transaction)) :-
 %
 %	Obtain the actioneer identifier of a transaction.
 %
-%	@param TsaskId of the transaction.
+%	@param ActioneerId of the transaction.
 %	@param Transaction to get the actioneer id.
 %
 wenet_actioneer_id_of_transaction(ActioneerId,json(Transaction)) :-
@@ -314,4 +315,26 @@ wenet_actioneer_id_of_transaction(ActioneerId,json(Transaction)) :-
 %
 wenet_messages_of_transaction(Messages,json(Transaction)) :-
 	member(messages=Messages,Transaction)
+	.
+
+%!	wenet_creation_ts_of_transaction(-CreationTs,+Transaction)
+%
+%	Obtain the creation timestamp of a transaction.
+%
+%	@param CreationTs of the transaction.
+%	@param Transaction to get the creation timestamp.
+%
+wenet_creation_ts_of_transaction(CreationTs,json(Transaction)) :-
+	member('_creationTs'=CreationTs,Transaction)
+	.
+
+%!	wenet_last_update_ts_of_transaction(-LastUpdateTs,+Transaction)
+%
+%	Obtain the last update timestamp of a transaction.
+%
+%	@param LastUpdateTs of the transaction.
+%	@param Transaction to get the last_update timestamp.
+%
+wenet_last_update_ts_of_transaction(LastUpdateTs,json(Transaction)) :-
+	member('_lastUpdateTs'=LastUpdateTs,Transaction)
 	.
