@@ -75,8 +75,8 @@ users_by_beliefs_and_values(BeliefsAndValuesUsers,Users) :-
 			normalized_diversity(Diversity,Users,Attributes),
 			(
 				=(BeliefsAndValuesAttr,'similar')
-				-> BeliefsAndValuesUsers = Diversity
-				; wenet_negate_user_value(BeliefsAndValuesUsers,Diversity)
+				-> wenet_negate_user_value(BeliefsAndValuesUsers,Diversity)
+				; BeliefsAndValuesUsers = Diversity
 			)
 		) 
 		; wenet_initialize_user_values(BeliefsAndValuesUsers,Users,1.0)
@@ -93,8 +93,8 @@ users_by_domain_interest(DomainInterestUsers,Users) :-
 			normalized_diversity(Diversity,Users,Attributes),
 			(
 				=(DomainInterestAttr,'similar')
-				-> DomainInterestUsers = Diversity
-				; wenet_negate_user_value(DomainInterestUsers,Diversity)
+				-> wenet_negate_user_value(DomainInterestUsers,Diversity)
+				; DomainInterestUsers = Diversity
 			)
 		) 
 		; wenet_initialize_user_values(DomainInterestUsers,Users,1.0)
@@ -117,5 +117,6 @@ attributes_by_domain('music',['gender','nationality','occupation']).
 attributes_by_domain('arts_and_crafts',['gender','nationality','occupation']).
 attributes_by_domain('life_ponders',['gender','nationality','occupation']).
 attributes_by_domain('varia_misc',Attributes) :-
-	Attributes = []
+	get_task_goal_name(Question),
+	my_profile_attributes_similars_to(Attributes,Question,0.4)
 	.

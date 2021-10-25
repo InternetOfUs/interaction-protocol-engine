@@ -27,7 +27,8 @@
 	wenet_profile_manager_operations_calculate_diversity/2,
 	wenet_new_diversity_data/3,
 	wenet_profile_manager_operations_calculate_similarity/2,
-	wenet_new_similarity_data/3
+	wenet_new_similarity_data/3,
+	wenet_attributes_of_similarity_result/3
 	.
 
 
@@ -180,4 +181,22 @@ wenet_profile_manager_operations_calculate_similarity(Similarity,Data) :-
 %
 wenet_new_similarity_data(Data,UserId,Source) :-
 	Data = json([userId=UserId,source=Source])
+	.
+
+%!	wenet_attributes_of_similarity_result(-Attributes,+SimilarityResult,+MinSimilarity)
+%
+%	Create the data necessary to calculate the similarity for some attributes.
+%
+%	@param Attributes list of attribute names.
+%	@param SimilarityResult the list with the attribute=similarity values.
+%	@param MinSimilarity minimum similarity, exclusive, to get the attribute.
+%
+wenet_attributes_of_similarity_result([],[],_).
+wenet_attributes_of_similarity_result(Attributes,[Name=Similarity|SimilarityResult],MinSimilarity) :-
+	<(MinSimilarity,Similarity)
+	-> (
+		wenet_attributes_of_similarity_result(Names,SimilarityResult,MinSimilarity),
+		Attributes = [Name|Names]
+	)
+	; wenet_attributes_of_similarity_result(Attributes,SimilarityResult,MinSimilarity)
 	.

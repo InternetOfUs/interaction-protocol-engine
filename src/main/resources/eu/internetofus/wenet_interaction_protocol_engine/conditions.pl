@@ -75,7 +75,8 @@
 	normalized_social_closeness/2,
 	normalized_social_closeness_/4,
 	normalized_diversity/3,
-	normalized_diversity_/4
+	normalized_diversity_/4,
+	my_profile_attributes_similars_to/3
 	.
 
 %!	is_now_less_than(+Time)
@@ -889,8 +890,9 @@ normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Rela
 %
 %	Calculate the socialness of a user repect some others.
 %
-%	@param Socialness a list with the socialness between a user and some others.
-%	@param Users identifiers of the users to calculate the socialness.
+%	@param Diversity a value in the range [0,1] that says how the diverse are the users team.
+%	@param Users array with the users identifiers to calculate the diversity.
+%	@param Attributes array with the names of the attributes to calculate the diversity.
 %
 normalized_diversity(Diversity,Users,Attributes) :-
 	(
@@ -914,4 +916,24 @@ normalized_diversity_([UserDiversity|UsersDiversity],[User|Users],Attributes,Me)
 	!,
 	wenet_new_user_value(UserDiversity,User,Diversity),
 	normalized_diversity_(UsersDiversity,Users,Attributes,Me)
+	.
+
+%!	my_profile_attributes_similars_to(-Attributes,+Text,+MinSimilarity)
+%
+%	Obtain the attributes of my profile that has a similarity to a text 
+%	equals or greater than the minimum.
+%
+%	@param Attributes a list with the name of the profile attributes that are similar to the text.
+%	@param Text to compare the profile attributes.
+%	@param MinSimilarity a value in the range [0,1] that define the minimum similarity to take an attribute.
+%
+my_profile_attributes_similars_to(Attributes,Text,MinSimilarity) :-
+	(
+		get_profile_id(Me),
+		wenet_new_similarity_data(Data,Me,Text),
+		wenet_profile_manager_operations_calculate_similarity(Similarity,Data),
+		wenet_attributes_of_similarity_result(Attributes,Similarity,MinSimilarity)
+	)
+	-> true
+	; Attributes = []
 	.
