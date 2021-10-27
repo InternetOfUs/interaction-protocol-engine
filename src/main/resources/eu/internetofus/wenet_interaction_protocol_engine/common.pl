@@ -46,6 +46,38 @@
 	wenet_product_user_values/3
 	.
 
+:- discontiguous
+	wenet_do_actions_status/1,
+	wenet_execute_safetly_once/1,
+	wenet_read_json_from_file/2,
+	wenet_get_json_from_url/2,
+	wenet_post_json_to_url/2,
+	wenet_put_json_to_url/2,
+	wenet_patch_json_to_url/2,
+	wenet_log_trace/2,
+	wenet_log_trace/1,
+	wenet_log_error/3,
+	wenet_log_error/2,
+	wenet_log_error/1,
+	wenet_remove/3,
+	wenet_add/3,
+	wenet_format/3,
+	wenet_math/2,
+	wenet_delete_to_url/1,
+	wenet_is_json_null/1,
+	wenet_add_query_params_to_url/3,
+	wenet_new_user_value/3,
+	wenet_user_id_from_user_value/2,
+	wenet_value_from_user_value/2,
+	wenet_initialize_user_values/3,
+	wenet_negate_user_value/2,
+	wenet_user_values_to_value_user_id_pairs/2,
+	wenet_value_user_id_pairs_to_user_values/2,
+	wenet_sort_user_values_by_value/2,
+	wenet_user_values_to_user_ids/2,
+	wenet_product_user_values/3
+	.
+
 :- autoload(library(http/json)).
 :- autoload(library(http/http_open)).
 :- autoload(library(http/http_client)).

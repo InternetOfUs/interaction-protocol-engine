@@ -44,6 +44,36 @@
 	wenet_interaction_protocol_engine_get_interactions_page/18
 	.
 
+:- discontiguous
+	wenet_interaction_protocol_engine_api_url_to/2,
+	wenet_interaction_protocol_engine_send_message/2,
+	wenet_interaction_protocol_engine_send_event/2,
+	wenet_interaction_protocol_engine_get_community_user_state/3,
+	wenet_interaction_protocol_engine_merge_community_user_state/4,
+	wenet_app_id_of_protocol_message/2,
+	wenet_community_id_of_protocol_message/2,
+	wenet_task_id_of_protocol_message/2,
+	wenet_transaction_id_of_protocol_message/2,
+	wenet_sender_of_protocol_message/2,
+	wenet_sender_component_of_protocol_message/2,
+	wenet_sender_id_of_protocol_message/2,
+	wenet_receiver_of_protocol_message/2,
+	wenet_receiver_component_of_protocol_message/2,
+	wenet_receiver_id_of_protocol_message/2,
+	wenet_particle_of_protocol_message/2,
+	wenet_content_of_protocol_message/2,
+	wenet_new_protocol_message/11,
+	wenet_interaction_protocol_engine_get_task_user_state/3,
+	wenet_interaction_protocol_engine_merge_task_user_state/4,
+	wenet_interaction_protocol_engine_get_user_state/2,
+	wenet_interaction_protocol_engine_merge_user_state/3,
+	wenet_id_of_protocol_event/2,
+	wenet_interaction_protocol_engine_delete_event/1,
+	wenet_interaction_protocol_engine_add_interaction/1,
+	wenet_new_interaction/13,
+	wenet_interaction_protocol_engine_get_interactions_page/18
+	.
+
 
 %!	wenet_interaction_protocol_engine_api_url_to(-Url,+Paths)
 %

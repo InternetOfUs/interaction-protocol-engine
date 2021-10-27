@@ -22,6 +22,14 @@
 	wenet_new_task_type_status/7
 	.
 
+:- discontiguous
+	wenet_incentive_server_api_url_to/2,
+	wenet_incentive_server_update_task_transaction_status/2,
+	wenet_new_task_transaction_status/8,
+	wenet_incentive_server_update_task_type_status/2,
+	wenet_new_task_type_status/7
+	.
+
 %!	wenet_incentive_server_api_url_to(-Url,+Paths)
 %
 %	Calculate the URL to interact to the specified path of the incentive server.

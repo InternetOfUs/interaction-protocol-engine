@@ -43,6 +43,35 @@
 	wenet_messages_of_transaction/2
 	.
 
+:- discontiguous
+	wenet_task_manager_api_url_to/2,
+	wenet_task_manager_get_task/2,
+	wenet_task_manager_merge_task/3,
+	wenet_task_manager_add_transaction_into_task/3,
+	wenet_task_manager_add_message_into_transaction/4,
+	wenet_id_of_task/2,
+	wenet_task_type_id_of_task/2,
+	wenet_app_id_of_task/2,
+	wenet_community_id_of_task/2,
+	wenet_requester_id_of_task/2,
+	wenet_goal_of_task/2,
+	wenet_goal_name_of_task/2,
+	wenet_goal_description_of_task/2,
+	wenet_goal_keywords_of_task/2,
+	wenet_is_closed_task/1,
+	wenet_close_ts_of_task/2,
+	wenet_attributes_of_task/2,
+	wenet_transactions_of_task/2,
+	wenet_id_of_transaction/2,
+	wenet_task_id_of_transaction/2,
+	wenet_label_of_transaction/2,
+	wenet_attributes_of_transaction/2,
+	wenet_actioneer_id_of_transaction/2,
+	wenet_creation_ts_of_transaction/2,
+	wenet_last_update_ts_of_transaction/2,
+	wenet_messages_of_transaction/2
+	.
+
 %!	wenet_task_manager_api_url_to(+Url,-Paths)
 %
 %	Calculate the URL from a path

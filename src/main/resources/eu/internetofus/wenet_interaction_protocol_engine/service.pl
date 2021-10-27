@@ -28,6 +28,20 @@
 	wenet_attributes_of_message/2
 	.
 
+:- discontiguous
+	wenet_service_api_url_to/2,
+	wenet_service_get_app/2,
+	wenet_id_of_app/2,
+	wenet_message_callback_url_of_app/2,
+	wenet_service_get_app_users/2,
+	wenet_service_post_callback/3,
+	wenet_new_message/5,
+	wenet_app_id_of_message/2,
+	wenet_receiver_id_of_message/2,
+	wenet_label_of_message/2,
+	wenet_attributes_of_message/2
+	.
+
 
 %!	wenet_service_api_url_to(+Url,-Paths)
 %

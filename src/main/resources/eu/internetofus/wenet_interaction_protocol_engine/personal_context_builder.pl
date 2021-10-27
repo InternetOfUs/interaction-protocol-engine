@@ -31,6 +31,22 @@
 	wenet_filter_locations_by_distance/5
 	.
 
+:- discontiguous
+	wenet_personal_context_builder_url_to/2,
+	wenet_personal_context_builder_locations/2,
+	wenet_user_id_of_location/2,
+	wenet_users_of_locations/2,
+	wenet_longitude_of_location/2,
+	wenet_latitude_of_location/2,
+	wenet_personal_context_builder_closest/4,
+	wenet_user_id_of_closest/2,
+	wenet_distance_of_closest/2,
+	wenet_users_of_closest/2,
+	wenet_distance_between_locations/3,
+	wenet_distance_between_locations/5,
+	wenet_filter_locations_by_distance/5
+	.
+
 
 %!	wenet_personal_context_builder_url_to(-Url,+Paths)
 %

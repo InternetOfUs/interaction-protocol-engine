@@ -19,6 +19,14 @@
 	wenet_do_norm_actions/1,
 	wenet_do_actions_status/1.
 
+:- discontiguous
+	wenet_do_actions/1,
+	wenet_do_norm_actions/1,
+	wenet_do_actions_status/1,
+	go/0,
+	check_exist_message/0
+	.
+
 go() :-
 	check_exist_message(),
 	wenet_execute_safetly_once(normengine(Actions)),

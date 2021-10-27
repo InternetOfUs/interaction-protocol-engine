@@ -31,6 +31,23 @@
 	wenet_attributes_of_similarity_result/3
 	.
 
+:- discontiguous
+	wenet_profile_manager_api_url_to/2,
+	wenet_profile_manager_get_profile/2,
+	wenet_profile_manager_get_community/2,
+	wenet_id_of_profile/2,
+	wenet_id_of_community/2,
+	wenet_relationships_of_profile/2,
+	wenet_user_id_of_relationship/2,
+	wenet_app_id_of_relationship/2,
+	wenet_weight_id_of_relationship/2,
+	wenet_profile_manager_operations_calculate_diversity/2,
+	wenet_new_diversity_data/3,
+	wenet_profile_manager_operations_calculate_similarity/2,
+	wenet_new_similarity_data/3,
+	wenet_attributes_of_similarity_result/3
+	.
+
 
 %!	wenet_profile_manager_api_url_to(+Url,-Paths)
 %
