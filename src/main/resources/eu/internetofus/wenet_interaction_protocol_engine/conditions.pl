@@ -990,6 +990,7 @@ my_profile_attributes_similars_to(Attributes,Text,MinSimilarity) :-
 	(
 		get_profile_id(Me),
 		wenet_new_similarity_data(Data,Me,Text),
+		!,
 		wenet_profile_manager_operations_calculate_similarity(Similarity,Data),
 		wenet_attributes_of_similarity_result(Attributes,Similarity,MinSimilarity)
 	)
