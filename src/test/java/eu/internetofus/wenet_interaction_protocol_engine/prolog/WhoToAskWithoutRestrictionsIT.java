@@ -38,7 +38,7 @@ public class WhoToAskWithoutRestrictionsIT extends AbstractWhoToAskITC {
   protected Future<?> doAfterTaskCreated(final Vertx vertx, final VertxTestContext testContext) {
 
     return this
-        .waitUntilResultcontainsUsers(vertx, testContext, false,
+        .waitUntilResultContainsUsers(vertx, testContext, false,
             this.users.subList(1, this.users.size()).toArray(new WeNetUserProfile[this.users.size() - 1]))
         .compose(ignored -> this.waitUntilUserTaskState(this.users.get(0).id, vertx, testContext, userTaskState -> {
           final var unaskedUserIds = userTaskState.attributes.getJsonArray("unaskedUserIds");
