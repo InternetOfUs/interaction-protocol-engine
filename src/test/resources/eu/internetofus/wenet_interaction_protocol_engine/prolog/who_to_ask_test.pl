@@ -130,11 +130,16 @@ domain_attributes('varia_misc',Attributes) :-
 attributes_similars_to_question(Attributes) :-
 	(
 		get_task_goal_name(Question),
-		my_profile_attributes_similars_to(Attributes,Question,0.4)
+		my_profile_attributes_similars_to(SimAttributes,Question,0.4)
 		-> true
-		; Attributes = []
+		; SimAttributes = []
 	),
 	!,
+	(
+		length(SimAttributes,0)
+		-> Attributes = ['competences.u_active','competences.u_read','competences.u_essay','competences.u_org','competences.u_balance','competences.u_assess','competences.u_theory','competences.u_pract','competences.c_locfac','competences.c_accom','competences.c_team_sp','competences.c_ind_sp','competences.c_watch_sp','competences.c_lit','competences.c_creatlit','competences.c_perf_art','competences.c_musgall','competences.c_food','competences.c_eating','competences.c_plays','competences.c_perf_plays','competences.c_app_mus','competences.c_perf_mus']
+		; Attributes = SimAttributes
+	),
 	retractall(attributes_similars_to_question(_)),
 	asserta(attributes_similars_to_question(Attributes))
 	.
