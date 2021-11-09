@@ -19,17 +19,32 @@
  */
 package eu.internetofus.wenet_interaction_protocol_engine.prolog;
 
+import eu.internetofus.common.components.models.Task;
 import eu.internetofus.common.components.models.WeNetUserProfile;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxTestContext;
 
 /**
- * Test the condition to calculate the normalized socialness.
+ * Test the condition to calculate the who to ask with the domain of type
+ * {@code varia-misc}.
  *
  * @author UDT-IA, IIIA-CSIC
  */
-public class WhoToAskWithoutRestrictionsIT extends AbstractWhoToAskITC {
+public class WhoToAskDomainVariaMiscIT extends AbstractWhoToAskITC {
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected Task createTaskForProtocol() {
+
+    final var task = super.createTaskForProtocol();
+    task.goal.name = "Witch is the best nationality flag?";
+    task.attributes.put("domain", "varia_misc").put("domainInterest", "similar");
+    return task;
+
+  }
 
   /**
    * {@inheritDoc}

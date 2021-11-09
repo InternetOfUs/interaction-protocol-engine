@@ -75,7 +75,67 @@
 	normalized_social_closeness/2,
 	normalized_social_closeness_/4,
 	normalized_diversity/3,
-	normalized_diversity_/4
+	normalized_diversity_/4,
+	my_profile_attributes_similars_to/3
+	.
+
+:- discontiguous
+	get_now/1,
+	is_now_less_than/1,
+	is_now_less_than_or_equal_to/1,
+	is_now_greater_than/1,
+	is_now_greater_than_or_equal_to/1,
+	is_now_equal_to/1,
+	get_message/1,
+	get_profile/1,
+	get_profile_id/1,
+	get_community/1,
+	get_community_id/1,
+	get_task/1,
+	get_task_id/1,
+	get_task_type/1,
+	get_task_type_id/1,
+	get_transaction/1,
+	get_transaction/2,
+	get_transaction_id/1,
+	get_app/1,
+	get_app_id/1,
+	get_app_message_callback_url/1,
+	get_app_users/1,
+	get_app_users_except_me/1,
+	is_received_do_transaction/2,
+	is_received_created_task/0,
+	get_task_attribute_value/2,
+	is_received_send_incentive/1,
+	is_received/3,
+	get_task_goal_name/1,
+	get_task_requester_id/1,
+	get_social_explanation/2,
+	is_task_closed/0,
+	get_community_state/1,
+	get_community_state_attribute/2,
+	get_community_state_attribute/3,
+	get_attribute/4,
+	get_attribute/3,
+	get_closest_users_to_me/1,
+	get_closest_users_to_me/2,
+	get_app_users_near_me/3,
+	is_received_event/2,
+	get_task_state/1,
+	get_task_state_attribute/2,
+	get_task_state_attribute/3,
+	get_user_state/1,
+	get_user_state_attribute/2,
+	get_user_state_attribute/3,
+	filter_transactions/3,
+	filter_transactions_/4,
+	normalized_closeness/3,
+	normalized_closeness_/5,
+	normalized_social_closeness/2,
+	normalized_social_closeness_/4,
+	normalized_diversity/3,
+	normalized_diversity_/4,
+	my_profile_attributes_similars_to/3
 	.
 
 %!	is_now_less_than(+Time)
@@ -889,8 +949,9 @@ normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Rela
 %
 %	Calculate the socialness of a user repect some others.
 %
-%	@param Socialness a list with the socialness between a user and some others.
-%	@param Users identifiers of the users to calculate the socialness.
+%	@param Diversity a value in the range [0,1] that says how the diverse are the users team.
+%	@param Users array with the users identifiers to calculate the diversity.
+%	@param Attributes array with the names of the attributes to calculate the diversity.
 %
 normalized_diversity(Diversity,Users,Attributes) :-
 	(
@@ -914,4 +975,25 @@ normalized_diversity_([UserDiversity|UsersDiversity],[User|Users],Attributes,Me)
 	!,
 	wenet_new_user_value(UserDiversity,User,Diversity),
 	normalized_diversity_(UsersDiversity,Users,Attributes,Me)
+	.
+
+%!	my_profile_attributes_similars_to(-Attributes,+Text,+MinSimilarity)
+%
+%	Obtain the attributes of my profile that has a similarity to a text 
+%	equals or greater than the minimum.
+%
+%	@param Attributes a list with the name of the profile attributes that are similar to the text.
+%	@param Text to compare the profile attributes.
+%	@param MinSimilarity a value in the range [0,1] that define the minimum similarity to take an attribute.
+%
+my_profile_attributes_similars_to(Attributes,Text,MinSimilarity) :-
+	(
+		get_profile_id(Me),
+		wenet_new_similarity_data(Data,Me,Text),
+		!,
+		wenet_profile_manager_operations_calculate_similarity(Similarity,Data),
+		wenet_attributes_of_similarity_result(Attributes,Similarity,MinSimilarity)
+	)
+	-> true
+	; Attributes = []
 	.

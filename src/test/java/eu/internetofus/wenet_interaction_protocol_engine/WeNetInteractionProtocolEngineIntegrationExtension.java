@@ -46,7 +46,8 @@ public class WeNetInteractionProtocolEngineIntegrationExtension extends Abstract
   @Override
   protected String[] createMainStartArguments() {
 
-    final var containers = Containers.status().startBasic().startProfileManagerContainer().startTaskManagerContainer();
+    final var containers = Containers.status().startBasic().startProfileDiversityManagerContainer()
+        .startProfileManagerContainer().startTaskManagerContainer();
     return new MainArgumentBuilder().withApiPort(containers.interactionProtocolEngineApiPort).withComponents(containers)
         .build();
 

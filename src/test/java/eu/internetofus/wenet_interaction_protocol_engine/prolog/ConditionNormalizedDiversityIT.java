@@ -69,7 +69,7 @@ public class ConditionNormalizedDiversityIT extends AbstractPrologITC {
   @Override
   protected String getThenceforthCode() {
 
-    return "normalized_diversity(Result,Users,[\"gender\",\"occupation\",\"nationality\",\"locale\"]) and send_user_message(\"result\",json([diversity=Result]))";
+    return "normalized_diversity(Result,Users,[\"gender\"]) and send_user_message(\"result\",json([diversity=Result]))";
   }
 
   /**
@@ -93,7 +93,11 @@ public class ConditionNormalizedDiversityIT extends AbstractPrologITC {
 
       final var normalized = new JsonObject();
       normalized.put("userId", this.users.get(i).id);
-      final var value = 0.0;
+      var value = 1.0d;
+      if (this.users.get(0).gender.equals(this.users.get(i).gender)) {
+
+        value = 0.0d;
+      }
       normalized.put("value", value);
       diversity.add(normalized);
 

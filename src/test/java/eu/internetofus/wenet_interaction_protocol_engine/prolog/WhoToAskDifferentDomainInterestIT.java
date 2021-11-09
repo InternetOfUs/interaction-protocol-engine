@@ -19,12 +19,9 @@
  */
 package eu.internetofus.wenet_interaction_protocol_engine.prolog;
 
-import eu.internetofus.common.components.models.SocialNetworkRelationship;
-import eu.internetofus.common.components.models.SocialNetworkRelationshipType;
 import eu.internetofus.common.components.models.Task;
 import eu.internetofus.common.components.models.TaskTransaction;
 import eu.internetofus.common.components.models.WeNetUserProfile;
-import eu.internetofus.common.components.profile_manager.WeNetProfileManager;
 import eu.internetofus.common.components.task_manager.TaskPredicates;
 import eu.internetofus.common.components.task_manager.TaskTransactionPredicates;
 import eu.internetofus.common.components.task_manager.WeNetTaskManager;
@@ -33,43 +30,22 @@ import io.vertx.core.Vertx;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxTestContext;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
 /**
- * Test the condition to calculate the normalized socialness.
+ * Test the who to ask when the domain interest is different.
  *
  * @author UDT-IA, IIIA-CSIC
  */
 public class WhoToAskDifferentDomainInterestIT extends AbstractWhoToAskITC {
 
   /**
-   * {@inheritDoc}
+   * The users to ask.
    */
-  @Override
-  protected Future<?> doBeforeTaskCreated(final Vertx vertx, final VertxTestContext testContext) {
-
-    final var profile = this.users.get(0);
-    profile.relationships = new ArrayList<>();
-    for (var i = 1; i < this.users.size() - 1; i++) {
-
-      final var relationship = new SocialNetworkRelationship();
-      relationship.appId = this.app.appId;
-      relationship.type = SocialNetworkRelationshipType.values()[i % SocialNetworkRelationshipType.values().length];
-      relationship.userId = this.users.get(i).id;
-      relationship.weight = 1.0 - 0.1 * (i + 1);
-      profile.relationships.add(relationship);
-
-    }
-
-    return WeNetProfileManager.createProxy(vertx).updateProfile(profile).map(updated -> {
-      this.users.remove(0);
-      this.users.add(0, updated);
-      return null;
-    });
-
-  }
+  protected List<WeNetUserProfile> expectedWhoToAskUsers = new ArrayList<>();
 
   /**
    * {@inheritDoc}
@@ -93,49 +69,86 @@ public class WhoToAskDifferentDomainInterestIT extends AbstractWhoToAskITC {
 
       if (userTaskState.attributes != null) {
 
-        final var socialClosenessUsers = userTaskState.attributes.getJsonArray("domainInterestUsers");
-        for (var i = this.users.size() - 1; i > 0; i--) {
+        final var domainInterestUsers = userTaskState.attributes.getJsonArray("domainInterestUsers");
+        final var whoToAskUsers = userTaskState.attributes.getJsonArray("whoToAskUsers");
+        final var unaskedUserIds = userTaskState.attributes.getJsonArray("unaskedUserIds");
+        final var maxUsers = this.users.size();
+        if (domainInterestUsers == null || maxUsers - 1 != domainInterestUsers.size() || whoToAskUsers == null
+            || maxUsers - 1 != whoToAskUsers.size() || unaskedUserIds == null || maxUsers - 3 != unaskedUserIds.size()
 
-          final var userId = this.users.get(i).id;
-          final var value = 100 - (9 - i) * 10;
-          var found = false;
-          for (var j = 0; j < socialClosenessUsers.size(); j++) {
+        ) {
 
-            final var element = socialClosenessUsers.getJsonObject(j);
-            if (userId.equals(element.getString("userId"))) {
+          return false;
+        }
 
-              found = Math.round(element.getDouble("value") * 100) == value;
-              break;
+        var expectedUsers = new ArrayList<>(this.users.subList(1, maxUsers));
+        for (var i = 0; i < maxUsers - 1; i++) {
+
+          final var element = domainInterestUsers.getJsonObject(i);
+          final var userId = element.getString("userId");
+          final var value = element.getDouble("value");
+          for (var j = 0; j < expectedUsers.size(); j++) {
+
+            final var expectedUser = expectedUsers.get(j);
+            if (expectedUser.id.equals(userId)) {
+
+              final var expectedValue = Math
+                  .abs(expectedUser.competences.get(0).level - this.users.get(0).competences.get(0).level) / 2.0;
+              if (Math.abs(expectedValue - value) > 0.00001d) {
+
+                return false;
+
+              } else {
+
+                expectedUsers.remove(j);
+                break;
+              }
+            }
+
+          }
+        }
+        if (!expectedUsers.isEmpty()) {
+
+          return false;
+        }
+
+        this.expectedWhoToAskUsers.clear();
+        expectedUsers = new ArrayList<>(this.users.subList(1, maxUsers));
+        var max = 1.0d;
+        for (var i = 0; i < maxUsers - 1; i++) {
+
+          final var element = whoToAskUsers.getJsonObject(i);
+          final var userId = element.getString("userId");
+          final var value = element.getDouble("value");
+          for (var j = 0; j < expectedUsers.size(); j++) {
+
+            final var expectedUser = expectedUsers.get(j);
+            if (expectedUser.id.equals(userId)) {
+
+              final var expectedValue = Math
+                  .abs(expectedUser.competences.get(0).level - this.users.get(0).competences.get(0).level) / 2.0;
+              if (Math.abs(expectedValue - value) > 0.00001d || value > max) {
+
+                return false;
+
+              } else if (i >= 2 && !expectedUser.id.equals(unaskedUserIds.getString(i - 2))) {
+
+                return false;
+
+              } else {
+
+                max = value;
+                this.expectedWhoToAskUsers.add(expectedUsers.remove(j));
+                break;
+              }
+
             }
           }
-          if (!found) {
-
-            return false;
-          }
         }
 
-        final var whoToAsk = userTaskState.attributes.getJsonArray("whoToAskUsers");
-        var j = 0;
-        for (var i = this.users.size() - 1; i > 0; i--, j++) {
+        if (!expectedUsers.isEmpty()) {
 
-          final var userId = this.users.get(i).id;
-          final var value = 100 - (9 - i) * 10;
-          final var element = whoToAsk.getJsonObject(j);
-          if (!userId.equals(element.getString("userId")) && Math.round(element.getDouble("value") * 100) != value) {
-
-            return false;
-          }
-        }
-
-        final var unaskedUserIds = userTaskState.attributes.getJsonArray("unaskedUserIds");
-        j = 0;
-        for (var i = this.users.size() - 3; i > 0; i--, j++) {
-
-          final var userId = this.users.get(i).id;
-          if (!userId.equals(unaskedUserIds.getString(j))) {
-
-            return false;
-          }
+          return false;
         }
 
         return true;
@@ -143,8 +156,8 @@ public class WhoToAskDifferentDomainInterestIT extends AbstractWhoToAskITC {
 
       return false;
 
-    }).compose(
-        ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(9), this.users.get(8)));
+    }).compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true, this.expectedWhoToAskUsers.get(0),
+        this.expectedWhoToAskUsers.get(1)));
 
   }
 
@@ -173,22 +186,23 @@ public class WhoToAskDifferentDomainInterestIT extends AbstractWhoToAskITC {
 
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction)
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(2))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(7),
-            this.users.get(6)))
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true,
+            this.expectedWhoToAskUsers.get(2), this.expectedWhoToAskUsers.get(3)))
         .compose(ignored -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction))
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(3))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(5),
-            this.users.get(4)))
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true,
+            this.expectedWhoToAskUsers.get(4), this.expectedWhoToAskUsers.get(5)))
         .compose(ignored -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction))
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(4))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(3),
-            this.users.get(2)))
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true,
+            this.expectedWhoToAskUsers.get(6), this.expectedWhoToAskUsers.get(7)))
         .compose(ignored -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction))
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(5))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(1)))
+        .compose(
+            ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true, this.expectedWhoToAskUsers.get(8)))
         .compose(ignored -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction))
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(6))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, new WeNetUserProfile[0]))
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true, new WeNetUserProfile[0]))
         .onComplete(testContext.succeeding(ignored -> this.assertSuccessfulCompleted(testContext)));
 
   }

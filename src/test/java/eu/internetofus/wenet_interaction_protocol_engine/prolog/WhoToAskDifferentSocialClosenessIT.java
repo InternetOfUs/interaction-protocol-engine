@@ -144,7 +144,7 @@ public class WhoToAskDifferentSocialClosenessIT extends AbstractWhoToAskITC {
       return false;
 
     }).compose(
-        ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(9), this.users.get(8)));
+        ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true, this.users.get(9), this.users.get(8)));
 
   }
 
@@ -173,22 +173,22 @@ public class WhoToAskDifferentSocialClosenessIT extends AbstractWhoToAskITC {
 
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction)
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(2))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(7),
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true, this.users.get(7),
             this.users.get(6)))
         .compose(ignored -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction))
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(3))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(5),
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true, this.users.get(5),
             this.users.get(4)))
         .compose(ignored -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction))
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(4))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(3),
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true, this.users.get(3),
             this.users.get(2)))
         .compose(ignored -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction))
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(5))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(1)))
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true, this.users.get(1)))
         .compose(ignored -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction))
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(6))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, new WeNetUserProfile[0]))
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true, new WeNetUserProfile[0]))
         .onComplete(testContext.succeeding(ignored -> this.assertSuccessfulCompleted(testContext)));
 
   }

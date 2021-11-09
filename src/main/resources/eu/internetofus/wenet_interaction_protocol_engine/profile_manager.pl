@@ -27,7 +27,25 @@
 	wenet_profile_manager_operations_calculate_diversity/2,
 	wenet_new_diversity_data/3,
 	wenet_profile_manager_operations_calculate_similarity/2,
-	wenet_new_similarity_data/3
+	wenet_new_similarity_data/3,
+	wenet_attributes_of_similarity_result/3
+	.
+
+:- discontiguous
+	wenet_profile_manager_api_url_to/2,
+	wenet_profile_manager_get_profile/2,
+	wenet_profile_manager_get_community/2,
+	wenet_id_of_profile/2,
+	wenet_id_of_community/2,
+	wenet_relationships_of_profile/2,
+	wenet_user_id_of_relationship/2,
+	wenet_app_id_of_relationship/2,
+	wenet_weight_id_of_relationship/2,
+	wenet_profile_manager_operations_calculate_diversity/2,
+	wenet_new_diversity_data/3,
+	wenet_profile_manager_operations_calculate_similarity/2,
+	wenet_new_similarity_data/3,
+	wenet_attributes_of_similarity_result/3
 	.
 
 
@@ -170,14 +188,32 @@ wenet_profile_manager_operations_calculate_similarity(Similarity,Data) :-
 	member(attributes=Similarity,Result)
 	.
 
-%!	wenet_new_diversity_data(-Data,+UserId,+Source)
+%!	wenet_new_similarity_data(-Data,+UserId,+Source)
 %
-%	reate the data necessary to calculate the diversity for some attributes.
+%	Create the data necessary to calculate the similarity for some attributes.
 %
 %	@param Data JSON with the information of the attributes to calculate the diversity.
 %	@param UserId string with the user identifier.
 %	@param Source string with the text to compare.
 %
-wenet_new_diversity_data(Data,UserId,Source) :-
+wenet_new_similarity_data(Data,UserId,Source) :-
 	Data = json([userId=UserId,source=Source])
+	.
+
+%!	wenet_attributes_of_similarity_result(-Attributes,+SimilarityResult,+MinSimilarity)
+%
+%	Create the data necessary to calculate the similarity for some attributes.
+%
+%	@param Attributes list of attribute names.
+%	@param SimilarityResult the list with the attribute=similarity values.
+%	@param MinSimilarity minimum similarity, exclusive, to get the attribute.
+%
+wenet_attributes_of_similarity_result([],[],_).
+wenet_attributes_of_similarity_result(Attributes,[Name=Similarity|SimilarityResult],MinSimilarity) :-
+	<(MinSimilarity,Similarity)
+	-> (
+		wenet_attributes_of_similarity_result(Names,SimilarityResult,MinSimilarity),
+		Attributes = [Name|Names]
+	)
+	; wenet_attributes_of_similarity_result(Attributes,SimilarityResult,MinSimilarity)
 	.

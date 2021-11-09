@@ -46,6 +46,34 @@
 	selected_answer_from_last_ranking/1
 	.
 
+:- discontiguous
+	add_created_transaction/0,
+	add_message_transaction/0,
+	add_transaction/1,
+	new_user_message/3,
+	send_user_message/2,
+	put_task_attribute/2,
+	send_messages/3,
+	send_message/3,
+	notify_incentive_server_transaction_done/1,
+	notify_incentive_server_transaction_done/2,
+	notify_incentive_server_message_sent/1,
+	notify_incentive_server_message_sent/2,
+	notify_incentive_server_task_created/0,
+	close_task/0,
+	merge_task/1,
+	merge_community_state/1,
+	put_community_state_attribute/2,
+	send_event/4,
+	volunteers_ranking/2,
+	answers_ranking/2,
+	notify_social_context_builder_message_sent/1,
+	merge_task_state/1,
+	put_task_state_attribute/2,
+	notify_message_interaction/1,
+	selected_answer_from_last_ranking/1
+	.
+
 
 %!	add_created_transaction()
 %

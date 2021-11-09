@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.function.Predicate;
 import org.apache.commons.io.IOUtils;
+import org.tinylog.Logger;
 
 /**
  * Test the condition to calculate the normalized socialness.
@@ -82,7 +83,7 @@ public abstract class AbstractWhoToAskITC extends AbstractPrologITC {
   @Override
   protected String getWheneverCode() {
 
-    return "who_to_ask(Users)";
+    return "who_to_ask(Users) and not(length(Users,0))";
   }
 
   /**
@@ -106,7 +107,7 @@ public abstract class AbstractWhoToAskITC extends AbstractPrologITC {
           .getResource("eu/internetofus/wenet_interaction_protocol_engine/prolog/who_to_ask_test.pl");
       var ontology = IOUtils.toString(url, Charset.defaultCharset());
       ontology = ontology.replaceAll("\\n\\t*", " ").trim();
-      System.out.println(ontology);
+      Logger.debug("ONTOLOGY CODE is {}", ontology);
       return ontology;
 
     } catch (final Throwable t) {
@@ -151,7 +152,7 @@ public abstract class AbstractWhoToAskITC extends AbstractPrologITC {
    *
    * @return the future that check if the result message contains the users.
    */
-  protected Future<?> waitUntilResultcontainsUsers(final Vertx vertx, final VertxTestContext testContext,
+  protected Future<?> waitUntilResultContainsUsers(final Vertx vertx, final VertxTestContext testContext,
       final boolean order, final WeNetUserProfile... profiles) {
 
     final var checkMessages = new ArrayList<Predicate<Message>>();

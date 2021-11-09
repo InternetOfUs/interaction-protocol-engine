@@ -31,6 +31,13 @@
 	notify_incentive_server/2,
 	notify_volunteers_to_social_context_builder/2
 	.
+
+:- discontiguous
+	wenet_incentive_server_update_task_status/2,
+	wenet_new_task_status/8,
+	notify_incentive_server/2,
+	notify_volunteers_to_social_context_builder/2
+	.
 	
 %!	wenet_incentive_server_update_task_status(-Updated,+Status)
 %

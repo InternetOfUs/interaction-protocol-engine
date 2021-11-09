@@ -3,6 +3,11 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
+## Version 0.23.0 (2021-11-9)
+
+ * Add predicates to interact with the similarity calculus.
+
+
 ## Version 0.22.0 (2021-10-21)
 
  * Add new social context builder ranking by answers.

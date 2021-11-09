@@ -29,6 +29,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxTestContext;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -41,14 +43,9 @@ import org.junit.jupiter.api.Test;
 public class WhoToAskDifferentBeliefsAndValuesIT extends AbstractWhoToAskITC {
 
   /**
-   * {@inheritDoc}
+   * The users to ask.
    */
-  @Override
-  protected Future<?> doBeforeTaskCreated(final Vertx vertx, final VertxTestContext testContext) {
-
-    return Future.succeededFuture();
-
-  }
+  protected List<WeNetUserProfile> expectedWhoToAskUsers = new ArrayList<>();
 
   /**
    * {@inheritDoc}
@@ -72,48 +69,86 @@ public class WhoToAskDifferentBeliefsAndValuesIT extends AbstractWhoToAskITC {
 
       if (userTaskState.attributes != null) {
 
-        final var socialClosenessUsers = userTaskState.attributes.getJsonArray("beliefsAndValuesUsers");
-        for (var i = this.users.size() - 1; i > 0; i--) {
+        final var beliefsAndValuesUsers = userTaskState.attributes.getJsonArray("beliefsAndValuesUsers");
+        final var whoToAskUsers = userTaskState.attributes.getJsonArray("whoToAskUsers");
+        final var unaskedUserIds = userTaskState.attributes.getJsonArray("unaskedUserIds");
+        final var maxUsers = this.users.size();
+        if (beliefsAndValuesUsers == null || maxUsers - 1 != beliefsAndValuesUsers.size() || whoToAskUsers == null
+            || maxUsers - 1 != whoToAskUsers.size() || unaskedUserIds == null || maxUsers - 3 != unaskedUserIds.size()
 
-          final var userId = this.users.get(i).id;
-          var found = false;
-          for (var j = 0; j < socialClosenessUsers.size(); j++) {
+        ) {
 
-            final var element = socialClosenessUsers.getJsonObject(j);
-            if (userId.equals(element.getString("userId"))) {
+          return false;
+        }
 
-              found = element.getDouble("value", -1d) == 1d;
-              break;
+        var expectedUsers = new ArrayList<>(this.users.subList(1, maxUsers));
+        for (var i = 0; i < maxUsers - 1; i++) {
+
+          final var element = beliefsAndValuesUsers.getJsonObject(i);
+          final var userId = element.getString("userId");
+          final var value = element.getDouble("value");
+          for (var j = 0; j < expectedUsers.size(); j++) {
+
+            final var expectedUser = expectedUsers.get(j);
+            if (expectedUser.id.equals(userId)) {
+
+              final var expectedValue = Math
+                  .abs(expectedUser.meanings.get(0).level - this.users.get(0).meanings.get(0).level) / 2.0;
+              if (Math.abs(expectedValue - value) > 0.00001d) {
+
+                return false;
+
+              } else {
+
+                expectedUsers.remove(j);
+                break;
+              }
+            }
+
+          }
+        }
+        if (!expectedUsers.isEmpty()) {
+
+          return false;
+        }
+
+        this.expectedWhoToAskUsers.clear();
+        expectedUsers = new ArrayList<>(this.users.subList(1, maxUsers));
+        var max = 1.0d;
+        for (var i = 0; i < maxUsers - 1; i++) {
+
+          final var element = whoToAskUsers.getJsonObject(i);
+          final var userId = element.getString("userId");
+          final var value = element.getDouble("value");
+          for (var j = 0; j < expectedUsers.size(); j++) {
+
+            final var expectedUser = expectedUsers.get(j);
+            if (expectedUser.id.equals(userId)) {
+
+              final var expectedValue = Math
+                  .abs(expectedUser.meanings.get(0).level - this.users.get(0).meanings.get(0).level) / 2.0;
+              if (Math.abs(expectedValue - value) > 0.00001d || value > max) {
+
+                return false;
+
+              } else if (i >= 2 && !expectedUser.id.equals(unaskedUserIds.getString(i - 2))) {
+
+                return false;
+
+              } else {
+
+                max = value;
+                this.expectedWhoToAskUsers.add(expectedUsers.remove(j));
+                break;
+              }
+
             }
           }
-          if (!found) {
-
-            return false;
-          }
         }
 
-        final var whoToAsk = userTaskState.attributes.getJsonArray("whoToAskUsers");
-        var j = 0;
-        for (var i = this.users.size() - 1; i > 0; i--, j++) {
+        if (!expectedUsers.isEmpty()) {
 
-          final var userId = this.users.get(i).id;
-          final var value = 100 - (9 - i) * 10;
-          final var element = whoToAsk.getJsonObject(j);
-          if (!userId.equals(element.getString("userId")) && Math.round(element.getDouble("value") * 100) != value) {
-
-            return false;
-          }
-        }
-
-        final var unaskedUserIds = userTaskState.attributes.getJsonArray("unaskedUserIds");
-        j = 0;
-        for (var i = this.users.size() - 3; i > 0; i--, j++) {
-
-          final var userId = this.users.get(i).id;
-          if (!userId.equals(unaskedUserIds.getString(j))) {
-
-            return false;
-          }
+          return false;
         }
 
         return true;
@@ -121,9 +156,8 @@ public class WhoToAskDifferentBeliefsAndValuesIT extends AbstractWhoToAskITC {
 
       return false;
 
-    }).compose(
-        ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(9), this.users.get(8)));
-
+    }).compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true, this.expectedWhoToAskUsers.get(0),
+        this.expectedWhoToAskUsers.get(1)));
   }
 
   /**
@@ -151,22 +185,23 @@ public class WhoToAskDifferentBeliefsAndValuesIT extends AbstractWhoToAskITC {
 
     WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction)
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(2))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(7),
-            this.users.get(6)))
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true,
+            this.expectedWhoToAskUsers.get(2), this.expectedWhoToAskUsers.get(3)))
         .compose(ignored -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction))
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(3))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(5),
-            this.users.get(4)))
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true,
+            this.expectedWhoToAskUsers.get(4), this.expectedWhoToAskUsers.get(5)))
         .compose(ignored -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction))
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(4))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(3),
-            this.users.get(2)))
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true,
+            this.expectedWhoToAskUsers.get(6), this.expectedWhoToAskUsers.get(7)))
         .compose(ignored -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction))
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(5))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, this.users.get(1)))
+        .compose(
+            ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true, this.expectedWhoToAskUsers.get(8)))
         .compose(ignored -> WeNetTaskManager.createProxy(vertx).doTaskTransaction(moreAnswerTransaction))
         .compose(ignored -> this.waitUntilTask(vertx, testContext, checkTask.and(TaskPredicates.transactionSizeIs(6))))
-        .compose(ignored -> this.waitUntilResultcontainsUsers(vertx, testContext, true, new WeNetUserProfile[0]))
+        .compose(ignored -> this.waitUntilResultContainsUsers(vertx, testContext, true, new WeNetUserProfile[0]))
         .onComplete(testContext.succeeding(ignored -> this.assertSuccessfulCompleted(testContext)));
 
   }

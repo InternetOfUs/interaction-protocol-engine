@@ -7,7 +7,8 @@
 	users_by_domain_interest/2,
 	get_profile_attribues_by_beliefs_and_values/1,
 	get_profile_attribues_by_domain_interest/1,
-	attributes_by_domain/2
+	domain_attributes/2,
+	attributes_similars_to_question/1
 	.
 	
 who_to_ask(Users) :-
@@ -75,15 +76,15 @@ users_by_beliefs_and_values(BeliefsAndValuesUsers,Users) :-
 			normalized_diversity(Diversity,Users,Attributes),
 			(
 				=(BeliefsAndValuesAttr,'similar')
-				-> BeliefsAndValuesUsers = Diversity
-				; wenet_negate_user_value(BeliefsAndValuesUsers,Diversity)
+				-> wenet_negate_user_value(BeliefsAndValuesUsers,Diversity)
+				; BeliefsAndValuesUsers = Diversity
 			)
 		) 
 		; wenet_initialize_user_values(BeliefsAndValuesUsers,Users,1.0)
 	),
 	put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
 	
-get_profile_attribues_by_beliefs_and_values(['gender','nationality','occupation']).
+get_profile_attribues_by_beliefs_and_values(['meanings.excitement','meanings.promotion','meanings.existence','meanings.suprapersonal','meanings.interactive','meanings.normative','meanings.extraversion','meanings.agreeableness','meanings.consientiousness','meanings.neuroticism','meanings.openness']).
 	
 users_by_domain_interest(DomainInterestUsers,Users) :-
 	(
@@ -93,8 +94,8 @@ users_by_domain_interest(DomainInterestUsers,Users) :-
 			normalized_diversity(Diversity,Users,Attributes),
 			(
 				=(DomainInterestAttr,'similar')
-				-> DomainInterestUsers = Diversity
-				; wenet_negate_user_value(DomainInterestUsers,Diversity)
+				-> wenet_negate_user_value(DomainInterestUsers,Diversity)
+				; DomainInterestUsers = Diversity
 			)
 		) 
 		; wenet_initialize_user_values(DomainInterestUsers,Users,1.0)
@@ -104,18 +105,41 @@ users_by_domain_interest(DomainInterestUsers,Users) :-
 	
 get_profile_attribues_by_domain_interest(Attributes) :-
 	get_task_attribute_value(Domain,'domain'),
-	attributes_by_domain(Attributes,Domain).
+	domain_attributes(Domain,Attributes),
+	!,
+	retractall(get_profile_attribues_by_domain_interest(_)),
+	asserta(get_profile_attribues_by_domain_interest(Attributes))
+	.
 	
-attributes_by_domain('studying_career',['gender','nationality','occupation']).
-attributes_by_domain('local_university',['gender','nationality','occupation']).
-attributes_by_domain('local_things',['gender','nationality','occupation']).
-attributes_by_domain('physical_activity',['gender','nationality','occupation']).
-attributes_by_domain('cultural_interests',['gender','nationality','occupation']).
-attributes_by_domain('food_and_cooking',['gender','nationality','occupation']).
-attributes_by_domain('cinema_theatre',['gender','nationality','occupation']).
-attributes_by_domain('music',['gender','nationality','occupation']).
-attributes_by_domain('arts_and_crafts',['gender','nationality','occupation']).
-attributes_by_domain('life_ponders',['gender','nationality','occupation']).
-attributes_by_domain('varia_misc',Attributes) :-
-	Attributes = []
+domain_attributes('studying_career',['competences.u_active','competences.u_read','competences.u_essay','competences.u_org','competences.u_balance','competences.u_assess','competences.u_theory','competences.u_pract']).
+domain_attributes('local_university',['competences.c_locfac','competences.c_accom']).
+domain_attributes('local_things',['competences.c_accom']).
+domain_attributes('physical_activity',['competences.c_team_sp','competences.c_ind_sp','competences.c_watch_sp']).
+domain_attributes('cultural_interests',['competences.c_lit','competences.c_creatlit','competences.c_perf_art','competences.c_musgall']).
+domain_attributes('food_and_cooking',['competences.c_food','competences.c_eating']).
+domain_attributes('cinema_theatre',['competences.c_plays','competences.c_perf_plays']).
+domain_attributes('music',['competences.c_app_mus','competences.c_perf_mus']).
+domain_attributes('arts_and_crafts',['competences.c_perf_art','competences.c_musgall']).
+domain_attributes('life_ponders',Attributes) :-
+	attributes_similars_to_question(Attributes)
+	.
+domain_attributes('varia_misc',Attributes) :-
+	attributes_similars_to_question(Attributes)
+	.
+
+attributes_similars_to_question(Attributes) :-
+	(
+		get_task_goal_name(Question),
+		my_profile_attributes_similars_to(SimAttributes,Question,0.4)
+		-> true
+		; SimAttributes = []
+	),
+	!,
+	(
+		length(SimAttributes,0)
+		-> Attributes = ['competences.u_active','competences.u_read','competences.u_essay','competences.u_org','competences.u_balance','competences.u_assess','competences.u_theory','competences.u_pract','competences.c_locfac','competences.c_accom','competences.c_team_sp','competences.c_ind_sp','competences.c_watch_sp','competences.c_lit','competences.c_creatlit','competences.c_perf_art','competences.c_musgall','competences.c_food','competences.c_eating','competences.c_plays','competences.c_perf_plays','competences.c_app_mus','competences.c_perf_mus']
+		; Attributes = SimAttributes
+	),
+	retractall(attributes_similars_to_question(_)),
+	asserta(attributes_similars_to_question(Attributes))
 	.

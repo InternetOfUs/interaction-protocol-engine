@@ -14,6 +14,18 @@
 % limitations under the License.
 %
 
+:- discontiguous 
+	normengine/1,
+	assert_todo_actions/1,
+	need_to_repeat/3,
+	remove_duplicates/3,
+	merge_lists/3,
+	remove_duplicates2/2,
+	check_condition/1,
+	recursive_norm_check/3,
+	check_norms/2,
+	execute_conclusion/2
+	.
 :- dynamic fact/1.
 :- dynamic todo/1.
 :- op(800, fx, whenever).

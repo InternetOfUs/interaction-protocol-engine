@@ -72,8 +72,8 @@ public interface Tasks {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Initialize a created task", description = "Start the process to initialize the task execution. Thus, this verify the norms that will be used for example to initialize the task state or decide witch of the WeNet users will participate on the task.")
-  @RequestBody(description = "The norm to publish", required = true, content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/349a7827e0bc0380c2269d7372b1671aa3a670f9/sources/wenet-models-openapi.yaml#/components/schemas/Task")))
-  @ApiResponse(responseCode = "202", description = "The creation task has accepted to be processed", content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/349a7827e0bc0380c2269d7372b1671aa3a670f9/sources/wenet-models-openapi.yaml#/components/schemas/Task")))
+  @RequestBody(description = "The norm to publish", required = true, content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/940e9403246417419c8dcce9f3b19c5bb754028b/sources/wenet-models-openapi.yaml#/components/schemas/Task")))
+  @ApiResponse(responseCode = "202", description = "The creation task has accepted to be processed", content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/940e9403246417419c8dcce9f3b19c5bb754028b/sources/wenet-models-openapi.yaml#/components/schemas/Task")))
   @ApiResponse(responseCode = "400", description = "Cannot process the created task", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   public void taskCreated(@Parameter(hidden = true, required = false) JsonObject body,
       @Parameter(hidden = true, required = false) ServiceRequest context,
@@ -91,8 +91,8 @@ public interface Tasks {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Do a transaction over a task", description = "Start the process to do a task transaction. Thus, verify that it fulfill the norms, change the task state and notify the necessary WeNet users.")
-  @RequestBody(description = "The norm to publish", required = true, content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/349a7827e0bc0380c2269d7372b1671aa3a670f9/sources/wenet-models-openapi.yaml#/components/schemas/TaskTransaction")))
-  @ApiResponse(responseCode = "202", description = "The transaction is accepted to be processed", content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/349a7827e0bc0380c2269d7372b1671aa3a670f9/sources/wenet-models-openapi.yaml#/components/schemas/TaskTransaction")))
+  @RequestBody(description = "The norm to publish", required = true, content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/940e9403246417419c8dcce9f3b19c5bb754028b/sources/wenet-models-openapi.yaml#/components/schemas/TaskTransaction")))
+  @ApiResponse(responseCode = "202", description = "The transaction is accepted to be processed", content = @Content(schema = @Schema(ref = "https://bitbucket.org/wenet/wenet-components-documentation/raw/940e9403246417419c8dcce9f3b19c5bb754028b/sources/wenet-models-openapi.yaml#/components/schemas/TaskTransaction")))
   @ApiResponse(responseCode = "400", description = "Cannot process the task transaction", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   public void doTransaction(@Parameter(hidden = true, required = false) JsonObject body,
       @Parameter(hidden = true, required = false) ServiceRequest context,

@@ -32,6 +32,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class Ask4HelpV2ProtocolWithallFiltersIT extends Ask4HelpV2ProtocolWithAllFiltersITC {
+public class Ask4HelpV2ProtocolWithAllFiltersIT extends Ask4HelpV2ProtocolWithAllFiltersITC {
 
 }

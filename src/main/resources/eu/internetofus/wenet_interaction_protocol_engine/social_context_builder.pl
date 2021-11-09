@@ -29,6 +29,21 @@
 	wenet_social_context_builder_put_preferences_answers_update/4
 	.
 
+:- discontiguous
+	wenet_social_context_builder_url_to/2,
+	wenet_social_context_builder_post_preferences/4,
+	wenet_social_context_builder_retrieve_social_explanation/3,
+	wenet_description_of_social_explanation/2,
+	wenet_summary_of_social_explanation/2,
+	wenet_social_context_builder_post_preferences_answers/4,
+	wenet_user_id_of_user_answer/2,
+	wenet_answer_of_user_answer/2,
+	wenet_new_user_answer/3,
+	wenet_social_context_builder_post_social_notification/1,
+	wenet_new_user_message/6,
+	wenet_social_context_builder_put_preferences_answers_update/4
+	.
+
 
 %!	get_social_context_builder_url_to(-Url,+Paths)
 %
