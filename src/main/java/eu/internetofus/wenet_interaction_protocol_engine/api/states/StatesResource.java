@@ -19,11 +19,11 @@
  */
 package eu.internetofus.wenet_interaction_protocol_engine.api.states;
 
-import eu.internetofus.common.model.TimeManager;
-import eu.internetofus.common.model.Merges;
+import eu.internetofus.common.components.WeNetModelContext;
 import eu.internetofus.common.components.interaction_protocol_engine.State;
 import eu.internetofus.common.components.interaction_protocol_engine.StatesPage;
-import eu.internetofus.common.vertx.ModelContext;
+import eu.internetofus.common.model.Merges;
+import eu.internetofus.common.model.TimeManager;
 import eu.internetofus.common.vertx.ModelResources;
 import eu.internetofus.common.vertx.ServiceContext;
 import eu.internetofus.common.vertx.ServiceResponseHandlers;
@@ -109,9 +109,7 @@ public class StatesResource implements States {
   protected void mergeState(final String communityId, final String taskId, final String userId, final JsonObject body,
       final ServiceRequest request, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
-    final var model = new ModelContext<State, Void>();
-    model.name = "state";
-    model.type = State.class;
+    final var model = WeNetModelContext.creteWeNetContext("state", State.class, this.vertx);
     final var context = new ServiceContext(request, resultHandler);
     ModelResources.toModel(body, model, context, () -> {
 

@@ -20,8 +20,9 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.messages;
 
-import eu.internetofus.common.model.Model;
+import eu.internetofus.common.components.WeNetValidateContext;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolMessage;
+import eu.internetofus.common.model.Model;
 import eu.internetofus.common.vertx.ServiceResponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker;
 import eu.internetofus.wenet_interaction_protocol_engine.MessageForWorkerBuilder;
@@ -74,7 +75,7 @@ public class MessagesResource implements Messages {
 
     } else {
 
-      message.validate("bad_message", this.vertx).onComplete(validation -> {
+      message.validate(new WeNetValidateContext("bad_message", this.vertx)).onComplete(validation -> {
 
         if (validation.failed()) {
 

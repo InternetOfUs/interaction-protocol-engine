@@ -20,9 +20,10 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.events;
 
-import eu.internetofus.common.model.Model;
+import eu.internetofus.common.components.WeNetValidateContext;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolEvent;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
+import eu.internetofus.common.model.Model;
 import eu.internetofus.common.vertx.ServiceResponseHandlers;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -73,7 +74,7 @@ public class EventsResource implements Events {
 
     } else {
 
-      event.validate("bad_event", this.vertx).onComplete(validation -> {
+      event.validate(new WeNetValidateContext("bad_event", this.vertx)).onComplete(validation -> {
 
         if (validation.failed()) {
 

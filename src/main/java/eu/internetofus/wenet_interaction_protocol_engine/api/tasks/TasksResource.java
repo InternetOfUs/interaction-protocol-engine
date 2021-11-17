@@ -20,9 +20,9 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.tasks;
 
+import eu.internetofus.common.components.WeNetModelContext;
 import eu.internetofus.common.components.models.Task;
 import eu.internetofus.common.components.models.TaskTransaction;
-import eu.internetofus.common.vertx.ModelContext;
 import eu.internetofus.common.vertx.ModelResources;
 import eu.internetofus.common.vertx.ServiceContext;
 import eu.internetofus.common.vertx.ServiceResponseHandlers;
@@ -68,9 +68,7 @@ public class TasksResource implements Tasks {
   public void taskCreated(final JsonObject body, final ServiceRequest request,
       final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
-    final var model = new ModelContext<Task, String>();
-    model.name = "task";
-    model.type = Task.class;
+    final var model = WeNetModelContext.creteWeNetContext("task", Task.class, this.vertx);
     final var context = new ServiceContext(request, resultHandler);
     ModelResources.toModel(body, model, context, () -> {
 
@@ -98,9 +96,7 @@ public class TasksResource implements Tasks {
   public void doTransaction(final JsonObject body, final ServiceRequest request,
       final Handler<AsyncResult<ServiceResponse>> resultHandler) {
 
-    final var model = new ModelContext<TaskTransaction, String>();
-    model.name = "taskTransaction";
-    model.type = TaskTransaction.class;
+    final var model = WeNetModelContext.creteWeNetContext("taskTransaction", TaskTransaction.class, this.vertx);
     final var context = new ServiceContext(request, resultHandler);
     ModelResources.toModel(body, model, context, () -> {
 

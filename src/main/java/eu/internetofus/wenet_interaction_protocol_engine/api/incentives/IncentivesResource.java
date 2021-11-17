@@ -20,6 +20,7 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.api.incentives;
 
+import eu.internetofus.common.components.WeNetValidateContext;
 import eu.internetofus.common.components.models.Incentive;
 import eu.internetofus.common.model.Model;
 import eu.internetofus.common.vertx.ServiceResponseHandlers;
@@ -74,7 +75,7 @@ public class IncentivesResource implements Incentives {
 
     } else {
 
-      incentive.validate("bad_incentive", this.vertx).onComplete(validate -> {
+      incentive.validate(new WeNetValidateContext("bad_incentive", this.vertx)).onComplete(validate -> {
 
         if (validate.failed()) {
 
