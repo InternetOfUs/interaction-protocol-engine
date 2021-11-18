@@ -21,13 +21,12 @@ package eu.internetofus.wenet_interaction_protocol_engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import eu.internetofus.common.vertx.AbstractMain;
 import org.itsallcode.io.Capturable;
 import org.itsallcode.junit.sysextensions.SystemErrGuard;
 import org.itsallcode.junit.sysextensions.SystemOutGuard;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import eu.internetofus.common.vertx.AbstractMain;
 
 /**
  * Test the {@link Main}
@@ -50,7 +49,8 @@ public class MainTest {
     stream.capture();
     Main.main("-" + AbstractMain.HELP_OPTION);
     final var data = stream.getCapturedData();
-    assertThat(data).contains("-" + AbstractMain.HELP_OPTION, "-" + AbstractMain.VERSION_OPTION, "-" + AbstractMain.CONF_DIR_OPTION, "-" + AbstractMain.PROPERTY_OPTION);
+    assertThat(data).contains("-" + AbstractMain.HELP_OPTION, "-" + AbstractMain.VERSION_OPTION,
+        "-" + AbstractMain.CONF_DIR_OPTION, "-" + AbstractMain.PROPERTY_OPTION);
 
   }
 
@@ -66,7 +66,7 @@ public class MainTest {
     stream.capture();
     Main.main("-undefined");
     final var data = stream.getCapturedData();
-    assertThat(data).contains("Can not start the WeNet interaction protocol engine!");
+    assertThat(data).contains("Can not start the wenet-interaction-protocol-engine!");
 
   }
 
