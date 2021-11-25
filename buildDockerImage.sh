@@ -8,7 +8,15 @@ else
 	COMPONENT_VERSION=$(grep --max-count=1 '<version>' pom.xml | awk -F '>' '{ print $2 }' | awk -F '<' '{ print $1 }')
 	COMPONENT_NAME="internetofus/interaction-protocol-engine"
 	DOCKER_TAG="$COMPONENT_NAME:$COMPONENT_VERSION"
-	PROFILE=${1:-"gitlab"}
-	DOCKER_BUILDKIT=1 docker build --build-arg DEFAULT_PROFILE=$PROFILE -f src/main/docker/Dockerfile -t $DOCKER_TAG .
+	DOCKER_ARGS=""
+	if [ "no-cache" = "$1" ];
+	then
+		PROFILE=${2:-"gitlab"}
+		DOCKER_ARGS="$DOCKER_ARGS --no-cache"
+	else
+		PROFILE=${1:-"gitlab"}
+	fi
+	DOCKER_ARGS="$DOCKER_ARGS --build-arg DEFAULT_PROFILE=$PROFILE"
+	DOCKER_BUILDKIT=1 docker build $DOCKER_ARGS -f src/main/docker/Dockerfile -t $DOCKER_TAG .
 	popd >/dev/null
 fi

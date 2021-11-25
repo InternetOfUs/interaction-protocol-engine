@@ -2,6 +2,10 @@
 
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
+## Version 0.24.0 (2021-11-25)
+
+ * Add cache when validate the same model.
+ 
 
 ## Version 0.23.0 (2021-11-9)
 

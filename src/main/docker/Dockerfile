@@ -29,6 +29,8 @@ ARG DEFAULT_WENET_INCENTIVE_SERVER_API="https://wenet.u-hopper.com/prod/incentiv
 ARG DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API="https://wenet.u-hopper.com/prod/social_context_builder"
 ARG DEFAULT_WENET_PERSONAL_CONTEXT_BUILDER_API="https://wenet.u-hopper.com/prod/personal_context_builder"
 ARG DEFAULT_COMP_AUTH_KEY=""
+ARG DEFAULT_CACHE_TIMEOUT=300
+ARG DEFAULT_CACHE_SIZE=10000
 ENV API_HOST=${DEFAULT_API_HOST}
 ENV API_PORT=${DEFAULT_API_PORT}
 ENV DB_HOST=${DEFAULT_DB_HOST}
@@ -44,6 +46,8 @@ ENV WENET_SOCIAL_CONTEXT_BUILDER_API=${DEFAULT_WENET_SOCIAL_CONTEXT_BUILDER_API}
 ENV WENET_PERSONAL_CONTEXT_BUILDER_API=${DEFAULT_WENET_PERSONAL_CONTEXT_BUILDER_API}
 ENV RUN_ARGS=""
 ENV COMP_AUTH_KEY=${DEFAULT_COMP_AUTH_KEY}
+ENV CACHE_TIMEOUT=${DEFAULT_CACHE_TIMEOUT}
+ENV CACHE_SIZE=${DEFAULT_CACHE_SIZE}
 
 # Install JRE
 RUN mkdir -p /var/cache/apt
@@ -90,6 +94,9 @@ RUN echo "{\"wenetComponents\":{\"socialContextBuilder\":\"${DEFAULT_WENET_SOCIA
 # Create configuration for personal context builder component
 RUN echo "{\"wenetComponents\":{\"personalContextBuilder\":\"${DEFAULT_WENET_PERSONAL_CONTEXT_BUILDER_API}\"}}" > /usr/wenet/interaction-protocol-engine/etc/personalContextBuilder.json
 
+# Create configuration for the cache
+RUN echo "{\"wenetComponents\":{\"cache\":{\"timeout\":\"${DEFAULT_CACHE_TIMEOUT}\",\"size\":\"${DEFAULT_CACHE_SIZE}\"}}}" > /usr/wenet/interaction-protocol-engine/etc/cache.json
+
 WORKDIR /usr/wenet/interaction-protocol-engine
 COPY --from=build /build/target/wenet-interaction-protocol-engine.jar /usr/wenet/interaction-protocol-engine/wenet-interaction-protocol-engine.jar
 COPY --from=build /build/target/lib/ /usr/wenet/interaction-protocol-engine/lib/
@@ -110,4 +117,6 @@ CMD /wait && java -jar wenet-interaction-protocol-engine.jar -c etc \
 	-pwenetComponents.socialContextBuilder=${WENET_SOCIAL_CONTEXT_BUILDER_API}\
 	-pwenetComponents.personalContextBuilder=${WENET_PERSONAL_CONTEXT_BUILDER_API}\
 	-pwebClient.wenetComponentApikey=${COMP_AUTH_KEY}\
+	-pwenetComponents.cache.timeout=${CACHE_TIMEOUT}\
+	-pwenetComponents.cache.size=${CACHE_SIZE}\
 	${RUN_ARGS}

@@ -19,9 +19,6 @@
  */
 package eu.internetofus.wenet_interaction_protocol_engine;
 
-import org.tinylog.Level;
-import org.tinylog.provider.InternalLogger;
-
 import eu.internetofus.common.vertx.AbstractMain;
 import eu.internetofus.common.vertx.AbstractMainVerticle;
 
@@ -46,7 +43,7 @@ public class Main extends AbstractMain {
 
       if (!result.succeeded()) {
 
-        InternalLogger.log(Level.ERROR, result.cause(), "Can not start the WeNet interaction protocol engine!\n Check the Logs to known why.");
+        main.printStartError(result.cause());
       }
 
     });
