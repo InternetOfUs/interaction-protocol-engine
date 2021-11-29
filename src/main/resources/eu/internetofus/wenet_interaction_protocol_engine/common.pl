@@ -553,9 +553,9 @@ wenet_initialize_user_values([UserValue|List],[UserId|Users],Value) :-
 
 %!	wenet_negate_user_value(-Target,+Source)
 %
-%	Negate the values of all the users. So convert the value sto 1 - Value.
+%	Negate the values of all the users. So convert the values to 1 - Value.
 %
-%	@param Target list where the user values to be negated (1 - value).
+%	@param Target list where the user values are negated (1 - value).
 %	@param Source list to get the values to negate.
 %
 wenet_negate_user_value([],[]).
@@ -621,12 +621,15 @@ wenet_user_values_to_user_ids([UserId|UserIds],[User|Users]) :-
 	wenet_user_values_to_user_ids(UserIds,Users)
 	.
 
-%!	wenet_product_user_values(-Target,+Source)
+%!	wenet_product_user_values(-Product,+A,+B)
 %
-%	Do the product of the values of the first and second user values lists.
+%	Do the product of the value of the same user in both lists. 
+%	If a user is present on A and not preset on B the product is 0.
+%	If a user is present on B and not preset on A it is ignored.
 %
-%	@param Product list with the JSON models.
-%	@param Source list with the JSON models to get the user identifiers.
+%	@param Product list with the JSON models product.
+%	@param A list with the JSON models to multiplicate.
+%	@param B list with the JSON models to multiplicate.
 %
 wenet_product_user_values([],[],_).
 wenet_product_user_values([Product|Products],[User|Users],Source) :-
