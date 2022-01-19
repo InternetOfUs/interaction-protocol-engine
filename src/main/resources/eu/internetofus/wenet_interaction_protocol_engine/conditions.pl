@@ -947,7 +947,7 @@ normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Rela
 
 %!	normalized_diversity(-Diversity,+Users,+Attributes)
 %
-%	Calculate the socialness of a user repect some others.
+%	Calculate the diversity of the current user repect some others.
 %
 %	@param Diversity a value in the range [0,1] that says how the diverse are the users team.
 %	@param Users array with the users identifiers to calculate the diversity.

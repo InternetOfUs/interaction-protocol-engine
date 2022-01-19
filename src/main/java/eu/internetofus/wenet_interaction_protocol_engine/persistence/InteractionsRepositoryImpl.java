@@ -20,7 +20,6 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import eu.internetofus.common.components.interaction_protocol_engine.Interaction;
 import eu.internetofus.common.vertx.Repository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -77,7 +76,7 @@ public class InteractionsRepositoryImpl extends Repository implements Interactio
    */
   public Future<Void> migrateDocumentsToCurrentVersions() {
 
-    return this.migrateCollection(INTERACTIONS_COLLECTION, Interaction.class);
+    return this.migrateSchemaVersionOnCollectionTo(this.schemaVersion, INTERACTIONS_COLLECTION);
 
   }
 
