@@ -20,7 +20,6 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine.persistence;
 
-import eu.internetofus.common.components.interaction_protocol_engine.State;
 import eu.internetofus.common.vertx.QueryBuilder;
 import eu.internetofus.common.vertx.Repository;
 import io.vertx.core.AsyncResult;
@@ -101,7 +100,7 @@ public class StatesRepositoryImpl extends Repository implements StatesRepository
    */
   public Future<Void> migrateDocumentsToCurrentVersions() {
 
-    return this.migrateCollection(STATES_COLLECTION, State.class);
+    return this.migrateSchemaVersionOnCollectionTo(this.schemaVersion, STATES_COLLECTION);
 
   }
 }
