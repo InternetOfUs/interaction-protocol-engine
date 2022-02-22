@@ -51,23 +51,21 @@ public class WhoToAskDifferentSocialClosenessIT extends AbstractWhoToAskITC {
   protected Future<?> doBeforeTaskCreated(final Vertx vertx, final VertxTestContext testContext) {
 
     final var profile = this.users.get(0);
-    profile.relationships = new ArrayList<>();
+    final var relationships = new ArrayList<SocialNetworkRelationship>();
     for (var i = 1; i < this.users.size() - 1; i++) {
 
       final var relationship = new SocialNetworkRelationship();
       relationship.appId = this.app.appId;
       relationship.type = SocialNetworkRelationshipType.values()[i % SocialNetworkRelationshipType.values().length];
-      relationship.userId = this.users.get(i).id;
+      relationship.sourceId = profile.id;
+      relationship.targetId = this.users.get(i).id;
       relationship.weight = 1.0 - 0.1 * (i + 1);
-      profile.relationships.add(relationship);
+      relationships.add(relationship);
 
     }
 
-    return WeNetProfileManager.createProxy(vertx).updateProfile(profile).map(updated -> {
-      this.users.remove(0);
-      this.users.add(0, updated);
-      return null;
-    });
+    return WeNetProfileManager.createProxy(vertx).addOrUpdateSocialNetworkRelationships(relationships)
+        .map(updated -> null);
 
   }
 

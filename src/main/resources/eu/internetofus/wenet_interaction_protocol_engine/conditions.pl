@@ -73,10 +73,11 @@
 	normalized_closeness/3,
 	normalized_closeness_/5,
 	normalized_social_closeness/2,
-	normalized_social_closeness_/4,
+	normalized_social_closeness_/3,
 	normalized_diversity/3,
 	normalized_diversity_/4,
-	my_profile_attributes_similars_to/3
+	my_profile_attributes_similars_to/3,
+	get_relationships/1
 	.
 
 :- discontiguous
@@ -132,10 +133,11 @@
 	normalized_closeness/3,
 	normalized_closeness_/5,
 	normalized_social_closeness/2,
-	normalized_social_closeness_/4,
+	normalized_social_closeness_/3,
 	normalized_diversity/3,
 	normalized_diversity_/4,
-	my_profile_attributes_similars_to/3
+	my_profile_attributes_similars_to/3,
+	get_relationships/1
 	.
 
 %!	is_now_less_than(+Time)
@@ -628,7 +630,7 @@ get_community_state_attribute(Value,Key) :-
 %
 %	@param Value of the community user state attribute.
 %	@param Key of the community user state attribute to get.
-%	@param DefaultValue to return if the key is not defined. 
+%	@param DefaultValue to return if the key is not defined.
 %
 get_community_state_attribute(Value,Key,DefaultValue) :-
 	get_community_state_attribute(Value,Key) -> true ; Value = DefaultValue
@@ -647,7 +649,7 @@ get_community_state_attribute(Value,Key,DefaultValue) :-
 get_attribute(Value,Key,DefaultValue,Json):-
 	get_attribute(Value,Key,Json)->true;Value = DefaultValue
 	.
-	
+
 %!	get_attribute(-Value,+Key,+DefaultValue,+Json)
 %
 %	Return the attribute value for the specified key
@@ -683,9 +685,9 @@ get_closest_users_to_me(Users) :-
 %
 get_closest_users_to_me(Users,NumUsers) :-
 	get_profile_id(Me),
-	( 
+	(
 		(
-			wenet_personal_context_builder_locations([Location|_],[Me]), 
+			wenet_personal_context_builder_locations([Location|_],[Me]),
 			wenet_longitude_of_location(Longitude,Location),
 			wenet_latitude_of_location(Latitude,Location),
 			Max is NumUsers + 1,
@@ -693,7 +695,7 @@ get_closest_users_to_me(Users,NumUsers) :-
 			wenet_users_of_closest(UserIds,ClosestUsers),
 			ignore(wenet_remove(Users,Me,UserIds))
 		)
-		-> true; Users = [] 
+		-> true; Users = []
 	),
 	!,
 	asserta(get_closest_users_to_me(Users,NumUsers))
@@ -704,7 +706,7 @@ get_closest_users_to_me(Users,NumUsers) :-
 %	Return the app users that are near to me on the specified range.
 %
 %	@param Users that are near to me on the specified range.
-%	@param Min minimum distance (inclusive) in meters between me and the rest of user. 
+%	@param Min minimum distance (inclusive) in meters between me and the rest of user.
 %	@param Max maximum distance (inclusive) in meters between me and the rest of user.
 %
 get_app_users_near_me(Users,Min,Max) :-
@@ -724,7 +726,7 @@ get_app_users_near_me(Users,Min,Max) :-
 	!,
 	asserta(get_app_users_near_me(Users,Min,Max))
 	.
-	
+
 %!	is_received_event(-Particle,-Content)
 %
 %	Check if received an event.
@@ -787,7 +789,7 @@ get_task_state_attribute(Value,Key) :-
 %
 %	@param Value of the task user state attribute.
 %	@param Key of the task user state attribute to get.
-%	@param DefaultValue to return if the key is not defined. 
+%	@param DefaultValue to return if the key is not defined.
 %
 get_task_state_attribute(Value,Key,DefaultValue) :-
 	get_task_state_attribute(Value,Key) -> true ; Value = DefaultValue
@@ -833,20 +835,20 @@ get_user_state_attribute(Value,Key) :-
 %
 %	@param Value of the user user state attribute.
 %	@param Key of the user user state attribute to get.
-%	@param DefaultValue to return if the key is not defined. 
+%	@param DefaultValue to return if the key is not defined.
 %
 get_user_state_attribute(Value,Key,DefaultValue) :-
 	get_user_state_attribute(Value,Key) -> true ; Value = DefaultValue
 	.
 
-	
+
 %!	filter_transactions(-Transactions,+Test,+Map)
 %
 %	This condition is used to obtain a sub set of the transactions that
 %	has been done in the task and map them to a new value. In other words, for
 %   each transaction of the current task if call(Test,Transaction) is True,
 %	it transforms the transaction with call(Map,Value,Transaction) and it adds
-%	the obtained Value to the result list.  
+%	the obtained Value to the result list.
 %
 %	@param Result the filtered and mapped task transactions.
 %	@param Test predicate to call to known if the transaction is accepted.
@@ -862,7 +864,7 @@ filter_transactions_([],[],_,_).
 filter_transactions_(Target,[Head|Tail],Test,Map):-
 	wenet_log_trace('Head:',[Head]),
 	(
-		call(Test,Head) 
+		call(Test,Head)
 		-> (
 			call(Map,NewHead,Head)
 			-> Target = [NewHead|NewTarget]
@@ -920,29 +922,26 @@ normalized_closeness_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,L
 %
 normalized_social_closeness(Socialness,Users) :-
 	(
-		get_profile(Profile),
-		get_app_id(AppId),
-		wenet_relationships_of_profile(Relationships,Profile),
+		get_relationships(Relationships),
 		!,
-		normalized_social_closeness_(Socialness,Users,Relationships,AppId)
+		normalized_social_closeness_(Socialness,Users,Relationships)
 	)
 	-> true
 	; wenet_initialize_user_values(Socialness,Users,0.0)
 	.
-normalized_social_closeness_([],[],_,_).
-normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Relationships,AppId) :-
+normalized_social_closeness_([],[],_).
+normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Relationships) :-
 	(
 		(
 			member(Relationship,Relationships),
-			wenet_user_id_of_relationship(UserId,Relationship),
-			wenet_app_id_of_relationship(AppId,Relationship)
+			wenet_target_id_of_relationship(UserId,Relationship)
 		)
 		-> wenet_weight_of_relationship(Weight,Relationship)
 		; Weight = 0.0
 	),
 	!,
 	wenet_new_user_value(UserSocialness,UserId,Weight),
-	normalized_social_closeness_(SocialnessRest,Users,Relationships,AppId)
+	normalized_social_closeness_(SocialnessRest,Users,Relationships)
 	.
 
 %!	normalized_diversity(-Diversity,+Users,+Attributes)
@@ -979,7 +978,7 @@ normalized_diversity_([UserDiversity|UsersDiversity],[User|Users],Attributes,Me)
 
 %!	my_profile_attributes_similars_to(-Attributes,+Text,+MinSimilarity)
 %
-%	Obtain the attributes of my profile that has a similarity to a text 
+%	Obtain the attributes of my profile that has a similarity to a text
 %	equals or greater than the minimum.
 %
 %	@param Attributes a list with the name of the profile attributes that are similar to the text.
@@ -996,4 +995,26 @@ my_profile_attributes_similars_to(Attributes,Text,MinSimilarity) :-
 	)
 	-> true
 	; Attributes = []
+	.
+
+
+%!	get_relationships(-Relationships)
+%
+%	Obtain the best 1k social network relationships of the current user repect
+%   the other application users.
+%
+%	@param Relationships of the user.
+%
+get_relationships(Relationships) :-
+	(
+		get_app_id(AppId),
+		get_profile_id(SourceId),
+		wenet_profile_manager_get_social_network_relationships_page(Page,AppId,SourceId, @(null), @(null), @(null), @(null),'weight',0,1000),
+		wenet_relationships_of_page(Relationships,Page),
+		!,
+		retractall(get_relationships(_)),
+		asserta(get_relationships(Relationships))
+	)
+	-> true
+	; Relationships = []
 	.

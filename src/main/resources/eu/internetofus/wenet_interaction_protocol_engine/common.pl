@@ -285,7 +285,7 @@ wenet_get_json_from_url(Json,Url) :-
 		,(
 			wenet_log_error('Cannot GET',Url,Error)
 			,false
-		)		
+		)
 	),
 	wenet_log_trace('GET',[Url,Json])
 	.
@@ -320,7 +320,7 @@ wenet_post_json_to_url(Json, Url, Body) :-
 		,(
 			wenet_log_error('Cannot POST',[Url,Body],Error)
 			,false
-		)		
+		)
 	),
 	wenet_log_trace('POST',[Url,Body,Json])
 	.
@@ -356,7 +356,7 @@ wenet_put_json_to_url(Json, Url, Body) :-
 		,(
 			wenet_log_error('Cannot PUT',[Url,Body],Error)
 			,false
-		)		
+		)
 	),
 	wenet_log_trace('PUT',[Url,Body,Json])
 	.
@@ -391,7 +391,7 @@ wenet_patch_json_to_url(Json, Url, Body) :-
 		,(
 			wenet_log_error('Cannot PATCH',[Url,Body],Error)
 			,false
-		)		
+		)
 	),
 	wenet_log_trace('PATCH',[Url,Body,Json])
 	.
@@ -447,7 +447,7 @@ wenet_format(Msg,WeNetFormat,Arguments) :-
 wenet_math(Number,Expr) :-
 	Number is Expr
 	.
-	
+
 %!	wenet_delete_to_url(+Url)
 %
 %	Delete an URL.
@@ -473,7 +473,7 @@ wenet_delete_to_url(Url) :-
 		,(
 			wenet_log_error('Cannot DELETE',Url,Error)
 			,false
-		)		
+		)
 	),
 	wenet_log_trace('DELETE',Url)
 	.
@@ -482,10 +482,11 @@ wenet_delete_to_url(Url) :-
 %
 %	Check if a json value is a {@code null}.
 %
-wenet_is_json_null(V) :-
-	V = @(null)
+wenet_is_json_null(@(null)).
+wenet_is_json_null(A=B) :-
+	wenet_is_json_null(B)
 	.
-	
+
 %!	wenet_add_query_params_to_url(-UrlWithParams,+Url,+Params)
 %
 %	Create an URL with the query parameters.
@@ -514,7 +515,7 @@ wenet_add_query_params_to_url(UrlWithParams,Url,Params) :-
 wenet_new_user_value(UserValue,UserId,Value) :-
 	UserValue = json([userId=UserId,value=Value])
 	.
-	
+
 %!	wenet_user_id_from_user_value(-UserId,+UserValue)
 %
 %	Get the user identifier of the JSON user value model.
@@ -623,7 +624,7 @@ wenet_user_values_to_user_ids([UserId|UserIds],[User|Users]) :-
 
 %!	wenet_product_user_values(-Product,+A,+B)
 %
-%	Do the product of the value of the same user in both lists. 
+%	Do the product of the value of the same user in both lists.
 %	If a user is present on A and not preset on B the product is 0.
 %	If a user is present on B and not preset on A it is ignored.
 %

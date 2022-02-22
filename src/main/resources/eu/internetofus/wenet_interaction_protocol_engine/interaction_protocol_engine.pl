@@ -323,7 +323,7 @@ wenet_interaction_protocol_engine_get_user_state(State,UserId) :-
 	wenet_interaction_protocol_engine_api_url_to(Url,['/users/',UserId]),
 	wenet_get_json_from_url(State,Url)
 	.
-	
+
 %!	wenet_interaction_protocol_engine_merge_user_state(-MergedState,+UserId,+NewState)
 %
 %	Merge the state of an user.
@@ -391,7 +391,7 @@ wenet_interaction_protocol_engine_delete_event(Id) :-
 	wenet_delete_to_url(Url)
 	.
 
-	
+
 %!	wenet_interaction_protocol_engine_add_interaction(+Interaction)
 %
 %	Add a new interaction.
@@ -426,11 +426,11 @@ wenet_new_interaction(Interaction,AppId,CommunityId,TaskTypeId,TaskId,SenderId,R
 	Interaction = json([appId=AppId,communityId=CommunityId,taskTypeId=TaskTypeId,taskId=TaskId,senderId=SenderId,receiverId=ReceiverId,transactionLabel=TransactionLabel,transactionAttributes=TransactionAttributes,transactionTs=TransactionTs,messageLabel=MessageLabel,messageAttributes=MessageAttributes,messageTs=MessageTs])
 	.
 
-%!	wenet_interaction_protocol_engine_get_interactions_page(-Page,+AppId,+CommunityId,+TaskTypeId,+TaskId,+SenderId,+ReceiverId,+HasTransaction,+TransactionLabel,+TransactionAttributes,+TransactionFrom,+TransactionTo,+HasMessage,+MessageLabel,+MessageAttributes,+MessageFrom,+MessageTo,+Offset,+Limit)
+%!	wenet_interaction_protocol_engine_get_interactions_page(-Page,+AppId,+CommunityId,+TaskTypeId,+TaskId,+SenderId,+ReceiverId,+HasTransaction,+TransactionLabel,+TransactionAttributes,+TransactionFrom,+TransactionTo,+HasMessage,+MessageLabel,+MessageAttributes,+MessageFrom,+MessageTo,+Order,+Offset,+Limit)
 %
-%	Add a new interaction.
+%	Search for some interaction.
 %
-%	@param Page with the interaction that match the wuery.
+%	@param Page with the interaction that match the query.
 %	@param AppId application identifier of the interactions to return.
 %	@param CommunityId community identifier of the interactions to return.
 %	@param TaskTypeId task type identifier of the interactions to return.

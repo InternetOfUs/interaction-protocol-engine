@@ -44,11 +44,11 @@ First of all, you must install the next software.
 The interaction protocol engine component requires:
 
  - [MongoDB](https://docs.mongodb.com/manual/installation/)
- - [WeNet - Profile manager](https://bitbucket.org/wenet/interaction-protocol-engine/)
- - [WeNet - Interaction protocol engine](https://bitbucket.org/wenet/wenet-interaction-protocol-engine/)
- - [WeNet - Service API](https://bitbucket.org/wenet/wenet-service-api/)
- - [WeNet - Social context builder](https://bitbucket.org/wenet/wenet-social-context-builder/)
- - [WeNet - Incentive server](https://bitbucket.org/wenet/wenet-incentive-server/)
+ - [Profile manager](https://github.com/InternetOfUs/profile-manager)
+ - [Interaction protocol engine](https://github.com/InternetOfUs/interaction-protocol-engine/)
+ - [Service API](https://github.com/InternetOfUs/service-api/)
+ - [Social context builder](https://github.com/InternetOfUs/social-context-builder/)
+ - [Incentive server](https://github.com/InternetOfUs/incentive-server/)
 
 ### Development
 
@@ -169,7 +169,7 @@ during 30 seconds execute:
 
 ## Documentation
 
-The latest APIs documentation is available [here](http://swagger.u-hopper.com/?url=https://bitbucket.org/wenet/wenet-components-documentation/raw/master/sources/wenet-interaction_protocol_engine-openapi.yaml).
+The latest APIs documentation is available [here](http://swagger.u-hopper.com/?url=https://github.com/InternetOfUs/components-documentation/raw/master/sources/wenet-interaction_protocol_engine-openapi.yaml).
 
 
 ## Instances
