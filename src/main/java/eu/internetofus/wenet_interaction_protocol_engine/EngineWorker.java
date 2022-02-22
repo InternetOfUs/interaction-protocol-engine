@@ -48,6 +48,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
+import org.apache.commons.io.FileUtils;
 import org.tinylog.Logger;
 
 /**
@@ -478,7 +479,6 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
       final var processBuilder = new ProcessBuilder("swipl", "--debug", "-O", "-s",
           this.init.toAbsolutePath().toString(), "-g", "go", "-t", "halt");
-      Logger.error("HERE {}", processBuilder.command());
       processBuilder.directory(this.work.toFile());
       final var error = this.work.resolve(Paths.get("error.txt"));
       final var output = this.work.resolve(Paths.get("output.txt"));
@@ -510,12 +510,11 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
     @Override
     public void close() throws IOException {
 
-      Logger.error("HERE {}", this.work.toFile().getAbsolutePath());
-//      if (!FileUtils.deleteQuietly(this.work.toFile())) {
-//
-//        Logger.error("Cannot remove the working directory {}", this.work);
-//
-//      }
+      if (!FileUtils.deleteQuietly(this.work.toFile())) {
+
+        Logger.error("Cannot remove the working directory {}", this.work);
+
+      }
 
     }
 
