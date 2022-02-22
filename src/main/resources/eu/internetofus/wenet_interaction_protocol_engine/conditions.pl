@@ -1009,7 +1009,7 @@ get_relationships(Relationships) :-
 	(
 		get_app_id(AppId),
 		get_profile_id(SourceId),
-		wenet_profile_manager_get_social_network_relationships_page(Page,AppId,SourceId, @(null), @(null), @(null), @(null),'weight',0,1000),
+		wenet_profile_manager_get_social_network_relationships_page(Page,AppId,SourceId, null, null, null, null,'weight',0,1000),
 		wenet_relationships_of_page(Relationships,Page),
 		!,
 		retractall(get_relationships(_)),

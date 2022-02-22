@@ -482,9 +482,10 @@ wenet_delete_to_url(Url) :-
 %
 %	Check if a json value is a {@code null}.
 %
-wenet_is_json_null(@(null)).
-wenet_is_json_null(A=B) :-
-	wenet_is_json_null(B)
+wenet_is_json_null(V) :-
+	V = @(null)
+	; V = null
+	; ( =(V,_=E),wenet_is_json_null(E))
 	.
 
 %!	wenet_add_query_params_to_url(-UrlWithParams,+Url,+Params)
