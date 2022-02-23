@@ -97,7 +97,7 @@
 %
 wenet_log_trace(Text) :-
 	format(string(Lines),'TRACE: ~w',Text),
-	print_message_lines(current_output,kind(trace),[Lines])
+	print_message_lines(user_output,kind(trace),[Lines])
 	.
 
 %!	wenet_log_trace(-Text,-Term)
@@ -208,7 +208,7 @@ wenet_log_warning(Text,Terms,Warning) :-
 %
 wenet_print_warning(Format,Arguments) :-
 	format(string(Lines),Format,Arguments),
-	print_message_lines(user_warning,kind(warning),[Lines])
+	print_message_lines(user_error,kind(warning),[Lines])
 	.
 
 %!	wenet_execute_safetly_once(+Term)
