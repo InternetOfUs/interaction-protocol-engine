@@ -2,10 +2,15 @@
 
 FROM ubuntu:latest
 
-ARG DEBIAN_FRONTEND=noninteractive
-ENV TZ=Etc/UTC
-RUN export DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+LANG=en_US.UTF-8 \
+LANGUAGE=en_US.UTF-8 \
+LC_ALL=en_US.UTF-8 \
+TZ=:/etc/UTC
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y update
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install locales
+RUN locale-gen en_US.UTF-8
+RUN dpkg-reconfigure locales
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install aptitude
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y update
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y full-upgrade
