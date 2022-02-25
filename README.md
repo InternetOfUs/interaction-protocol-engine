@@ -1,4 +1,4 @@
-# WeNet - Interaction protocol engine
+# Internet of us - Interaction protocol engine
 
 ## Introduction
 
