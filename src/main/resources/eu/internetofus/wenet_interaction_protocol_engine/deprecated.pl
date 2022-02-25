@@ -122,7 +122,7 @@ notify_volunteers_to_social_context_builder(Volunteers,UserId):-
 %
 %	Obtain the relationships of the profile.
 %
-%	@param Relationships of teh profile.
+%	@param Relationships of the profile.
 %	@param Profile to get the relationships.
 %
 %   @deprecated use get_relationships or wenet_profile_manager_get_social_network_relationships_page(Page,AppId,SourceId,TargetId,Type,WeightFrom,WeightTo,Order,Offset,Limit) instead.
