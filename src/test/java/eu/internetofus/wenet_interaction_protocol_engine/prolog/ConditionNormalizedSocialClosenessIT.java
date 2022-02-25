@@ -82,7 +82,7 @@ public class ConditionNormalizedSocialClosenessIT extends AbstractPrologITC {
   protected Future<?> doBeforeTaskCreated(final Vertx vertx, final VertxTestContext testContext) {
 
     final var profile = this.users.get(0);
-    profile.relationships = new ArrayList<>();
+    final var relationships = new ArrayList<SocialNetworkRelationship>();
     for (var i = 0; i < this.users.size(); i++) {
 
       if (i % 2 == 0) {
@@ -90,17 +90,16 @@ public class ConditionNormalizedSocialClosenessIT extends AbstractPrologITC {
         final var relationship = new SocialNetworkRelationship();
         relationship.appId = this.app.appId;
         relationship.type = SocialNetworkRelationshipType.values()[i % SocialNetworkRelationshipType.values().length];
-        relationship.userId = this.users.get(i).id;
+        relationship.sourceId = profile.id;
+        relationship.targetId = this.users.get(i).id;
         relationship.weight = Math.max(0.0, 1.0 - 0.1 * i);
-        profile.relationships.add(relationship);
+        relationships.add(relationship);
       }
 
     }
-    return WeNetProfileManager.createProxy(vertx).updateProfile(profile).map(updated -> {
-      this.users.remove(0);
-      this.users.add(0, updated);
-      return null;
-    });
+    return WeNetProfileManager.createProxy(vertx).addOrUpdateSocialNetworkRelationships(relationships)
+        .map(updated -> null);
+
   }
 
   /**

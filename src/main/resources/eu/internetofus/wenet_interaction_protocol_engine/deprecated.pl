@@ -29,16 +29,18 @@
 	wenet_incentive_server_update_task_status/2,
 	wenet_new_task_status/8,
 	notify_incentive_server/2,
-	notify_volunteers_to_social_context_builder/2
+	notify_volunteers_to_social_context_builder/2,
+	wenet_relationships_of_profile/2
 	.
 
 :- discontiguous
 	wenet_incentive_server_update_task_status/2,
 	wenet_new_task_status/8,
 	notify_incentive_server/2,
-	notify_volunteers_to_social_context_builder/2
+	notify_volunteers_to_social_context_builder/2,
+	wenet_relationships_of_profile/2
 	.
-	
+
 %!	wenet_incentive_server_update_task_status(-Updated,+Status)
 %
 %	Update the task status. Nothing happens because this API point
@@ -71,7 +73,7 @@ wenet_incentive_server_update_task_status(Updated,Status) :-
 wenet_new_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message) :-
 	Status = json([app_id=AppId,user_id=UserId,community_id=CommunityId,task_id=TaskId,'Action'=Action,'Message'=Message])
 	.
-	
+
 %!	notify_incentive_server(+Action,+Message)
 %
 %	Send a message to the interaction protocol engine of an user.
@@ -84,7 +86,7 @@ wenet_new_task_status(Status,AppId,UserId,CommunityId,TaskId,Action,Message) :-
 notify_incentive_server(Action,Message) :-
 	wenet_log_warning('Called deprecated notify_incentive_server with:',[Action,Message])
 	.
-	
+
 %!	wenet_social_context_builder_update_preferences(+UserId,+TaskId,+Users)
 %
 %	Update the preferences of an user.
@@ -99,7 +101,7 @@ wenet_social_context_builder_update_preferences(UserId,TaskId,Users):-
 	wenet_social_context_builder_post_preferences(UserId,TaskId,Users)
 	.
 
-	
+
 %!	notify_volunteers_to_social_context_builder(+Volunteers,+UserId)
 %
 %	Notify the social context builder about the user preferences in a task.
@@ -113,4 +115,34 @@ notify_volunteers_to_social_context_builder(Volunteers,UserId):-
 	get_task_id(TaskId),
 	!,
 	ignore(wenet_social_context_builder_post_preferences(_,UserId,TaskId,Volunteers))
+	.
+
+
+%!	wenet_relationships_of_profile(-Relationships,+Profile)
+%
+%	Obtain the relationships of the profile.
+%
+%	@param Relationships of the profile.
+%	@param Profile to get the relationships.
+%
+%   @deprecated use get_relationships or wenet_profile_manager_get_social_network_relationships_page(Page,AppId,SourceId,TargetId,Type,WeightFrom,WeightTo,Order,Offset,Limit) instead.
+%
+wenet_relationships_of_profile(Relationships,Profile) :-
+	wenet_id_of_profile(Id,Profile),
+	wenet_profile_manager_get_social_network_relationships_page(Page,@(null),Id,@(null),@(null),@(null),@(null),@(null),0,1000),
+	wenet_relationships_of_page(Relationships,Page)
+	.
+
+
+%!	wenet_user_id_of_relationship(-UserId,+Relationship)
+%
+%	Obtain the user identifier defined on a social relationship.
+%
+%	@param UserId of a relationship.
+%	@param Relationship to get the user identifier.
+%
+%   @deprecated use wenet_target_id_of_relationship
+%
+wenet_user_id_of_relationship(UserId, Relationship) :-
+	wenet_target_id_of_relationship(UserId, Relationship)
 	.

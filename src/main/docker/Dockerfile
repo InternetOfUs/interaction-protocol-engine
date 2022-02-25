@@ -13,8 +13,11 @@ RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn -P ${DEFAULT_PROFILE} -
 
 # --- Run the code
 FROM ubuntu:latest
-ARG DEBIAN_FRONTEND=noninteractive
-ENV TZ=Etc/UTC
+ENV DEBIAN_FRONTEND=noninteractive \
+LANG=en_US.UTF-8 \
+LANGUAGE=en_US.UTF-8 \
+LC_ALL=en_US.UTF-8 \
+TZ=:/etc/UTC
 ARG DEFAULT_API_HOST=0.0.0.0
 ARG DEFAULT_API_PORT=8080
 ARG DEFAULT_DB_HOST=localhost
@@ -52,6 +55,9 @@ ENV CACHE_SIZE=${DEFAULT_CACHE_SIZE}
 # Install JRE
 RUN mkdir -p /var/cache/apt
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y update
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install locales
+RUN locale-gen en_US.UTF-8
+RUN dpkg-reconfigure locales
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install aptitude
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y update
 RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y full-upgrade

@@ -20,15 +20,17 @@
 	wenet_profile_manager_get_community/2,
 	wenet_id_of_profile/2,
 	wenet_id_of_community/2,
-	wenet_relationships_of_profile/2,
-	wenet_user_id_of_relationship/2,
+	wenet_relationships_of_page/2,
+	wenet_source_id_of_relationship/2,
+	wenet_target_id_of_relationship/2,
 	wenet_app_id_of_relationship/2,
 	wenet_weight_id_of_relationship/2,
 	wenet_profile_manager_operations_calculate_diversity/2,
 	wenet_new_diversity_data/3,
 	wenet_profile_manager_operations_calculate_similarity/2,
 	wenet_new_similarity_data/3,
-	wenet_attributes_of_similarity_result/3
+	wenet_attributes_of_similarity_result/3,
+	wenet_profile_manager_get_social_network_relationships_page/10
 	.
 
 :- discontiguous
@@ -37,15 +39,17 @@
 	wenet_profile_manager_get_community/2,
 	wenet_id_of_profile/2,
 	wenet_id_of_community/2,
-	wenet_relationships_of_profile/2,
-	wenet_user_id_of_relationship/2,
+	wenet_relationships_of_page/2,
+	wenet_source_id_of_relationship/2,
+	wenet_target_id_of_relationship/2,
 	wenet_app_id_of_relationship/2,
 	wenet_weight_id_of_relationship/2,
 	wenet_profile_manager_operations_calculate_diversity/2,
 	wenet_new_diversity_data/3,
 	wenet_profile_manager_operations_calculate_similarity/2,
 	wenet_new_similarity_data/3,
-	wenet_attributes_of_similarity_result/3
+	wenet_attributes_of_similarity_result/3,
+	wenet_profile_manager_get_social_network_relationships_page/10
 	.
 
 
@@ -71,7 +75,7 @@ wenet_profile_manager_get_profile(Profile,Id) :-
 	wenet_get_json_from_url(Profile,Url)
 	.
 
-%!	get_community(+Community,-Id)
+%!	wenet_profile_manager_get_community(+Community,-Id)
 %
 %	Return the community associated to an identifier.
 %
@@ -105,26 +109,37 @@ wenet_id_of_community(Id, json(Community)) :-
 	member(id=Id,Community)
 	.
 
-%!	wenet_relationships_of_profile(-Relationships,+Profile)
+%!	wenet_relationships_of_page(-Relationships,+Page)
 %
-%	Obtain the relationshipsentifier of a profile.
+%	Obtain the relationshipsentifier of a page.
 %
-%	@param Relationships of a profile.
-%	@param Profile to get the relationshipsentifier.
+%	@param Relationships of a page.
+%	@param Page to get the relationships.
 %
-wenet_relationships_of_profile(Relationships, json(Profile)) :-
-	member(relationships=Relationships,Profile)
+wenet_relationships_of_page(Relationships, json(Page)) :-
+	member(relationships=Relationships,Page)
 	.
 
-%!	wenet_user_id_of_relationship(-UserId,+Relationship)
+%!	wenet_source_id_of_relationship(-SourceId,+Relationship)
 %
-%	Obtain the user identifier defined on a social relationship.
+%	Obtain the source identifier defined on a social relationship.
 %
-%	@param UserId of a relationship.
-%	@param Relationship to get the user identifier.
+%	@param SourceId of a relationship.
+%	@param Relationship to get the source identifier.
 %
-wenet_user_id_of_relationship(UserId, json(Relationship)) :-
-	member(userId=UserId,Relationship)
+wenet_source_id_of_relationship(SourceId, json(Relationship)) :-
+	member(sourceId=SourceId,Relationship)
+	.
+
+%!	wenet_target_id_of_relationship(-TargetId,+Relationship)
+%
+%	Obtain the target identifier defined on a social relationship.
+%
+%	@param TargetId of a relationship.
+%	@param Relationship to get the target identifier.
+%
+wenet_target_id_of_relationship(TargetId, json(Relationship)) :-
+	member(targetId=TargetId,Relationship)
 	.
 
 %!	wenet_app_id_of_relationship(-AppId,+Relationship)
@@ -161,8 +176,8 @@ wenet_profile_manager_operations_calculate_diversity(Diversity,Data) :-
 	wenet_post_json_to_url(json(Result),Url,Data),
 	member(diversity=Diversity,Result)
 	.
-	
-	
+
+
 %!	wenet_new_diversity_data(-Data,+UserIds,+AttributeNames)
 %
 %	reate the data necessary to calculate the diversity for some users.
@@ -174,7 +189,7 @@ wenet_profile_manager_operations_calculate_diversity(Diversity,Data) :-
 wenet_new_diversity_data(Data,UserIds,AttributeNames) :-
 	Data = json([userIds=UserIds,attributes=AttributeNames])
 	.
-	
+
 %!	wenet_profile_manager_operations_calculate_similarity(-Similarity,+Data)
 %
 %	Obtain the similarity form a set of attributes.
@@ -216,4 +231,25 @@ wenet_attributes_of_similarity_result(Attributes,[Name=Similarity|SimilarityResu
 		Attributes = [Name|Names]
 	)
 	; wenet_attributes_of_similarity_result(Attributes,SimilarityResult,MinSimilarity)
+	.
+
+%!	wenet_profile_manager_get_social_network_relationships_page(-Page,+AppId,+SourceId,+TargetId,+Type,+Order,+Offset,+Limit)
+%
+%	Search for some social network relationships.
+%
+%	@param Page with the social network relatioships that match the query.
+%	@param AppId application identifier of the relations to return.
+%	@param SourceId user identifier of the source of the relationships to return.
+%	@param TargetId user identifier of the target of the relationships to return.
+%	@param Type of the relationships to return.
+%	@param WeightFrom the minimum inclusive of the weight of the relationships to return.
+%	@param WeightTo the maximum inclusive of the weight of the relationships to return.
+%	@param Order in witch the interactions has to be returned. For each field it has be separated by a ',' and each field can start with '+' (or without it) to order on ascending order, or with the prefix '-' to do on descendant order.
+%	@param Offset the index of the first interaction to return.
+%	@param Limit the number maximum of interactions to return.
+%
+wenet_profile_manager_get_social_network_relationships_page(Page,AppId,SourceId,TargetId,Type,WeightFrom,WeightTo,Order,Offset,Limit):-
+	wenet_profile_manager_api_url_to(Url,['/relationships']),
+	wenet_add_query_params_to_url(UrlWithParams,Url,[appId=AppId,sourceId=SourceId,targetId=TargetId,type=Type,weightFrom=WeightFrom,weightTo=WeightTo,order=Order,offset=Offset,limit=Limit]),
+	wenet_get_json_from_url(Page,UrlWithParams)
 	.
