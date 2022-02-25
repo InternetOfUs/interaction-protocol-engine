@@ -45,6 +45,7 @@ openAPI:
       (so that would be applied for a specific task only). A community norm might be
       “If you don’t volunteer, you cannot ask for help” and it would be enforced on everyone.
       Given the above, this means that norms will be attached to users, tasks and communities.
+
     contact:
       name: Bruno Rosell i Gui (UDT-IA, IIIA-CSIC)
       email: rosell@iiia.csic.es
