@@ -73,7 +73,7 @@ public interface Incentives {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Send a incentive to an user that is involved in a protocol.", description = "Publish a incentive to encourage an user to participate on a protocol.")
-  @RequestBody(description = "The incentive to send to the user", required = true, content = @Content(schema = @Schema(ref = "https://raw.githubusercontent.com/InternetOfUs/components-documentation/MODELS_2.1.0/sources/wenet-models-openapi.yaml#/components/schemas/Incentive")))
+  @RequestBody(description = "The incentive to send to the user", required = true, content = @Content(schema = @Schema(ref = "https://raw.githubusercontent.com/InternetOfUs/components-documentation/MODELS_2.2.0/sources/wenet-models-openapi.yaml#/components/schemas/Incentive")))
   @ApiResponse(responseCode = "202", description = "If the accepted to be processed")
   @ApiResponse(responseCode = "400", description = "Bad incentive", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   void sendIncentive(@Parameter(hidden = true, required = false) JsonObject body,
