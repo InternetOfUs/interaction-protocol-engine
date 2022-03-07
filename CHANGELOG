@@ -3,6 +3,11 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
+## Version 1.0.2 (2022-03-07)
+
+ * Check the new ask4Help protocol.
+
+
 ## Version 1.0.1 (2022-03-03)
 
  * Update common models API.
