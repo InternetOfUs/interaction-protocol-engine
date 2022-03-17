@@ -43,7 +43,8 @@
 	wenet_value_user_id_pairs_to_user_values/2,
 	wenet_sort_user_values_by_value/2,
 	wenet_user_values_to_user_ids/2,
-	wenet_product_user_values/3
+	wenet_product_user_values/3,
+	wenet_error_to_string/2
 	.
 
 :- discontiguous
@@ -75,7 +76,8 @@
 	wenet_value_user_id_pairs_to_user_values/2,
 	wenet_sort_user_values_by_value/2,
 	wenet_user_values_to_user_ids/2,
-	wenet_product_user_values/3
+	wenet_product_user_values/3,
+	wenet_error_to_string/2
 	.
 
 :- autoload(library(http/json)).
@@ -144,7 +146,7 @@ wenet_log_error(Text,Terms) :-
 %	@param Error to show into the log message.
 %
 wenet_log_error(Text,Terms,Error) :-
-	message_to_string(Error,ErrorMessage),
+	wenet_error_to_string(ErrorMessage,Error),
 	term_string(Terms,Value),
 	wenet_print_error('~w. ~w ~w',[ErrorMessage,Text,Value])
 	.
@@ -194,7 +196,7 @@ wenet_log_warning(Text,Terms) :-
 %	@param Warning to show into the log message.
 %
 wenet_log_warning(Text,Terms,Warning) :-
-	message_to_string(Warning,WarningMessage),
+	wenet_error_to_string(WarningMessage,Warning),
 	term_string(Terms,Value),
 	wenet_print_warning('~w. ~w ~w',[WarningMessage,Text,Value])
 	.
@@ -646,3 +648,17 @@ wenet_product_user_values([Product|Products],[User|Users],Source) :-
 	wenet_new_user_value(Product,UserId,ProductValue),
 	wenet_product_user_values(Products,Users,Source)
 	.
+
+
+%!	wenet_error_to_string(-ErrorMessage,+Error)
+%
+%	Convert an error exception into a string.
+%
+%	@param ErrorMessage of the error.
+%	@param Error to convert to string.
+wenet_error_to_string(ErrorMessage,Error) :-
+	catch(
+		message_to_string(Error,ErrorMessage)
+		,_
+		,term_string(Error,ErrorMessage)
+	).

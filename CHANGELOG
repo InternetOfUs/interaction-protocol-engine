@@ -3,6 +3,11 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
+## Version 1.1.0 (2022-03-17)
+
+ * Fix problem when calculate diversity and the requester has an empty profile.
+
+
 ## Version 1.0.1 (2022-03-03)
 
  * Update common models API.

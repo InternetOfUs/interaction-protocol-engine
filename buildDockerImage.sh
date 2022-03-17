@@ -1,7 +1,7 @@
 #!/bin/bash
 if ! docker stats --no-stream >/dev/null 2>&1; then
     echo "Docker does not seem to be running, run it first and retry"
-    exit 1
+    RESULT=1
 else
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 	pushd "$DIR" >/dev/null
@@ -18,5 +18,7 @@ else
 	fi
 	DOCKER_ARGS="$DOCKER_ARGS --build-arg DEFAULT_PROFILE=$PROFILE"
 	DOCKER_BUILDKIT=1 docker build $DOCKER_ARGS -f src/main/docker/Dockerfile -t $DOCKER_TAG .
+	RESULT=$?
 	popd >/dev/null
 fi
+exit $RESULT

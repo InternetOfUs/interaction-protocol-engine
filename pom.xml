@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.internetofus</groupId>
 	<artifactId>interaction-protocol-engine</artifactId>
-	<version>1.0.1</version>
+	<version>1.1.0</version>
 	<description>This project will be used to provide the API to manage the protocol interaction.</description>
 	<organization>
 		<name>UDT-IA, IIIA-CSIC</name>
@@ -49,7 +49,7 @@
 		<gmavenplus-plugin-version>1.12.1</gmavenplus-plugin-version>
 		<groovy-version>3.0.8</groovy-version>
 		<!-- Library versions -->
-		<eu.internetofus.common-version>1.1.0</eu.internetofus.common-version>
+		<eu.internetofus.common-version>1.2.0</eu.internetofus.common-version>
 	</properties>
 	<profiles>
 		<profile>
