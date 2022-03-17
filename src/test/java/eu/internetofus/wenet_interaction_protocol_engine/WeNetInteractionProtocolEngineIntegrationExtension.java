@@ -48,6 +48,8 @@ public class WeNetInteractionProtocolEngineIntegrationExtension extends Abstract
 
     final var containers = Containers.status().startBasic().startProfileDiversityManagerContainer()
         .startProfileManagerContainer().startTaskManagerContainer();
+    containers.waitUntilProfileManagerCanCreateProfile();
+    containers.waitUntilTaskManagerCanCreateTaskType();
     return new MainArgumentBuilder().withApiPort(containers.interactionProtocolEngineApiPort).withComponents(containers)
         .build();
 

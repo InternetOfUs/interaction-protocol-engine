@@ -6,7 +6,7 @@ else
 	pushd "$DIR" >/dev/null
 	DOCKER_BUILDKIT=1 docker build -f src/dev/docker/Dockerfile -t internetofus/interaction-protocol-engine:dev .
 	if [ $? -eq 0 ]; then
-		DOCKER_PARAMS="--rm --name wenet_interaction_protocol_engine_dev -v /var/run/docker.sock:/var/run/docker.sock -p 5003:5005 -it"
+		DOCKER_PARAMS="--rm --name wenet_interaction_protocol_engine_dev -v /var/run/docker.sock:/var/run/docker.sock -p 5554:5554 -it"
 		if [[ "$OSTYPE" == "darwin"* ]]; then
 			DOCKER_PARAMS="$DOCKER_PARAMS -e TESTCONTAINERS_HOST_OVERRIDE=docker.for.mac.host.internal"
 		fi
