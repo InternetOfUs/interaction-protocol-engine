@@ -174,7 +174,7 @@ public interface Interactions {
    */
   @DELETE
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(summary = "Count the number of interactions between two users.")
+  @Operation(summary = "Delete some interactions.")
   @ApiResponse(responseCode = "204", description = "If the interaction that match the parameters has been deleted")
   @ApiResponse(responseCode = "404", description = "Can not delete because no interaction match the parameters", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   void deleteInteractions(
