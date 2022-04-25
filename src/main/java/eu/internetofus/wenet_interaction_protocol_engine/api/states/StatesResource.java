@@ -21,7 +21,6 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.states;
 
 import eu.internetofus.common.components.WeNetModelContext;
 import eu.internetofus.common.components.interaction_protocol_engine.State;
-import eu.internetofus.common.components.interaction_protocol_engine.StatesPage;
 import eu.internetofus.common.model.Merges;
 import eu.internetofus.common.model.TimeManager;
 import eu.internetofus.common.vertx.ModelResources;
@@ -55,17 +54,6 @@ public class StatesResource implements States {
   public StatesResource(final Vertx vertx) {
 
     this.vertx = vertx;
-
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void retrieveStates(final String communityId, final String taskId, final String userId,
-      final ServiceRequest context, final Handler<AsyncResult<ServiceResponse>> resultHandler) {
-
-    ServiceResponseHandlers.responseOk(resultHandler, new StatesPage());
 
   }
 
