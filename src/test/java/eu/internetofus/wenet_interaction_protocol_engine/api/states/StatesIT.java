@@ -20,13 +20,11 @@
 package eu.internetofus.wenet_interaction_protocol_engine.api.states;
 
 import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
-import static io.reactiverse.junit5.web.TestRequest.queryParam;
 import static io.reactiverse.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import eu.internetofus.common.model.ErrorMessage;
 import eu.internetofus.common.components.interaction_protocol_engine.State;
-import eu.internetofus.common.components.interaction_protocol_engine.StatesPage;
+import eu.internetofus.common.model.ErrorMessage;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -49,30 +47,6 @@ import org.junit.jupiter.params.provider.ValueSource;
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
 public class StatesIT {
-
-  /**
-   * Should return empty page when the field is undefined.
-   *
-   * @param query       parameter.
-   * @param vertx       event bus to use.
-   * @param client      to connect to the server.
-   * @param testContext context to test.
-   */
-  @ParameterizedTest(name = " {0}")
-  @ValueSource(strings = { "communityId", "taskId", "usetId" })
-  public void shouldBeEmptyPageWithUndefinedQueryField(final String query, final Vertx vertx, final WebClient client,
-      final VertxTestContext testContext) {
-
-    testRequest(client, HttpMethod.GET, States.PATH).with(queryParam(query, "undefined")).expect(res -> {
-
-      assertThat(res.statusCode()).isEqualTo(Status.OK.getStatusCode());
-      final var page = assertThatBodyIs(StatesPage.class, res);
-      assertThat(page.total).isEqualTo(0l);
-      assertThat(page.states).isNull();
-
-    }).send(testContext);
-
-  }
 
   /**
    * Should return empty state for path.
