@@ -17,11 +17,13 @@
 :- dynamic
 	wenet_do_actions/1,
 	wenet_do_norm_actions/1,
+	wenet_do_norm_action/1,
 	wenet_do_actions_status/1.
 
 :- discontiguous
 	wenet_do_actions/1,
 	wenet_do_norm_actions/1,
+	wenet_do_norm_action/1,
 	wenet_do_actions_status/1,
 	go/0,
 	check_exist_message/0
@@ -63,6 +65,14 @@ wenet_do_actions([NormActions|Tail]) :-
 wenet_do_actions(_).
 
 wenet_do_norm_actions([]).
-wenet_do_norm_actions([put(NormAction)|Tail]) :-
-	wenet_execute_safetly_once(NormAction),
+wenet_do_norm_actions([NormAction|Tail]) :-
+	wenet_do_norm_action(NormAction),
 	wenet_do_norm_actions(Tail).
+
+wenet_do_norm_action(put(NormAction)) :-
+	wenet_execute_safetly_once(NormAction).
+
+wenet_do_norm_action(not(_)).
+
+wenet_do_norm_action(NormAction) :-
+	wenet_log_error('Unexpected action to do.',NormAction).

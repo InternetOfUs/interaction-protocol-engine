@@ -14,7 +14,7 @@ openAPI:
       description: The functionality to obtain the interactions that has been done.
   info:
     # The verion of the API has to be synchonized with the 'api-version' property of the 'pom.xml'
-    version: '1.1.0'
+    version: '1.2.0'
     title: WeNet - Interaciton protocol engine API
     description:  >-
       The interaction protocol engine component is the one responsible for guaranteeing interactions

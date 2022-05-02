@@ -12,12 +12,7 @@ COPY src/ /build/src/
 RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn -P ${DEFAULT_PROFILE} -DskipTests -DfinalName=wenet-interaction-protocol-engine clean install -U
 
 # --- Run the code
-FROM ubuntu:latest
-ENV DEBIAN_FRONTEND=noninteractive \
-LANG=en_US.UTF-8 \
-LANGUAGE=en_US.UTF-8 \
-LC_ALL=en_US.UTF-8 \
-TZ=:/etc/UTC
+FROM swipl:stable
 ARG DEFAULT_API_HOST=0.0.0.0
 ARG DEFAULT_API_PORT=8080
 ARG DEFAULT_DB_HOST=localhost
@@ -53,23 +48,10 @@ ENV CACHE_TIMEOUT=${DEFAULT_CACHE_TIMEOUT}
 ENV CACHE_SIZE=${DEFAULT_CACHE_SIZE}
 
 # Install JRE
-RUN mkdir -p /var/cache/apt
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y update
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install locales
-RUN locale-gen en_US.UTF-8
-RUN dpkg-reconfigure locales
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get -y install aptitude
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y update
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y full-upgrade
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y install openjdk-11-jre
+RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt apt-get update &&\
+	apt-get install -y openjdk-11-jre &&\
+	rm -rf /var/lib/apt/lists/*
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-
-# Install swi prolog
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y install software-properties-common
-RUN apt-add-repository ppa:swi-prolog/stable
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y update
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y full-upgrade
-RUN --mount=type=cache,id=apt-ubuntu-cache-amd64,target=/var/cache/apt aptitude -y install swi-prolog
 
 # Create running dierectories
 RUN mkdir -p /usr/wenet/interaction-protocol-engine/lib
