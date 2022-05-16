@@ -77,7 +77,8 @@
 	normalized_diversity/3,
 	normalized_diversity_/4,
 	my_profile_attributes_similars_to/3,
-	get_relationships/1
+	get_relationships/1,
+	delay_to/2
 	.
 
 :- discontiguous
@@ -137,7 +138,8 @@
 	normalized_diversity/3,
 	normalized_diversity_/4,
 	my_profile_attributes_similars_to/3,
-	get_relationships/1
+	get_relationships/1,
+	delay_to/2
 	.
 
 %!	is_now_less_than(+Time)
@@ -1017,4 +1019,16 @@ get_relationships(Relationships) :-
 	)
 	-> true
 	; Relationships = []
+	.
+
+%!	delay_to(-Delay,+Date)
+%
+%	Calculate the time that has to wait until a date is reached.
+%
+%	@param Delay in seconds that has to wait to the date.
+%	@param Date epoch that has to reach.
+%
+delay_to(Delay,Date) :-
+	get_now(Now),
+	Delay = Date - Now
 	.

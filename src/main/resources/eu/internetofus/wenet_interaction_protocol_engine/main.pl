@@ -74,5 +74,4 @@ wenet_do_norm_action(put(NormAction)) :-
 
 wenet_do_norm_action(not(_)).
 
-wenet_do_norm_action(NormAction) :-
-	wenet_log_error('Unexpected action to do.',NormAction).
+wenet_do_norm_action(delay(_)).
