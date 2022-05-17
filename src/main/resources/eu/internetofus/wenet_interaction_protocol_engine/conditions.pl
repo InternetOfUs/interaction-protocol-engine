@@ -78,7 +78,27 @@
 	normalized_diversity_/4,
 	my_profile_attributes_similars_to/3,
 	get_relationships/1,
-	delay_to/2
+	delay_to/2,
+	now_to_week_day/1,
+	timestamp_to_week_day/2,
+	is_now_on_week_day/1,
+	is_now_one_of_week_days/1,
+	is_now_on_monday/0,
+	is_now_on_tuesday/0,
+	is_now_on_wednesday/0,
+	is_now_on_thursday/0,
+	is_now_on_friday/0,
+	is_now_on_saturday/0,
+	is_now_on_sunday/0,
+	string_to_time/2,
+	normalized_time/2,
+	timestamp_to_time/2,
+	now_to_time/1,
+	is_now_before_time/1,
+	is_now_before_time_or_equals/1,
+	is_now_after_time/1,
+	is_now_after_time_or_equals/1,
+	is_now_between_times/2
 	.
 
 :- discontiguous
@@ -139,7 +159,27 @@
 	normalized_diversity_/4,
 	my_profile_attributes_similars_to/3,
 	get_relationships/1,
-	delay_to/2
+	delay_to/2,
+	now_to_week_day/1,
+	timestamp_to_week_day/2,
+	is_now_on_week_day/1,
+	is_now_one_of_week_days/1,
+	is_now_on_monday/0,
+	is_now_on_tuesday/0,
+	is_now_on_wednesday/0,
+	is_now_on_thursday/0,
+	is_now_on_friday/0,
+	is_now_on_saturday/0,
+	is_now_on_sunday/0,
+	string_to_time/2,
+	normalized_time/2,
+	timestamp_to_time/2,
+	now_to_time/1,
+	is_now_before_time/1,
+	is_now_before_time_or_equals/1,
+	is_now_after_time/1,
+	is_now_after_time_or_equals/1,
+	is_now_between_times/2
 	.
 
 %!	is_now_less_than(+Time)
@@ -1002,8 +1042,8 @@ my_profile_attributes_similars_to(Attributes,Text,MinSimilarity) :-
 
 %!	get_relationships(-Relationships)
 %
-%	Obtain the best 1k social network relationships of the current user repect
-%   the other application users.
+%	Obtain the best 1k social network relationships of the current user respect
+%	the other application users.
 %
 %	@param Relationships of the user.
 %
@@ -1031,4 +1071,221 @@ get_relationships(Relationships) :-
 delay_to(Delay,Date) :-
 	get_now(Now),
 	Delay = Date - Now
+	.
+
+%!	now_to_week_day(-WeekDay)
+%
+%	Calculate the week day that now represents.
+%
+%	@param WeekDay of the current time. It is a number from one to seven: Monday = 1, Tuesday = 2, ... , Sunday = 7.
+%
+now_to_week_day(WeekDay):-
+	get_now(Now),
+	timestamp_to_week_day(WeekDay,Now)
+	.
+
+%!	timestamp_to_week_day(-WeekDay,+Timestamp)
+%
+%	Calculate the week day from a time stamp.
+%
+%	@param WeekDay of the time stamp. It is a number from one to seven: Monday = 1, Tuesday = 2, ... , Sunday = 7.
+%	@param Timestamp epoch time since January 1, 1970 in seconds.
+%
+timestamp_to_week_day(WeekDay,Timestamp) :-
+	stamp_date_time(Timestamp, DateTime, 'UTC'),
+	date_time_value(date,DateTime,Date),
+	day_of_the_week(Date,WeekDay)
+	.
+
+
+%!	is_now_on_week_day(+Day)
+%
+%	This is {@code true} if now is the day of the week specified.
+%
+%	@param Day a number with the day of the week. It is from one to seven: Monday = 1, Tuesday = 2, ... , Sunday = 7.
+%
+is_now_on_week_day(Day) :-
+	now_to_week_day(Day)
+	.
+
+%!	is_now_on_week_day(+Days)
+%
+%	This is {@code true} if now is one of the week days specified on the list.
+%
+%	@param Days list with now has to be defined. The array contains numbers from one to seven where Monday = 1, Tuesday = 2, ... , Sunday = 7.
+%
+is_now_one_of_week_days(Days) :-
+	now_to_week_day(Day),
+	member(Day,Days)
+	.
+
+%!	is_now_on_monday()
+%
+%	This is {@code true} if now is Monday.
+%
+is_now_on_monday() :-
+	is_now_on_week_day(1)
+	.
+
+%!	is_now_on_tuesday()
+%
+%	This is {@code true} if now is Tuesday.
+%
+is_now_on_tuesday() :-
+	is_now_on_week_day(2)
+	.
+
+%!	is_now_on_wednesday()
+%
+%	This is {@code true} if now is Wednesday.
+%
+is_now_on_wednesday() :-
+	is_now_on_week_day(3)
+	.
+
+%!	is_now_on_thursday()
+%
+%	This is {@code true} if now is Thursday.
+%
+is_now_on_thursday() :-
+	is_now_on_week_day(4)
+	.
+
+%!	is_now_on_friday()
+%
+%	This is {@code true} if now is Friday.
+%
+is_now_on_friday() :-
+	is_now_on_week_day(5)
+	.
+
+%!	is_now_on_saturday()
+%
+%	This is {@code true} if now is Saturday.
+%
+is_now_on_saturday() :-
+	is_now_on_week_day(6)
+	.
+
+%!	is_now_on_sunday()
+%
+%	This is {@code true} if now is Sunday.
+%
+is_now_on_sunday() :-
+	is_now_on_week_day(7)
+	.
+
+%!	string_to_time(-Time,+String)
+%
+%	Return the time associated to a string.
+%
+%	@param Time of the string. It is on the format H:M where H is between 00 and 23, and MM between 00 and 59.
+%	@param String with the time to extract.
+%
+string_to_time(Time,String) :-
+	split_string(String,":","",[SH|[SM|_]]),
+	number_string(H,SH),
+	number_string(M,SM),
+	Timestamp is H*60+M,
+ 	timestamp_to_time(Time,Timestamp)
+ 	.
+
+
+%!	normalized_time(-Normalized,+Time)
+%
+%	Return the normalized time.
+%
+%	@param Normalized on the format H:M where H is between 00 and 23, and MM between 00 and 59.
+%	@param Time to normalize.
+%
+normalized_time(Normalized,Time) :-
+	string_length(Time,5) ->
+		Normalized=Time;
+		string_to_time(Time,Normalized)
+	.
+
+
+%!	timestamp_to_time(-Time,+Timestamp)
+%
+%	Return the time associated to a time stamp.
+%
+%	@param Time of the time stamp. It is on the format H:M where H is between 00 and 23, and MM between 00 and 59.
+%	@param Timestamp epoch time since January 1, 1970 in seconds.
+%
+timestamp_to_time(Time,Timestamp) :-
+ 	stamp_date_time(Timestamp, DateTime, 'UTC'),
+	format_time(string(Time),"%H:%M",DateTime).
+
+%!	now_to_time(-Time)
+%
+%	Return the time associated to now.
+%
+%	@param Time of now. It is on the format H:M where H is between 00 and 23, and MM between 00 and 59.
+%
+now_to_time(Time) :-
+	get_now(Now),
+	timestamp_to_time(Time,Now)
+	.
+
+%!	is_now_before_time(+Time)
+%
+%	Check if now is before the specified time.
+%
+%	@param Time to be before now.
+%
+is_now_before_time(Time) :-
+	now_to_time(Now),
+	normalized_time(Normalized,Time),
+	Now @< Normalized
+	.
+
+%!	is_now_before_time_or_equals(+Time)
+%
+%	Check if now is before the specified time or it is equals.
+%
+%	@param Time to be before now or equals.
+%
+is_now_before_time_or_equals(Time) :-
+	now_to_time(Now),
+	normalized_time(Normalized,Time),
+	Now @=< Normalized
+	.
+
+%!	is_now_after_time(+Time)
+%
+%	Check if now is after the specified time.
+%
+%	@param Time to be after now.
+%
+is_now_after_time(Time) :-
+	now_to_time(Now),
+	normalized_time(Normalized,Time),
+	Now @> Normalized
+	.
+
+%!	is_now_after_time_or_equals(+Time)
+%
+%	Check if now is after the specified time or it is equals.
+%
+%	@param Time to be after now or equals.
+%
+is_now_after_time_or_equals(Time) :-
+	now_to_time(Now),
+	normalized_time(Normalized,Time),
+	Now @>= Normalized
+	.
+
+%!	is_now_between_times(+Lower,+Upper)
+%
+%	Check if now is between the specified times.
+%
+%	@param Lower time that now can be, inclusive.
+%	@param Upper time that now can be, inclusive.
+%
+is_now_between_times(Lower,Upper) :-
+	now_to_time(Now),
+	normalized_time(NormalizedLower,Lower),
+	normalized_time(NormalizedUpper,Upper),
+	Now @>= NormalizedLower,
+	Now @=< NormalizedUpper
 	.
