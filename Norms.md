@@ -749,10 +749,6 @@ The next predicates are used to do HTTP request into an URL.
 
 ### Time
 
-- ``now_to_week_day(WeekDay)``
-  Obtain the week day that is **now**.
-    * ``WeekDay``  _Output_  integer with the week day. It is a value on the range [1,7]
-    where 1 => Monday ... 7=> Sunday.
 - ``timestamp_to_week_day(WeekDay,Timestamp)``
   Obtain the week day from a time stamp.
     * ``WeekDay``  _Output_  integer with the week day. It is a value on the range [1,7]

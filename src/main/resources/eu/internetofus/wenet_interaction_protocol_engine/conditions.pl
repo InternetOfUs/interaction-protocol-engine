@@ -19,6 +19,7 @@
 %
 
 :- use_module(library(apply)).
+:- use_module(library(pcre)).
 
 :- dynamic
 	get_now/1,
@@ -79,7 +80,6 @@
 	my_profile_attributes_similars_to/3,
 	get_relationships/1,
 	delay_to/2,
-	now_to_week_day/1,
 	timestamp_to_week_day/2,
 	is_now_on_week_day/1,
 	is_now_one_of_week_days/1,
@@ -160,7 +160,6 @@
 	my_profile_attributes_similars_to/3,
 	get_relationships/1,
 	delay_to/2,
-	now_to_week_day/1,
 	timestamp_to_week_day/2,
 	is_now_on_week_day/1,
 	is_now_one_of_week_days/1,
@@ -1073,17 +1072,6 @@ delay_to(Delay,Date) :-
 	Delay = Date - Now
 	.
 
-%!	now_to_week_day(-WeekDay)
-%
-%	Calculate the week day that now represents.
-%
-%	@param WeekDay of the current time. It is a number from one to seven: Monday = 1, Tuesday = 2, ... , Sunday = 7.
-%
-now_to_week_day(WeekDay):-
-	get_now(Now),
-	timestamp_to_week_day(WeekDay,Now)
-	.
-
 %!	timestamp_to_week_day(-WeekDay,+Timestamp)
 %
 %	Calculate the week day from a time stamp.
@@ -1102,10 +1090,11 @@ timestamp_to_week_day(WeekDay,Timestamp) :-
 %
 %	This is {@code true} if now is the day of the week specified.
 %
-%	@param Day a number with the day of the week. It is from one to seven: Monday = 1, Tuesday = 2, ... , Sunday = 7.
+%	@param WeekDay a number with the day of the week. It is from one to seven: Monday = 1, Tuesday = 2, ... , Sunday = 7.
 %
-is_now_on_week_day(Day) :-
-	now_to_week_day(Day)
+is_now_on_week_day(WeekDay) :-
+	get_now(Now),
+	timestamp_to_week_day(WeekDay,Now)
 	.
 
 %!	is_now_on_week_day(+Days)
@@ -1115,7 +1104,7 @@ is_now_on_week_day(Day) :-
 %	@param Days list with now has to be defined. The array contains numbers from one to seven where Monday = 1, Tuesday = 2, ... , Sunday = 7.
 %
 is_now_one_of_week_days(Days) :-
-	now_to_week_day(Day),
+	is_now_on_week_day(Day),
 	member(Day,Days)
 	.
 
@@ -1183,13 +1172,13 @@ is_now_on_sunday() :-
 %	@param String with the time to extract.
 %
 string_to_time(Time,String) :-
-	split_string(String,":","",[SH|[SM|_]]),
+	wenet_to_string(StrTime,String),
+	split_string(StrTime,":","",[SH|[SM|_]]),
 	number_string(H,SH),
 	number_string(M,SM),
-	Timestamp is H*60+M,
+	Timestamp is H*3600+M*60,
  	timestamp_to_time(Time,Timestamp)
  	.
-
 
 %!	normalized_time(-Normalized,+Time)
 %
@@ -1199,11 +1188,9 @@ string_to_time(Time,String) :-
 %	@param Time to normalize.
 %
 normalized_time(Normalized,Time) :-
-	string_length(Time,5) ->
-		Normalized=Time;
-		string_to_time(Time,Normalized)
+	wenet_to_string(StrTime,Time),
+	(re_match("^([01][0-9]|2[0-3]):([0-5][0-9])$"/i,StrTime) -> Normalized = StrTime ; string_to_time(Normalized,StrTime))
 	.
-
 
 %!	timestamp_to_time(-Time,+Timestamp)
 %
@@ -1213,6 +1200,7 @@ normalized_time(Normalized,Time) :-
 %	@param Timestamp epoch time since January 1, 1970 in seconds.
 %
 timestamp_to_time(Time,Timestamp) :-
+	number(Timestamp),
  	stamp_date_time(Timestamp, DateTime, 'UTC'),
 	format_time(string(Time),"%H:%M",DateTime).
 

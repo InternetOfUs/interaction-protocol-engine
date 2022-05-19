@@ -44,7 +44,8 @@
 	wenet_sort_user_values_by_value/2,
 	wenet_user_values_to_user_ids/2,
 	wenet_product_user_values/3,
-	wenet_error_to_string/2
+	wenet_error_to_string/2,
+	wenet_to_string/2
 	.
 
 :- discontiguous
@@ -77,7 +78,8 @@
 	wenet_sort_user_values_by_value/2,
 	wenet_user_values_to_user_ids/2,
 	wenet_product_user_values/3,
-	wenet_error_to_string/2
+	wenet_error_to_string/2,
+	wenet_to_string/2
 	.
 
 :- autoload(library(http/json)).
@@ -110,7 +112,7 @@ wenet_log_trace(Text) :-
 %	@param Term Term to show into the log message.
 %
 wenet_log_trace(Text,Term) :-
-	term_string(Term,Value),
+	wenet_to_string(Value,Term),
 	format(string(Lines),'TRACE: ~w ~w',[Text,Value]),
 	print_message_lines(user_output,kind(trace),[Lines])
 	.
@@ -133,7 +135,7 @@ wenet_log_error(Text) :-
 %	@param Terms arguments to show into the log message.
 %
 wenet_log_error(Text,Terms) :-
-	term_string(Terms,Value),
+	wenet_to_string(Value,Terms),
 	wenet_print_error('~w ~w',[Text,Value])
 	.
 
@@ -147,7 +149,7 @@ wenet_log_error(Text,Terms) :-
 %
 wenet_log_error(Text,Terms,Error) :-
 	wenet_error_to_string(ErrorMessage,Error),
-	term_string(Terms,Value),
+	wenet_to_string(Value,Terms),
 	wenet_print_error('~w. ~w ~w',[ErrorMessage,Text,Value])
 	.
 
@@ -183,7 +185,7 @@ wenet_log_warning(Text) :-
 %	@param Terms arguments to show into the log message.
 %
 wenet_log_warning(Text,Terms) :-
-	term_string(Terms,Value),
+	wenet_to_string(Value,Terms),
 	wenet_print_warning('~w ~w',[Text,Value])
 	.
 
@@ -197,7 +199,7 @@ wenet_log_warning(Text,Terms) :-
 %
 wenet_log_warning(Text,Terms,Warning) :-
 	wenet_error_to_string(WarningMessage,Warning),
-	term_string(Terms,Value),
+	wenet_to_string(Value,Terms),
 	wenet_print_warning('~w. ~w ~w',[WarningMessage,Text,Value])
 	.
 
@@ -660,5 +662,19 @@ wenet_error_to_string(ErrorMessage,Error) :-
 	catch(
 		message_to_string(Error,ErrorMessage)
 		,_
-		,term_string(Error,ErrorMessage)
+		,wenet_to_string(ErrorMessage,Error)
 	).
+
+%!	wenet_to_string(-String,+Any)
+%
+%	Convert any value to a string.
+%
+%	@param String associated to the value.
+%	@param Any to convert to string.
+wenet_to_string(String,Any) :-
+	string(Any) ->
+		String = Any;
+		atom(Any) ->
+			atom_string(Any,String) ;
+			term_string(Any,String)
+	.
