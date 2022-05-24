@@ -69,9 +69,8 @@ wenet_do_norm_actions([NormAction|Tail]) :-
 	wenet_do_norm_action(NormAction),
 	wenet_do_norm_actions(Tail).
 
+wenet_do_norm_action(put(not(_))).
+wenet_do_norm_action(put(delay(_))).
+
 wenet_do_norm_action(put(NormAction)) :-
 	wenet_execute_safetly_once(NormAction).
-
-wenet_do_norm_action(not(_)).
-
-wenet_do_norm_action(delay(_)).

@@ -354,7 +354,9 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
 
       if (!norms.isEmpty()) {
         // Fill in norms
-        Collections.sort(norms, (a, b) -> a.priority.compareTo(b.priority));
+        // The norms has to be written on the file from the higher priority to the
+        // lowest one
+        Collections.sort(norms, (a, b) -> b.priority.compareTo(a.priority));
         final var ontologyContent = new StringBuilder();
         final var normsContent = new StringBuilder();
         for (final var norm : norms) {

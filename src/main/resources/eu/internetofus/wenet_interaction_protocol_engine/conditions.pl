@@ -98,7 +98,8 @@
 	is_now_before_time_or_equals/1,
 	is_now_after_time/1,
 	is_now_after_time_or_equals/1,
-	is_now_between_times/2
+	is_now_between_times/2,
+	get_transaction_actioneer_id/1
 	.
 
 :- discontiguous
@@ -178,7 +179,8 @@
 	is_now_before_time_or_equals/1,
 	is_now_after_time/1,
 	is_now_after_time_or_equals/1,
-	is_now_between_times/2
+	is_now_between_times/2,
+	get_transaction_actioneer_id/1
 	.
 
 %!	is_now_less_than(+Time)
@@ -398,6 +400,20 @@ get_transaction(json(Transaction),TransactionId) :-
 	wenet_transactions_of_task(Transactions,Task),
 	member(json(Transaction),Transactions),
 	member(id=TransactionId,Transaction)
+	.
+
+%!	get_transaction_actioneer_id(-ActioneerId)
+%
+%	Return the identifier of the transaction actioneer defined on the norm engine.
+%
+%	@param TransactionIs string with the user identifier.
+%
+get_transaction_actioneer_id(ActioneerId) :-
+	get_transaction(Transaction),
+	wenet_actioneer_id_of_transaction(ActioneerId,Transaction),
+	!,
+	retractall(get_transaction_actioneer_id(_)),
+	asserta(get_transaction_actioneer_id(ActioneerId))
 	.
 
 %!	get_transaction_id(-TransactionId)
@@ -918,7 +934,7 @@ filter_transactions_(Target,[Head|Tail],Test,Map):-
 
 %!	normalized_closeness(-Closeness,+Users,+MaxDistance)
 %
-%	Calculate the closeness (in distance) of a user repect some others.
+%	Calculate the closeness (in distance) of a user respect some others.
 %
 %	@param Closeness a list with the closeness between a user and some others.
 %	@param Users identifiers of the users to calculate the closeness.
@@ -956,7 +972,7 @@ normalized_closeness_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,L
 
 %!	normalized_social_closeness(-Socialness,+Users)
 %
-%	Calculate the socialness of a user repect some others.
+%	Calculate the socialness of a user respect some others.
 %
 %	@param Socialness a list with the socialness between a user and some others.
 %	@param Users identifiers of the users to calculate the socialness.

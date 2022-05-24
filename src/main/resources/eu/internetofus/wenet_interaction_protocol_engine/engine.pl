@@ -14,7 +14,7 @@
 % limitations under the License.
 %
 
-:- discontiguous 
+:- discontiguous
 	normengine/1,
 	assert_todo_actions/1,
 	need_to_repeat/3,
@@ -46,9 +46,14 @@ normengine(Output) :-
     % We also assume the norms and knowledge base of the user and the community are loaded as predicates
     % (and not hidden within the hideous profile structure)
     % For now we only deal with community norms, in the future we need to distinguish community norms from user norms
-    findall([Condition, Conclusion], whenever Condition thenceforth Conclusion, AllNorms),
-    recursive_norm_check([],AllNorms,Output).
+    getnorms(AllNorms),
+    recursive_norm_check([],AllNorms,Output1),
+    remove_conflicts([],Output1,Output2),
+    print(Output2),
+    remove_negations(Output2,Output).
 
+getnorms(AllNorms) :-
+  findall([Condition, Conclusion], whenever Condition thenceforth Conclusion, AllNorms), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%     NORM ASSESSMENT     %%%
@@ -132,6 +137,36 @@ execute_conclusion(Conclusion,[put(Conclusion)])  :- !,
     assertz(Conclusion).
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% CORE OF CONFLICT RESOLUTION %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+remove_conflicts(ConfirmedList,[],ConfirmedList) :- !.
+remove_conflicts(ConfirmedList,[H|T],Output) :-
+    		no_conflict(H,ConfirmedList), !,
+    		append(ConfirmedList,[H],ConfirmedList2),
+    		remove_conflicts(ConfirmedList2,T,Output).
+remove_conflicts(ConfirmedList,[H|T],Output) :-
+    				\+ no_conflict(H,ConfirmedList), !,
+    				remove_conflicts(ConfirmedList,T,Output).
+
+no_conflict([put(not(X))],List) :- !,
+    		\+ member([put(X)],List),
+    		\+ member([put(delay(X,_))],List).
+no_conflict([put(delay(X,_))],List) :- !,
+    		\+ member([put(X)],List),
+    		\+ member([put(not(X))],List).
+no_conflict([put(X)],List) :- !,
+    		\+ member([put(delay(X,_))],List),
+    		\+ member([put(not(X))],List).
+
+remove_negations([],[]).
+remove_negations([[put(not(_))]|T],Result) :- !,
+    remove_negations(T,Result).
+remove_negations([[put(X)]|T],[[put(X)]|Result]) :- !,
+        remove_negations(T,Result).
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% END NARDINE'S INPUT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% END NARDINES INPUT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
