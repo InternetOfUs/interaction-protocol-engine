@@ -48,9 +48,9 @@ normengine(Output) :-
     % For now we only deal with community norms, in the future we need to distinguish community norms from user norms
     getnorms(AllNorms),
     recursive_norm_check([],AllNorms,Output1),
-    remove_conflicts([],Output1,Output2),
-    print(Output2),
-    remove_negations(Output2,Output).
+		flatten(Output1,Output2),
+		remove_conflicts([],Output2,Output3),
+    remove_negations(Output3,Output).
 
 getnorms(AllNorms) :-
   findall([Condition, Conclusion], whenever Condition thenceforth Conclusion, AllNorms), !.
@@ -143,27 +143,27 @@ execute_conclusion(Conclusion,[put(Conclusion)])  :- !,
 
 remove_conflicts(ConfirmedList,[],ConfirmedList) :- !.
 remove_conflicts(ConfirmedList,[H|T],Output) :-
-    		no_conflict(H,ConfirmedList), !,
-    		append(ConfirmedList,[H],ConfirmedList2),
-    		remove_conflicts(ConfirmedList2,T,Output).
+    no_conflict(H,ConfirmedList), !,
+    append(ConfirmedList,[H],ConfirmedList2),
+    remove_conflicts(ConfirmedList2,T,Output).
 remove_conflicts(ConfirmedList,[H|T],Output) :-
-    				\+ no_conflict(H,ConfirmedList), !,
-    				remove_conflicts(ConfirmedList,T,Output).
+    \+ no_conflict(H,ConfirmedList), !,
+    remove_conflicts(ConfirmedList,T,Output).
 
-no_conflict([put(not(X))],List) :- !,
-    		\+ member([put(X)],List),
-    		\+ member([put(delay(X,_))],List).
-no_conflict([put(delay(X,_))],List) :- !,
-    		\+ member([put(X)],List),
-    		\+ member([put(not(X))],List).
-no_conflict([put(X)],List) :- !,
-    		\+ member([put(delay(X,_))],List),
-    		\+ member([put(not(X))],List).
+no_conflict(put(not(X)),List) :- !,
+		\+ member(put(X),List),
+		\+ member(put(delay(X,_)),List).
+no_conflict(put(delay(X,_)),List) :- !,
+    \+ member(put(X),List),
+    \+ member(put(not(X)),List).
+no_conflict(put(X),List) :- !,
+		\+ member(put(delay(X,_)),List),
+		\+ member(put(not(X)),List).
 
 remove_negations([],[]).
-remove_negations([[put(not(_))]|T],Result) :- !,
+remove_negations([put(not(_))|T],Result) :- !,
     remove_negations(T,Result).
-remove_negations([[put(X)]|T],[[put(X)]|Result]) :- !,
+remove_negations([put(X)|T],[put(X)|Result]) :- !,
         remove_negations(T,Result).
 
 

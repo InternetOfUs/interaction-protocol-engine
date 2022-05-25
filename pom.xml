@@ -79,6 +79,18 @@
 				</repository>
 			</repositories>
 		</profile>
+		<profile>
+			<id>nexus-ardid</id>
+			<repositories>
+				<repository>
+					<id>nexus-ardid</id>
+					<url>https://ardid.iiia.csic.es/nexus/repository/maven-public/</url>
+					<snapshots>
+						<enabled>true</enabled>
+					</snapshots>
+				</repository>
+			</repositories>
+		</profile>
 	</profiles>
 	<dependencyManagement>
 		<dependencies>
