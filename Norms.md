@@ -865,6 +865,26 @@ The next predicates are used to interact with the profile manager component.
   This predicate returns the relationships defined on a page.
     * ``Relationships``  _Output_  array of JSON models with the relationships defined on the page.
     * ``Page``  _Input_  JSON model with the relationships to get.
+- ``wenet_relevant_locations_of_profile(RelevantLocations, Profile)``
+  Obtain the relevant locations of a profile.
+    * ``RelevantLocations``  _Output_  array of JSON model with the relevant locations.
+    * ``Profile``  _Input_  JSON model of the profile to obtain the relevant locations.
+- ``wenet_id_of_relevant_location(Id, RelevantLocation)``
+  Obtain the identifier of a relevant location.
+    * ``Id``  _Output_  string with the relevant location identifier.
+    * ``RelevantLocation``  _Input_  JSON model of the relevant location to obtain the identifier.
+- ``wenet_label_of_relevant_location(Label, RelevantLocation)``
+    Obtain the label of a relevant location.
+    * ``Label``  _Output_  string with the relevant location label.
+    * ``RelevantLocation``  _Input_  JSON model of the relevant location to obtain the label.
+- ``wenet_longitude_of_relevant_location(Longitude, RelevantLocation)``
+    Obtain the longitude of a relevant location.
+    * ``Longitude``  _Output_  number with the relevant location longitude.
+    * ``RelevantLocation``  _Input_  JSON model of the relevant location to obtain the longitude.
+- ``wenet_latitude_of_relevant_location(Latitude, RelevantLocation)``
+    Obtain the latitude of a relevant location.
+    * ``Latitude``  _Output_  number with the relevant location latitude.
+    * ``RelevantLocation``  _Input_  JSON model of the relevant location to obtain the latitude.
 
 
 ### Task manager
