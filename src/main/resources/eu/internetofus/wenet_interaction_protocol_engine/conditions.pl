@@ -99,7 +99,13 @@
 	is_now_after_time/1,
 	is_now_after_time_or_equals/1,
 	is_now_between_times/2,
-	get_transaction_actioneer_id/1
+	get_transaction_actioneer_id/1,
+	get_current_location/1,
+	get_current_location/2,
+	is_current_location_near/2,
+	is_current_location_near/3,
+	is_current_location_near_relevant/2,
+	is_current_location_near_relevant/1
 	.
 
 :- discontiguous
@@ -180,7 +186,13 @@
 	is_now_after_time/1,
 	is_now_after_time_or_equals/1,
 	is_now_between_times/2,
-	get_transaction_actioneer_id/1
+	get_transaction_actioneer_id/1,
+	get_current_location/1,
+	get_current_location/2,
+	is_current_location_near/2,
+	is_current_location_near/3,
+	is_current_location_near_relevant/2,
+	is_current_location_near_relevant/1
 	.
 
 %!	is_now_less_than(+Time)
@@ -1292,4 +1304,83 @@ is_now_between_times(Lower,Upper) :-
 	normalized_time(NormalizedUpper,Upper),
 	Now @>= NormalizedLower,
 	Now @=< NormalizedUpper
+	.
+
+%!	get_current_location(-Location)
+%
+%	Obtain the current location of the user.
+%
+%	@param Loction of the user.
+get_current_location(Location) :-
+	get_profile_id(Me),
+	wenet_personal_context_builder_locations(Locations,[Me]),
+	!,
+	member(Location,Locations),
+	wenet_user_id_of_location(Me,Location),
+	!,
+	retractall(get_current_location(_)),
+	asserta(get_current_location(Location))
+ 	.
+
+%!	get_current_location(-Latitude,-Longitude)
+%
+%	Obtain the current location of the user.
+%
+%	@param Latitude of the user.
+%	@param Longitude of the user.
+get_current_location(Latitude,Longitude) :-
+	get_current_location(Location),
+	wenet_latitude_of_location(Latitude,Location),
+	wenet_longitude_of_location(Longitude,Location),
+	!,
+	retractall(get_current_location(_,_)),
+	asserta(get_current_location(Latitude,Longitude))
+ 	.
+
+%!	is_current_location_near(-Latitude,-Longitude)
+%
+%	Check if the user is less than 1 Km of a location.
+%
+%	@param Latitude of the location to be near.
+%	@param Longitude of the location to be near.
+is_current_location_near(Latitude,Longitude) :-
+	is_current_location_near(Latitude,Longitude,1000)
+	.
+
+%!	is_current_location_near(-Latitude,-Longitude)
+%
+%	Check if the user is less than MaxDistance, in meters, of a location.
+%
+%	@param Latitude of the location to be near.
+%	@param Longitude of the location to be near.
+%	@param MaxDistance between the current location and the location. In meters.
+is_current_location_near(Latitude,Longitude,MaxDistance) :-
+	get_current_location(CurrentLatitude,CurrentLongitude),
+	wenet_distance_between_locations(Distance,CurrentLatitude,CurrentLongitude,Latitude,Longitude),
+	Distance @=< MaxDistance
+	.
+
+%!	is_current_location_near_relevant(-Name)
+%
+%	Check if the user is less than 1 Km to a relevant location.
+%
+%	@param Name identifier of label of the relevant location.
+is_current_location_near_relevant(Name) :-
+	is_current_location_near_relevant(Name,1000)
+	.
+
+%!	is_current_location_near_relevant(-Name,-MaxDistance)
+%
+%	Check if the user is less MaxDistance, in meters, to a relevant location.
+%
+%	@param Name identifier of label of the relevant location.
+%	@param MaxDistance between the current location and the location. In meters.
+is_current_location_near_relevant(Name,MaxDistance) :-
+	get_profile(Profile),
+	wenet_relevant_locations_of_profile(RelevantLocations,Profile),
+	member(RelevantLocation,RelevantLocations),
+	(wenet_id_of_relevant_location(Name,RelevantLocation);wenet_label_of_relevant_location(Name,RelevantLocation)),
+	wenet_latitude_of_relevant_location(Latitude,RelevantLocation),
+	wenet_longitude_of_relevant_location(Longitude,RelevantLocation),
+	is_current_location_near(Latitude,Longitude,MaxDistance)
 	.
