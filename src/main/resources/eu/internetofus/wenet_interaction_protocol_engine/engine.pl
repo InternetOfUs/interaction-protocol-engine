@@ -24,7 +24,10 @@
 	check_condition/1,
 	recursive_norm_check/3,
 	check_norms/2,
-	execute_conclusion/2
+	execute_conclusion/2,
+	remove_conflicts/2,
+	negate_actions/3,
+	delay_actions/4
 	.
 :- dynamic fact/1.
 :- dynamic todo/1.
@@ -48,9 +51,9 @@ normengine(Output) :-
     % For now we only deal with community norms, in the future we need to distinguish community norms from user norms
     getnorms(AllNorms),
     recursive_norm_check([],AllNorms,Output1),
-		flatten(Output1,Output2),
-		remove_conflicts([],Output2,Output3),
-    remove_negations(Output3,Output).
+    flatten(Output1,Output2),
+    remove_conflicts(Output2,Output)
+    .
 
 getnorms(AllNorms) :-
   findall([Condition, Conclusion], whenever Condition thenceforth Conclusion, AllNorms), !.
@@ -141,30 +144,51 @@ execute_conclusion(Conclusion,[put(Conclusion)])  :- !,
 %%% CORE OF CONFLICT RESOLUTION %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-remove_conflicts(ConfirmedList,[],ConfirmedList) :- !.
-remove_conflicts(ConfirmedList,[H|T],Output) :-
-    no_conflict(H,ConfirmedList), !,
-    append(ConfirmedList,[H],ConfirmedList2),
-    remove_conflicts(ConfirmedList2,T,Output).
-remove_conflicts(ConfirmedList,[H|T],Output) :-
-    \+ no_conflict(H,ConfirmedList), !,
-    remove_conflicts(ConfirmedList,T,Output).
+remove_conflicts([],[]).
+remove_conflicts([put(not(Action))|SourceTail],Target) :-
+	negate_actions(Action,SourceTail,NegateTarget),
+	remove_conflicts(NegateTarget,Target)
+	.
+remove_conflicts([put(delay(Action,Delay))|SourceTail],Target) :-
+	delay_actions(Action,Delay,SourceTail,DelayTarget),
+	remove_conflicts(DelayTarget,Target)
+	.
+remove_conflicts([SourceHead|SourceTail],Target) :-
+	remove_conflicts(SourceTail,TargetTail),
+	Target = [SourceHead|TargetTail]
+	.
 
-no_conflict(put(not(X)),List) :- !,
-		\+ member(put(X),List),
-		\+ member(put(delay(X,_)),List).
-no_conflict(put(delay(X,_)),List) :- !,
-    \+ member(put(X),List),
-    \+ member(put(not(X)),List).
-no_conflict(put(X),List) :- !,
-		\+ member(put(delay(X,_)),List),
-		\+ member(put(not(X)),List).
+negate_actions(_,[],[]).
+negate_actions(Action,[put(SourceHead)|SourceTail],Target) :-
+	copy_term(Action,Pattern),
+	(
+		Pattern = SourceHead ->
+			TargetHead = not(SourceHead) ;
+			TargetHead = put(SourceHead)
+	),
+	negate_actions(Action,SourceTail,TargetTail),
+	Target = [TargetHead|TargetTail]
+	.
+negate_actions(Action,[SourceHead|SourceTail],Target) :-
+	negate_actions(Action,SourceTail,TargetTail),
+	Target = [SourceHead|TargetTail]
+	.
 
-remove_negations([],[]).
-remove_negations([put(not(_))|T],Result) :- !,
-    remove_negations(T,Result).
-remove_negations([put(X)|T],[put(X)|Result]) :- !,
-        remove_negations(T,Result).
+delay_actions(_,_,[],[]).
+delay_actions(Action,Delay,[put(SourceHead)|SourceTail],Target) :-
+	copy_term(Action,Pattern),
+	(
+		Pattern = SourceHead ->
+			TargetHead = delay(SourceHead,Delay) ;
+			TargetHead = put(SourceHead)
+	),
+	delay_actions(Action,Delay,SourceTail,TargetTail),
+	Target = [TargetHead|TargetTail]
+	.
+delay_actions(Action,Delay,[SourceHead|SourceTail],Target) :-
+	delay_actions(Action,Delay,SourceTail,TargetTail),
+	Target = [SourceHead|TargetTail]
+	.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
