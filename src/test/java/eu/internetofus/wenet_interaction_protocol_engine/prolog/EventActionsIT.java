@@ -197,20 +197,10 @@ public class EventActionsIT extends AbstractProtocolITC {
     cancelEventTransaction.taskId = this.task.id;
     cancelEventTransaction.label = "cancelLastEvent";
 
+    final var checkMessage = this.createMessagePredicate().and(MessagePredicates.labelIs("eventCancelled"))
+        .and(MessagePredicates.receiverIs(this.task.requesterId))
+        .and(MessagePredicates.attributesSimilarTo(new JsonObject().put("success", "true")));
     final var checkMessages = new ArrayList<Predicate<Message>>();
-    checkMessages.add(this.createMessagePredicate().and(target -> {
-      // check the sendEvent is cancelled
-      return !"eventSent".equals(target.label);
-
-    }));
-
-    final var checkMessage = this.createMessagePredicate().and(MessagePredicates.labelIs("eventSent"))
-        .and(MessagePredicates.receiverIs(this.task.requesterId)).and(MessagePredicates.attributesAre(target -> {
-
-          final var success = target.getBoolean("success", false);
-          return success;
-
-        }));
     checkMessages.add(checkMessage);
 
     final var currentTransactionsSize = this.task.transactions.size();
