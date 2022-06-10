@@ -19,6 +19,7 @@
 %
 
 :- use_module(library(apply)).
+:- use_module(library(pcre)).
 
 :- dynamic
 	get_now/1,
@@ -77,7 +78,34 @@
 	normalized_diversity/3,
 	normalized_diversity_/4,
 	my_profile_attributes_similars_to/3,
-	get_relationships/1
+	get_relationships/1,
+	delay_to/2,
+	timestamp_to_week_day/2,
+	is_now_on_week_day/1,
+	is_now_one_of_week_days/1,
+	is_now_on_monday/0,
+	is_now_on_tuesday/0,
+	is_now_on_wednesday/0,
+	is_now_on_thursday/0,
+	is_now_on_friday/0,
+	is_now_on_saturday/0,
+	is_now_on_sunday/0,
+	string_to_time/2,
+	normalized_time/2,
+	timestamp_to_time/2,
+	now_to_time/1,
+	is_now_before_time/1,
+	is_now_before_time_or_equals/1,
+	is_now_after_time/1,
+	is_now_after_time_or_equals/1,
+	is_now_between_times/2,
+	get_transaction_actioneer_id/1,
+	get_current_location/1,
+	get_current_location/2,
+	is_current_location_near/2,
+	is_current_location_near/3,
+	is_current_location_near_relevant/2,
+	is_current_location_near_relevant/1
 	.
 
 :- discontiguous
@@ -137,7 +165,34 @@
 	normalized_diversity/3,
 	normalized_diversity_/4,
 	my_profile_attributes_similars_to/3,
-	get_relationships/1
+	get_relationships/1,
+	delay_to/2,
+	timestamp_to_week_day/2,
+	is_now_on_week_day/1,
+	is_now_one_of_week_days/1,
+	is_now_on_monday/0,
+	is_now_on_tuesday/0,
+	is_now_on_wednesday/0,
+	is_now_on_thursday/0,
+	is_now_on_friday/0,
+	is_now_on_saturday/0,
+	is_now_on_sunday/0,
+	string_to_time/2,
+	normalized_time/2,
+	timestamp_to_time/2,
+	now_to_time/1,
+	is_now_before_time/1,
+	is_now_before_time_or_equals/1,
+	is_now_after_time/1,
+	is_now_after_time_or_equals/1,
+	is_now_between_times/2,
+	get_transaction_actioneer_id/1,
+	get_current_location/1,
+	get_current_location/2,
+	is_current_location_near/2,
+	is_current_location_near/3,
+	is_current_location_near_relevant/2,
+	is_current_location_near_relevant/1
 	.
 
 %!	is_now_less_than(+Time)
@@ -357,6 +412,20 @@ get_transaction(json(Transaction),TransactionId) :-
 	wenet_transactions_of_task(Transactions,Task),
 	member(json(Transaction),Transactions),
 	member(id=TransactionId,Transaction)
+	.
+
+%!	get_transaction_actioneer_id(-ActioneerId)
+%
+%	Return the identifier of the transaction actioneer defined on the norm engine.
+%
+%	@param TransactionIs string with the user identifier.
+%
+get_transaction_actioneer_id(ActioneerId) :-
+	get_transaction(Transaction),
+	wenet_actioneer_id_of_transaction(ActioneerId,Transaction),
+	!,
+	retractall(get_transaction_actioneer_id(_)),
+	asserta(get_transaction_actioneer_id(ActioneerId))
 	.
 
 %!	get_transaction_id(-TransactionId)
@@ -877,7 +946,7 @@ filter_transactions_(Target,[Head|Tail],Test,Map):-
 
 %!	normalized_closeness(-Closeness,+Users,+MaxDistance)
 %
-%	Calculate the closeness (in distance) of a user repect some others.
+%	Calculate the closeness (in distance) of a user respect some others.
 %
 %	@param Closeness a list with the closeness between a user and some others.
 %	@param Users identifiers of the users to calculate the closeness.
@@ -915,7 +984,7 @@ normalized_closeness_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,L
 
 %!	normalized_social_closeness(-Socialness,+Users)
 %
-%	Calculate the socialness of a user repect some others.
+%	Calculate the socialness of a user respect some others.
 %
 %	@param Socialness a list with the socialness between a user and some others.
 %	@param Users identifiers of the users to calculate the socialness.
@@ -1000,8 +1069,8 @@ my_profile_attributes_similars_to(Attributes,Text,MinSimilarity) :-
 
 %!	get_relationships(-Relationships)
 %
-%	Obtain the best 1k social network relationships of the current user repect
-%   the other application users.
+%	Obtain the best 1k social network relationships of the current user respect
+%	the other application users.
 %
 %	@param Relationships of the user.
 %
@@ -1017,4 +1086,301 @@ get_relationships(Relationships) :-
 	)
 	-> true
 	; Relationships = []
+	.
+
+%!	delay_to(-Delay,+Date)
+%
+%	Calculate the time that has to wait until a date is reached.
+%
+%	@param Delay in seconds that has to wait to the date.
+%	@param Date epoch that has to reach.
+%
+delay_to(Delay,Date) :-
+	get_now(Now),
+	Delay = Date - Now
+	.
+
+%!	timestamp_to_week_day(-WeekDay,+Timestamp)
+%
+%	Calculate the week day from a time stamp.
+%
+%	@param WeekDay of the time stamp. It is a number from one to seven: Monday = 1, Tuesday = 2, ... , Sunday = 7.
+%	@param Timestamp epoch time since January 1, 1970 in seconds.
+%
+timestamp_to_week_day(WeekDay,Timestamp) :-
+	stamp_date_time(Timestamp, DateTime, 'UTC'),
+	date_time_value(date,DateTime,Date),
+	day_of_the_week(Date,WeekDay)
+	.
+
+
+%!	is_now_on_week_day(+Day)
+%
+%	This is {@code true} if now is the day of the week specified.
+%
+%	@param WeekDay a number with the day of the week. It is from one to seven: Monday = 1, Tuesday = 2, ... , Sunday = 7.
+%
+is_now_on_week_day(WeekDay) :-
+	get_now(Now),
+	timestamp_to_week_day(WeekDay,Now)
+	.
+
+%!	is_now_on_week_day(+Days)
+%
+%	This is {@code true} if now is one of the week days specified on the list.
+%
+%	@param Days list with now has to be defined. The array contains numbers from one to seven where Monday = 1, Tuesday = 2, ... , Sunday = 7.
+%
+is_now_one_of_week_days(Days) :-
+	is_now_on_week_day(Day),
+	member(Day,Days)
+	.
+
+%!	is_now_on_monday()
+%
+%	This is {@code true} if now is Monday.
+%
+is_now_on_monday() :-
+	is_now_on_week_day(1)
+	.
+
+%!	is_now_on_tuesday()
+%
+%	This is {@code true} if now is Tuesday.
+%
+is_now_on_tuesday() :-
+	is_now_on_week_day(2)
+	.
+
+%!	is_now_on_wednesday()
+%
+%	This is {@code true} if now is Wednesday.
+%
+is_now_on_wednesday() :-
+	is_now_on_week_day(3)
+	.
+
+%!	is_now_on_thursday()
+%
+%	This is {@code true} if now is Thursday.
+%
+is_now_on_thursday() :-
+	is_now_on_week_day(4)
+	.
+
+%!	is_now_on_friday()
+%
+%	This is {@code true} if now is Friday.
+%
+is_now_on_friday() :-
+	is_now_on_week_day(5)
+	.
+
+%!	is_now_on_saturday()
+%
+%	This is {@code true} if now is Saturday.
+%
+is_now_on_saturday() :-
+	is_now_on_week_day(6)
+	.
+
+%!	is_now_on_sunday()
+%
+%	This is {@code true} if now is Sunday.
+%
+is_now_on_sunday() :-
+	is_now_on_week_day(7)
+	.
+
+%!	string_to_time(-Time,+String)
+%
+%	Return the time associated to a string.
+%
+%	@param Time of the string. It is on the format H:M where H is between 00 and 23, and MM between 00 and 59.
+%	@param String with the time to extract.
+%
+string_to_time(Time,String) :-
+	wenet_to_string(StrTime,String),
+	split_string(StrTime,":","",[SH|[SM|_]]),
+	number_string(H,SH),
+	number_string(M,SM),
+	Timestamp is H*3600+M*60,
+ 	timestamp_to_time(Time,Timestamp)
+ 	.
+
+%!	normalized_time(-Normalized,+Time)
+%
+%	Return the normalized time.
+%
+%	@param Normalized on the format H:M where H is between 00 and 23, and MM between 00 and 59.
+%	@param Time to normalize.
+%
+normalized_time(Normalized,Time) :-
+	wenet_to_string(StrTime,Time),
+	(re_match("^([01][0-9]|2[0-3]):([0-5][0-9])$"/i,StrTime) -> Normalized = StrTime ; string_to_time(Normalized,StrTime))
+	.
+
+%!	timestamp_to_time(-Time,+Timestamp)
+%
+%	Return the time associated to a time stamp.
+%
+%	@param Time of the time stamp. It is on the format H:M where H is between 00 and 23, and MM between 00 and 59.
+%	@param Timestamp epoch time since January 1, 1970 in seconds.
+%
+timestamp_to_time(Time,Timestamp) :-
+	number(Timestamp),
+ 	stamp_date_time(Timestamp, DateTime, 'UTC'),
+	format_time(string(Time),"%H:%M",DateTime).
+
+%!	now_to_time(-Time)
+%
+%	Return the time associated to now.
+%
+%	@param Time of now. It is on the format H:M where H is between 00 and 23, and MM between 00 and 59.
+%
+now_to_time(Time) :-
+	get_now(Now),
+	timestamp_to_time(Time,Now)
+	.
+
+%!	is_now_before_time(+Time)
+%
+%	Check if now is before the specified time.
+%
+%	@param Time to be before now.
+%
+is_now_before_time(Time) :-
+	now_to_time(Now),
+	normalized_time(Normalized,Time),
+	Now @< Normalized
+	.
+
+%!	is_now_before_time_or_equals(+Time)
+%
+%	Check if now is before the specified time or it is equals.
+%
+%	@param Time to be before now or equals.
+%
+is_now_before_time_or_equals(Time) :-
+	now_to_time(Now),
+	normalized_time(Normalized,Time),
+	Now @=< Normalized
+	.
+
+%!	is_now_after_time(+Time)
+%
+%	Check if now is after the specified time.
+%
+%	@param Time to be after now.
+%
+is_now_after_time(Time) :-
+	now_to_time(Now),
+	normalized_time(Normalized,Time),
+	Now @> Normalized
+	.
+
+%!	is_now_after_time_or_equals(+Time)
+%
+%	Check if now is after the specified time or it is equals.
+%
+%	@param Time to be after now or equals.
+%
+is_now_after_time_or_equals(Time) :-
+	now_to_time(Now),
+	normalized_time(Normalized,Time),
+	Now @>= Normalized
+	.
+
+%!	is_now_between_times(+Lower,+Upper)
+%
+%	Check if now is between the specified times.
+%
+%	@param Lower time that now can be, inclusive.
+%	@param Upper time that now can be, inclusive.
+%
+is_now_between_times(Lower,Upper) :-
+	now_to_time(Now),
+	normalized_time(NormalizedLower,Lower),
+	normalized_time(NormalizedUpper,Upper),
+	Now @>= NormalizedLower,
+	Now @=< NormalizedUpper
+	.
+
+%!	get_current_location(-Location)
+%
+%	Obtain the current location of the user.
+%
+%	@param Loction of the user.
+get_current_location(Location) :-
+	get_profile_id(Me),
+	wenet_personal_context_builder_locations(Locations,[Me]),
+	!,
+	member(Location,Locations),
+	wenet_user_id_of_location(Me,Location),
+	!,
+	retractall(get_current_location(_)),
+	asserta(get_current_location(Location))
+ 	.
+
+%!	get_current_location(-Latitude,-Longitude)
+%
+%	Obtain the current location of the user.
+%
+%	@param Latitude of the user.
+%	@param Longitude of the user.
+get_current_location(Latitude,Longitude) :-
+	get_current_location(Location),
+	wenet_latitude_of_location(Latitude,Location),
+	wenet_longitude_of_location(Longitude,Location),
+	!,
+	retractall(get_current_location(_,_)),
+	asserta(get_current_location(Latitude,Longitude))
+ 	.
+
+%!	is_current_location_near(-Latitude,-Longitude)
+%
+%	Check if the user is less than 1 Km of a location.
+%
+%	@param Latitude of the location to be near.
+%	@param Longitude of the location to be near.
+is_current_location_near(Latitude,Longitude) :-
+	is_current_location_near(Latitude,Longitude,1000)
+	.
+
+%!	is_current_location_near(-Latitude,-Longitude)
+%
+%	Check if the user is less than MaxDistance, in meters, of a location.
+%
+%	@param Latitude of the location to be near.
+%	@param Longitude of the location to be near.
+%	@param MaxDistance between the current location and the location. In meters.
+is_current_location_near(Latitude,Longitude,MaxDistance) :-
+	get_current_location(CurrentLatitude,CurrentLongitude),
+	wenet_distance_between_locations(Distance,CurrentLatitude,CurrentLongitude,Latitude,Longitude),
+	Distance @=< MaxDistance
+	.
+
+%!	is_current_location_near_relevant(-Name)
+%
+%	Check if the user is less than 1 Km to a relevant location.
+%
+%	@param Name identifier of label of the relevant location.
+is_current_location_near_relevant(Name) :-
+	is_current_location_near_relevant(Name,1000)
+	.
+
+%!	is_current_location_near_relevant(-Name,-MaxDistance)
+%
+%	Check if the user is less MaxDistance, in meters, to a relevant location.
+%
+%	@param Name identifier of label of the relevant location.
+%	@param MaxDistance between the current location and the location. In meters.
+is_current_location_near_relevant(Name,MaxDistance) :-
+	get_profile(Profile),
+	wenet_relevant_locations_of_profile(RelevantLocations,Profile),
+	member(RelevantLocation,RelevantLocations),
+	(wenet_id_of_relevant_location(Name,RelevantLocation);wenet_label_of_relevant_location(Name,RelevantLocation)),
+	wenet_latitude_of_relevant_location(Latitude,RelevantLocation),
+	wenet_longitude_of_relevant_location(Longitude,RelevantLocation),
+	is_current_location_near(Latitude,Longitude,MaxDistance)
 	.

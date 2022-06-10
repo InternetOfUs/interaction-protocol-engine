@@ -19,9 +19,8 @@
  */
 package eu.internetofus.wenet_interaction_protocol_engine.api.states;
 
-import eu.internetofus.common.model.ErrorMessage;
 import eu.internetofus.common.components.interaction_protocol_engine.State;
-import eu.internetofus.common.components.interaction_protocol_engine.StatesPage;
+import eu.internetofus.common.model.ErrorMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -41,7 +40,6 @@ import javax.ws.rs.PATCH;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -63,26 +61,6 @@ public interface States {
    * The address of this service.
    */
   String ADDRESS = "wenet_interaction_protocol_engine.api.states";
-
-  /**
-   * Called to return the state of a user in a community.
-   *
-   * @param communityId   identifier of the community associated to the state.
-   * @param taskId        identifier of the task associated to the state.
-   * @param userId        identifier of the user associated to the state.
-   * @param context       of the request.
-   * @param resultHandler to inform of the response.
-   */
-  @GET
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Operation(summary = "Return the state", description = "Retrieve the state that satisfy the query parameters.")
-  @ApiResponse(responseCode = "200", description = "The state associated to the query", content = @Content(schema = @Schema(implementation = StatesPage.class)))
-  public void retrieveStates(
-      @QueryParam(value = "communityId") @Parameter(description = "A community identifier to be equals on the state to return. You can use a Perl compatible regular expressions (PCRE) that has to match the community identifier of the state if you write between '/'. For example to get the state for communities '1' and '2' you must pass as 'communityId' '/^[1|2]$/'.", example = "1", required = false) String communityId,
-      @QueryParam(value = "taskId") @Parameter(description = "An task identifier to be equals on the state to return. You can use a Perl compatible regular expressions (PCRE) that has to match the task of the state if you write between '/'. For example to get the state for tasks '1' and '2' you must pass as 'taskId' '/^[1|2]$/'.", example = "1", required = false) String taskId,
-      @QueryParam(value = "userId") @Parameter(description = "a user identifier to be equals on the state to return. You can use a Perl compatible regular expressions (PCRE) that has to match the user of the state if you write between '/'. For example to get the state for users '1' and '2' you must pass as 'userId' '/^[1|2]$/'.", example = "1", required = false) String userId,
-      @Parameter(hidden = true, required = false) ServiceRequest context,
-      @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
   /**
    * Called to return the state of a user in a community.

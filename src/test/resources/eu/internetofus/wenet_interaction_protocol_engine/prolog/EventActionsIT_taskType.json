@@ -1,0 +1,90 @@
+{
+	"attributes": {
+		"type": "object",
+		"properties": {
+			"notificationDelay": {
+				"type": "integer",
+				"minimum": 1
+			}
+		}
+	},
+	"transactions": {
+		"sendEvent": {
+			"type": "object",
+			"properties": {
+				"content": {
+					"type": "string"
+				}
+			}
+		},
+		"cancelLastEvent": {
+			"type": "object",
+			"nullable": true
+		}
+	},
+	"callbacks": {
+		"taskCreated": {
+			"type": "object",
+			"properties": {
+				"previousNow": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"now": {
+					"type": "integer",
+					"minimum": 0
+				}
+			}
+		},
+		"eventSent": {
+			"type": "object",
+			"properties": {
+				"previousNow": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"now": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"content": {
+					"type": "string"
+				}
+			}
+		},
+		"eventCancelled": {
+			"type": "object",
+			"properties": {
+				"success": {
+					"type": "boolean"
+				}
+			}
+		}
+	},
+	"norms": [
+		{
+			"whenever": "is_received_created_task() and get_now(Now) and get_task_attribute_value(NotificationDelay,notificationDelay)",
+			"thenceforth": "add_created_transaction() and send_event(_,NotificationDelay,'notifyCreatedTask',json([now=Now]))"
+		},
+		{
+			"whenever": "is_received_event('notifyCreatedTask',Attributes) and get_now(Now) and get_attribute(PreviousNow,now,Attributes)",
+			"thenceforth": "send_user_message('taskCreated',json([previousNow=PreviousNow,now=Now]))"
+		},
+		{
+			"whenever": "is_received_do_transaction('sendEvent',Attributes) and get_now(Now) and get_attribute(Content,content,Attributes) and get_task_attribute_value(NotificationDelay,notificationDelay)",
+			"thenceforth": "add_message_transaction() and send_event(Id,NotificationDelay,'notifyEvent',json([now=Now,content=Content])) and put_task_state_attribute('eventId',Id)"
+		},
+		{
+			"whenever": "is_received_do_transaction('cancelLastEvent',_) and get_task_attribute_value(NotificationDelay,notificationDelay)",
+			"thenceforth": "delay(send_user_message('eventCancelled',_),NotificationDelay)"
+		},
+		{
+			"whenever": "is_received_do_transaction('cancelLastEvent',_) and get_task_state_attribute(Id,'eventId')",
+			"thenceforth": "add_message_transaction() and discard_event(Success,Id) and send_user_message('eventCancelled',json([success=Success]))"
+		},
+		{
+			"whenever": "is_received_event('notifyEvent',Attributes) and get_now(Now) and get_attribute(PreviousNow,now,Attributes) and get_attribute(Content,content,Attributes)",
+			"thenceforth": "send_user_message('eventSent',json([previousNow=PreviousNow,now=Now,content=Content]))"
+		}
+	]
+}

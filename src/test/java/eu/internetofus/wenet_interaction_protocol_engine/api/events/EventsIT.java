@@ -24,9 +24,10 @@ import static eu.internetofus.common.vertx.HttpResponses.assertThatBodyIs;
 import static io.reactiverse.junit5.web.TestRequest.testRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import eu.internetofus.common.model.ErrorMessage;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolEvent;
 import eu.internetofus.common.components.interaction_protocol_engine.ProtocolEventTest;
+import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
+import eu.internetofus.common.model.ErrorMessage;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -121,6 +122,31 @@ public class EventsIT {
 
     }).sendJson(event.toJsonObject(), testContext);
 
+  }
+
+  /**
+   * Verify that can delete an event.
+   *
+   * @param vertx       event bus to use.
+   * @param client      to connect to the server.
+   * @param testContext context to test.
+   *
+   * @see Events#deleteEvent(long, io.vertx.ext.web.api.service.ServiceRequest,
+   *      io.vertx.core.Handler)
+   */
+  @Test
+  public void shouldDeleteEvent(final Vertx vertx, final WebClient client, final VertxTestContext testContext) {
+
+    testContext.assertComplete(new ProtocolEventTest().createModelExample(1, vertx, testContext)
+        .compose(event -> WeNetInteractionProtocolEngine.createProxy(vertx).sendEvent(event))).onSuccess(event -> {
+
+          testRequest(client, HttpMethod.DELETE, Events.PATH + "/" + event.id).expect(res -> {
+
+            assertThat(res.statusCode()).isEqualTo(Status.NO_CONTENT.getStatusCode());
+
+          }).sendJson(event.toJsonObject(), testContext);
+
+        });
   }
 
 }

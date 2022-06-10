@@ -16,4 +16,11 @@
 
 %
 % General norms
-% 
+%
+
+:- discontiguous (whenever)/1.
+
+whenever
+	is_received_event('INTERNAL_DELAY_ACTION_EVENT',json([action=ActionStr])) and term_string(Action,ActionStr)
+thenceforth
+	Action.

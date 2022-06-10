@@ -46,6 +46,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import org.apache.commons.io.FileUtils;
@@ -322,58 +325,40 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
      */
     public void fillIn(final ProtocolData protocol) throws IOException {
 
+      final List<ProtocolNorm> norms = new ArrayList<>();
       if (protocol.profile != null) {
 
         this.appendToInitAssertaModel(protocol.profile.toJsonObject(), "profile");
-        this.appendNorms(protocol.profile.norms, "Norms of profile ", protocol.profile.id);
+        this.addNormsTo(norms, protocol.profile.norms, 40000);
       }
 
       if (protocol.community != null) {
 
         this.appendToInitAssertaModel(protocol.community.toJsonObject(), "community");
-        this.appendNorms(protocol.community.norms, "Norms of community ", protocol.community.name, " (",
-            protocol.community.id, ")");
+        this.addNormsTo(norms, protocol.community.norms, 30000);
 
       }
 
       if (protocol.taskType != null) {
 
         this.appendToInitAssertaModel(protocol.taskType.toJsonObject(), "task_type");
-        this.appendNorms(protocol.taskType.norms, "Norms of task type ", protocol.taskType.name, " (",
-            protocol.taskType.id, ")");
+        this.addNormsTo(norms, protocol.taskType.norms, 20000);
 
       }
 
       if (protocol.task != null) {
 
         this.appendToInitAssertaModel(protocol.task.toJsonObject(), "task");
-        this.appendNorms(protocol.task.norms, "Norms of task  ", protocol.task.id);
-
+        this.addNormsTo(norms, protocol.task.norms, 50000);
       }
 
-    }
-
-    /**
-     * Append the norms into the protocol norms file.
-     *
-     * @param norms   to fill in.
-     * @param headers for the norms.
-     *
-     * @throws IOException If can not write into the protocol norms.
-     */
-    protected void appendNorms(final Iterable<ProtocolNorm> norms, final String... headers) throws IOException {
-
-      final var ontologyContent = new StringBuilder();
-      final var normsContent = new StringBuilder();
-      normsContent.append("\n% ");
-      for (final var header : headers) {
-
-        normsContent.append(header);
-      }
-      normsContent.append("\n");
-
-      if (norms != null) {
-
+      if (!norms.isEmpty()) {
+        // Fill in norms
+        // The norms has to be written on the file from the higher priority to the
+        // lowest one
+        Collections.sort(norms, (a, b) -> b.priority.compareTo(a.priority));
+        final var ontologyContent = new StringBuilder();
+        final var normsContent = new StringBuilder();
         for (final var norm : norms) {
 
           if (norm.ontology != null) {
@@ -393,10 +378,37 @@ public class EngineWorker extends AbstractVerticle implements Handler<Message<Js
           normsContent.append(norm.thenceforth.trim().replaceAll("\\sand\\s", "\n\tand "));
           normsContent.append(".\n");
         }
+
+        Files.writeString(this.protocolOntology, ontologyContent, StandardOpenOption.APPEND);
+        Files.writeString(this.protocolNorms, normsContent, StandardOpenOption.APPEND);
       }
 
-      Files.writeString(this.protocolOntology, ontologyContent, StandardOpenOption.APPEND);
-      Files.writeString(this.protocolNorms, normsContent, StandardOpenOption.APPEND);
+    }
+
+    /**
+     * Add to a list the norms defined of a component.
+     *
+     * @param target          list to add the norms.
+     * @param source          norms to add.
+     * @param defaultPriority the default priority value to use.
+     */
+    private void addNormsTo(final List<ProtocolNorm> target, final List<ProtocolNorm> source,
+        final int defaultPriority) {
+
+      if (source != null) {
+
+        final var max = source.size();
+        for (var i = 0; i < max; i++) {
+
+          final var norm = source.get(i);
+          if (norm.priority == null) {
+
+            norm.priority = defaultPriority + max - i;
+          }
+          target.add(norm);
+
+        }
+      }
 
     }
 

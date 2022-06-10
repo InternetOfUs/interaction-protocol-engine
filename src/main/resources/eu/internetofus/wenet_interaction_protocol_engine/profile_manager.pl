@@ -30,7 +30,12 @@
 	wenet_profile_manager_operations_calculate_similarity/2,
 	wenet_new_similarity_data/3,
 	wenet_attributes_of_similarity_result/3,
-	wenet_profile_manager_get_social_network_relationships_page/10
+	wenet_profile_manager_get_social_network_relationships_page/10,
+	wenet_relevant_locations_of_profile/2,
+	wenet_id_of_relevant_location/2,
+	wenet_label_of_relevant_location/2,
+	wenet_latitude_of_relevant_location/2,
+	wenet_longitude_of_relevant_location/2
 	.
 
 :- discontiguous
@@ -49,7 +54,12 @@
 	wenet_profile_manager_operations_calculate_similarity/2,
 	wenet_new_similarity_data/3,
 	wenet_attributes_of_similarity_result/3,
-	wenet_profile_manager_get_social_network_relationships_page/10
+	wenet_profile_manager_get_social_network_relationships_page/10,
+	wenet_relevant_locations_of_profile/2,
+	wenet_id_of_relevant_location/2,
+	wenet_label_of_relevant_location/2,
+	wenet_latitude_of_relevant_location/2,
+	wenet_longitude_of_relevant_location/2
 	.
 
 
@@ -252,4 +262,59 @@ wenet_profile_manager_get_social_network_relationships_page(Page,AppId,SourceId,
 	wenet_profile_manager_api_url_to(Url,['/relationships']),
 	wenet_add_query_params_to_url(UrlWithParams,Url,[appId=AppId,sourceId=SourceId,targetId=TargetId,type=Type,weightFrom=WeightFrom,weightTo=WeightTo,order=Order,offset=Offset,limit=Limit]),
 	wenet_get_json_from_url(Page,UrlWithParams)
+	.
+
+%!	wenet_relevant_locations_of_profile(-RelevantLocations,+Profile)
+%
+%	Obtain the relevant locations of a profile.
+%
+%	@param RelevantLocations of a profile.
+%	@param Profile to get the relevant locations.
+%
+wenet_relevant_locations_of_profile(RelevantLocations, json(Profile)) :-
+	member(relevantLocations=RelevantLocations,Profile)
+	.
+
+%!	wenet_id_of_relevant_location(-Id,+RelevantLocation)
+%
+%	Obtain the id of a relevant locations.
+%
+%	@param id of the relevant location.
+%	@param RelevantLocation to get the identifier.
+%
+wenet_id_of_relevant_location(Id, json(RelevantLocation)) :-
+	member(id=Id,RelevantLocation)
+	.
+
+%!	wenet_label_of_relevant_location(-Label,+RelevantLocation)
+%
+%	Obtain the label of a relevant locations.
+%
+%	@param label of the relevant location.
+%	@param RelevantLocation to get the label.
+%
+wenet_label_of_relevant_location(Label, json(RelevantLocation)) :-
+	member(label=Label,RelevantLocation)
+	.
+
+%!	wenet_latitude_of_relevant_location(-Latitude,+RelevantLocation)
+%
+%	Obtain the latitude of a relevant locations.
+%
+%	@param latitude of the relevant location.
+%	@param RelevantLocation to get the latitude.
+%
+wenet_latitude_of_relevant_location(Latitude, json(RelevantLocation)) :-
+	member(latitude=Latitude,RelevantLocation)
+	.
+
+%!	wenet_longitude_of_relevant_location(-Longitude,+RelevantLocation)
+%
+%	Obtain the longitude of a relevant locations.
+%
+%	@param longitude of the relevant location.
+%	@param RelevantLocation to get the longitude.
+%
+wenet_longitude_of_relevant_location(Longitude, json(RelevantLocation)) :-
+	member(longitude=Longitude,RelevantLocation)
 	.

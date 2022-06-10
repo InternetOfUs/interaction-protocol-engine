@@ -14,7 +14,7 @@
 % limitations under the License.
 %
 
-:- discontiguous 
+:- discontiguous
 	normengine/1,
 	assert_todo_actions/1,
 	need_to_repeat/3,
@@ -24,7 +24,10 @@
 	check_condition/1,
 	recursive_norm_check/3,
 	check_norms/2,
-	execute_conclusion/2
+	execute_conclusion/2,
+	remove_conflicts/2,
+	negate_actions/3,
+	delay_actions/4
 	.
 :- dynamic fact/1.
 :- dynamic todo/1.
@@ -46,9 +49,14 @@ normengine(Output) :-
     % We also assume the norms and knowledge base of the user and the community are loaded as predicates
     % (and not hidden within the hideous profile structure)
     % For now we only deal with community norms, in the future we need to distinguish community norms from user norms
-    findall([Condition, Conclusion], whenever Condition thenceforth Conclusion, AllNorms),
-    recursive_norm_check([],AllNorms,Output).
+    getnorms(AllNorms),
+    recursive_norm_check([],AllNorms,Output1),
+    flatten(Output1,Output2),
+    remove_conflicts(Output2,Output)
+    .
 
+getnorms(AllNorms) :-
+  findall([Condition, Conclusion], whenever Condition thenceforth Conclusion, AllNorms), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%     NORM ASSESSMENT     %%%
@@ -132,6 +140,57 @@ execute_conclusion(Conclusion,[put(Conclusion)])  :- !,
     assertz(Conclusion).
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% CORE OF CONFLICT RESOLUTION %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+remove_conflicts([],[]).
+remove_conflicts([put(not(Action))|SourceTail],Target) :-
+	negate_actions(Action,SourceTail,NegateTarget),
+	remove_conflicts(NegateTarget,Target)
+	.
+remove_conflicts([put(delay(Action,Delay))|SourceTail],Target) :-
+	delay_actions(Action,Delay,SourceTail,DelayTarget),
+	remove_conflicts(DelayTarget,Target)
+	.
+remove_conflicts([SourceHead|SourceTail],Target) :-
+	remove_conflicts(SourceTail,TargetTail),
+	Target = [SourceHead|TargetTail]
+	.
+
+negate_actions(_,[],[]).
+negate_actions(Action,[put(SourceHead)|SourceTail],Target) :-
+	copy_term(Action,Pattern),
+	(
+		Pattern = SourceHead ->
+			TargetHead = not(SourceHead) ;
+			TargetHead = put(SourceHead)
+	),
+	negate_actions(Action,SourceTail,TargetTail),
+	Target = [TargetHead|TargetTail]
+	.
+negate_actions(Action,[SourceHead|SourceTail],Target) :-
+	negate_actions(Action,SourceTail,TargetTail),
+	Target = [SourceHead|TargetTail]
+	.
+
+delay_actions(_,_,[],[]).
+delay_actions(Action,Delay,[put(SourceHead)|SourceTail],Target) :-
+	copy_term(Action,Pattern),
+	(
+		Pattern = SourceHead ->
+			TargetHead = delay(SourceHead,Delay) ;
+			TargetHead = put(SourceHead)
+	),
+	delay_actions(Action,Delay,SourceTail,TargetTail),
+	Target = [TargetHead|TargetTail]
+	.
+delay_actions(Action,Delay,[SourceHead|SourceTail],Target) :-
+	delay_actions(Action,Delay,SourceTail,TargetTail),
+	Target = [SourceHead|TargetTail]
+	.
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% END NARDINE'S INPUT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% END NARDINES INPUT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

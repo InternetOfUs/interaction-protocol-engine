@@ -43,7 +43,9 @@
 	merge_task_state/1,
 	put_task_state_attribute/2,
 	notify_message_interaction/1,
-	selected_answer_from_last_ranking/1
+	selected_answer_from_last_ranking/1,
+	discard_event/2,
+	discard_event/1
 	.
 
 :- discontiguous
@@ -71,7 +73,9 @@
 	merge_task_state/1,
 	put_task_state_attribute/2,
 	notify_message_interaction/1,
-	selected_answer_from_last_ranking/1
+	selected_answer_from_last_ranking/1,
+	discard_event/2,
+	discard_event/1
 	.
 
 
@@ -117,11 +121,11 @@ notify_incentive_server_task_created() :-
 %!	add_message_transaction()
 %
 %	Add the transaction of the message into the task.
-% 
+%
 add_message_transaction() :-
 	!,
 	get_message(Message),
-	wenet_content_of_protocol_message(Transaction,Message), 
+	wenet_content_of_protocol_message(Transaction,Message),
 	ignore(add_transaction(Transaction)),
 	!,
 	asserta(add_message_transaction())
@@ -471,9 +475,9 @@ selected_answer_from_last_ranking(UserAnswer):-
 					length(Ranking,Selected),
 					wenet_add(NewRanking,UserAnswer,Ranking),
 					wenet_social_context_builder_put_preferences_answers_update(UserId,TaskId,Selected,NewRanking)
-				)  
+				)
 			)
-		
+
 		)
 	)
 	.
@@ -492,7 +496,7 @@ notify_social_context_builder_message_sent(Message) :-
 		get_now(Timestamp),
 		get_transaction(Transaction),
 		wenet_actioneer_id_of_transaction(SenderId,Transaction),
-		wenet_new_user_message(UserMessage,TaskId,TransactionId,Timestamp,SenderId,Message)		
+		wenet_new_user_message(UserMessage,TaskId,TransactionId,Timestamp,SenderId,Message)
 	)->
 	wenet_social_context_builder_post_social_notification(UserMessage)
 	; true
@@ -538,7 +542,7 @@ put_task_state_attribute(Key,Value) :-
 %	Notfy that has been done a message interaction.
 %
 %	@param Message of the interaction.
-% 
+%
 notify_message_interaction(Message) :-
 	(
 		get_app_id(AppId)
@@ -576,14 +580,14 @@ notify_message_interaction(Message) :-
 				; TransactionTs = @(null)
 			)
 		)
-		; SenderId = @(null),TransactionLabel = @(null),TransactionAttributes = @(null), TransactionTs =  @(null) 
+		; SenderId = @(null),TransactionLabel = @(null),TransactionAttributes = @(null), TransactionTs =  @(null)
 	),
 	(
 		(
 			wenet_is_json_null(Message),
 			ReceiverId = @(null),
 			MessageLabel = @(null),
-			MessageAttributes = @(null), 
+			MessageAttributes = @(null),
 			MessageTs =  @(null)
 		)
 		;
@@ -600,9 +604,28 @@ notify_message_interaction(Message) :-
 				wenet_attributes_of_message(MessageAttributes,Message)
 				; MessageAttributes = @(null)
 			),
-			get_now(MessageTs)			
+			get_now(MessageTs)
 		)
 	),
 	wenet_new_interaction(Interaction,AppId,CommunityId,TaskTypeId,TaskId,SenderId,ReceiverId,TransactionLabel,TransactionAttributes,TransactionTs,MessageLabel,MessageAttributes,MessageTs),
 	ignore(wenet_interaction_protocol_engine_add_interaction(Interaction))
 	.
+
+%!	discard_event(+Id)
+%
+%	Discard a sent event.
+%
+%	@param Id identifier of the event to discard.
+%
+discard_event(Id) :-
+	discard_event(_,Id).
+
+%!	discard_event(+Id)
+%
+%	Discard a sent event.
+%
+%	@param Success is {#code true} if the event has been discarded.
+%	@param Id identifier of the event to discard.
+%
+discard_event(Success,Id) :-
+	wenet_interaction_protocol_engine_delete_event(Id) -> Success = true; Success= false.

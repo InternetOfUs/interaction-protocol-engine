@@ -16,12 +16,15 @@
 
 :- dynamic
 	wenet_do_actions/1,
-	wenet_do_norm_actions/1,
-	wenet_do_actions_status/1.
+	wenet_do_action/1,
+	wenet_do_actions_status/1,
+	go/0,
+	check_exist_message/0
+	.
 
 :- discontiguous
 	wenet_do_actions/1,
-	wenet_do_norm_actions/1,
+	wenet_do_action/1,
 	wenet_do_actions_status/1,
 	go/0,
 	check_exist_message/0
@@ -55,14 +58,22 @@ check_exist_message() :-
 %	@param Actions to execute.
 %
 wenet_do_actions([]).
-wenet_do_actions([NormActions|Tail]) :-
-	flatten(NormActions,NormActionstoDo),
-	wenet_do_norm_actions(NormActionstoDo),
+wenet_do_actions([NormAction|Tail]) :-
+	wenet_do_action(NormAction),
 	wenet_do_actions(Tail)
 	.
-wenet_do_actions(_).
 
-wenet_do_norm_actions([]).
-wenet_do_norm_actions([put(NormAction)|Tail]) :-
-	wenet_execute_safetly_once(NormAction),
-	wenet_do_norm_actions(Tail).
+wenet_do_action(put(NormAction)) :-
+	wenet_execute_safetly_once(NormAction)
+	.
+wenet_do_action(not(Action)) :-
+	wenet_execute_safetly_once(wenet_log_trace("Discarded ",Action))
+	.
+wenet_do_action(delay(Action,Delay)) :-
+	term_string(Action,ActionStr),
+	wenet_execute_safetly_once(send_event(_,Delay,'INTERNAL_DELAY_ACTION_EVENT',json([action=ActionStr])))
+	.
+%wenet_do_action(Action) :-
+%	wenet_execute_safetly_once(wenet_log_error("Unknown how to process ",Action))
+%	.
+
