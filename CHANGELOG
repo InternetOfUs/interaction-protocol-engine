@@ -3,11 +3,11 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
-## Version 1.2.0 (2022-05-02)
+## Version 1.2.0 (2022-06-10)
 
  * Fix OpenAPI documentation.
  * Adapt to use the norms priority.
- * Adapt to ignore or delay actions.
+ * Adapt to allow to disable or delay actions.
 
 
 ## Version 1.1.0 (2022-03-17)
