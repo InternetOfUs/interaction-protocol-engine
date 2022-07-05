@@ -996,7 +996,7 @@ normalized_social_closeness(Socialness,Users) :-
 		normalized_social_closeness_(Socialness,Users,Relationships)
 	)
 	-> true
-	; wenet_initialize_user_values(Socialness,Users,0.0)
+	; wenet_initialize_user_values(Socialness,Users,0.5)
 	.
 normalized_social_closeness_([],[],_).
 normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Relationships) :-
@@ -1006,7 +1006,7 @@ normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Rela
 			wenet_target_id_of_relationship(UserId,Relationship)
 		)
 		-> wenet_weight_of_relationship(Weight,Relationship)
-		; Weight = 0.0
+		; Weight = 0.5
 	),
 	!,
 	wenet_new_user_value(UserSocialness,UserId,Weight),
