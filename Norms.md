@@ -451,6 +451,13 @@ The next conditions are used to manage the diversity of some users.
     * ``Diversity``  _Output_  JSON model list with the userId and value on the range [0,1] with the diversity of the user. Where 1 is the maximum diversity and 0 that the user is similar to.
     * ``Users``  _Input_  string list with the identifiers of the users to calculate the diversity respect the current user.
     * ``Attributes``  _Input_  string list  with the names of the attributes of the profile to calculate the diversity.
+- ``normalized_diversity(Diversity,Users,Attributes,DefaultValue,MatchAll)``
+  Calculate the diversity of the current user over some other users spscifing the default value and if has to match all teh atributes or at least one.
+    * ``Diversity``  _Output_  JSON model list with the userId and value on the range [0,1] with the diversity of the user. Where 1 is the maximum diversity and 0 that the user is similar to.
+    * ``Users``  _Input_  string list with the identifiers of the users to calculate the diversity respect the current user.
+    * ``Attributes``  _Input_  string list  with the names of the attributes of the profile to calculate the diversity.
+    * ``DefaultValue``  _Input_  any value to set if can not caluclate the diversity.
+    * ``MatchAll``  _Input_  boolean it is true if has to match all the attributes, or false if it has to match at least one.
 - ``my_profile_attributes_similars_to(Attributes,Text,MinSimilarity)``
   Obtain the attributes of my profile that has a similarity to a text equal or greater than the minimum.
     * ``Attributes``  _Output_  string list  with the name of the profile attributes that are similar to the text.
@@ -901,17 +908,45 @@ The next predicates are used to interact with the profile manager component.
     * ``Id``  _Output_  string with the relevant location identifier.
     * ``RelevantLocation``  _Input_  JSON model of the relevant location to obtain the identifier.
 - ``wenet_label_of_relevant_location(Label, RelevantLocation)``
-    Obtain the label of a relevant location.
+  Obtain the label of a relevant location.
     * ``Label``  _Output_  string with the relevant location label.
     * ``RelevantLocation``  _Input_  JSON model of the relevant location to obtain the label.
 - ``wenet_longitude_of_relevant_location(Longitude, RelevantLocation)``
-    Obtain the longitude of a relevant location.
+  Obtain the longitude of a relevant location.
     * ``Longitude``  _Output_  number with the relevant location longitude.
     * ``RelevantLocation``  _Input_  JSON model of the relevant location to obtain the longitude.
 - ``wenet_latitude_of_relevant_location(Latitude, RelevantLocation)``
-    Obtain the latitude of a relevant location.
+  Obtain the latitude of a relevant location.
     * ``Latitude``  _Output_  number with the relevant location latitude.
     * ``RelevantLocation``  _Input_  JSON model of the relevant location to obtain the latitude.
+- ``wenet_new_diversity_data_match_all(Data,UserIds,AttributeNames)``
+  Create the data necessary to calculate the diversity for some users and for all the attributes.
+    * ``Data``  _Output_  JSON with the information of the users to calculate the diversity.
+    * ``UserIds``  _Input_  list of strings with the identifier of the users to calculate the diversity.
+    * ``AttributeNames``  _Input_  list of strings with the names for the attributes to calculate the diversity.
+- ``wenet_new_diversity_data_match_at_least_one``
+  Create the data necessary to calculate the diversity for some users and for at least one attribute.
+    * ``Data``  _Output_  JSON with the information of the users to calculate the diversity.
+    * ``UserIds``  _Input_  list of strings with the identifier of the users to calculate the diversity.
+    * ``AttributeNames``  _Input_  list of strings with the names for the attributes to calculate the diversity.
+- ``wenet_profile_manager_operations_calculate_diversity(Diversity,Data)``
+  Obtain the diversity form a set of users.
+    * ``Diversity``  _Output_  number on the range [0,1] that represents the users diversity.
+    * ``Data``  _Input_  JSON with the information of the users to calculate the diversity.
+- ``wenet_new_similarity_data(Data,UserId,Source)``
+  Create the data necessary to calculate the similarity for some attributes.
+    * ``Data``  _Output_  JSON with the information of the attributes to calculate the similarity.
+    * ``UserId``  _Input_  string with the user identifier.
+    * ``Source``  _Input_  string with the text to compare.
+- ``wenet_profile_manager_operations_calculate_similarity(Similarity,Data)``
+  Obtain the similarity form a set of attributes.
+    * ``Similarity``  _Output_  JSON with the attribute as name and a value its similarity..
+    * ``Data``  _Input_  JSON with the information of the attributes to calculate the similarity..
+- ``wenet_attributes_of_similarity_result(Attributes,SimilarityResult,MinSimilarity)``
+  Obtain from the similarity operation result the attributes with a minimum similarity value.
+    * ``Attributes``  _Output_  string list of attribute names.
+    * ``SimilarityResult``  _Input_  pair list with the attribute=similarity values obtained form the similarity operation.
+    * ``MinSimilarity``  _Input_  number minimum similarity, exclusive, to get the attribute..
 
 
 ### Task manager
@@ -1467,3 +1502,10 @@ to use them.
   Use wenet_target_id_of_relationship instead.
     * ``UserId``  _Output_  string eith the user identifier of the relationship.
     * ``Relationship``  _Input_  JSON model to get the user identifier.
+
+- ``wenet_new_diversity_data(Data,UserIds,AttributeNames)``
+  Create the data necessary to calculate the diversity for some users.
+  Use wenet_new_diversity_data_match_all
+    * ``Data``  _Output_  JSON with the information of the users to calculate the diversity.
+    * ``UserIds``  _Input_   list of strings with the identifier of the users to calculate the diversity.
+    * ``AttributeNames``  _Input_   list of strings with the names for the attributes to calculate the diversity.

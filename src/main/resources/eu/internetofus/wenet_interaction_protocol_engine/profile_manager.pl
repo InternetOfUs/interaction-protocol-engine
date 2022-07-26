@@ -26,7 +26,8 @@
 	wenet_app_id_of_relationship/2,
 	wenet_weight_id_of_relationship/2,
 	wenet_profile_manager_operations_calculate_diversity/2,
-	wenet_new_diversity_data/3,
+	wenet_new_diversity_data_match_all/3,
+	wenet_new_diversity_data_match_at_least_one/3,
 	wenet_profile_manager_operations_calculate_similarity/2,
 	wenet_new_similarity_data/3,
 	wenet_attributes_of_similarity_result/3,
@@ -50,7 +51,8 @@
 	wenet_app_id_of_relationship/2,
 	wenet_weight_id_of_relationship/2,
 	wenet_profile_manager_operations_calculate_diversity/2,
-	wenet_new_diversity_data/3,
+	wenet_new_diversity_data_match_all/3,
+	wenet_new_diversity_data_match_at_least_one/3,
 	wenet_profile_manager_operations_calculate_similarity/2,
 	wenet_new_similarity_data/3,
 	wenet_attributes_of_similarity_result/3,
@@ -188,16 +190,29 @@ wenet_profile_manager_operations_calculate_diversity(Diversity,Data) :-
 	.
 
 
-%!	wenet_new_diversity_data(-Data,+UserIds,+AttributeNames)
+%!	wenet_new_diversity_data_match_all(-Data,+UserIds,+AttributeNames)
 %
-%	reate the data necessary to calculate the diversity for some users.
+%	Create the data necessary to calculate the diversity for some users and for all the attributes.
 %
 %	@param Data JSON with the information of the users to calculate the diversity.
 %	@param UserIds list of strings with the identifier of the users to calculate the diversity.
 %	@param AttributeNames list of strings with the names for the attributes to calculate the diversity.
 %
-wenet_new_diversity_data(Data,UserIds,AttributeNames) :-
-	Data = json([userIds=UserIds,attributes=AttributeNames])
+wenet_new_diversity_data_match_all(Data,UserIds,AttributeNames) :-
+	Data = json([userIds=UserIds,attributes=AttributeNames,match='ALL'])
+	.
+
+
+%!	wenet_new_diversity_data_match_at_least_one(-Data,+UserIds,+AttributeNames)
+%
+%	Create the data necessary to calculate the diversity for some users and for at least one attribute.
+%
+%	@param Data JSON with the information of the users to calculate the diversity.
+%	@param UserIds list of strings with the identifier of the users to calculate the diversity.
+%	@param AttributeNames list of strings with the names for the attributes to calculate the diversity.
+%
+wenet_new_diversity_data_match_at_least_one(Data,UserIds,AttributeNames) :-
+	Data = json([userIds=UserIds,attributes=AttributeNames,match='AT_LEAST_ONE'])
 	.
 
 %!	wenet_profile_manager_operations_calculate_similarity(-Similarity,+Data)
@@ -217,7 +232,7 @@ wenet_profile_manager_operations_calculate_similarity(Similarity,Data) :-
 %
 %	Create the data necessary to calculate the similarity for some attributes.
 %
-%	@param Data JSON with the information of the attributes to calculate the diversity.
+%	@param Data JSON with the information of the attributes to calculate the similarity.
 %	@param UserId string with the user identifier.
 %	@param Source string with the text to compare.
 %
@@ -227,7 +242,7 @@ wenet_new_similarity_data(Data,UserId,Source) :-
 
 %!	wenet_attributes_of_similarity_result(-Attributes,+SimilarityResult,+MinSimilarity)
 %
-%	Create the data necessary to calculate the similarity for some attributes.
+%	Obtain from the similarity operation result the attributes with a minimum similarity value.
 %
 %	@param Attributes list of attribute names.
 %	@param SimilarityResult the list with the attribute=similarity values.

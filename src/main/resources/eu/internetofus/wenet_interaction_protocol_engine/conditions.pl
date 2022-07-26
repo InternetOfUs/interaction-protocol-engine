@@ -76,7 +76,8 @@
 	normalized_social_closeness/2,
 	normalized_social_closeness_/3,
 	normalized_diversity/3,
-	normalized_diversity_/4,
+	normalized_diversity/5,
+	normalized_diversity_/6,
 	my_profile_attributes_similars_to/3,
 	get_relationships/1,
 	delay_to/2,
@@ -163,7 +164,8 @@
 	normalized_social_closeness/2,
 	normalized_social_closeness_/3,
 	normalized_diversity/3,
-	normalized_diversity_/4,
+	normalized_diversity/5,
+	normalized_diversity_/6,
 	my_profile_attributes_similars_to/3,
 	get_relationships/1,
 	delay_to/2,
@@ -1022,27 +1024,44 @@ normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Rela
 %	@param Attributes array with the names of the attributes to calculate the diversity.
 %
 normalized_diversity(Diversity,Users,Attributes) :-
+	normalized_diversity(Diversity,Users,Attributes,0.0,true)
+	.
+
+%!	normalized_diversity(-Diversity,+Users,+Attributes,+DefaultValue,+MatchAll)
+%
+%	Calculate the diversity of the current user over some other users spscifing the default value
+%   and if has to match all teh atributes or at least one.
+%
+%	@param Diversity a value in the range [0,1] that says how the diverse are the users team.
+%	@param Users array with the users identifiers to calculate the diversity.
+%	@param Attributes array with the names of the attributes to calculate the diversity.
+%	@param DefaultValue array with the names of the attributes to calculate the diversity.
+%	@param Attributes array with the names of the attributes to calculate the diversity.
+%
+normalized_diversity(Diversity,Users,Attributes,DefaultValue,MatchAll) :-
 	(
 		get_profile_id(Me),
-		normalized_diversity_(Diversity,Users,Attributes,Me)
+		normalized_diversity_(Diversity,Users,Attributes,Me,DefaultValue,MatchAll)
 	)
 	-> true
-	; wenet_initialize_user_values(Diversity,Users,0.0)
+	; wenet_initialize_user_values(Diversity,Users,DefaultValue)
 	.
-normalized_diversity_([],[],_,_).
-normalized_diversity_([UserDiversity|UsersDiversity],[User|Users],Attributes,Me) :-
+
+
+normalized_diversity_([],[],_,_,_,_).
+normalized_diversity_([UserDiversity|UsersDiversity],[User|Users],Attributes,Me,DefaultValue,MatchAll) :-
 	(
 		(
-			wenet_new_diversity_data(Data,[Me,User],Attributes),
+			( MatchAll = true -> wenet_new_diversity_data_match_all(Data,[Me,User],Attributes);wenet_new_diversity_data_match_at_least_one(Data,[Me,User],Attributes)),
 			!,
 			wenet_profile_manager_operations_calculate_diversity(Diversity,Data)
 		)
 		-> true
-		; Diversity = 0.0
+		; Diversity = DefaultValue
 	),
 	!,
 	wenet_new_user_value(UserDiversity,User,Diversity),
-	normalized_diversity_(UsersDiversity,Users,Attributes,Me)
+	normalized_diversity_(UsersDiversity,Users,Attributes,Me,DefaultValue,MatchAll)
 	.
 
 %!	my_profile_attributes_similars_to(-Attributes,+Text,+MinSimilarity)
