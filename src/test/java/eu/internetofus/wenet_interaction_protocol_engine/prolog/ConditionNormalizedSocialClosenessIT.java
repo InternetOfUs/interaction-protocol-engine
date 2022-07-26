@@ -113,7 +113,7 @@ public class ConditionNormalizedSocialClosenessIT extends AbstractPrologITC {
 
       final var normalized = new JsonObject();
       normalized.put("userId", this.users.get(i).id);
-      var value = 0.0;
+      var value = 0.5;
       if (i % 2 == 0) {
 
         value = Math.max(0.0, 1.0 - 0.1 * i);
