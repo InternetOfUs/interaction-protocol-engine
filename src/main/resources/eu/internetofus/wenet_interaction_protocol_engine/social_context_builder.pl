@@ -65,7 +65,8 @@ wenet_social_context_builder_url_to(Url,Paths) :-
 %
 wenet_social_context_builder_post_preferences(Ranking,UserId,TaskId,Users) :-
 	wenet_social_context_builder_url_to(Url,['/social/preferences/',UserId,'/',TaskId,'/']),
-	wenet_post_json_to_url(Ranking,Url,Users)
+	wenet_post_json_to_url(json(Result),Url,json([users_IDs=Users])),
+	member(users_IDs=Ranking,Result)
 	.
 
 %!	wenet_social_context_builder_retrieve_social_explanation(-SocialExplanation,+UserId,+TaskId)
@@ -102,7 +103,7 @@ wenet_description_of_social_explanation(Description,json(SocialExplanation)) :-
 wenet_summary_of_social_explanation(Summary,json(SocialExplanation)) :-
 	member('Summary'=Summary,SocialExplanation)
 	.
-	
+
 %!	wenet_social_context_builder_post_preferences_answers(-Ranking,+UserId,+TaskId,+UserAnswers)
 %
 %	Post the preferences answers of an user. This is used to calculate the ranking of the answers.
@@ -144,7 +145,7 @@ wenet_answer_of_user_answer(Answer,json(UserAnswer)) :-
 %
 %	Obtain the id of a task.
 %
-%	@param UserAnswer 
+%	@param UserAnswer
 %	@param UserId user idnetifier fro the model.
 %	@param Answer for the model.
 %
@@ -208,5 +209,5 @@ wenet_social_context_builder_put_preferences_answers_update(UserId,TaskId,Select
 	wenet_social_context_builder_url_to(Url,['/social/preferences/answers/',UserId,'/',TaskId,'/',Selected,'/update']),
 	wenet_put_json_to_url(_,Url,json([data=Ranking]))
 	.
-	
+
 
