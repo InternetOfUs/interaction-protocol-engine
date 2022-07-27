@@ -121,6 +121,8 @@ public class ConditionsIT extends AbstractConditionsITC {
     conditions.add("is_now_between_times('" + lower + "','" + upper + "')");
     conditions.add("is_now_between_times(\"" + lower + "\",\"" + upper + "\")");
 
+    conditions.add("get_profile_language(\"" + this.users.get(0).locale.substring(0, 2) + "\")");
+
     return conditions;
 
   }

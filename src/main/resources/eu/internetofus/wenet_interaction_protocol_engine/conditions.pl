@@ -106,7 +106,8 @@
 	is_current_location_near/2,
 	is_current_location_near/3,
 	is_current_location_near_relevant/2,
-	is_current_location_near_relevant/1
+	is_current_location_near_relevant/1,
+	get_profile_language/1
 	.
 
 :- discontiguous
@@ -194,7 +195,8 @@
 	is_current_location_near/2,
 	is_current_location_near/3,
 	is_current_location_near_relevant/2,
-	is_current_location_near_relevant/1
+	is_current_location_near_relevant/1,
+	get_profile_language/1
 	.
 
 %!	is_now_less_than(+Time)
@@ -1402,4 +1404,14 @@ is_current_location_near_relevant(Name,MaxDistance) :-
 	wenet_latitude_of_relevant_location(Latitude,RelevantLocation),
 	wenet_longitude_of_relevant_location(Longitude,RelevantLocation),
 	is_current_location_near(Latitude,Longitude,MaxDistance)
+	.
+
+
+%!	get_profile_language(-Lang)
+%
+%	Extract the language from the profile locale. If it is not defined it return 'en'.
+%
+%	@param Lang the language of the user defined on the profile. If it is not defined return 'en'.
+get_profile_language(Lang) :-
+	(get_profile(Profile), get_attribute(Locale,locale,'en',Profile),sub_string(Locale,0,2,_,Lang)) -> true ; Lang = 'en'
 	.
