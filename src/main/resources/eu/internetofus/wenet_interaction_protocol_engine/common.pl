@@ -568,7 +568,7 @@ wenet_negate_user_value([],[]).
 wenet_negate_user_value([Target|TargetRest],[Source|SourceRest]) :-
 	wenet_user_id_from_user_value(UserId,Source),
 	wenet_value_from_user_value(Value,Source),
-	Negate is 1.0 - Value,
+	(number(Value) -> Negate is 1.0 - Value ; Negate = Value),
 	wenet_new_user_value(Target,UserId,Negate),
 	wenet_negate_user_value(TargetRest,SourceRest)
 	.
@@ -584,7 +584,7 @@ wenet_user_values_to_value_user_id_pairs([],[]).
 wenet_user_values_to_value_user_id_pairs([Pair|Pairs],[User|Users]) :-
 	wenet_user_id_from_user_value(UserId,User),
 	wenet_value_from_user_value(Value,User),
-	Pair = Value-UserId,
+	( number(Value) -> Pair = Value-UserId ; Pair = -1-UserId),
 	wenet_user_values_to_value_user_id_pairs(Pairs,Users)
 	.
 
@@ -597,7 +597,7 @@ wenet_user_values_to_value_user_id_pairs([Pair|Pairs],[User|Users]) :-
 %
 wenet_value_user_id_pairs_to_user_values([],[]).
 wenet_value_user_id_pairs_to_user_values([User|Users],[Value-UserId|Pairs]) :-
-	wenet_new_user_value(User,UserId,Value),
+	( Value = -1  -> wenet_new_user_value(User,UserId,@(null)) ; wenet_new_user_value(User,UserId,Value) ),
 	wenet_value_user_id_pairs_to_user_values(Users,Pairs)
 	.
 
