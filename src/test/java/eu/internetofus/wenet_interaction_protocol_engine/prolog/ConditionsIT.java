@@ -123,6 +123,13 @@ public class ConditionsIT extends AbstractConditionsITC {
 
     conditions.add("get_profile_language(\"" + this.users.get(0).locale.substring(0, 2) + "\")");
 
+    conditions.add(
+        "wenet_value_of_user_id_from_user_values(1.0,\"0\",[json([userId=\"0\",value=1.0]),json([userId=\"1\",value=0.0])],-1)");
+    conditions.add(
+        "wenet_value_of_user_id_from_user_values(0.0,\"1\",[json([userId=\"0\",value=1.0]),json([userId=\"1\",value=0.0])],-1)");
+    conditions.add(
+        "wenet_value_of_user_id_from_user_values(-1,\"2\",[json([userId=\"0\",value=1.0]),json([userId=\"1\",value=0.0])],-1)");
+
     return conditions;
 
   }

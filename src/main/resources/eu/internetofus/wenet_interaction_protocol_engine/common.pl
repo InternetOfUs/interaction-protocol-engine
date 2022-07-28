@@ -45,7 +45,8 @@
 	wenet_user_values_to_user_ids/2,
 	wenet_product_user_values/3,
 	wenet_error_to_string/2,
-	wenet_to_string/2
+	wenet_to_string/2,
+	wenet_value_of_user_id_from_user_values/4
 	.
 
 :- discontiguous
@@ -79,7 +80,8 @@
 	wenet_user_values_to_user_ids/2,
 	wenet_product_user_values/3,
 	wenet_error_to_string/2,
-	wenet_to_string/2
+	wenet_to_string/2,
+	wenet_value_of_user_id_from_user_values/4
 	.
 
 :- autoload(library(http/json)).
@@ -641,14 +643,27 @@ wenet_product_user_values([],[],_).
 wenet_product_user_values([Product|Products],[User|Users],Source) :-
 	wenet_user_id_from_user_value(UserId,User),
 	wenet_value_from_user_value(Value,User),
-	(
-		( member(SourceUser,Source), wenet_user_id_from_user_value(UserId,SourceUser), wenet_value_from_user_value(SourceValue,SourceUser) )
-		-> ProductValue is Value * SourceValue
-		; ProductValue = 0.0
-	),
+	wenet_value_of_user_id_from_user_values(SourceValue,UserId,Source,0.0),
+	ProductValue is Value * SourceValue,
 	!,
 	wenet_new_user_value(Product,UserId,ProductValue),
 	wenet_product_user_values(Products,Users,Source)
+	.
+
+	
+%!	wenet_value_of_user_id_from_user_values(-Value,+UserId,+UserValues,+DefaultValue)
+%
+%	Obtain the value associated to a user .
+%
+%	@param Value associated to the user.
+%	@param UserId identifier of teh user to get the value.
+%	@param UserValues list of user values to obtain the value of a user.
+%	@param DefaultValue value to return if it is not defined.
+%
+wenet_value_of_user_id_from_user_values(Value,UserId,UserValues,DefaultValue) :-
+	( member(UserValue,UserValues), wenet_user_id_from_user_value(UserId,UserValue) )
+	-> wenet_value_from_user_value(Value,UserValue)
+	; Value = DefaultValue
 	.
 
 
