@@ -665,6 +665,10 @@ These actions interact with the other components of the WeNet platform.
 - ``notify_social_context_builder_message_sent(Message)``
   This action notifies the social context builder that a message is sent to the user.
     * ``Message``  _Input_  JSON model with the sent message.
+- ``social_ranking(ShuffledUserIds,UserIds)``
+  Shuffle the user based on diversity attributes.
+    * ``ShuffledUserIds``  _Output_  array of strings with the shuffled user ids.
+    * ``UserIds``  _Input_  array of strings with the user identifiers to shuffle.
 
 
 ## Other Useful Norms predicates
@@ -1379,6 +1383,10 @@ The next predicates are used to interact with the social context builder compone
     * ``Timestamp``  _Input_  number with the UTC epoch timestamp when the interaction is done.
     * ``SenderId``  _Input_  string with the identifier of the user that started the interaction.
     * ``Message``  _Input_  JSON model with the message that is sent to the user.
+- ``wenet_social_context_builder_post_social_shuffle(ShuffledUserIds,UserIds)``
+  Shuffle the user based on diversity attributes.
+    * ``ShuffledUserIds``  _Output_  JSON model with the interaction message between the users.
+    * ``UserIds``  _Input_  array of strings with the shuffled user ids.
 
 
 ### Personal context builder

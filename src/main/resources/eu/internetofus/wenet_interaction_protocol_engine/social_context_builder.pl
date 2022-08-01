@@ -26,7 +26,8 @@
 	wenet_new_user_answer/3,
 	wenet_social_context_builder_post_social_notification/1,
 	wenet_new_user_message/6,
-	wenet_social_context_builder_put_preferences_answers_update/4
+	wenet_social_context_builder_put_preferences_answers_update/4,
+	wenet_social_context_builder_post_social_shuffle/2
 	.
 
 :- discontiguous
@@ -41,7 +42,8 @@
 	wenet_new_user_answer/3,
 	wenet_social_context_builder_post_social_notification/1,
 	wenet_new_user_message/6,
-	wenet_social_context_builder_put_preferences_answers_update/4
+	wenet_social_context_builder_put_preferences_answers_update/4,
+	wenet_social_context_builder_post_social_shuffle/2
 	.
 
 
@@ -210,4 +212,16 @@ wenet_social_context_builder_put_preferences_answers_update(UserId,TaskId,Select
 	wenet_put_json_to_url(_,Url,json([data=Ranking]))
 	.
 
+%!	wenet_social_context_builder_post_social_shuffle(-ShuffledUserIds,+UserIds)
+%
+%	Shuffle the user based on diversity attributes.
+%
+%	@param ShuffledUserIds array of strings with the shuffled user ids.
+%	@param UserIds array of strings with the user identifiers to shuffle.
+%
+wenet_social_context_builder_post_social_shuffle(ShuffledUserIds,UserIds) :-
+	wenet_social_context_builder_url_to(Url,['/social/shuffle']),
+	wenet_post_json_to_url(json(Result),Url,json([users_IDs=UserIds])),
+	member(users_IDs=ShuffledUserIds,Result)
+	.
 
