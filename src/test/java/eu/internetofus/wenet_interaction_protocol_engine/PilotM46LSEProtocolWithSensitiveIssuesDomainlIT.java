@@ -21,7 +21,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine;
 
 import eu.internetofus.common.protocols.DefaultProtocols;
-import eu.internetofus.common.protocols.PilotM46LSEProtocolWithRandomThroughtdOrSenditiveIssuesDomainslITC;
+import eu.internetofus.common.protocols.PilotM46LSEProtocolWithSensitiveIssuesDomainITC;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
@@ -32,7 +32,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class PilotM46LSEProtocolWithRandomThroughtdOrSenditiveIssuesDomainslIT
-    extends PilotM46LSEProtocolWithRandomThroughtdOrSenditiveIssuesDomainslITC {
+public class PilotM46LSEProtocolWithSensitiveIssuesDomainlIT extends PilotM46LSEProtocolWithSensitiveIssuesDomainITC {
 
 }
