@@ -1057,6 +1057,7 @@ normalized_diversity(Diversity,Users,Attributes) :-
 %
 normalized_diversity(Diversity,Users,Attributes,DefaultValue,MatchAll) :-
 	(
+		not(length(Attributes,0)),
 		get_profile_id(Me),
 		normalized_diversity_(Diversity,Users,Attributes,Me,DefaultValue,MatchAll)
 	)
