@@ -28,7 +28,7 @@ whenever
 	and get_task_attribute_value('similar','socialCloseness')
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-	normalized_social_closeness(SocialClosenessUsers,Users)
+	normalized_social_closeness(SocialClosenessUsers,Users,@(null))
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 % Order the users by different social closeness
@@ -37,11 +37,9 @@ whenever
 	and get_task_attribute_value('different','socialCloseness')
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-    normalized_social_closeness(Socialness,Users)
-
-and wenet_negate_user_value(SocialClosenessUsers,Socialness)
-
-and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
+    normalized_social_closeness(Socialness,Users,@(null))
+	and wenet_negate_user_value(SocialClosenessUsers,Socialness)
+	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 % Users social closeness is indifferent
 whenever
@@ -166,6 +164,95 @@ are_all_dimensions_indifferent() :-
 	get_task_attribute_value('indifferent','domainInterest'),
 	get_task_attribute_value('indifferent','beliefsAndValues'),
 	get_task_attribute_value('indifferent','socialCloseness').
+
+% Calculate match value for ‘basic needs’, ‘appreciating culture’, ‘performing/producing culture’, ‘physical activities/sports’, or ‘things to do about town’ domains
+whenever
+	is_received_event('aggregateUsersByDiversity',_)
+	and not(are_all_dimensions_indifferent())
+	and get_task_attribute_value(Domain,'domain')
+	and member(Domain,['food_and_cooking','cultural_interests','arts_and_crafts','physical_activity','local_things'])
+thenceforth
+	calculate_match_degree_for_basic_needs_and_other_domains(MatchUsers)
+	and put_task_state_attribute('matchUsers',MatchUsers).
+
+:- dynamic
+	calculate_match_degree_for_basic_needs_and_other_domains/1,
+	calculate_match_degree_for_basic_needs_and_other_domains_/5,
+	calculate_user_match_degree_for_basic_needs_and_other_domains/5.
+
+calculate_match_degree_for_basic_needs_and_other_domains(ReverseSortedMatchUsers) :-
+	get_task_state_attribute(Users,'appUsers'),
+	get_task_state_attribute(SocialClosenessUsers,'socialClosenessUsers'),
+	get_task_state_attribute(BeliefsAndValuesUsers,'beliefsAndValuesUsers'),
+	get_task_state_attribute(DomainInterestUsers,'domainInterestUsers'),
+	calculate_match_degree_for_basic_needs_and_other_domains_(MatchUsers,Users,SocialClosenessUsers,DomainInterestUsers,BeliefsAndValuesUsers),
+	wenet_sort_user_values_by_value(SortedMatchUsers,MatchUsers),
+	reverse(ReverseSortedMatchUsers,SortedMatchUsers)
+	.
+
+calculate_match_degree_for_basic_needs_and_other_domains_([],[],_,_,_).
+calculate_match_degree_for_basic_needs_and_other_domains_([MatchUser|MatchUsers],[UserId|UserIds],SocialClosenessUsers,DomainInterestUsers,BeliefsAndValuesUsers) :-
+	calculate_user_match_degree_for_basic_needs_and_other_domains(Value,UserId,SocialClosenessUsers,DomainInterestUsers,BeliefsAndValuesUsers),
+	wenet_new_user_value(MatchUser,UserId,Value),
+	calculate_match_degree_for_basic_needs_and_other_domains_(MatchUsers,UserIds,SocialClosenessUsers,DomainInterestUsers,BeliefsAndValuesUsers)
+	.
+
+calculate_user_match_degree_for_basic_needs_and_other_domains(Value,UserId,SocialClosenessUsers,DomainInterestUsers,BeliefsAndValuesUsers) :-
+	wenet_value_of_user_id_from_user_values(DomainInterest,UserId,DomainInterestUsers,@(null)),
+	wenet_value_of_user_id_from_user_values(BeliefsAndValues,UserId,BeliefsAndValuesUsers,@(null)),
+	wenet_value_of_user_id_from_user_values(SocialCloseness,UserId,SocialClosenessUsers,@(null)),
+	( number(DomainInterest) -> X = 1; X = 0 ),
+	( number(BeliefsAndValues) -> Y = 1; Y = 0 ),
+	( number(SocialCloseness) -> Z = 1; Z = 0 ),
+	( number(DomainInterest) -> MdX = DomainInterest; MdX = 0 ),
+	( number(BeliefsAndValues) -> MdV = BeliefsAndValues; MdV = 0 ),
+	( number(SocialCloseness) -> MdSC = SocialCloseness; MdSC = 0 ),
+	( (X = 0 , Y = 0, Z = 0) -> Value = 0 ; Value is (3*X*MdX + Y*MdV + Z*MdSC)/(3*X + Y + Z) )
+	.
+
+
+% Calculate match value for ‘campus life’ domain
+whenever
+	is_received_event('aggregateUsersByDiversity',_)
+	and not(are_all_dimensions_indifferent())
+	and get_task_attribute_value('local_university','domain')
+thenceforth
+	calculate_match_degree_for_campus_life_domain(MatchUsers)
+	and put_task_state_attribute('matchUsers',MatchUsers).
+
+:- dynamic calculate_match_degree_for_campus_life_domain/1.
+calculate_match_degree_for_campus_life_domain(MatchUsers) :-
+	MatchUsers = [].
+
+
+% Calculate match value for ‘academic skills’ domain
+whenever
+	is_received_event('aggregateUsersByDiversity',_)
+	and not(are_all_dimensions_indifferent())
+	and get_task_attribute_value('studying_career','domain')
+thenceforth
+	calculate_match_degree_for_academic_skills_domain(MatchUsers)
+	and put_task_state_attribute('matchUsers',MatchUsers).
+
+:- dynamic calculate_match_degree_for_academic_skills_domain/1.
+calculate_match_degree_for_academic_skills_domain(MatchUsers) :-
+	MatchUsers = [].
+
+
+% Calculate match value for ‘random thoughts’ or ‘sensitive issues’ domains
+whenever
+	is_received_event('aggregateUsersByDiversity',_)
+	and not(are_all_dimensions_indifferent())
+	and get_task_attribute_value(Domain,'domain')
+	and member(Domain,['varia_misc','life_ponders'])
+thenceforth
+	calculate_match_degree_for_random_thougs_and_other_domains(MatchUsers)
+	and put_task_state_attribute('matchUsers',MatchUsers).
+
+:- dynamic calculate_match_degree_for_random_thougs_and_other_domains/1.
+calculate_match_degree_for_random_thougs_and_other_domains(MatchUsers) :-
+	MatchUsers = [].
+
 
 % After caluclated the matching go to rank them
 whenever
@@ -376,3 +463,6 @@ thenceforth
 	send_user_message('QuestionExpirationMessage',json([taskId=TaskId,question=Question,listOfTransactionIds=AnswersTransactionIds]))
 	and cancel_expiration_event().
 
+
+[{"userId":"62e40ba71f209b3c24ca6d7d","value":0.9099999999999999},{"userId":"62e40ba71f209b3c24ca6d78","value":0.818},{"userId":"62e40ba81f209b3c24ca6d7f","value":0.808},{"userId":"62e40ba71f209b3c24ca6d7a","value":0.716},{"userId":"62e40ba71f209b3c24ca6d7e","value":0.7060000000000001},{"userId":"62e40ba71f209b3c24ca6d7b","value":0.614},{"userId":"62e40ba71f209b3c24ca6d7c","value":0.512},{"userId":"62e40ba71f209b3c24ca6d6f","value":0.0},{"userId":"62e40ba61f209b3c24ca6d6d","value":0.0},{"userId":"62e40ba61f209b3c24ca6d6e","value":0.0}]
+[{"userId":"62e40ba71f209b3c24ca6d7d","value":0.9099999999999999},{"userId":"62e40ba71f209b3c24ca6d78","value":0.818},{"userId":"62e40ba81f209b3c24ca6d7f","value":0.808},{"userId":"62e40ba71f209b3c24ca6d7a","value":0.716},{"userId":"62e40ba71f209b3c24ca6d7e","value":0.7060000000000001},{"userId":"62e40ba71f209b3c24ca6d7b","value":0.614},{"userId":"62e40ba61f209b3c24ca6d6d","value":0.52},{"userId":"62e40ba71f209b3c24ca6d7c","value":0.512},{"userId":"62e40ba61f209b3c24ca6d6e","value":0.51},{"userId":"62e40ba71f209b3c24ca6d6f","value":0.5}]
