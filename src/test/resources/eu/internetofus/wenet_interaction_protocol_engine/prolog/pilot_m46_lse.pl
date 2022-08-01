@@ -284,7 +284,7 @@ calculate_user_match_degree_for_academic_skills_domain(Value,UserId,SocialClosen
 	( number(DomainInterest) -> MdX = DomainInterest; MdX = 0 ),
 	( number(BeliefsAndValues) -> MdV = BeliefsAndValues; MdV = 0 ),
 	( number(SocialCloseness) -> MdSC = SocialCloseness; MdSC = 0 ),
-	( (X = 0 , Y = 0, Z = 0) -> Value = 0 ; Value is (X*MdX + Y*MdV + 3*Z*MdSC)/(X + Y + 3*Z) )
+	( (X = 0 , Y = 0, Z = 0) -> Value = 0 ; Value is (8*X*MdX + Y*MdV + Z*MdSC)/(8*X + Y + Z) )
 	.
 
 
@@ -295,12 +295,40 @@ whenever
 	and get_task_attribute_value(Domain,'domain')
 	and member(Domain,['random_thoughts','sensitive_issues'])
 thenceforth
-	calculate_match_degree_for_random_thougs_and_other_domains(MatchUsers)
+	calculate_match_degree_for_random_thougs_or_sensitive_issues_domains(MatchUsers)
 	and put_task_state_attribute('matchUsers',MatchUsers).
 
-:- dynamic calculate_match_degree_for_random_thougs_and_other_domains/1.
-calculate_match_degree_for_random_thougs_and_other_domains(MatchUsers) :-
-	MatchUsers = [].
+
+:- dynamic
+	calculate_match_degree_for_random_thougs_or_sensitive_issues_domains/1,
+	calculate_match_degree_for_random_thougs_or_sensitive_issues_domains_/4,
+	calculate_user_match_degree_for_random_thougs_or_sensitive_issues_domains/4.
+
+calculate_match_degree_for_random_thougs_or_sensitive_issues_domains(ReverseSortedMatchUsers) :-
+	get_task_state_attribute(Users,'appUsers'),
+	get_task_state_attribute(SocialClosenessUsers,'socialClosenessUsers'),
+	get_task_state_attribute(BeliefsAndValuesUsers,'beliefsAndValuesUsers'),
+	calculate_match_degree_for_random_thougs_or_sensitive_issues_domains_(MatchUsers,Users,SocialClosenessUsers,BeliefsAndValuesUsers),
+	wenet_sort_user_values_by_value(SortedMatchUsers,MatchUsers),
+	reverse(ReverseSortedMatchUsers,SortedMatchUsers)
+	.
+
+calculate_match_degree_for_random_thougs_or_sensitive_issues_domains_([],[],_,_).
+calculate_match_degree_for_random_thougs_or_sensitive_issues_domains_([MatchUser|MatchUsers],[UserId|UserIds],SocialClosenessUsers,BeliefsAndValuesUsers) :-
+	calculate_user_match_degree_for_random_thougs_or_sensitive_issues_domains(Value,UserId,SocialClosenessUsers,BeliefsAndValuesUsers),
+	wenet_new_user_value(MatchUser,UserId,Value),
+	calculate_match_degree_for_random_thougs_or_sensitive_issues_domains_(MatchUsers,UserIds,SocialClosenessUsers,BeliefsAndValuesUsers)
+	.
+
+calculate_user_match_degree_for_random_thougs_or_sensitive_issues_domains(Value,UserId,SocialClosenessUsers,BeliefsAndValuesUsers) :-
+	wenet_value_of_user_id_from_user_values(BeliefsAndValues,UserId,BeliefsAndValuesUsers,@(null)),
+	wenet_value_of_user_id_from_user_values(SocialCloseness,UserId,SocialClosenessUsers,@(null)),
+	( number(BeliefsAndValues) -> Y = 1; Y = 0 ),
+	( number(SocialCloseness) -> Z = 1; Z = 0 ),
+	( number(BeliefsAndValues) -> MdV = BeliefsAndValues; MdV = 0 ),
+	( number(SocialCloseness) -> MdSC = SocialCloseness; MdSC = 0 ),
+	( ( Y = 0, Z = 0) -> Value = 0 ; Value is ( Y*MdV + Z*MdSC)/(Y + Z) )
+	.
 
 
 % After caluclated the matching go to rank them
@@ -511,7 +539,3 @@ whenever
 thenceforth
 	send_user_message('QuestionExpirationMessage',json([taskId=TaskId,question=Question,listOfTransactionIds=AnswersTransactionIds]))
 	and cancel_expiration_event().
-
-
-[{"userId":"62e40ba71f209b3c24ca6d7d","value":0.9099999999999999},{"userId":"62e40ba71f209b3c24ca6d78","value":0.818},{"userId":"62e40ba81f209b3c24ca6d7f","value":0.808},{"userId":"62e40ba71f209b3c24ca6d7a","value":0.716},{"userId":"62e40ba71f209b3c24ca6d7e","value":0.7060000000000001},{"userId":"62e40ba71f209b3c24ca6d7b","value":0.614},{"userId":"62e40ba71f209b3c24ca6d7c","value":0.512},{"userId":"62e40ba71f209b3c24ca6d6f","value":0.0},{"userId":"62e40ba61f209b3c24ca6d6d","value":0.0},{"userId":"62e40ba61f209b3c24ca6d6e","value":0.0}]
-[{"userId":"62e40ba71f209b3c24ca6d7d","value":0.9099999999999999},{"userId":"62e40ba71f209b3c24ca6d78","value":0.818},{"userId":"62e40ba81f209b3c24ca6d7f","value":0.808},{"userId":"62e40ba71f209b3c24ca6d7a","value":0.716},{"userId":"62e40ba71f209b3c24ca6d7e","value":0.7060000000000001},{"userId":"62e40ba71f209b3c24ca6d7b","value":0.614},{"userId":"62e40ba61f209b3c24ca6d6d","value":0.52},{"userId":"62e40ba71f209b3c24ca6d7c","value":0.512},{"userId":"62e40ba61f209b3c24ca6d6e","value":0.51},{"userId":"62e40ba71f209b3c24ca6d6f","value":0.5}]
