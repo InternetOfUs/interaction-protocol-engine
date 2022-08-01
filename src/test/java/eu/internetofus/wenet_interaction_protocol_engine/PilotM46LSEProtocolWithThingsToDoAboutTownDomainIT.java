@@ -21,7 +21,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine;
 
 import eu.internetofus.common.protocols.DefaultProtocols;
-import eu.internetofus.common.protocols.PilotM46LSEProtocolWithBasicNeedsOrOtherDomainsITC;
+import eu.internetofus.common.protocols.PilotM46LSEProtocolWithThingsToDoAboutTownDomainITC;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
@@ -32,7 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class PilotM46LSEProtocolWithBasicNeedsOrOtherDomainsIT
-    extends PilotM46LSEProtocolWithBasicNeedsOrOtherDomainsITC {
+public class PilotM46LSEProtocolWithThingsToDoAboutTownDomainIT
+    extends PilotM46LSEProtocolWithThingsToDoAboutTownDomainITC {
 
 }
