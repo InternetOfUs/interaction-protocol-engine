@@ -436,7 +436,7 @@ volunteers_ranking(Ranking,Volunteers):-
 	get_profile_id(Me),
 	get_task_id(TaskId),
 	!,
-	ignore(wenet_social_context_builder_post_preferences(Ranking,Me,TaskId,Volunteers))
+	( wenet_social_context_builder_post_preferences(Ranking,Me,TaskId,Volunteers) -> true ; Ranking = Volunteers)
 	.
 
 %!	answers_ranking(-Ranking,+Answers)
@@ -641,5 +641,5 @@ discard_event(Success,Id) :-
 %	@param UserIds array of strings with the user identifiers to shuffle.
 %
 social_ranking(ShuffledUserIds,UserIds) :-
-	ignore(wenet_social_context_builder_post_preferences(ShuffledUserIds,UserIds))
+	( wenet_social_context_builder_post_preferences(ShuffledUserIds,UserIds) ->true ; ShuffledUserIds = UserIds )
 	.

@@ -650,7 +650,7 @@ wenet_product_user_values([Product|Products],[User|Users],Source) :-
 	wenet_product_user_values(Products,Users,Source)
 	.
 
-	
+
 %!	wenet_value_of_user_id_from_user_values(-Value,+UserId,+UserValues,+DefaultValue)
 %
 %	Obtain the value associated to a user .
@@ -662,7 +662,7 @@ wenet_product_user_values([Product|Products],[User|Users],Source) :-
 %
 wenet_value_of_user_id_from_user_values(Value,UserId,UserValues,DefaultValue) :-
 	( member(UserValue,UserValues), wenet_user_id_from_user_value(UserId,UserValue) )
-	-> wenet_value_from_user_value(Value,UserValue)
+	-> ( wenet_value_from_user_value(Value,UserValue) ->true; Value = DefaultValue )
 	; Value = DefaultValue
 	.
 

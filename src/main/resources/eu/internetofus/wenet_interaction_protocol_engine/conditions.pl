@@ -74,7 +74,8 @@
 	normalized_closeness/3,
 	normalized_closeness_/5,
 	normalized_social_closeness/2,
-	normalized_social_closeness_/3,
+	normalized_social_closeness/3,
+	normalized_social_closeness_/4,
 	normalized_diversity/3,
 	normalized_diversity/5,
 	normalized_diversity_/6,
@@ -163,7 +164,8 @@
 	normalized_closeness/3,
 	normalized_closeness_/5,
 	normalized_social_closeness/2,
-	normalized_social_closeness_/3,
+	normalized_social_closeness/3,
+	normalized_social_closeness_/4,
 	normalized_diversity/3,
 	normalized_diversity/5,
 	normalized_diversity_/6,
@@ -994,27 +996,40 @@ normalized_closeness_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,L
 %	@param Users identifiers of the users to calculate the socialness.
 %
 normalized_social_closeness(Socialness,Users) :-
+	normalized_social_closeness(Socialness,Users,0.5)
+	.
+
+%!	normalized_social_closeness(-Socialness,+Users,+DefaultValue)
+%
+%	Calculate the socialness of a user respect some others.
+%
+%	@param Socialness a list with the socialness between a user and some others.
+%	@param Users identifiers of the users to calculate the socialness.
+%	@param DefaultValue value to use cannot obtain the social closeness.
+%
+normalized_social_closeness(Socialness,Users,DefaultValue) :-
 	(
 		get_relationships(Relationships),
 		!,
-		normalized_social_closeness_(Socialness,Users,Relationships)
+		normalized_social_closeness_(Socialness,Users,DefaultValue,Relationships)
 	)
 	-> true
-	; wenet_initialize_user_values(Socialness,Users,0.5)
+	; wenet_initialize_user_values(Socialness,Users,DefaultValue)
 	.
-normalized_social_closeness_([],[],_).
-normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Relationships) :-
+
+normalized_social_closeness_([],[],_,_).
+normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],DefaultValue,Relationships) :-
 	(
 		(
 			member(Relationship,Relationships),
 			wenet_target_id_of_relationship(UserId,Relationship)
 		)
-		-> wenet_weight_of_relationship(Weight,Relationship)
-		; Weight = 0.5
+		-> ( wenet_weight_of_relationship(Weight,Relationship) -> true ; Weight = DefaultValue)
+		; Weight = DefaultValue
 	),
 	!,
 	wenet_new_user_value(UserSocialness,UserId,Weight),
-	normalized_social_closeness_(SocialnessRest,Users,Relationships)
+	normalized_social_closeness_(SocialnessRest,Users,DefaultValue,Relationships)
 	.
 
 %!	normalized_diversity(-Diversity,+Users,+Attributes)
@@ -1037,7 +1052,7 @@ normalized_diversity(Diversity,Users,Attributes) :-
 %	@param Diversity a value in the range [0,1] that says how the diverse are the users team.
 %	@param Users array with the users identifiers to calculate the diversity.
 %	@param Attributes array with the names of the attributes to calculate the diversity.
-%	@param DefaultValue array with the names of the attributes to calculate the diversity.
+%	@param DefaultValue value to use cannot obtain the diverstity.
 %	@param Attributes array with the names of the attributes to calculate the diversity.
 %
 normalized_diversity(Diversity,Users,Attributes,DefaultValue,MatchAll) :-
