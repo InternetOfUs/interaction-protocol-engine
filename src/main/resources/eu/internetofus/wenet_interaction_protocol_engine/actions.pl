@@ -641,5 +641,5 @@ discard_event(Success,Id) :-
 %	@param UserIds array of strings with the user identifiers to shuffle.
 %
 social_ranking(ShuffledUserIds,UserIds) :-
-	( wenet_social_context_builder_post_preferences(ShuffledUserIds,UserIds) ->true ; ShuffledUserIds = UserIds )
+	( wenet_social_context_builder_post_social_shuffle(ShuffledUserIds,UserIds) ->true ; ShuffledUserIds = UserIds )
 	.
