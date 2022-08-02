@@ -343,7 +343,7 @@ whenever
 	and get_task_state_attribute(MatchUsers,'matchUsers',[])
 thenceforth
 	wenet_user_values_to_user_ids(UserIds,MatchUsers)
-	and volunteers_ranking(RankedUsers,UserIds)
+	and social_ranking(RankedUsers,UserIds)
 	and put_task_state_attribute('unaskedUserIds',RankedUsers)
 	and put_task_state_attribute('rankedUsers',RankedUsers)
 	and send_event(_,1,'askUsersByDiversity',json([])).
