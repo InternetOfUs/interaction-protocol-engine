@@ -858,6 +858,12 @@ The next predicates are used to do HTTP request into an URL.
   [here](https://www.swi-prolog.org/pldoc/man?section=functions). For example: ``wenet_format(4,2+2)``
     * ``Result``  _Output_  number with the result of the arithmetical expression.
     * ``Expr``  _Input_  mathematical expression to evaluate.
+- ``wenet_json_element_with(Element,Arrray,Field,DefaultValue)``
+  Obtain an elment of a list of json values.
+    * ``Element``  _Output_  json with the found element.
+    * ``Array``  _Input_  array of json elements to search.
+    * ``Field``  _Input_  pair key=value that has to be defined on the element to get.
+    * ``DefaultValue``  _Input_  json value to return if not found the element.
 
 
 ### Profile manager

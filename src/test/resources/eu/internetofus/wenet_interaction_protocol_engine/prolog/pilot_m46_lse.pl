@@ -419,9 +419,11 @@ thenceforth
 	explanation/7,
 	explanation_title/2,
 	explanation_text/3.
+
 explanation(ExplanationTitle,ExplanationText,UserId,SocialClosenessUsers,BeliefsAndValuesUsers,DomainInterestUsers) :-
 	get_profile_language(Lang),
 	explanation(ExplanationTitle,ExplanationText,UserId,SocialClosenessUsers,BeliefsAndValuesUsers,DomainInterestUsers,Lang).
+
 explanation(ExplanationTitle,ExplanationText,UserId,SocialClosenessUsers,BeliefsAndValuesUsers,DomainInterestUsers,Lang) :-
 	explanation_title(ExplanationTitle,Lang),
 	( are_all_dimensions_indifferent()

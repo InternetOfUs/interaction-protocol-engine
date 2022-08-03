@@ -46,7 +46,8 @@
 	wenet_product_user_values/3,
 	wenet_error_to_string/2,
 	wenet_to_string/2,
-	wenet_value_of_user_id_from_user_values/4
+	wenet_value_of_user_id_from_user_values/4,
+	wenet_json_element_with/4
 	.
 
 :- discontiguous
@@ -81,7 +82,8 @@
 	wenet_product_user_values/3,
 	wenet_error_to_string/2,
 	wenet_to_string/2,
-	wenet_value_of_user_id_from_user_values/4
+	wenet_value_of_user_id_from_user_values/4,
+	wenet_json_element_with/4
 	.
 
 :- autoload(library(http/json)).
@@ -692,4 +694,19 @@ wenet_to_string(String,Any) :-
 		atom(Any) ->
 			atom_string(Any,String) ;
 			term_string(Any,String)
+	.
+
+%!	wenet_json_element_with(-Element,+Arrray,+Field,+DefaultValue)
+%
+%	Obtain an elment of a list of json values.
+%
+%	@param Element json found element.
+%	@param Array list of json elements.
+%	@param Field pair key=value that has to be defined on the element to get.
+%	@param DefaultValue value to return if it is not found.
+%
+wenet_json_element_with(Element,Array,Field,DefaultValue) :-
+	( member(json(Fields),Array), member(Field,Fields) )
+	-> Element = json(Fields)
+	; Element = DefaultValue
 	.
