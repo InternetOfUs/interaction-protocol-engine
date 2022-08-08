@@ -258,14 +258,14 @@ calculate_user_match_degree_for(MatchUser,GroupUser,UserId,Domain,DomainInterest
 	group_indexes_for_value(MdV,Y,SS1,SB1,SS,SB,BeliefsAndValues),
 	group_indexes_for_social(MdSC,Z,SS2,SB2,HB,HS,SS1,SB1,Domain,SocialCloseness),
 	group_indexes_for_physical(MdPC,W,HS1,HB1,HS,HB,PhysicalCloseness),
-	( (X = 0 , Y = 0, Z = 0, W = 0) -> Value = 0 ; Value is (X*MdX + Y*MdV + Z*MdSC+W*MdPC)/(X + Y + Z + W) ),
+	( (X = 0 , Y = 0, Z = 0, W = 0) -> Value = 0 ; Value is (X*MdX + Y*MdV + Z*MdSC + W*MdPC )/(X + Y + Z + W) ),
 	wenet_new_user_value(MatchUser,UserId,Value),
 	group_for(Group,SS2,SB2,HS1,HB1),
 	explanation_type_for(ExplanationType,Group,PhysicalCloseness,SocialCloseness,Domain),
   	GroupUser = json([userId=UserId,group=Group,explanationType=ExplanationType])
 	.
 
-group_indexes_for_domain(DomainInterest,1,0,DomainInterest) :-
+group_indexes_for_domain(DomainInterest,1,1,0,DomainInterest) :-
 	number(DomainInterest),
 	>(DomainInterest,0.0),
 	!.
