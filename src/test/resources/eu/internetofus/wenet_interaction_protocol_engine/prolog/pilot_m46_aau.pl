@@ -22,120 +22,19 @@ send_expiration_event() :-
 	put_task_state_attribute('timerId',TimerId).
 
 
-% Order the users by its physical closeness location
+% Calculate domain dimension if it is indifferent or the domain is 'sessitive issue'
 whenever
 	is_received_event('sortUsersByDiversity',_)
-	and get_task_attribute_value('nearby','positionOfAnswerer')
+	and ( get_task_attribute_value('indifferent','domainInterest') or get_task_attribute_value('sensitive_issue','domain'))
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-	normalized_closeness(PhysicalClosenessUsers,Users,500)
-	and put_task_state_attribute('physicalClosenessUsers',PhysicalClosenessUsers).
+	wenet_initialize_user_values(DomainInterestUsers,Users,@(null))
+	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
 
-% Users location is not important
+% Calculate domain dimension if it is similar and domain is not 'sessitive issue'
 whenever
 	is_received_event('sortUsersByDiversity',_)
-	and get_task_attribute_value('anywhere','positionOfAnswerer')
-	and get_task_state_attribute(Users,'appUsers')
-thenceforth
-	wenet_initialize_user_values(PhysicalClosenessUsers,Users,@(null))
-	and put_task_state_attribute('physicalClosenessUsers',PhysicalClosenessUsers).
-
-
-% Users social closeness is indifferent
-whenever
-	is_received_event('sortUsersByDiversity',_)
-	and get_task_attribute_value('indifferent','socialCloseness')
-	and get_task_state_attribute(Users,'appUsers')
-thenceforth
-	wenet_initialize_user_values(SocialClosenessUsers,Users,@(null))
-	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
-
-% Order the users by similar social closeness when domain is 'academic skills'
-whenever
-	is_received_event('sortUsersByDiversity',_)
-	and get_task_attribute_value('academic_skills','domain')
-	and get_task_attribute_value('similar','socialCloseness')
-	and get_task_state_attribute(Users,'appUsers')
-	and get_profile_attribues_by_social_closeness(Attributes)
-thenceforth
-	normalized_diversity(Diversity,Users,Attributes,@(null),false)
-	and wenet_negate_user_value(SocialClosenessUsers,Diversity)
-	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
-
-:- dynamic get_profile_attribues_by_social_closeness/1.
-get_profile_attribues_by_social_closeness(['materials.department','materials.degree_programme']).
-
-
-% Order the users by different social closeness when domain is 'academic skills'
-whenever
-	is_received_event('sortUsersByDiversity',_)
-	and get_task_attribute_value('academic_skills','domain')
-	and get_task_attribute_value('different','socialCloseness')
-	and get_task_state_attribute(Users,'appUsers')
-	and get_profile_attribues_by_social_closeness(Attributes)
-thenceforth
-	normalized_diversity(SocialClosenessUsers,Users,Attributes,@(null),false)
-	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
-
-% Order the users by similar social closeness when domain is not 'academic skills'
-whenever
-	is_received_event('sortUsersByDiversity',_)
-	and not(get_task_attribute_value('academic_skills','domain'))
-	and get_task_attribute_value('similar','socialCloseness')
-	and get_task_state_attribute(Users,'appUsers')
-thenceforth
-	normalized_social_closeness(SocialClosenessUsers,Users,@(null))
-	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
-
-% Order the users by different social closeness when domain is not 'academic skills'
-whenever
-	is_received_event('sortUsersByDiversity',_)
-	and not(get_task_attribute_value('academic_skills','domain'))
-	and get_task_attribute_value('different','socialCloseness')
-	and get_task_state_attribute(Users,'appUsers')
-thenceforth
-    normalized_social_closeness(Socialness,Users,@(null))
-	and wenet_negate_user_value(SocialClosenessUsers,Socialness)
-	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
-
-
-% Order the users by similar beliefs
-and values
-whenever
-	is_received_event('sortUsersByDiversity',_)
-	and get_task_attribute_value('similar','beliefsAndValues')
-	and get_task_state_attribute(Users,'appUsers')
-	and get_profile_attribues_by_beliefs_and_values(Attributes)
-thenceforth
-	normalized_diversity(Diversity,Users,Attributes,@(null),false)
-	and wenet_negate_user_value(BeliefsAndValuesUsers,Diversity)
-	and put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
-
-:- dynamic get_profile_attribues_by_beliefs_and_values/1.
-get_profile_attribues_by_beliefs_and_values(['meanings.excitement','meanings.promotion','meanings.existence','meanings.suprapersonal','meanings.interactive','meanings.normative']).
-
-% Order the users by different beliefs and values
-whenever
-	is_received_event('sortUsersByDiversity',_)
-	and get_task_attribute_value('different','beliefsAndValues')
-	and get_task_state_attribute(Users,'appUsers')
-	and get_profile_attribues_by_beliefs_and_values(Attributes)
-thenceforth
-	normalized_diversity(BeliefsAndValuesUsers,Users,Attributes,@(null),false)
-	and put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
-
-% Users beliefs and values is indifferent
-whenever
-	is_received_event('sortUsersByDiversity',_)
-	and get_task_attribute_value('indifferent','beliefsAndValues')
-	and get_task_state_attribute(Users,'appUsers')
-thenceforth
-	wenet_initialize_user_values(BeliefsAndValuesUsers,Users,@(null))
-	and put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
-
-% Order the users by domain
-whenever
-	is_received_event('sortUsersByDiversity',_)
+	and not(get_task_attribute_value('sensitive_issue','domain'))
 	and get_task_attribute_value('similar','domainInterest')
 	and get_task_state_attribute(Users,'appUsers')
 	and get_task_attribute_value(Domain,'domain')
@@ -160,7 +59,7 @@ domain_attributes('sensitive_issues',[]).
 domain_attributes(_,[]).
 
 
-% Order the users by different domain
+% Calculate domain dimension if it is different and domain is not 'sessitive issue'
 whenever
 	is_received_event('sortUsersByDiversity',_)
 	and get_task_attribute_value('different','domainInterest')
@@ -171,14 +70,115 @@ thenceforth
 	normalized_diversity(DomainInterestUsers,Users,Attributes,@(null),false)
 	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
 
-% Domain is indifferent
+% Calculate believe and values if it is similar
+and values
 whenever
 	is_received_event('sortUsersByDiversity',_)
-	and get_task_attribute_value('indifferent','domainInterest')
+	and get_task_attribute_value('similar','beliefsAndValues')
+	and get_task_state_attribute(Users,'appUsers')
+	and get_profile_attribues_by_beliefs_and_values(Attributes)
+thenceforth
+	normalized_diversity(Diversity,Users,Attributes,@(null),false)
+	and wenet_negate_user_value(BeliefsAndValuesUsers,Diversity)
+	and put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
+
+:- dynamic get_profile_attribues_by_beliefs_and_values/1.
+get_profile_attribues_by_beliefs_and_values(['meanings.excitement','meanings.promotion','meanings.existence','meanings.suprapersonal','meanings.interactive','meanings.normative']).
+
+% Calculate believe and values if it is different
+whenever
+	is_received_event('sortUsersByDiversity',_)
+	and get_task_attribute_value('different','beliefsAndValues')
+	and get_task_state_attribute(Users,'appUsers')
+	and get_profile_attribues_by_beliefs_and_values(Attributes)
+thenceforth
+	normalized_diversity(BeliefsAndValuesUsers,Users,Attributes,@(null),false)
+	and put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
+
+% Calculate believe and values if it is indifferent
+whenever
+	is_received_event('sortUsersByDiversity',_)
+	and get_task_attribute_value('indifferent','beliefsAndValues')
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-	wenet_initialize_user_values(DomainInterestUsers,Users,@(null))
-	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
+	wenet_initialize_user_values(BeliefsAndValuesUsers,Users,@(null))
+	and put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
+
+% Calculate social closeness if it is indifferent
+whenever
+	is_received_event('sortUsersByDiversity',_)
+	and get_task_attribute_value('indifferent','socialCloseness')
+	and get_task_state_attribute(Users,'appUsers')
+thenceforth
+	wenet_initialize_user_values(SocialClosenessUsers,Users,@(null))
+	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
+
+% Calculate social closeness if it is similar and domain is 'academic skills'
+whenever
+	is_received_event('sortUsersByDiversity',_)
+	and get_task_attribute_value('academic_skills','domain')
+	and get_task_attribute_value('similar','socialCloseness')
+	and get_task_state_attribute(Users,'appUsers')
+	and get_profile_attribues_by_social_closeness(Attributes)
+thenceforth
+	normalized_diversity(Diversity,Users,Attributes,@(null),false)
+	and wenet_negate_user_value(SocialClosenessUsers,Diversity)
+	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
+
+:- dynamic get_profile_attribues_by_social_closeness/1.
+get_profile_attribues_by_social_closeness(['materials.department','materials.degree_programme']).
+
+
+% Calculate social closeness if it is different and domain is 'academic skills'
+whenever
+	is_received_event('sortUsersByDiversity',_)
+	and get_task_attribute_value('academic_skills','domain')
+	and get_task_attribute_value('different','socialCloseness')
+	and get_task_state_attribute(Users,'appUsers')
+	and get_profile_attribues_by_social_closeness(Attributes)
+thenceforth
+	normalized_diversity(SocialClosenessUsers,Users,Attributes,@(null),false)
+	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
+
+% Calculate social closeness if it is similar and domain is not 'academic skills'
+whenever
+	is_received_event('sortUsersByDiversity',_)
+	and not(get_task_attribute_value('academic_skills','domain'))
+	and get_task_attribute_value('similar','socialCloseness')
+	and get_task_state_attribute(Users,'appUsers')
+thenceforth
+	normalized_social_closeness(SocialClosenessUsers,Users,@(null))
+	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
+
+% Calculate social closeness if it is different and domain is not 'academic skills'
+whenever
+	is_received_event('sortUsersByDiversity',_)
+	and not(get_task_attribute_value('academic_skills','domain'))
+	and get_task_attribute_value('different','socialCloseness')
+	and get_task_state_attribute(Users,'appUsers')
+thenceforth
+    normalized_social_closeness(Socialness,Users,@(null))
+	and wenet_negate_user_value(SocialClosenessUsers,Socialness)
+	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
+
+% Calculate physical closeness if it is nearby
+whenever
+	is_received_event('sortUsersByDiversity',_)
+	and get_task_attribute_value('nearby','positionOfAnswerer')
+	and get_task_state_attribute(Users,'appUsers')
+thenceforth
+	normalized_closeness(PhysicalClosenessUsers,Users,500)
+	and put_task_state_attribute('physicalClosenessUsers',PhysicalClosenessUsers).
+
+% Calculate physical closeness if it is anywhere
+whenever
+	is_received_event('sortUsersByDiversity',_)
+	and get_task_attribute_value('anywhere','positionOfAnswerer')
+	and get_task_state_attribute(Users,'appUsers')
+thenceforth
+	wenet_initialize_user_values(PhysicalClosenessUsers,Users,@(null))
+	and put_task_state_attribute('physicalClosenessUsers',PhysicalClosenessUsers).
+
 
 % After sorting users by eack diversity dimension aggregate them
 whenever
@@ -222,15 +222,168 @@ thenceforth
 	.
 
 :- dynamic
-	calculate_match_degree_for/2.
+	calculate_match_degree_for/2,
+	calculate_match_degree_for_/7,
+	calculate_user_match_degree_for/7,
+	explanation_type_for/5,
+	group_indexes_for_domain/5,
+	group_indexes_for_value/7,
+	group_indexes_for_social/10,
+	group_indexes_for_physical/7,
+	group_for/5.
 
 calculate_match_degree_for(ReverseSortedMatchUsers,GroupsUsers) :-
 	get_task_state_attribute(Users,'appUsers'),
-	wenet_initialize_user_values(MatchUsers,Users,1.0),
+	get_task_attribute_value(Domain,'domain'),
+	get_task_state_attribute(DomainInterestUsers,'domainInterestUsers'),
+	get_task_state_attribute(BeliefsAndValuesUsers,'beliefsAndValuesUsers'),
+	get_task_state_attribute(SocialClosenessUsers,'socialClosenessUsers'),
+	get_task_state_attribute(PhysicalClosenessUsers,'physicalClosenessUsers'),
+	calculate_match_degree_for_(MatchUsers,GroupsUsers,Users,Domain,DomainInterestUsers,BeliefsAndValuesUsers,SocialClosenessUsers,PhysicalClosenessUsers),
 	wenet_sort_user_values_by_value(SortedMatchUsers,MatchUsers),
-	reverse(ReverseSortedMatchUsers,SortedMatchUsers),
-	initialize_users_to_group_0(GroupsUsers,Users)
+	reverse(ReverseSortedMatchUsers,SortedMatchUsers)
 	.
+calculate_match_degree_for_([],[],[],_,_,_,_,_).
+calculate_match_degree_for_([MatchUser|MatchUsers],[GroupUser|GroupUsers],[UserId|UserIds],Domain,DomainInterestUsers,BeliefsAndValuesUsers,SocialClosenessUsers,PhysicalClosenessUsers) :-
+	calculate_user_match_degree_for(MatchUser,GroupUser,UserId,Domain,DomainInterestUsers,BeliefsAndValuesUsers,SocialClosenessUsers,PhysicalClosenessUsers),
+	calculate_match_degree_for_(MatchUsers,GroupUsers,UserIds,Domain,DomainInterestUsers,BeliefsAndValuesUsers,SocialClosenessUsers,PhysicalClosenessUsers)
+	.
+
+calculate_user_match_degree_for(MatchUser,GroupUser,UserId,Domain,DomainInterestUsers,BeliefsAndValuesUsers,SocialClosenessUsers,PhysicalClosenessUsers) :-
+	wenet_value_of_user_id_from_user_values(DomainInterest,UserId,DomainInterestUsers,@(null)),
+	wenet_value_of_user_id_from_user_values(BeliefsAndValues,UserId,BeliefsAndValuesUsers,@(null)),
+	wenet_value_of_user_id_from_user_values(SocialCloseness,UserId,SocialClosenessUsers,@(null)),
+	wenet_value_of_user_id_from_user_values(PhysicalCloseness,UserId,PhysicalClosenessUsers,@(null)),
+	group_indexes_for_domain(MdX,X,SS,SB,DomainInterest),
+	group_indexes_for_value(MdV,Y,SS1,SB1,SS,SB,BeliefsAndValues),
+	group_indexes_for_social(MdSC,Z,SS2,SB2,HB,HS,SS1,SB1,Domain,SocialCloseness),
+	group_indexes_for_physical(MdPC,W,HS1,HB1,HS,HB,PhysicalCloseness),
+	( (X = 0 , Y = 0, Z = 0, W = 0) -> Value = 0 ; Value is (X*MdX + Y*MdV + Z*MdSC+W*MdPC)/(X + Y + Z + W) ),
+	wenet_new_user_value(MatchUser,UserId,Value),
+	group_for(Group,SS2,SB2,HS1,HB1),
+	explanation_type_for(ExplanationType,Group,PhysicalCloseness,SocialCloseness,Domain),
+  	GroupUser = json([userId=UserId,group=Group,explanationType=ExplanationType])
+	.
+
+group_indexes_for_domain(DomainInterest,1,0,DomainInterest) :-
+	number(DomainInterest),
+	>(DomainInterest,0.0),
+	!.
+group_indexes_for_domain(0.0,0,0,1,0.0) :-
+	!.
+group_indexes_for_domain(0.0,0,0,0,_) :-
+	!.
+
+
+group_indexes_for_value(BeliefsAndValues,1,SS1,SB,SS,SB,BeliefsAndValues) :-
+	number(BeliefsAndValues),
+	>(BeliefsAndValues,0.0),
+	!,
+	SS1 is SS + 1.
+group_indexes_for_value(0.0,0,SS,SB1,SS,SB,0.0) :-
+	!,
+	SB1 is SB + 1.
+group_indexes_for_value(0.0,0,SS,SB,SS,SB,_) :-
+	!.
+
+group_indexes_for_social(SocialCloseness,1,SS1,SB1,0,1,SS1,SB1,'academic_skills',SocialCloseness) :-
+	number(SocialCloseness),
+	>(SocialCloseness,0.0),
+	!.
+group_indexes_for_social(SocialCloseness,1,SS2,SB1,0,0,SS1,SB1,_,SocialCloseness) :-
+	number(SocialCloseness),
+	>(SocialCloseness,0.0),
+	!,
+	SS2 is SS1 + 1.
+group_indexes_for_social(0.0,0,SS1,SB1,1,0,SS1,SB1,'academic_skills',0.0) :-
+	!.
+group_indexes_for_social(0.0,0,SS1,SB2,0,0,SS1,SB1,_,0.0) :-
+	!,
+	SB2 is SB1 + 1.
+group_indexes_for_social(0.0,0,SS1,SB1,0,0,SS1,SB1,_,_) :-
+	!.
+
+group_indexes_for_physical(PhysicalCloseness,1,HS1,HB,HS,HB,PhysicalCloseness) :-
+	number(PhysicalCloseness),
+	>(PhysicalCloseness,0.0),
+	!,
+	HS1 is HS + 1.
+group_indexes_for_physical(0.0,0,HS,HB1,HS,HB,0.0) :-
+	!,
+	HB1 is HB + 1.
+group_indexes_for_physical(0.0,0,HS,HB,HS,HB,_) :-
+	!.
+
+group_for(Group,SS,SB,_,0):-
+	>(SS,0),
+	!,
+	Group is 1 + SB.
+group_for(4,_,_,_,0):-
+	!.
+group_for(Group,SS,SB,1,1):-
+	>(SS,0),
+	!,
+	Group is 5 + SB.
+group_for(8,_,_,1,1):-
+	!.
+group_for(Group,SS,SB,_,_):-
+	>(SS,0),
+	!,
+	Group is 9 + SB.
+group_for(12,_,_,_,_):-
+	!.
+
+explanation_type_for(group_0,0,_,_,_) :- !.
+explanation_type_for(group_1,0,_,_,_) :- !.
+explanation_type_for(group_2_3_4_a,Group,MdPC,MdSC,Domain) :-
+	(Group = 2; Group = 3;  Group = 4),
+	number(MdPC),
+	number(MdSC),
+	Domain = 'academic_skills',
+	!.
+explanation_type_for(group_2_3_4_b,Group,MdPC,MdSC,Domain) :-
+	(Group = 2; Group = 3;  Group = 4),
+	not(number(MdPC)),
+	number(MdSC),
+	Domain = 'academic_skills',
+	!.
+explanation_type_for(group_2_3_4_c,Group,_,_,_) :-
+	(Group = 2; Group = 3;  Group = 4),
+	!.
+explanation_type_for(group_5_a,5,0.0,MdSC,Domain) :-
+	number(MdSC),
+	>(MdSC,0.0),
+	Domain = 'academic_skills',
+	!.
+explanation_type_for(group_5_b,5,_,_,_) :-
+	!.
+explanation_type_for(group_6_7_8_a,Group,0.0,MdSC,Domain) :-
+	(Group = 6; Group = 7;  Group = 8),
+	number(MdSC),
+	>(MdSC,0.0),
+	Domain = 'academic_skills',
+	!.
+explanation_type_for(group_6_7_8_b,Group,_,_,_) :-
+	(Group = 6; Group = 7;  Group = 8),
+	!.
+explanation_type_for(group_9_10_11_a,Group,MdPC,MdSC,Domain) :-
+	(Group = 9; Group = 10;  Group = 11),
+	number(MdPC),
+	number(MdSC),
+	Domain = 'academic_skills',
+	!.
+explanation_type_for(group_9_10_11_b,Group,MdPC,MdSC,Domain) :-
+	(Group = 9; Group = 10;  Group = 11),
+	not(number(MdPC)),
+	number(MdSC),
+	Domain = 'academic_skills',
+	!.
+explanation_type_for(group_9_10_11_c,Group,_,_,_) :-
+	(Group = 9; Group = 10;  Group = 11),
+	!.
+explanation_type_for(group_12,12,_,_,_) :- !.
+explanation_type_for(@(null),_,_,_,_) :- !.
+
 
 % After caluclated the matching go to rank them
 whenever
