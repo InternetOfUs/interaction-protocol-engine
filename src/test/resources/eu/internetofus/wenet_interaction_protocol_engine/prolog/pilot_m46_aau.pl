@@ -334,7 +334,7 @@ group_for(12,_,_,_,_):-
 	!.
 
 explanation_type_for(group_0,0,_,_,_) :- !.
-explanation_type_for(group_1,0,_,_,_) :- !.
+explanation_type_for(group_1,1,_,_,_) :- !.
 explanation_type_for(group_2_3_4_a,Group,MdPC,MdSC,Domain) :-
 	(Group = 2; Group = 3;  Group = 4),
 	number(MdPC),
@@ -484,7 +484,7 @@ explanation(ExplanationTitle,ExplanationText,UserId,GroupsUsers,Lang) :-
 
 explanation_title('Why is this user chosen?',_).
 explanation_text('Recall that there were no requirements set w.r.t domains, values, social or physical closeness. Nevertheless, we tried to increase the gender diversity of selected users.',group_0,_).
-explanation_text('This user fulfils all requirements. While searching for users, we tried to increase the gender diversity of selected users.',group_11,_).
+explanation_text('This user fulfils all requirements. While searching for users, we tried to increase the gender diversity of selected users.',group_1,_).
 explanation_text('Not enough members fulfil the requirements. To find some answers, we had to choose some that don\'t fulfil any, like this user. While doing so, we also tried to increase the gender diversity of selected users.',group_12,_).
 explanation_text('This user fulfils the physical and social closeness requirements, but not all of the other requirements. To find some answers, we had to relax some of the other requirements. We also tried to increase the gender diversity of selected users.',group_2_3_4_a,_).
 explanation_text('This user fulfils the social closeness requirements, but not all of the other requirements. To find some answers, we had to relax some of the other requirements. We also tried to increase the gender diversity of selected users.',group_2_3_4_b,_).
