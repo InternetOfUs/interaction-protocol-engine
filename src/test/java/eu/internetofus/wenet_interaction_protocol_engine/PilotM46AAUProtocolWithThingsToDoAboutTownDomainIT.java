@@ -21,11 +21,11 @@
 package eu.internetofus.wenet_interaction_protocol_engine;
 
 import eu.internetofus.common.protocols.DefaultProtocols;
-import eu.internetofus.common.protocols.PilotM46LSEProtocolWithThingsToDoAboutTownDomainITC;
+import eu.internetofus.common.protocols.PilotM46AAUProtocolWithThingsToDoAboutTownDomainITC;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Check the {@link DefaultProtocols#PILOT_M46_LSE} protocol. ATTENTION: This
+ * Check the {@link DefaultProtocols#PILOT_M46_AAU} protocol. ATTENTION: This
  * test is sequential and maintains the state between methods. In other words,
  * you must to run the entire test methods on the specified order to work.
  *
@@ -33,6 +33,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
 public class PilotM46AAUProtocolWithThingsToDoAboutTownDomainIT
-    extends PilotM46LSEProtocolWithThingsToDoAboutTownDomainITC {
+    extends PilotM46AAUProtocolWithThingsToDoAboutTownDomainITC {
 
 }
