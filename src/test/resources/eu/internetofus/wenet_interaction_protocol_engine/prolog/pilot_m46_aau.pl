@@ -48,7 +48,7 @@ thenceforth
 	domain_attributes/2.
 
 domain_attributes('basic_needs',['competences.c_food','competences.c_accom']).
-domain_attributes('campus_life',['materials.degree_programme']).
+domain_attributes('campus_life',['materials.study_year']).
 domain_attributes('academic_skills',['competences.u_active','competences.u_read','competences.u_essay','competences.u_org','competences.u_balance','competences.u_assess','competences.u_theory','competences.u_pract']).
 domain_attributes('appreciating_culture',['competences.c_lit','competences.c_app_mus','competences.c_plays','competences.c_musgall']).
 domain_attributes('performing_producing_culture',['competences.c_creatlit','competences.c_perf_mus','competences.c_perf_plays','competences.c_perf_art']).
@@ -125,7 +125,7 @@ thenceforth
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 :- dynamic get_profile_attribues_by_social_closeness/1.
-get_profile_attribues_by_social_closeness(['materials.department','materials.degree_programme']).
+get_profile_attribues_by_social_closeness(['materials.study_year','materials.degree_programme']).
 
 
 % Calculate social closeness if it is different and domain is 'academic skills'
