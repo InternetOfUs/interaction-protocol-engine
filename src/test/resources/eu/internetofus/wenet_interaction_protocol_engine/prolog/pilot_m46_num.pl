@@ -161,7 +161,7 @@ thenceforth
 	and put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
 
 :- dynamic get_profile_attribues_by_beliefs_and_values/1.
-get_profile_attribues_by_beliefs_and_values(['meanings.excitement','meanings.promotion','meanings.existence','meanings.suprapersonal','meanings.interactive','meanings.normative']).
+get_profile_attribues_by_beliefs_and_values(['meanings.excitement', 'meanings.promotion', 'meanings.existence', 'meanings.suprapersonal', 'meanings.interactive', 'meanings.normative', 'meanings.neuroticism', 'meanings.extraversion', 'meanings.openness', 'meanings.agreeableness', 'meanings.conscientiousness']).
 
 % Calculate believe and values if it is different
 whenever
