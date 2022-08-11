@@ -303,10 +303,10 @@ thenceforth
 	calculate_match_degree_for/2,
 	calculate_match_degree_for_/7,
 	calculate_user_match_degree_for/7,
-	explanation_type_for/5,
-	group_indexes_for_domain/5,
+	explanation_type_for/6,
+	group_indexes_for_domain/8,
 	group_indexes_for_value/7,
-	group_indexes_for_social/10,
+	group_indexes_for_social/12,
 	group_indexes_for_physical/7,
 	group_for/5.
 
@@ -332,24 +332,35 @@ calculate_user_match_degree_for(MatchUser,GroupUser,UserId,Domain,DomainInterest
 	wenet_value_of_user_id_from_user_values(BeliefsAndValues,UserId,BeliefsAndValuesUsers,@(null)),
 	wenet_value_of_user_id_from_user_values(SocialCloseness,UserId,SocialClosenessUsers,@(null)),
 	wenet_value_of_user_id_from_user_values(PhysicalCloseness,UserId,PhysicalClosenessUsers,@(null)),
-	group_indexes_for_domain(MdX,X,SS,SB,DomainInterest),
+	group_indexes_for_domain(MdX,X,SS,SB,HS,HB,Domain,DomainInterest),
 	group_indexes_for_value(MdV,Y,SS1,SB1,SS,SB,BeliefsAndValues),
-	group_indexes_for_social(MdSC,Z,SS2,SB2,HB,HS,SS1,SB1,Domain,SocialCloseness),
-	group_indexes_for_physical(MdPC,W,HS1,HB1,HS,HB,PhysicalCloseness),
+	group_indexes_for_social(MdSC,Z,SS2,SB2,HS1,HB1,SS1,SB1,HS,HB,Domain,SocialCloseness),
+	group_indexes_for_physical(MdPC,W,HS2,HB2,HS1,HB1,PhysicalCloseness),
 	( (X = 0 , Y = 0, Z = 0, W = 0) -> Value = 0 ; Value is (X*MdX + Y*MdV + Z*MdSC + W*MdPC )/(X + Y + Z + W) ),
 	wenet_new_user_value(MatchUser,UserId,Value),
-	group_for(Group,SS2,SB2,HS1,HB1),
-	explanation_type_for(ExplanationType,Group,PhysicalCloseness,SocialCloseness,Domain),
+	group_for(Group,SS2,SB2,HS2,HB2),
+	explanation_type_for(ExplanationType,Group,PhysicalCloseness,SocialCloseness,DomainInterest,Domain),
   	GroupUser = json([userId=UserId,group=Group,explanationType=ExplanationType])
 	.
 
-group_indexes_for_domain(DomainInterest,1,1,0,DomainInterest) :-
+group_indexes_for_domain(DomainInterest,1,0,0,1,0,'academic_skills',DomainInterest) :-
 	number(DomainInterest),
 	>(DomainInterest,0.0),
 	!.
-group_indexes_for_domain(0.0,0,0,1,0.0) :-
+group_indexes_for_domain(DomainInterest,1,1,0,0,0,Domain,DomainInterest) :-
+	number(DomainInterest),
+	>(DomainInterest,0.0),
+	not(Domain = 'academic_skills'),
 	!.
-group_indexes_for_domain(0.0,0,0,0,_) :-
+group_indexes_for_domain(0.0,0,0,0,0,1,'academic_skills',DomainInterest) :-
+	number(DomainInterest),
+	DomainInterest =:= 0.0,
+	!.
+group_indexes_for_domain(0.0,0,0,1,0,0,_,DomainInterest) :-
+	number(DomainInterest),
+	DomainInterest =:= 0.0,
+	!.
+group_indexes_for_domain(0.0,0,0,0,0,0,_,_) :-
 	!.
 
 
@@ -358,27 +369,39 @@ group_indexes_for_value(BeliefsAndValues,1,SS1,SB,SS,SB,BeliefsAndValues) :-
 	>(BeliefsAndValues,0.0),
 	!,
 	SS1 is SS + 1.
-group_indexes_for_value(0.0,0,SS,SB1,SS,SB,0.0) :-
+group_indexes_for_value(0.0,0,SS,SB1,SS,SB,BeliefsAndValues) :-
+	number(BeliefsAndValues),
+	BeliefsAndValues =:= 0.0,
 	!,
 	SB1 is SB + 1.
 group_indexes_for_value(0.0,0,SS,SB,SS,SB,_) :-
 	!.
 
-group_indexes_for_social(SocialCloseness,1,SS1,SB1,0,1,SS1,SB1,'academic_skills',SocialCloseness) :-
-	number(SocialCloseness),
-	>(SocialCloseness,0.0),
-	!.
-group_indexes_for_social(SocialCloseness,1,SS2,SB1,0,0,SS1,SB1,_,SocialCloseness) :-
+group_indexes_for_social(SocialCloseness,1,SS1,SB1,HS1,HB,SS1,SB1,HS,HB,'academic_skills',SocialCloseness) :-
 	number(SocialCloseness),
 	>(SocialCloseness,0.0),
 	!,
-	SS2 is SS1 + 1.
-group_indexes_for_social(0.0,0,SS1,SB1,1,0,SS1,SB1,'academic_skills',0.0) :-
-	!.
-group_indexes_for_social(0.0,0,SS1,SB2,0,0,SS1,SB1,_,0.0) :-
+	HS1 is HS +1
+	.
+group_indexes_for_social(SocialCloseness,1,SS2,SB1,HS,HB,SS1,SB1,HS,HB,Domain,SocialCloseness) :-
+	number(SocialCloseness),
+	>(SocialCloseness,0.0),
+	not(Domain = 'academic_skills'),
+	!,
+	SS2 is SS1 + 1
+	.
+group_indexes_for_social(0.0,0,SS1,SB1,HS,HB1,SS1,SB1,HS,HB,'academic_skills',SocialCloseness) :-
+	number(SocialCloseness),
+	SocialCloseness =:= 0.0,
+	!,
+	HB1 is HB + 1.
+group_indexes_for_social(0.0,0,SS1,SB2,HS,HB,SS1,SB1,HS,HB,Domain,SocialCloseness) :-
+	not(Domain = 'academic_skills'),
+	number(SocialCloseness),
+	SocialCloseness =:= 0,
 	!,
 	SB2 is SB1 + 1.
-group_indexes_for_social(0.0,0,SS1,SB1,0,0,SS1,SB1,_,_) :-
+group_indexes_for_social(0.0,0,SS1,SB1,HS,HB,SS1,SB1,HS,HB,_,_) :-
 	!.
 
 group_indexes_for_physical(PhysicalCloseness,1,HS1,HB,HS,HB,PhysicalCloseness) :-
@@ -386,7 +409,9 @@ group_indexes_for_physical(PhysicalCloseness,1,HS1,HB,HS,HB,PhysicalCloseness) :
 	>(PhysicalCloseness,0.0),
 	!,
 	HS1 is HS + 1.
-group_indexes_for_physical(0.0,0,HS,HB1,HS,HB,0.0) :-
+group_indexes_for_physical(0.0,0,HS,HB1,HS,HB,PhysicalCloseness) :-
+	number(PhysicalCloseness),
+	PhysicalCloseness =:= 0.0,
 	!,
 	HB1 is HB + 1.
 group_indexes_for_physical(0.0,0,HS,HB,HS,HB,_) :-
@@ -398,11 +423,15 @@ group_for(Group,SS,SB,_,0):-
 	Group is 1 + SB.
 group_for(4,_,_,_,0):-
 	!.
-group_for(Group,SS,SB,1,1):-
+group_for(Group,SS,SB,HS,HB):-
+	>(HB,0),
+	>(HS,0),
 	>(SS,0),
 	!,
 	Group is 5 + SB.
-group_for(8,_,_,1,1):-
+group_for(8,_,_,HS,HB):-
+	>(HB,0),
+	>(HS,0),
 	!.
 group_for(Group,SS,SB,_,_):-
 	>(SS,0),
@@ -411,56 +440,166 @@ group_for(Group,SS,SB,_,_):-
 group_for(12,_,_,_,_):-
 	!.
 
-explanation_type_for(group_0,0,_,_,_) :- !.
-explanation_type_for(group_1,1,_,_,_) :- !.
-explanation_type_for(group_2_3_4_a,Group,MdPC,MdSC,Domain) :-
+explanation_type_for(group_0,0,_,_,_,_) :- !.
+explanation_type_for(group_1,1,_,_,_,_) :- !.
+explanation_type_for(group_2_3_4_a,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	(Group = 2; Group = 3;  Group = 4),
 	number(MdPC),
 	number(MdSC),
-	Domain = 'academic_skills',
+	number(MdX),
 	!.
-explanation_type_for(group_2_3_4_b,Group,MdPC,MdSC,Domain) :-
+explanation_type_for(group_2_3_4_b,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	(Group = 2; Group = 3;  Group = 4),
-	not(number(MdPC)),
-	number(MdSC),
-	Domain = 'academic_skills',
-	!.
-explanation_type_for(group_2_3_4_c,Group,_,_,_) :-
-	(Group = 2; Group = 3;  Group = 4),
-	!.
-explanation_type_for(group_5_a,5,0.0,MdSC,Domain) :-
-	number(MdSC),
-	>(MdSC,0.0),
-	Domain = 'academic_skills',
-	!.
-explanation_type_for(group_5_b,5,_,_,_) :-
-	!.
-explanation_type_for(group_6_7_8_a,Group,0.0,MdSC,Domain) :-
-	(Group = 6; Group = 7;  Group = 8),
-	number(MdSC),
-	>(MdSC,0.0),
-	Domain = 'academic_skills',
-	!.
-explanation_type_for(group_6_7_8_b,Group,_,_,_) :-
-	(Group = 6; Group = 7;  Group = 8),
-	!.
-explanation_type_for(group_9_10_11_a,Group,MdPC,MdSC,Domain) :-
-	(Group = 9; Group = 10;  Group = 11),
 	number(MdPC),
 	number(MdSC),
-	Domain = 'academic_skills',
+	not(number(MdX)),
 	!.
-explanation_type_for(group_9_10_11_b,Group,MdPC,MdSC,Domain) :-
+explanation_type_for(group_2_3_4_c,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 2; Group = 3;  Group = 4),
+	number(MdPC),
+	not(number(MdSC)),
+	number(MdX),
+	!.
+explanation_type_for(group_2_3_4_d,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 2; Group = 3;  Group = 4),
+	not(number(MdPC)),
+	number(MdSC),
+	number(MdX),
+	!.
+explanation_type_for(group_2_3_4_e,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 2; Group = 3;  Group = 4),
+	not(number(MdPC)),
+	not(number(MdSC)),
+	number(MdX),
+	!.
+explanation_type_for(group_2_3_4_f,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 2; Group = 3;  Group = 4),
+	not(number(MdPC)),
+	number(MdSC),
+	not(number(MdX)),
+	!.
+explanation_type_for(group_2_3_4_g,Group,_,_,_,_) :-
+	(Group = 2; Group = 3;  Group = 4),
+	!.
+explanation_type_for(group_5_a,5,MdPC,MdSC,MdX,'academic_skills') :-
+	number(MdPC),
+	MdPC =:= 0.0,
+	number(MdSC),
+	MdSC =:= 0.0,
+	(not(number(MdX));not(MdX =:= 0.0)),
+	!.
+explanation_type_for(group_5_b,5,MdPC,MdSC,MdX,'academic_skills') :-
+	number(MdPC),
+	MdPC =:= 0.0,
+	(not(number(MdSC));not(MdSC =:= 0.0)),
+	number(MdX),
+	MdX =:= 0.0,
+	!.
+explanation_type_for(group_5_c,5,MdPC,MdSC,MdX,'academic_skills') :-
+	(not(number(MdPC));not(MdPC =:= 0.0)),
+	number(MdSC),
+	MdSC =:= 0.0,
+	number(MdX),
+	MdX =:= 0.0,
+	!.
+explanation_type_for(group_5_d,5,MdPC,MdSC,MdX,'academic_skills') :-
+	number(MdPC),
+	MdPC =:= 0.0,
+	(not(number(MdSC));not(MdSC =:= 0.0)),
+	(not(number(MdX));not(MdX =:= 0.0)),
+	!.
+explanation_type_for(group_5_e,5,MdPC,MdSC,MdX,'academic_skills') :-
+	(not(number(MdPC));not(MdPC =:= 0.0)),
+	number(MdSC),
+	MdSC =:= 0.0,
+	(not(number(MdX));not(MdX =:= 0.0)),
+	!.
+explanation_type_for(group_5_f,5,_,_,_,_) :-
+	!.
+explanation_type_for(group_6_7_8_a,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 6; Group = 7;  Group = 8),
+	number(MdPC),
+	MdPC =:= 0.0,
+	number(MdSC),
+	MdSC =:= 0.0,
+	(not(number(MdX));not(MdX =:= 0.0)),
+	!.
+explanation_type_for(group_6_7_8_b,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 6; Group = 7;  Group = 8),
+	number(MdPC),
+	MdPC =:= 0.0,
+	(not(number(MdSC));not(MdSC =:= 0.0)),
+	number(MdX),
+	MdX =:= 0.0,
+	!.
+explanation_type_for(group_6_7_8_c,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 6; Group = 7;  Group = 8),
+	(not(number(MdPC));not(MdPC =:= 0.0)),
+	number(MdSC),
+	MdSC =:= 0.0,
+	number(MdX),
+	MdX =:= 0.0,
+	!.
+explanation_type_for(group_6_7_8_d,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 6; Group = 7;  Group = 8),
+	number(MdPC),
+	MdPC =:= 0.0,
+	(not(number(MdSC));not(MdSC =:= 0.0)),
+	(not(number(MdX));not(MdX =:= 0.0)),
+	!.
+explanation_type_for(group_6_7_8_e,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 6; Group = 7;  Group = 8),
+	(not(number(MdPC));not(MdPC =:= 0.0)),
+	number(MdSC),
+	MdSC =:= 0.0,
+	(not(number(MdX));not(MdX =:= 0.0)),
+	!.
+explanation_type_for(group_6_7_8_f,Group,_,_,_,_) :-
+	(Group = 6; Group = 7;  Group = 8),
+	!.
+explanation_type_for(group_9_10_11_a,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 9; Group = 10;  Group = 11),
+	number(MdPC),
+	number(MdPC),
+	number(MdSC),
+	number(MdX),
+	!.
+explanation_type_for(group_9_10_11_b,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 9; Group = 10;  Group = 11),
+	number(MdPC),
+	number(MdPC),
+	number(MdSC),
+	not(number(MdX)),
+	!.
+explanation_type_for(group_9_10_11_c,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 9; Group = 10;  Group = 11),
+	number(MdPC),
+	not(number(MdSC)),
+	number(MdX),
+	!.
+explanation_type_for(group_9_10_11_d,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	(Group = 9; Group = 10;  Group = 11),
 	not(number(MdPC)),
 	number(MdSC),
-	Domain = 'academic_skills',
+	number(MdX),
 	!.
-explanation_type_for(group_9_10_11_c,Group,_,_,_) :-
+explanation_type_for(group_9_10_11_e,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 9; Group = 10;  Group = 11),
+	not(number(MdPC)),
+	not(number(MdSC)),
+	number(MdX),
+	!.
+explanation_type_for(group_9_10_11_f,Group,MdPC,MdSC,MdX,'academic_skills') :-
+	(Group = 9; Group = 10;  Group = 11),
+	not(number(MdPC)),
+	number(MdSC),
+	not(number(MdX)),
+	!.
+explanation_type_for(group_9_10_11_g,Group,_,_,_,_) :-
 	(Group = 9; Group = 10;  Group = 11),
 	!.
-explanation_type_for(group_12,12,_,_,_) :- !.
-explanation_type_for(@(null),_,_,_,_) :- !.
+explanation_type_for(group_12,12,_,_,_,_) :- !.
+explanation_type_for(@(null),_,_,_,_,_) :- !.
 
 
 % After caluclated the matching go to rank them

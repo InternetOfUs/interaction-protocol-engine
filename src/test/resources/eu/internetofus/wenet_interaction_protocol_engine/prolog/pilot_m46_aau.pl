@@ -268,7 +268,9 @@ group_indexes_for_domain(DomainInterest,1,1,0,DomainInterest) :-
 	number(DomainInterest),
 	>(DomainInterest,0.0),
 	!.
-group_indexes_for_domain(0.0,0,0,1,0.0) :-
+group_indexes_for_domain(0.0,0,0,1,DomainInterest) :-
+	number(DomainInterest),
+	DomainInterest =:= 0.0,
 	!.
 group_indexes_for_domain(0.0,0,0,0,_) :-
 	!.
@@ -279,7 +281,9 @@ group_indexes_for_value(BeliefsAndValues,1,SS1,SB,SS,SB,BeliefsAndValues) :-
 	>(BeliefsAndValues,0.0),
 	!,
 	SS1 is SS + 1.
-group_indexes_for_value(0.0,0,SS,SB1,SS,SB,0.0) :-
+group_indexes_for_value(0.0,0,SS,SB1,SS,SB,BeliefsAndValues) :-
+	number(BeliefsAndValues),
+	BeliefsAndValues =:= 0.0,
 	!,
 	SB1 is SB + 1.
 group_indexes_for_value(0.0,0,SS,SB,SS,SB,_) :-
@@ -294,9 +298,13 @@ group_indexes_for_social(SocialCloseness,1,SS2,SB1,0,0,SS1,SB1,_,SocialCloseness
 	>(SocialCloseness,0.0),
 	!,
 	SS2 is SS1 + 1.
-group_indexes_for_social(0.0,0,SS1,SB1,1,0,SS1,SB1,'academic_skills',0.0) :-
+group_indexes_for_social(0.0,0,SS1,SB1,1,0,SS1,SB1,'academic_skills',SocialCloseness) :-
+	number(SocialCloseness),
+	SocialCloseness =:= 0.0,
 	!.
-group_indexes_for_social(0.0,0,SS1,SB2,0,0,SS1,SB1,_,0.0) :-
+group_indexes_for_social(0.0,0,SS1,SB2,0,0,SS1,SB1,_,SocialCloseness) :-
+	number(SocialCloseness),
+	SocialCloseness =:= 0.0,
 	!,
 	SB2 is SB1 + 1.
 group_indexes_for_social(0.0,0,SS1,SB1,0,0,SS1,SB1,_,_) :-
@@ -307,7 +315,9 @@ group_indexes_for_physical(PhysicalCloseness,1,HS1,HB,HS,HB,PhysicalCloseness) :
 	>(PhysicalCloseness,0.0),
 	!,
 	HS1 is HS + 1.
-group_indexes_for_physical(0.0,0,HS,HB1,HS,HB,0.0) :-
+group_indexes_for_physical(0.0,0,HS,HB1,HS,HB,PhysicalCloseness) :-
+	number(PhysicalCloseness),
+	PhysicalCloseness =:= 0.0,
 	!,
 	HB1 is HB + 1.
 group_indexes_for_physical(0.0,0,HS,HB,HS,HB,_) :-
@@ -349,15 +359,19 @@ explanation_type_for(group_2_3_4_b,Group,MdPC,MdSC,Domain) :-
 explanation_type_for(group_2_3_4_c,Group,_,_,_) :-
 	(Group = 2; Group = 3;  Group = 4),
 	!.
-explanation_type_for(group_5_a,5,0.0,MdSC,Domain) :-
+explanation_type_for(group_5_a,5,MdPC,MdSC,Domain) :-
+	number(MdPC),
+	MdPC =:= 0.0,
 	number(MdSC),
 	>(MdSC,0.0),
 	Domain = 'academic_skills',
 	!.
 explanation_type_for(group_5_b,5,_,_,_) :-
 	!.
-explanation_type_for(group_6_7_8_a,Group,0.0,MdSC,Domain) :-
+explanation_type_for(group_6_7_8_a,Group,MdPC,MdSC,Domain) :-
 	(Group = 6; Group = 7;  Group = 8),
+	number(MdPC),
+	MdPC =:= 0.0,
 	number(MdSC),
 	>(MdSC,0.0),
 	Domain = 'academic_skills',
