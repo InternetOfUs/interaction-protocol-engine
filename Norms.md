@@ -282,6 +282,38 @@ The next conditions are over the user associated with the norm engine (**me**).
   This condition obtains the best 1k social network relationships of the current user repect
   the other application users. value of a user state attribute, or a default value if it is not defined.
     * ``Relationships``  _Output_  array of JSON models with my social network relationships.
+- ``get_profile_competence(Competence,Label)``
+  Obtain the competence on my profile with the specified name.
+    * ``Competence``  _Output_  JSON model with the competence information, or @(null) if can not obtain it.
+    * ``Name``  _Input_  string name of the competence to obtain.
+- ``get_profile_competence(Competence,Profile,Name,DefaultValue)``
+  Obtain the competence on a profile with the specified name.
+    * ``Competence``  _Output_  JSON model with the competence information, or @(null) if can not obtain it.
+    * ``Profile``  _Input_  JSON model with the competence to search.
+    * ``Name``  _Input_  string name of the competence to obtain.
+    * ``DefaultValue``  _Input_  value to return if not found the competence.
+- ``get_profile_material(Material,Label)``
+  Obtain the material on my profile with the specified name.
+    * ``Material``  _Output_  JSON model with the material information, or @(null) if can not obtain it.
+    * ``Name``  _Input_  string name of the material to obtain.
+- ``get_profile_material(Material,Profile,Name,DefaultValue)``
+  Obtain the material on a profile with the specified name.
+    * ``Material``  _Output_  JSON model with the material information, or @(null) if can not obtain it.
+    * ``Profile``  _Input_  JSON model with the material to search.
+    * ``Name``  _Input_  string name of the material to obtain.
+    * ``DefaultValue``  _Input_  value to return if not found the material.
+- ``get_profile_meaning(Meaning,Label)``
+  Obtain the meaning on my profile with the specified name.
+    * ``Meaning``  _Output_  JSON model with the meaning information, or @(null) if can not obtain it.
+    * ``Name``  _Input_  string name of the meaning to obtain.
+- ``get_profile_meaning(Meaning,Profile,Name,DefaultValue)``
+  Obtain the meaning on a profile with the specified name.
+    * ``Meaning``  _Output_  JSON model with the meaning information, or @(null) if can not obtain it.
+    * ``Profile``  _Input_  JSON model with the meaning to search.
+    * ``Name``  _Input_  string name of the meaning to obtain.
+    * ``DefaultValue``  _Input_  value to return if not found the meaning.
+
+
 
 
 ### Application conditions

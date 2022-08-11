@@ -108,7 +108,13 @@
 	is_current_location_near/3,
 	is_current_location_near_relevant/2,
 	is_current_location_near_relevant/1,
-	get_profile_language/1
+	get_profile_language/1,
+	get_profile_competence/2,
+	get_profile_competence/4,
+	get_profile_material/2,
+	get_profile_material/4,
+	get_profile_meaning/2,
+	get_profile_meaning/4
 	.
 
 :- discontiguous
@@ -198,7 +204,13 @@
 	is_current_location_near/3,
 	is_current_location_near_relevant/2,
 	is_current_location_near_relevant/1,
-	get_profile_language/1
+	get_profile_language/1,
+	get_profile_competence/2,
+	get_profile_competence/4,
+	get_profile_material/2,
+	get_profile_material/4,
+	get_profile_meaning/2,
+	get_profile_meaning/4
 	.
 
 %!	is_now_less_than(+Time)
@@ -1430,4 +1442,79 @@ is_current_location_near_relevant(Name,MaxDistance) :-
 %	@param Lang the language of the user defined on the profile. If it is not defined return 'en'.
 get_profile_language(Lang) :-
 	(get_profile(Profile), get_attribute(Locale,locale,'en',Profile),sub_string(Locale,0,2,_,Lang)) -> true ; Lang = 'en'
+	.
+
+%!	get_profile_competence(-Competence,+Name)
+%
+%	Obtain the competence on my profile with the specified name.
+%
+%	@param Competence JSON model with the competence information, or @(null) if can not obtain it.
+%	@param Name string name of the competence to obtain.
+get_profile_competence(Competence,Name) :-
+	(get_profile(Profile), get_profile_competence(Competence,Profile,Name,@(null))) -> true ; Competence = @(null)
+	.
+
+%!	get_profile_competence(-Competence,+Profile,+Name,+DefaultValue)
+%
+%	Obtain the competence on a profile with the specified name.
+%
+%	@param Competence JSON model with the competence infprmation, or @(null) if can not obtain it.
+%	@param Profile JSON model with the competence to search.
+%	@param Name string name of the competence to obtain.
+%	@param DefaultValue value to return if not found the competence.
+get_profile_competence(Competence,Profile,Name,DefaultValue) :-
+	( get_attribute(Competences,competences,[],Profile),
+	  member(json(CompetenceFields),Competences),
+	  member(name=Name,CompetenceFields)
+	) -> Competence = json(CompetenceFields) ; Competence = DefaultValue
+	.
+
+%!	get_profile_material(-Material,+Name)
+%
+%	Obtain the material on the profile with the specified name.
+%
+%	@param Material JSON model with the material infprmation, or @(null) if can not obtain it.
+%	@param Name string name of the material to obtain.
+get_profile_material(Material,Name) :-
+	(get_profile(Profile), get_profile_material(Material,Profile,Name,@(null))) -> true ; Material = @(null)
+	.
+
+%!	get_profile_material(-Material,+Profile,+Name,+DefaultValue)
+%
+%	Obtain the material on the profile with the specified name.
+%
+%	@param Material JSON model with the material infprmation, or @(null) if can not obtain it.
+%	@param Profile JSON model with the material to search.
+%	@param Name string name of the material to obtain.
+%	@param DefaultValue value to return if not found the material.
+get_profile_material(Material,Profile,Name,DefaultValue) :-
+	( get_attribute(Materials,materials,[],Profile),
+	  member(json(MaterialFields),Materials),
+	  member(name=Name,MaterialFields)
+	) -> Material = json(MaterialFields) ; Material = DefaultValue
+	.
+
+%!	get_profile_meaning(-Meaning,+Name)
+%
+%	Obtain the meaning on the profile with the specified name.
+%
+%	@param Meaning JSON model with the meaning infprmation, or @(null) if can not obtain it.
+%	@param Name string name of the meaning to obtain.
+get_profile_meaning(Meaning,Name) :-
+	(get_profile(Profile), get_profile_meaning(Meaning,Profile,Name,@(null))) -> true ; Meaning = @(null)
+	.
+
+%!	get_profile_meaning(-Meaning,+Profile,+Name,+DefaultValue)
+%
+%	Obtain the meaning on the profile with the specified name.
+%
+%	@param Meaning JSON model with the meaning infprmation, or @(null) if can not obtain it.
+%	@param Profile JSON model with the meaning to search.
+%	@param Name string name of the meaning to obtain.
+%	@param DefaultValue value to return if not found the meaning.
+get_profile_meaning(Meaning,Profile,Name,DefaultValue) :-
+	( get_attribute(Meanings,meanings,[],Profile),
+	  member(json(MeaningFields),Meanings),
+	  member(name=Name,MeaningFields)
+	) -> Meaning = json(MeaningFields) ; Meaning = DefaultValue
 	.
