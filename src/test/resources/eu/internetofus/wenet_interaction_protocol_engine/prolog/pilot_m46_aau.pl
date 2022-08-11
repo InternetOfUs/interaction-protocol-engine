@@ -70,8 +70,7 @@ thenceforth
 	normalized_diversity(DomainInterestUsers,Users,Attributes,@(null),false)
 	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
 
-% Calculate believe and values if it is similar
-and values
+% Calculate believe and values if it is similar and values
 whenever
 	is_received_event('sortUsersByDiversity',_)
 	and get_task_attribute_value('similar','beliefsAndValues')
