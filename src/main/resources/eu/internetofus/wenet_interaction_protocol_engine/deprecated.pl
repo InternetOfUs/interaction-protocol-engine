@@ -30,7 +30,8 @@
 	wenet_new_task_status/8,
 	notify_incentive_server/2,
 	notify_volunteers_to_social_context_builder/2,
-	wenet_relationships_of_profile/2
+	wenet_relationships_of_profile/2,
+	wenet_new_diversity_data/3
 	.
 
 :- discontiguous
@@ -38,7 +39,8 @@
 	wenet_new_task_status/8,
 	notify_incentive_server/2,
 	notify_volunteers_to_social_context_builder/2,
-	wenet_relationships_of_profile/2
+	wenet_relationships_of_profile/2,
+	wenet_new_diversity_data/3
 	.
 
 %!	wenet_incentive_server_update_task_status(-Updated,+Status)
@@ -146,3 +148,18 @@ wenet_relationships_of_profile(Relationships,Profile) :-
 wenet_user_id_of_relationship(UserId, Relationship) :-
 	wenet_target_id_of_relationship(UserId, Relationship)
 	.
+
+%!	wenet_new_diversity_data(-Data,+UserIds,+AttributeNames)
+%
+%	Create the data necessary to calculate the diversity for some users.
+%
+%	@param Data JSON with the information of the users to calculate the diversity.
+%	@param UserIds list of strings with the identifier of the users to calculate the diversity.
+%	@param AttributeNames list of strings with the names for the attributes to calculate the diversity.
+%
+%   @deprecated use wenet_new_diversity_data_match_all
+%
+wenet_new_diversity_data(Data,UserIds,AttributeNames) :-
+	wenet_new_diversity_data_match_all(Data,UserIds,AttributeNames)
+	.
+

@@ -74,9 +74,11 @@
 	normalized_closeness/3,
 	normalized_closeness_/5,
 	normalized_social_closeness/2,
-	normalized_social_closeness_/3,
+	normalized_social_closeness/3,
+	normalized_social_closeness_/4,
 	normalized_diversity/3,
-	normalized_diversity_/4,
+	normalized_diversity/5,
+	normalized_diversity_/6,
 	my_profile_attributes_similars_to/3,
 	get_relationships/1,
 	delay_to/2,
@@ -105,7 +107,14 @@
 	is_current_location_near/2,
 	is_current_location_near/3,
 	is_current_location_near_relevant/2,
-	is_current_location_near_relevant/1
+	is_current_location_near_relevant/1,
+	get_profile_language/1,
+	get_profile_competence/2,
+	get_profile_competence/4,
+	get_profile_material/2,
+	get_profile_material/4,
+	get_profile_meaning/2,
+	get_profile_meaning/4
 	.
 
 :- discontiguous
@@ -161,9 +170,11 @@
 	normalized_closeness/3,
 	normalized_closeness_/5,
 	normalized_social_closeness/2,
-	normalized_social_closeness_/3,
+	normalized_social_closeness/3,
+	normalized_social_closeness_/4,
 	normalized_diversity/3,
-	normalized_diversity_/4,
+	normalized_diversity/5,
+	normalized_diversity_/6,
 	my_profile_attributes_similars_to/3,
 	get_relationships/1,
 	delay_to/2,
@@ -192,7 +203,14 @@
 	is_current_location_near/2,
 	is_current_location_near/3,
 	is_current_location_near_relevant/2,
-	is_current_location_near_relevant/1
+	is_current_location_near_relevant/1,
+	get_profile_language/1,
+	get_profile_competence/2,
+	get_profile_competence/4,
+	get_profile_material/2,
+	get_profile_material/4,
+	get_profile_meaning/2,
+	get_profile_meaning/4
 	.
 
 %!	is_now_less_than(+Time)
@@ -990,27 +1008,40 @@ normalized_closeness_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,L
 %	@param Users identifiers of the users to calculate the socialness.
 %
 normalized_social_closeness(Socialness,Users) :-
+	normalized_social_closeness(Socialness,Users,0.5)
+	.
+
+%!	normalized_social_closeness(-Socialness,+Users,+DefaultValue)
+%
+%	Calculate the socialness of a user respect some others.
+%
+%	@param Socialness a list with the socialness between a user and some others.
+%	@param Users identifiers of the users to calculate the socialness.
+%	@param DefaultValue value to use cannot obtain the social closeness.
+%
+normalized_social_closeness(Socialness,Users,DefaultValue) :-
 	(
 		get_relationships(Relationships),
 		!,
-		normalized_social_closeness_(Socialness,Users,Relationships)
+		normalized_social_closeness_(Socialness,Users,DefaultValue,Relationships)
 	)
 	-> true
-	; wenet_initialize_user_values(Socialness,Users,0.0)
+	; wenet_initialize_user_values(Socialness,Users,DefaultValue)
 	.
-normalized_social_closeness_([],[],_).
-normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Relationships) :-
+
+normalized_social_closeness_([],[],_,_).
+normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],DefaultValue,Relationships) :-
 	(
 		(
 			member(Relationship,Relationships),
 			wenet_target_id_of_relationship(UserId,Relationship)
 		)
-		-> wenet_weight_of_relationship(Weight,Relationship)
-		; Weight = 0.0
+		-> ( wenet_weight_of_relationship(Weight,Relationship) -> true ; Weight = DefaultValue)
+		; Weight = DefaultValue
 	),
 	!,
 	wenet_new_user_value(UserSocialness,UserId,Weight),
-	normalized_social_closeness_(SocialnessRest,Users,Relationships)
+	normalized_social_closeness_(SocialnessRest,Users,DefaultValue,Relationships)
 	.
 
 %!	normalized_diversity(-Diversity,+Users,+Attributes)
@@ -1022,27 +1053,45 @@ normalized_social_closeness_([UserSocialness|SocialnessRest],[UserId|Users],Rela
 %	@param Attributes array with the names of the attributes to calculate the diversity.
 %
 normalized_diversity(Diversity,Users,Attributes) :-
+	normalized_diversity(Diversity,Users,Attributes,0.0,true)
+	.
+
+%!	normalized_diversity(-Diversity,+Users,+Attributes,+DefaultValue,+MatchAll)
+%
+%	Calculate the diversity of the current user over some other users spscifing the default value
+%   and if has to match all teh atributes or at least one.
+%
+%	@param Diversity a value in the range [0,1] that says how the diverse are the users team.
+%	@param Users array with the users identifiers to calculate the diversity.
+%	@param Attributes array with the names of the attributes to calculate the diversity.
+%	@param DefaultValue value to use cannot obtain the diverstity.
+%	@param Attributes array with the names of the attributes to calculate the diversity.
+%
+normalized_diversity(Diversity,Users,Attributes,DefaultValue,MatchAll) :-
 	(
+		not(length(Attributes,0)),
 		get_profile_id(Me),
-		normalized_diversity_(Diversity,Users,Attributes,Me)
+		normalized_diversity_(Diversity,Users,Attributes,Me,DefaultValue,MatchAll)
 	)
 	-> true
-	; wenet_initialize_user_values(Diversity,Users,0.0)
+	; wenet_initialize_user_values(Diversity,Users,DefaultValue)
 	.
-normalized_diversity_([],[],_,_).
-normalized_diversity_([UserDiversity|UsersDiversity],[User|Users],Attributes,Me) :-
+
+
+normalized_diversity_([],[],_,_,_,_).
+normalized_diversity_([UserDiversity|UsersDiversity],[User|Users],Attributes,Me,DefaultValue,MatchAll) :-
 	(
 		(
-			wenet_new_diversity_data(Data,[Me,User],Attributes),
+			( MatchAll = true -> wenet_new_diversity_data_match_all(Data,[Me,User],Attributes);wenet_new_diversity_data_match_at_least_one(Data,[Me,User],Attributes)),
 			!,
 			wenet_profile_manager_operations_calculate_diversity(Diversity,Data)
 		)
 		-> true
-		; Diversity = 0.0
+		; Diversity = DefaultValue
 	),
 	!,
 	wenet_new_user_value(UserDiversity,User,Diversity),
-	normalized_diversity_(UsersDiversity,Users,Attributes,Me)
+	normalized_diversity_(UsersDiversity,Users,Attributes,Me,DefaultValue,MatchAll)
 	.
 
 %!	my_profile_attributes_similars_to(-Attributes,+Text,+MinSimilarity)
@@ -1383,4 +1432,89 @@ is_current_location_near_relevant(Name,MaxDistance) :-
 	wenet_latitude_of_relevant_location(Latitude,RelevantLocation),
 	wenet_longitude_of_relevant_location(Longitude,RelevantLocation),
 	is_current_location_near(Latitude,Longitude,MaxDistance)
+	.
+
+
+%!	get_profile_language(-Lang)
+%
+%	Extract the language from the profile locale. If it is not defined it return 'en'.
+%
+%	@param Lang the language of the user defined on the profile. If it is not defined return 'en'.
+get_profile_language(Lang) :-
+	(get_profile(Profile), get_attribute(Locale,locale,'en',Profile),sub_string(Locale,0,2,_,Lang)) -> true ; Lang = 'en'
+	.
+
+%!	get_profile_competence(-Competence,+Name)
+%
+%	Obtain the competence on my profile with the specified name.
+%
+%	@param Competence JSON model with the competence information, or @(null) if can not obtain it.
+%	@param Name string name of the competence to obtain.
+get_profile_competence(Competence,Name) :-
+	(get_profile(Profile), get_profile_competence(Competence,Profile,Name,@(null))) -> true ; Competence = @(null)
+	.
+
+%!	get_profile_competence(-Competence,+Profile,+Name,+DefaultValue)
+%
+%	Obtain the competence on a profile with the specified name.
+%
+%	@param Competence JSON model with the competence infprmation, or @(null) if can not obtain it.
+%	@param Profile JSON model with the competence to search.
+%	@param Name string name of the competence to obtain.
+%	@param DefaultValue value to return if not found the competence.
+get_profile_competence(Competence,Profile,Name,DefaultValue) :-
+	( get_attribute(Competences,competences,[],Profile),
+	  member(json(CompetenceFields),Competences),
+	  member(name=Name,CompetenceFields)
+	) -> Competence = json(CompetenceFields) ; Competence = DefaultValue
+	.
+
+%!	get_profile_material(-Material,+Name)
+%
+%	Obtain the material on the profile with the specified name.
+%
+%	@param Material JSON model with the material infprmation, or @(null) if can not obtain it.
+%	@param Name string name of the material to obtain.
+get_profile_material(Material,Name) :-
+	(get_profile(Profile), get_profile_material(Material,Profile,Name,@(null))) -> true ; Material = @(null)
+	.
+
+%!	get_profile_material(-Material,+Profile,+Name,+DefaultValue)
+%
+%	Obtain the material on the profile with the specified name.
+%
+%	@param Material JSON model with the material infprmation, or @(null) if can not obtain it.
+%	@param Profile JSON model with the material to search.
+%	@param Name string name of the material to obtain.
+%	@param DefaultValue value to return if not found the material.
+get_profile_material(Material,Profile,Name,DefaultValue) :-
+	( get_attribute(Materials,materials,[],Profile),
+	  member(json(MaterialFields),Materials),
+	  member(name=Name,MaterialFields)
+	) -> Material = json(MaterialFields) ; Material = DefaultValue
+	.
+
+%!	get_profile_meaning(-Meaning,+Name)
+%
+%	Obtain the meaning on the profile with the specified name.
+%
+%	@param Meaning JSON model with the meaning infprmation, or @(null) if can not obtain it.
+%	@param Name string name of the meaning to obtain.
+get_profile_meaning(Meaning,Name) :-
+	(get_profile(Profile), get_profile_meaning(Meaning,Profile,Name,@(null))) -> true ; Meaning = @(null)
+	.
+
+%!	get_profile_meaning(-Meaning,+Profile,+Name,+DefaultValue)
+%
+%	Obtain the meaning on the profile with the specified name.
+%
+%	@param Meaning JSON model with the meaning infprmation, or @(null) if can not obtain it.
+%	@param Profile JSON model with the meaning to search.
+%	@param Name string name of the meaning to obtain.
+%	@param DefaultValue value to return if not found the meaning.
+get_profile_meaning(Meaning,Profile,Name,DefaultValue) :-
+	( get_attribute(Meanings,meanings,[],Profile),
+	  member(json(MeaningFields),Meanings),
+	  member(name=Name,MeaningFields)
+	) -> Meaning = json(MeaningFields) ; Meaning = DefaultValue
 	.

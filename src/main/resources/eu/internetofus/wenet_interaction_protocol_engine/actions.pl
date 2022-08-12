@@ -45,7 +45,8 @@
 	notify_message_interaction/1,
 	selected_answer_from_last_ranking/1,
 	discard_event/2,
-	discard_event/1
+	discard_event/1,
+	social_ranking/2
 	.
 
 :- discontiguous
@@ -75,7 +76,8 @@
 	notify_message_interaction/1,
 	selected_answer_from_last_ranking/1,
 	discard_event/2,
-	discard_event/1
+	discard_event/1,
+	social_ranking/2
 	.
 
 
@@ -434,7 +436,7 @@ volunteers_ranking(Ranking,Volunteers):-
 	get_profile_id(Me),
 	get_task_id(TaskId),
 	!,
-	ignore(wenet_social_context_builder_post_preferences(Ranking,Me,TaskId,Volunteers))
+	( wenet_social_context_builder_post_preferences(Ranking,Me,TaskId,Volunteers) -> true ; Ranking = Volunteers)
 	.
 
 %!	answers_ranking(-Ranking,+Answers)
@@ -629,3 +631,15 @@ discard_event(Id) :-
 %
 discard_event(Success,Id) :-
 	wenet_interaction_protocol_engine_delete_event(Id) -> Success = true; Success= false.
+
+
+%!	social_ranking(-ShuffledUserIds,+UserIds)
+%
+%	Shuffle the user based on diversity attributes.
+%
+%	@param ShuffledUserIds array of strings with the shuffled user ids.
+%	@param UserIds array of strings with the user identifiers to shuffle.
+%
+social_ranking(ShuffledUserIds,UserIds) :-
+	( wenet_social_context_builder_post_social_shuffle(ShuffledUserIds,UserIds) -> true ; ShuffledUserIds = UserIds )
+	.

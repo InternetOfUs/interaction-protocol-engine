@@ -3,6 +3,13 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
+## Version 1.3.0 (2022-08-12)
+
+ * Update common protocols.
+ * Use 0.5 as defualt social closeness if it is not defined.
+ * Test the M46 pilots norms.
+
+
 ## Version 1.2.0 (2022-06-10)
 
  * Fix OpenAPI documentation.

@@ -45,7 +45,9 @@
 	wenet_user_values_to_user_ids/2,
 	wenet_product_user_values/3,
 	wenet_error_to_string/2,
-	wenet_to_string/2
+	wenet_to_string/2,
+	wenet_value_of_user_id_from_user_values/4,
+	wenet_json_element_with/4
 	.
 
 :- discontiguous
@@ -79,7 +81,9 @@
 	wenet_user_values_to_user_ids/2,
 	wenet_product_user_values/3,
 	wenet_error_to_string/2,
-	wenet_to_string/2
+	wenet_to_string/2,
+	wenet_value_of_user_id_from_user_values/4,
+	wenet_json_element_with/4
 	.
 
 :- autoload(library(http/json)).
@@ -568,7 +572,7 @@ wenet_negate_user_value([],[]).
 wenet_negate_user_value([Target|TargetRest],[Source|SourceRest]) :-
 	wenet_user_id_from_user_value(UserId,Source),
 	wenet_value_from_user_value(Value,Source),
-	Negate is 1.0 - Value,
+	(number(Value) -> Negate is 1.0 - Value ; Negate = Value),
 	wenet_new_user_value(Target,UserId,Negate),
 	wenet_negate_user_value(TargetRest,SourceRest)
 	.
@@ -584,7 +588,7 @@ wenet_user_values_to_value_user_id_pairs([],[]).
 wenet_user_values_to_value_user_id_pairs([Pair|Pairs],[User|Users]) :-
 	wenet_user_id_from_user_value(UserId,User),
 	wenet_value_from_user_value(Value,User),
-	Pair = Value-UserId,
+	( number(Value) -> Pair = Value-UserId ; Pair = -1-UserId),
 	wenet_user_values_to_value_user_id_pairs(Pairs,Users)
 	.
 
@@ -597,7 +601,7 @@ wenet_user_values_to_value_user_id_pairs([Pair|Pairs],[User|Users]) :-
 %
 wenet_value_user_id_pairs_to_user_values([],[]).
 wenet_value_user_id_pairs_to_user_values([User|Users],[Value-UserId|Pairs]) :-
-	wenet_new_user_value(User,UserId,Value),
+	( Value = -1  -> wenet_new_user_value(User,UserId,@(null)) ; wenet_new_user_value(User,UserId,Value) ),
 	wenet_value_user_id_pairs_to_user_values(Users,Pairs)
 	.
 
@@ -641,14 +645,27 @@ wenet_product_user_values([],[],_).
 wenet_product_user_values([Product|Products],[User|Users],Source) :-
 	wenet_user_id_from_user_value(UserId,User),
 	wenet_value_from_user_value(Value,User),
-	(
-		( member(SourceUser,Source), wenet_user_id_from_user_value(UserId,SourceUser), wenet_value_from_user_value(SourceValue,SourceUser) )
-		-> ProductValue is Value * SourceValue
-		; ProductValue = 0.0
-	),
+	wenet_value_of_user_id_from_user_values(SourceValue,UserId,Source,0.0),
+	ProductValue is Value * SourceValue,
 	!,
 	wenet_new_user_value(Product,UserId,ProductValue),
 	wenet_product_user_values(Products,Users,Source)
+	.
+
+
+%!	wenet_value_of_user_id_from_user_values(-Value,+UserId,+UserValues,+DefaultValue)
+%
+%	Obtain the value associated to a user .
+%
+%	@param Value associated to the user.
+%	@param UserId identifier of teh user to get the value.
+%	@param UserValues list of user values to obtain the value of a user.
+%	@param DefaultValue value to return if it is not defined.
+%
+wenet_value_of_user_id_from_user_values(Value,UserId,UserValues,DefaultValue) :-
+	( member(UserValue,UserValues), wenet_user_id_from_user_value(UserId,UserValue) )
+	-> ( wenet_value_from_user_value(Value,UserValue) ->true; Value = DefaultValue )
+	; Value = DefaultValue
 	.
 
 
@@ -677,4 +694,19 @@ wenet_to_string(String,Any) :-
 		atom(Any) ->
 			atom_string(Any,String) ;
 			term_string(Any,String)
+	.
+
+%!	wenet_json_element_with(-Element,+Arrray,+Field,+DefaultValue)
+%
+%	Obtain an elment of a list of json values.
+%
+%	@param Element json found element.
+%	@param Array list of json elements.
+%	@param Field pair key=value that has to be defined on the element to get.
+%	@param DefaultValue value to return if it is not found.
+%
+wenet_json_element_with(Element,Array,Field,DefaultValue) :-
+	( member(json(Fields),Array), member(Field,Fields) )
+	-> Element = json(Fields)
+	; Element = DefaultValue
 	.

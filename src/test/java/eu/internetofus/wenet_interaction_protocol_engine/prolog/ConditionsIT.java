@@ -121,6 +121,45 @@ public class ConditionsIT extends AbstractConditionsITC {
     conditions.add("is_now_between_times('" + lower + "','" + upper + "')");
     conditions.add("is_now_between_times(\"" + lower + "\",\"" + upper + "\")");
 
+    conditions.add("get_profile_language(\"" + this.users.get(0).locale.substring(0, 2) + "\")");
+
+    conditions.add(
+        "wenet_value_of_user_id_from_user_values(1.0,\"0\",[json([userId=\"0\",value=1.0]),json([userId=\"1\",value=0.0])],-1)");
+    conditions.add(
+        "wenet_value_of_user_id_from_user_values(0.0,\"1\",[json([userId=\"0\",value=1.0]),json([userId=\"1\",value=0.0])],-1)");
+    conditions.add(
+        "wenet_value_of_user_id_from_user_values(-1,\"2\",[json([userId=\"0\",value=1.0]),json([userId=\"1\",value=0.0])],-1)");
+
+    conditions.add("get_profile_competence(@(null),'undefined')");
+    conditions.add("get_profile_competence(json([]),json([]),'undefined',json([]))");
+    conditions.add("get_profile_competence(json([]),json([competences=[]]),'undefined',json([]))");
+    conditions.add(
+        "get_profile_competence(json([name='1',ontology='onto',level=0]),json([competences=[json([name='1',ontology='onto',level=0])]]),'1',json([]))");
+    conditions.add(
+        "get_profile_competence(json([]),json([competences=[json([name='1',ontology='onto',level=0])]]),'2',json([]))");
+    conditions.add(
+        "get_profile_competence(json([name='2',ontology='onto2',level=0.2]),json([competences=[json([name='1',ontology='onto',level=0]),json([name='3',ontology='onto3',level=0.3]),json([name='2',ontology='onto2',level=0.2])]]),'2',json([]))");
+
+    conditions.add("get_profile_material(@(null),'undefined')");
+    conditions.add("get_profile_material(json([]),json([]),'undefined',json([]))");
+    conditions.add("get_profile_material(json([]),json([materials=[]]),'undefined',json([]))");
+    conditions.add(
+        "get_profile_material(json([name='1',description='desc',quantity=0]),json([materials=[json([name='1',description='desc',quantity=0])]]),'1',json([]))");
+    conditions.add(
+        "get_profile_material(json([]),json([materials=[json([name='1',description='desc',quantity=0])]]),'2',json([]))");
+    conditions.add(
+        "get_profile_material(json([name='2',description='desc2',quantity=2]),json([materials=[json([name='1',description='desc',quantity=0]),json([name='3',description='desc3',quantity=3]),json([name='2',description='desc2',quantity=2])]]),'2',json([]))");
+
+    conditions.add("get_profile_meaning(@(null),'undefined')");
+    conditions.add("get_profile_meaning(json([]),json([]),'undefined',json([]))");
+    conditions.add("get_profile_meaning(json([]),json([meanings=[]]),'undefined',json([]))");
+    conditions.add(
+        "get_profile_meaning(json([name='1',category='cat',level=0]),json([meanings=[json([name='1',category='cat',level=0])]]),'1',json([]))");
+    conditions
+        .add("get_profile_meaning(json([]),json([meanings=[json([name='1',category='cat',level=0])]]),'2',json([]))");
+    conditions.add(
+        "get_profile_meaning(json([name='2',category='cat2',level=0.2]),json([meanings=[json([name='1',category='cat',level=0]),json([name='3',category='cat3',level=0.3]),json([name='2',category='cat2',level=0.2])]]),'2',json([]))");
+
     return conditions;
 
   }
