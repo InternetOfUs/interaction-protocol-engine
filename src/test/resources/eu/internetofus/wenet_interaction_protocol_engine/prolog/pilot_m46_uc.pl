@@ -200,7 +200,8 @@ uc_competence_names(['c_logic'
 calculate_competences_value_(0.0,0.0,_,[]).
 calculate_competences_value_(Sum,Total,Profile,[Name|Competences]):-
 	calculate_competences_value_(PrevSum,PrevTotal,Profile,Competences),
-	get_profile_competence(Value,Profile,Name,@(null)),
+	get_profile_competence(Competence,Profile,Name,@(null)),
+	get_attribute(Value,level,@(null),Competence),
 	(number(Value)->(Sum is PrevSum + Value,Total is PrevTotal + 1.0);(Sum=PrevSum,Total=PrevTotal))
 	.
 
@@ -263,6 +264,182 @@ initialize_users_to_group_0([],[]).
 initialize_users_to_group_0([json([userId=UserId,group=0,explanationType=group_0])|GroupsUsers],[UserId|Users]) :-
 	initialize_users_to_group_0(GroupsUsers,Users).
 
+% Calculate match value for at least one requirement
+whenever
+	is_received_event('aggregateUsersByDiversity',_)
+	and not(are_all_dimensions_indifferent())
+thenceforth
+	calculate_match_degree_for(MatchUsers,GroupsUsers)
+	and put_task_state_attribute('matchUsers',MatchUsers)
+	and put_task_state_attribute('groupsUsers',GroupsUsers)
+	.
+
+:- dynamic
+	calculate_match_degree_for/2,
+	calculate_match_degree_for_/7,
+	calculate_user_match_degree_for/6,
+	explanation_type_for/4,
+	group_indexes_for_domain/5,
+	group_indexes_for_value/7,
+	group_indexes_for_competences/5,
+	group_indexes_for_physical/7,
+	group_for/5.
+
+calculate_match_degree_for(ReverseSortedMatchUsers,GroupsUsers) :-
+	get_task_state_attribute(Users,'appUsers'),
+	get_task_state_attribute(DomainInterestUsers,'domainInterestUsers'),
+	get_task_state_attribute(BeliefsAndValuesUsers,'beliefsAndValuesUsers'),
+	get_task_state_attribute(CompetencesUsers,'competencesUsers'),
+	get_task_state_attribute(PhysicalClosenessUsers,'physicalClosenessUsers'),
+	calculate_match_degree_for_(MatchUsers,GroupsUsers,Users,DomainInterestUsers,BeliefsAndValuesUsers,CompetencesUsers,PhysicalClosenessUsers),
+	wenet_sort_user_values_by_value(SortedMatchUsers,MatchUsers),
+	reverse(ReverseSortedMatchUsers,SortedMatchUsers)
+	.
+calculate_match_degree_for_([],[],[],_,_,_,_).
+calculate_match_degree_for_([MatchUser|MatchUsers],[GroupUser|GroupUsers],[UserId|UserIds],DomainInterestUsers,BeliefsAndValuesUsers,CompetencesUsers,PhysicalClosenessUsers) :-
+	calculate_user_match_degree_for(MatchUser,GroupUser,UserId,DomainInterestUsers,BeliefsAndValuesUsers,CompetencesUsers,PhysicalClosenessUsers),
+	calculate_match_degree_for_(MatchUsers,GroupUsers,UserIds,DomainInterestUsers,BeliefsAndValuesUsers,CompetencesUsers,PhysicalClosenessUsers)
+	.
+
+calculate_user_match_degree_for(MatchUser,GroupUser,UserId,DomainInterestUsers,BeliefsAndValuesUsers,CompetencesUsers,PhysicalClosenessUsers) :-
+	wenet_value_of_user_id_from_user_values(DomainInterest,UserId,DomainInterestUsers,@(null)),
+	wenet_value_of_user_id_from_user_values(BeliefsAndValues,UserId,BeliefsAndValuesUsers,@(null)),
+	wenet_value_of_user_id_from_user_values(Competences,UserId,CompetencesUsers,@(null)),
+	wenet_value_of_user_id_from_user_values(PhysicalCloseness,UserId,PhysicalClosenessUsers,@(null)),
+	group_indexes_for_domain(MdX,X,SS,SB,DomainInterest),
+	group_indexes_for_value(MdV,Y,SS1,SB1,SS,SB,BeliefsAndValues),
+	group_indexes_for_competences(MdC,Z,HS,HB,Competences),
+	group_indexes_for_physical(MdPC,W,HS1,HB1,HS,HB,PhysicalCloseness),
+	( (X = 0 , Y = 0, Z = 0, W = 0) -> Value = 0 ; Value is (X*MdX + Y*MdV + Z*MdC + W*MdPC )/(X + Y + Z + W) ),
+	wenet_new_user_value(MatchUser,UserId,Value),
+	group_for(Group,SS1,SB1,HS1,HB1),
+	explanation_type_for(ExplanationType,Group,PhysicalCloseness,Competences),
+  	GroupUser = json([userId=UserId,group=Group,explanationType=ExplanationType])
+	.
+
+group_indexes_for_domain(DomainInterest,1,1,0,DomainInterest) :-
+	number(DomainInterest),
+	>(DomainInterest,0.0),
+	!.
+group_indexes_for_domain(0.0,0,0,1,DomainInterest) :-
+	number(DomainInterest),
+	DomainInterest =:= 0.0,
+	!.
+group_indexes_for_domain(0.0,0,0,0,_) :-
+	!.
+
+
+group_indexes_for_value(BeliefsAndValues,1,SS1,SB,SS,SB,BeliefsAndValues) :-
+	number(BeliefsAndValues),
+	>(BeliefsAndValues,0.0),
+	!,
+	SS1 is SS + 1.
+group_indexes_for_value(0.0,0,SS,SB1,SS,SB,BeliefsAndValues) :-
+	number(BeliefsAndValues),
+	BeliefsAndValues =:= 0.0,
+	!,
+	SB1 is SB + 1.
+group_indexes_for_value(0.0,0,SS,SB,SS,SB,_) :-
+	!.
+
+
+group_indexes_for_competences(Competences,1,1,0,Competences) :-
+	number(Competences),
+	>(Competences,0.0),
+	!.
+group_indexes_for_competences(0.0,0,0,1,Competences) :-
+	number(Competences),
+	Competences =:= 0.0,
+	!.
+group_indexes_for_competences(0.0,0,0,0,_) :-
+	!.
+
+group_indexes_for_physical(PhysicalCloseness,1,HS1,HB,HS,HB,PhysicalCloseness) :-
+	number(PhysicalCloseness),
+	>(PhysicalCloseness,0.0),
+	!,
+	HS1 is HS + 1.
+group_indexes_for_physical(0.0,0,HS,1,HS,_,PhysicalCloseness) :-
+	number(PhysicalCloseness),
+	PhysicalCloseness =:= 0.0,
+	!.
+group_indexes_for_physical(0.0,0,HS,HB,HS,HB,_) :-
+	!.
+
+group_for(Group,SS,SB,_,0):-
+	>(SS,0),
+	!,
+	Group is 1 + SB.
+group_for(3,_,_,_,0):-
+	!.
+group_for(Group,SS,SB,1,1):-
+	>(SS,0),
+	!,
+	Group is 5 + SB.
+group_for(6,_,_,1,1):-
+	!.
+group_for(Group,SS,SB,_,_):-
+	>(SS,0),
+	!,
+	Group is 7 + SB.
+group_for(9,_,_,_,_):-
+	!.
+
+explanation_type_for(group_0,0,_,_) :- !.
+explanation_type_for(group_1,1,_,_) :- !.
+explanation_type_for(group_2_3_a,Group,MdPC,MdC) :-
+	(Group = 2; Group = 3),
+	number(MdPC),
+	number(MdC),
+	!.
+explanation_type_for(group_2_3_b,Group,MdPC,MdC) :-
+	(Group = 2; Group = 3),
+	not(number(MdPC)),
+	number(MdC),
+	!.
+explanation_type_for(group_2_3_c,Group,_,_) :-
+	(Group = 2; Group = 3),
+	!.
+explanation_type_for(group_4_a,4,MdPC,MdC) :-
+	number(MdPC),
+	MdPC =:= 0.0,
+	number(MdC),
+	>(MdC,0.0),
+	!.
+explanation_type_for(group_4_b,4,_,_) :-
+	!.
+explanation_type_for(group_5_6_a,Group,MdPC,MdC) :-
+	(Group = 5; Group = 6),
+	number(MdPC),
+	MdPC =:= 0.0,
+	number(MdC),
+	>(MdC,0.0),
+	!.
+explanation_type_for(group_5_6_b,Group,_,_) :-
+	(Group = 5; Group = 6),
+	!.
+explanation_type_for(group_7_8_a,Group,MdPC,MdC) :-
+	(Group = 7; Group = 8),
+	number(MdPC),
+	number(MdC),
+	!.
+explanation_type_for(group_7_8_b,Group,MdPC,MdC) :-
+	(Group = 7; Group = 8),
+	not(number(MdPC)),
+	number(MdC),
+	!.
+explanation_type_for(group_7_8_c,Group,_,_) :-
+	(Group = 7; Group = 8),
+	!.
+explanation_type_for(group_9,9,_,_) :- !.
+explanation_type_for(@(null),_,_,_) :- !.
+
+
+% After caluclated the matching go to rank them
+whenever
+	is_received_event('aggregateUsersByDiversity',_)
+thenceforth
+	send_event(_,1,'rankMatchUsers',json([])).
 % Call the social context builder to rank the user by its match
 whenever
 	is_received_event('rankMatchUsers',_)

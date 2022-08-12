@@ -222,7 +222,7 @@ thenceforth
 
 :- dynamic
 	calculate_match_degree_for/2,
-	calculate_match_degree_for_/7,
+	calculate_match_degree_for_/8,
 	calculate_user_match_degree_for/7,
 	explanation_type_for/5,
 	group_indexes_for_domain/5,
