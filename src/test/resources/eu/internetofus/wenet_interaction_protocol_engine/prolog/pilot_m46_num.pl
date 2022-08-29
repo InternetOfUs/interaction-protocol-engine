@@ -71,11 +71,11 @@ domain_attributes('basic_needs',['competences.c_food','competences.c_accom']).
 domain_attributes('campus_life',['materials.degree_programme']).
 domain_attributes('academic_skills',['competences.course_fa','competences.course_plc','competences.course_oop']).
 domain_attributes('appreciating_culture',['competences.c_lit','competences.c_app_mus','competences.c_plays','competences.c_musgall']).
-domain_attributes('performing_producing_culture',['competences.c_creatlit','competences.c_perf_mus','competences.c_perf_plays','competences.c_perf_art']).
-domain_attributes('physical_activities_sports',['competences.c_watch_sp','competences.c_ind_sp','competences.c_team_sp']).
-domain_attributes('things_to_do_about_town',['competences.c_eating','competences.c_locfac','materials.degree_programme']).
+domain_attributes('producing_culture',['competences.c_creatlit','competences.c_perf_mus','competences.c_perf_plays','competences.c_perf_art']).
+domain_attributes('physical_activity',['competences.c_watch_sp','competences.c_ind_sp','competences.c_team_sp']).
+domain_attributes('leisure_activities',['competences.c_eating','competences.c_locfac','materials.degree_programme']).
 domain_attributes('random_thoughts',['competences.c_food','competences.c_eating','competences.c_lit','competences.c_createlit','competences.c_app_mus','competences.c_perf_mus','competences.c_plays','competences.c_perf_plays','competences.c_musgall','competences.c_perf_art','competences.c_watch_sp','competences.c_ind_sp','competences.c_team_sp','competences.c_accom','competences.c_locfac','competences.u_active','competences.u_read','competences.u_essay','competences.u_org','competences.u_balance','competences.u_assess','competences.u_theory','competences.u_pract']).
-domain_attributes('sensitive_issues',[]).
+domain_attributes('sensitive',[]).
 domain_attributes(_,[]).
 
 
