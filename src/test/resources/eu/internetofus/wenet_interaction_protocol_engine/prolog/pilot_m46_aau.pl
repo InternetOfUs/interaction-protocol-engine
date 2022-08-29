@@ -580,6 +580,17 @@ cancel_expiration_event() :-
 	 	; ( wenet_interaction_protocol_engine_delete_event(TimerId) -> true ; wenet_log_error('Cannot cancel previous event'))
 	).
 
+% Notify the user that its answer is picked
+whenever
+	is_received(_,'closeQuestionTransaction',_)
+	and get_profile_id(Me)
+	and get_task_requester_id(Me)
+	and not(is_task_closed())
+thenceforth
+	add_message_transaction()
+	and close_task()
+	.
+
 % Nothing to do with this transaction only store it
 whenever
 	is_received_do_transaction('reportAnswerTransaction',_)
@@ -589,22 +600,24 @@ whenever
 thenceforth
 	add_message_transaction().
 
-% Send expiration message if received max answers
+% Nothing to do with this transaction only store it
 whenever
-	is_received(_,'checkMaxAnswers',_)
-	and get_task_state_attribute(AnswersTransactionIds,'answersTransactionIds',[])
-	and length(AnswersTransactionIds,AnswersCount)
-	and get_task_attribute_value(MaxAnswers,'maxAnswers')
-	and =<(MaxAnswers,AnswersCount)
+	is_received_do_transaction('likeAnswerTransaction',Attributes)
+	and get_profile_id(Me)
+	and get_task_requester_id(Me)
+	and not(is_task_closed())
+	and get_attribute(TransactionId,transactionId,Attributes)
+	and get_transaction(_,TransactionId)
 thenceforth
-	send_event(_,1,'notifyQuestionExpirationMessage',json([])).
+	add_message_transaction().
 
-% Notify user of the expiration message
+% Nothing to do with this transaction only store it
 whenever
-	is_received_event('notifyQuestionExpirationMessage',_)
-	and get_task_state_attribute(AnswersTransactionIds,'answersTransactionIds',[])
-	and get_task_id(TaskId)
-	and get_task_goal_name(Question)
+	is_received_do_transaction('followUpTransaction',Attributes)
+	and get_profile_id(Me)
+	and not(get_task_requester_id(Me))
+	and not(is_task_closed())
+	and get_attribute(TransactionId,transactionId,Attributes)
+	and get_transaction(_,TransactionId)
 thenceforth
-	send_user_message('QuestionExpirationMessage',json([taskId=TaskId,question=Question,listOfTransactionIds=AnswersTransactionIds]))
-	and cancel_expiration_event().
+	add_message_transaction().

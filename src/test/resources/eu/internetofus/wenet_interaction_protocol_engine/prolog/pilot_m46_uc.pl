@@ -475,11 +475,11 @@ whenever
 	and get_task_id(TaskId)
 	and get_task_goal_name(Question)
 	and get_task_requester_id(RequesterId)
-	and get_task_attribute_value(Sensitive,'sensitive')
+	and get_task_attribute_value(Domain,'domain')
 	and get_task_attribute_value(Anonymous,'anonymous')
 	and get_task_attribute_value(PositionOfAnswerer,'positionOfAnswerer').
 thenceforth
-	send_user_message('QuestionToAnswerMessage',json([taskId=TaskId,question=Question,userId=RequesterId,sensitive=Sensitive,anonymous=Anonymous,positionOfAnswerer=PositionOfAnswerer])).
+	send_user_message('QuestionToAnswerMessage',json([taskId=TaskId,question=Question,userId=RequesterId,domain=Domain,anonymous=Anonymous,positionOfAnswerer=PositionOfAnswerer])).
 
 % Provide an answer to a question
 whenever

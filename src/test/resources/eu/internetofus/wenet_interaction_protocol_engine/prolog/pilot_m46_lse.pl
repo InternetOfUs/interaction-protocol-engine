@@ -576,7 +576,7 @@ thenceforth
 whenever
 	is_received_do_transaction('followUpTransaction',Attributes)
 	and get_profile_id(Me)
-	and not(get_task_requester_id(Me)
+	and not(get_task_requester_id(Me))
 	and not(is_task_closed())
 	and get_attribute(TransactionId,transactionId,Attributes)
 	and get_transaction(_,TransactionId)
