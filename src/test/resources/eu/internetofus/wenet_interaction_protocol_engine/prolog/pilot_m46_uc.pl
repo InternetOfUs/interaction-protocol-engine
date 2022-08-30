@@ -222,7 +222,7 @@ whenever
 	and get_task_attribute_value('nearby','positionOfAnswerer')
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-	normalized_closeness(PhysicalClosenessUsers,Users,500)
+	normalized_closeness(PhysicalClosenessUsers,Users,1000)
 	and put_task_state_attribute('physicalClosenessUsers',PhysicalClosenessUsers).
 
 % Calculate physical closeness if it is anywhere
