@@ -29,7 +29,7 @@ whenever
 	and get_task_attribute_value('similar','socialCloseness')
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-	normalized_social_closeness(SocialClosenessUsers,Users,@(null))
+	normalized_social_closeness(SocialClosenessUsers,Users,0.5)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 % Order the users by different social closeness
@@ -38,7 +38,7 @@ whenever
 	and get_task_attribute_value('different','socialCloseness')
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-    normalized_social_closeness(Socialness,Users,@(null))
+    normalized_social_closeness(Socialness,Users,0.5)
 	and wenet_negate_user_value(SocialClosenessUsers,Socialness)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
@@ -440,7 +440,7 @@ explanation(ExplanationTitle,ExplanationText,UserId,SocialClosenessUsers,Beliefs
 			wenet_value_of_user_id_from_user_values(SocialCloseness,UserId,SocialClosenessUsers,@(null)),
 		 	wenet_value_of_user_id_from_user_values(BeliefsAndValue,UserId,BeliefsAndValuesUsers,@(null)),
 		 	wenet_value_of_user_id_from_user_values(DomainInterest,UserId,DomainInterestUsers,@(null)),
-		 	( (number(SocialCloseness);number(BeliefsAndValue);number(DomainInterest)) -> Type = type2 ; Type = type3)
+		 	( ((number(SocialCloseness),>(SocialCloseness,0.5));(number(BeliefsAndValue),>(BeliefsAndValue,0.0));(number(DomainInterest),>(DomainInterest,0.0))) -> Type = type2 ; Type = type3)
 		 )
 	),
 	explanation_text(ExplanationText,Type,Lang).
