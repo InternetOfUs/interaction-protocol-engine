@@ -137,7 +137,7 @@ calculate_social_closeness_users([SocialClosenessUser|SocialClosenessUsers],[Use
 	is_user_q04_greather_or_equal_to_requester(Result,User),
 	(Result = true-> wenet_value_of_user_id_from_user_values(Value,User,Similarity,0.0); Value = 0.0 ),
 	wenet_new_user_value(SocialClosenessUser,User,Value),
-	calculate_social_closeness_users(SocialClosenessUsers,Users)
+	calculate_social_closeness_users(SocialClosenessUsers,Users,Similarity)
 	.
 
 is_user_q04_greather_or_equal_to_requester(Result,UserId) :-
