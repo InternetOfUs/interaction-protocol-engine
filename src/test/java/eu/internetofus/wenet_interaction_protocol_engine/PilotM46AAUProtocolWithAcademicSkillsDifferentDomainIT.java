@@ -21,7 +21,7 @@
 package eu.internetofus.wenet_interaction_protocol_engine;
 
 import eu.internetofus.common.protocols.DefaultProtocols;
-import eu.internetofus.common.protocols.PilotM46AAUProtocolWithAcademicSkillsDomainITC;
+import eu.internetofus.common.protocols.PilotM46AAUProtocolWithAcademicSkillsDifferentDomainITC;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
@@ -32,6 +32,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class PilotM46AAUProtocolWithAcademicSkillsDomainIT extends PilotM46AAUProtocolWithAcademicSkillsDomainITC {
+public class PilotM46AAUProtocolWithAcademicSkillsDifferentDomainIT extends PilotM46AAUProtocolWithAcademicSkillsDifferentDomainITC {
 
 }
