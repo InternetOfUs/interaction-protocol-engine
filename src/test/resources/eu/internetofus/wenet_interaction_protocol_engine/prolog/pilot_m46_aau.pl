@@ -121,12 +121,36 @@ whenever
 	and get_profile_attribues_by_social_closeness(Attributes)
 thenceforth
 	normalized_diversity(Diversity,Users,Attributes,@(null),false)
-	and wenet_negate_user_value(SocialClosenessUsers,Diversity)
+	and wenet_negate_user_value(Similarity,Diversity)
+	and calculate_social_closeness_users(SocialClosenessUsers,Users,Similarity)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
-:- dynamic get_profile_attribues_by_social_closeness/1.
-get_profile_attribues_by_social_closeness(['materials.study_year','materials.degree_programme']).
+:- dynamic
+	get_profile_attribues_by_social_closeness/1,
+	calculate_social_closeness_users/3,
+	is_user_q04_greather_or_equal_to_requester/2.
 
+get_profile_attribues_by_social_closeness(['materials.degree_programme']).
+
+calculate_social_closeness_users([],[],_).
+calculate_social_closeness_users([SocialClosenessUser|SocialClosenessUsers],[User|Users],Similarity) :-
+	is_user_q04_greather_or_equal_to_requester(Result,User),
+	(Result = true-> wenet_value_of_user_id_from_user_values(Value,User,Similarity,0.0); Value = 0.0 ),
+	wenet_new_user_value(SocialClosenessUser,User,Value),
+	calculate_social_closeness_users(SocialClosenessUsers,Users)
+	.
+
+is_user_q04_greather_or_equal_to_requester(Result,UserId) :-
+	 (wenet_profile_manager_get_profile(UserProfile,UserId)->true;UserProfile=json([])),
+	 get_profile(Profile),
+	 get_profile_material(UserMaterial,UserProfile,'study_year',json([])),
+	 get_profile_material(Material,Profile,'study_year',json([])),
+	 get_attribute(UserValue,description,'',UserMaterial),
+	 get_attribute(Value,description,'',Material),
+	 (UserValue @>= Value -> Result = true; Result = false),
+	 !,
+	 asserta(is_user_q04_greather_or_equal_to_requester(Result,UserId))
+	.
 
 % Calculate social closeness if it is different and domain is 'academic skills'
 whenever
@@ -136,7 +160,8 @@ whenever
 	and get_task_state_attribute(Users,'appUsers')
 	and get_profile_attribues_by_social_closeness(Attributes)
 thenceforth
-	normalized_diversity(SocialClosenessUsers,Users,Attributes,@(null),false)
+	normalized_diversity(Diversity,Users,Attributes,@(null),false)
+	and calculate_social_closeness_users(SocialClosenessUsers,Users,Diversity)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 % Calculate social closeness if it is similar and domain is not 'academic skills'
@@ -289,7 +314,8 @@ group_indexes_for_value(0.0,0,SS,SB1,SS,SB,BeliefsAndValues) :-
 group_indexes_for_value(0.0,0,SS,SB,SS,SB,_) :-
 	!.
 
-group_indexes_for_social(SocialCloseness,1,SS1,SB1,0,1,SS1,SB1,'academic_skills',SocialCloseness) :-
+group_indexes_for_social(SocialCloseness,1,SS1,SB1,0,1,SS1,SB1,Domain,SocialCloseness) :-
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	number(SocialCloseness),
 	>(SocialCloseness,0.0),
 	!.
@@ -298,7 +324,8 @@ group_indexes_for_social(SocialCloseness,1,SS2,SB1,0,0,SS1,SB1,_,SocialCloseness
 	>(SocialCloseness,0.0),
 	!,
 	SS2 is SS1 + 1.
-group_indexes_for_social(0.0,0,SS1,SB1,1,0,SS1,SB1,'academic_skills',SocialCloseness) :-
+group_indexes_for_social(0.0,0,SS1,SB1,1,0,SS1,SB1,Domain,SocialCloseness) :-
+    ( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	number(SocialCloseness),
 	SocialCloseness =:= 0.0,
 	!.
@@ -348,13 +375,13 @@ explanation_type_for(group_2_3_4_a,Group,MdPC,MdSC,Domain) :-
 	(Group = 2; Group = 3;  Group = 4),
 	number(MdPC),
 	number(MdSC),
-	Domain = 'academic_skills',
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	!.
 explanation_type_for(group_2_3_4_b,Group,MdPC,MdSC,Domain) :-
 	(Group = 2; Group = 3;  Group = 4),
 	not(number(MdPC)),
 	number(MdSC),
-	Domain = 'academic_skills',
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	!.
 explanation_type_for(group_2_3_4_c,Group,_,_,_) :-
 	(Group = 2; Group = 3;  Group = 4),
@@ -364,7 +391,7 @@ explanation_type_for(group_5_a,5,MdPC,MdSC,Domain) :-
 	MdPC =:= 0.0,
 	number(MdSC),
 	>(MdSC,0.0),
-	Domain = 'academic_skills',
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	!.
 explanation_type_for(group_5_b,5,_,_,_) :-
 	!.
@@ -374,7 +401,7 @@ explanation_type_for(group_6_7_8_a,Group,MdPC,MdSC,Domain) :-
 	MdPC =:= 0.0,
 	number(MdSC),
 	>(MdSC,0.0),
-	Domain = 'academic_skills',
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	!.
 explanation_type_for(group_6_7_8_b,Group,_,_,_) :-
 	(Group = 6; Group = 7;  Group = 8),
@@ -383,13 +410,13 @@ explanation_type_for(group_9_10_11_a,Group,MdPC,MdSC,Domain) :-
 	(Group = 9; Group = 10;  Group = 11),
 	number(MdPC),
 	number(MdSC),
-	Domain = 'academic_skills',
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	!.
 explanation_type_for(group_9_10_11_b,Group,MdPC,MdSC,Domain) :-
 	(Group = 9; Group = 10;  Group = 11),
 	not(number(MdPC)),
 	number(MdSC),
-	Domain = 'academic_skills',
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	!.
 explanation_type_for(group_9_10_11_c,Group,_,_,_) :-
 	(Group = 9; Group = 10;  Group = 11),
