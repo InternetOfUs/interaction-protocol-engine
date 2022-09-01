@@ -31,15 +31,6 @@ thenceforth
 	wenet_initialize_user_values(DomainInterestUsers,Users,@(null))
 	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
 
-% Calculate domain dimension if domain is 'sessitive issue'
-whenever
-	is_received_event('sortUsersByDiversity',_)
-	and get_task_attribute_value('sensitive_issue','domain')
-	and get_task_state_attribute(Users,'appUsers')
-thenceforth
-	wenet_initialize_user_values(DomainInterestUsers,Users,@(null))
-	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
-
 % Calculate domain dimension if it is similar and the domain is 'academic skills'
 whenever
 	is_received_event('sortUsersByDiversity',_)
@@ -53,14 +44,13 @@ thenceforth
 % Calculate domain dimension if it is similar for the rest of domains
 whenever
 	is_received_event('sortUsersByDiversity',_)
-	and not(get_task_attribute_value('sensitive_issue','domain'))
 	and not(get_task_attribute_value('academic_skills','domain'))
 	and get_task_attribute_value('similar','domainInterest')
 	and get_task_state_attribute(Users,'appUsers')
 	and get_task_attribute_value(Domain,'domain')
 	and domain_attributes(Domain,Attributes)
 thenceforth
-	normalized_diversity(Diversity,Users,Attributes,@(null),false)
+	normalized_diversity(Diversity,Users,Attributes,1.0,false)
 	and wenet_negate_user_value(DomainInterestUsers,Diversity)
 	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
 
@@ -68,13 +58,13 @@ thenceforth
 	domain_attributes/2.
 
 domain_attributes('basic_needs',['competences.c_food','competences.c_accom']).
-domain_attributes('campus_life',['materials.degree_programme']).
-domain_attributes('academic_skills',['competences.course_fa','competences.course_plc','competences.course_oop']).
+domain_attributes('campus_life',['materials.study_year']).
+domain_attributes('academic_skills',['competences.c_u_active','competences.c_read','competences.c_essay','competences.c_org','competences.c_balance','competences.c_assess','competences.c_theory','competences.c_pract','competences.course_fa','competences.course_plc','competences.course_oop','materials.program_study']).
 domain_attributes('appreciating_culture',['competences.c_lit','competences.c_app_mus','competences.c_plays','competences.c_musgall']).
 domain_attributes('producing_culture',['competences.c_creatlit','competences.c_perf_mus','competences.c_perf_plays','competences.c_perf_art']).
-domain_attributes('physical_activity',['competences.c_watch_sp','competences.c_ind_sp','competences.c_team_sp']).
-domain_attributes('leisure_activities',['competences.c_eating','competences.c_locfac','materials.degree_programme']).
-domain_attributes('random_thoughts',['competences.c_food','competences.c_eating','competences.c_lit','competences.c_createlit','competences.c_app_mus','competences.c_perf_mus','competences.c_plays','competences.c_perf_plays','competences.c_musgall','competences.c_perf_art','competences.c_watch_sp','competences.c_ind_sp','competences.c_team_sp','competences.c_accom','competences.c_locfac','competences.u_active','competences.u_read','competences.u_essay','competences.u_org','competences.u_balance','competences.u_assess','competences.u_theory','competences.u_pract']).
+domain_attributes('physical_activity',['competences.c_wath_sp','competences.c_ind_sp','competences.c_team_sp']).
+domain_attributes('leisure_activities',['competences.c_eating','competences.c_locfac']).
+domain_attributes('random_thoughts',[]).
 domain_attributes('sensitive',[]).
 domain_attributes(_,[]).
 
@@ -85,67 +75,80 @@ whenever
 	and get_task_attribute_value('different','domainInterest')
 	and get_task_attribute_value('academic_skills','domain')
 	and get_task_state_attribute(Users,'appUsers')
+	and domain_attributes('academic_skills',Attributes)
 thenceforth
-	calculate_domain_by_competences(DomainInterestUsers,Users)
+	calculate_domain_by_attribute(DomainInterestUsers,Users,Attributes)
 	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
 
-:- dynamic calculate_domain_by_competences/2,
-	get_domain_competence_values_for/2,
-	calculate_domain_by_competences_/3,
-	calculate_domain_by_competences_values/3.
+:- dynamic calculate_domain_by_attribute/3,
+	get_domain_attribute_values_for/3,
+	calculate_domain_by_attribute_/4,
+	get_domain_competence_value/3,
+	get_domain_material_value/3,
+	calculate_domain_by_attribute_values/3,
+	are_domain_attribute_values_greater/2,
+	are_domain_attribute_values_le/2.
 
-calculate_domain_by_competences(DomainInterestUsers,Users) :-
+calculate_domain_by_attribute(DomainInterestUsers,Users,Attributes) :-
 	get_profile(Profile),
-	get_domain_competence_values_for(CompetenceValues,Profile),
-	calculate_domain_by_competences_(DomainInterestUsers,Users,CompetenceValues)
+	get_domain_attribute_values_for(Values,Profile,Attributes),
+	calculate_domain_by_attribute_(DomainInterestUsers,Users,Values,Attributes)
 	.
 
-calculate_domain_by_competences_([],[],_).
-calculate_domain_by_competences_([DomainInterestUser|DomainInterestUsers],[User|Users],CompetenceValues) :-
-	(wenet_profile_manager_get_profile(Profile,User)->true;Profile = json([competences=[]])),
-	get_domain_competence_values_for(UserCompetenceValues,Profile),
-	calculate_domain_by_competences_values(Value,CompetenceValues,UserCompetenceValues),
+calculate_domain_by_attribute_([],[],_,_).
+calculate_domain_by_attribute_([DomainInterestUser|DomainInterestUsers],[User|Users],Values,Attributes) :-
+	(wenet_profile_manager_get_profile(Profile,User)->true;Profile = json([competences=[],materials=[]])),
+	get_domain_attribute_values_for(UserValues,Profile,Attributes),
+	calculate_domain_by_attribute_values(Value,Values,UserValues),
 	wenet_new_user_value(DomainInterestUser,User,Value),
-	calculate_domain_by_competences(DomainInterestUsers,Users)
+	calculate_domain_by_attribute_(DomainInterestUsers,Users,Values,Attributes)
 	.
 
-get_domain_competence_values_for(UserCompetenceValues,Profile) :-
-	get_profile_competence(Competence1,Profile,'course_fa',json([level=0.0])),
-	get_attribute(Value1,level,0.0,Competence1),
-	get_profile_competence(json(Competence2),Profile,'course_plc',json([level=0.0])),
-	get_attribute(Value2,level,0.0,Competence2),
-	get_profile_competence(json(Competence3),Profile,'course_oop',json([level=0.0])),
-	get_attribute(Value3,level,0.0,Competence3),
-	UserCompetenceValues = [Value1, Value2, Value3]
+get_domain_attribute_values_for([],_,[]).
+get_domain_attribute_values_for([Value|Values],Profile,[Attribute|Attributes]) :-
+	(get_domain_competence_value(Value,Profile,Attribute);get_domain_material_value(Value,Profile,Attribute);Value = 0.0),
+	get_domain_attribute_values_for(Values,Profile,Attributes)
 	.
 
-get_domain_competence_values_for([0.0,0.0,0.0],_).
+get_domain_competence_value(Value,Profile,Attribute) :-
+	string_concat('competences.',CompetenceStr,Attribute),
+	atom_string(CompetenceName, CompetenceStr),
+	get_profile_competence(Competence,Profile,CompetenceName,json([level=0.0])),
+	get_attribute(Value,level,0.0,Competence)
+	.
 
-calculate_domain_by_competences_values(_,[],[]).
-calculate_domain_by_competences_values(Value,[Requester|RequesterValues],[User|UserValues]):-
-	>(Requester,User),
-	calculate_domain_by_competences_values(Value,RequesterValues,UserValues),
-	Value = 1
-.
-calculate_domain_by_competences_values(Value,[Requester|RequesterValues],[User|UserValues]):-
-	=<(Requester,User),
-	calculate_domain_by_competences_values(Value,RequesterValues,UserValues),
-	Value = 0
-.
-calculate_domain_by_competences_values(0.5,_,_).
+get_domain_material_value(Value,Profile,Attribute) :-
+	string_concat('materials.',MaterialStr,Attribute),
+	atom_string(MaterialName, MaterialStr),
+	get_profile_material(Material,Profile,MaterialName,json([description=''])),
+	get_attribute(Value,description,'',Material)
+	.
+
+calculate_domain_by_attribute_values(Value,[Requester|RequesterValues],[User|UserValues]):-
+	( Requester @> User ->
+		( are_domain_attribute_values_greater(RequesterValues,UserValues) -> Value = 0.0;Value = 0.5)
+		; ( are_domain_attribute_values_le(RequesterValues,UserValues) -> Value = 1.0;Value = 0.5)
+	).
+are_domain_attribute_values_greater([],[]).
+are_domain_attribute_values_greater([Requester|RequesterValues],[User|UserValues]) :-
+	Requester @> User,
+	are_domain_attribute_values_greater(RequesterValues,UserValues).
+are_domain_attribute_values_le([],[]).
+are_domain_attribute_values_le([Requester|RequesterValues],[User|UserValues]) :-
+	Requester @=< User,
+	are_domain_attribute_values_le(RequesterValues,UserValues).
 
 
 % Calculate domain dimension if it is different for the rest of domains
 whenever
 	is_received_event('sortUsersByDiversity',_)
 	and get_task_attribute_value('different','domainInterest')
-	and not(get_task_attribute_value('sensitive_issue','domain'))
 	and not(get_task_attribute_value('academic_skills','domain'))
 	and get_task_state_attribute(Users,'appUsers')
 	and get_task_attribute_value(Domain,'domain')
 	and domain_attributes(Domain,Attributes)
 thenceforth
-	normalized_diversity(DomainInterestUsers,Users,Attributes,@(null),false)
+	normalized_diversity(DomainInterestUsers,Users,Attributes,0.0,false)
 	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
 
 % Calculate believe and values if it is similar
@@ -156,7 +159,7 @@ whenever
 	and get_task_state_attribute(Users,'appUsers')
 	and get_profile_attribues_by_beliefs_and_values(Attributes)
 thenceforth
-	normalized_diversity(Diversity,Users,Attributes,@(null),false)
+	normalized_diversity(Diversity,Users,Attributes,1.0,false)
 	and wenet_negate_user_value(BeliefsAndValuesUsers,Diversity)
 	and put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
 
@@ -170,7 +173,7 @@ whenever
 	and get_task_state_attribute(Users,'appUsers')
 	and get_profile_attribues_by_beliefs_and_values(Attributes)
 thenceforth
-	normalized_diversity(BeliefsAndValuesUsers,Users,Attributes,@(null),false)
+	normalized_diversity(BeliefsAndValuesUsers,Users,Attributes,0.0,false)
 	and put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
 
 % Calculate believe and values if it is indifferent
@@ -199,12 +202,12 @@ whenever
 	and get_task_state_attribute(Users,'appUsers')
 	and get_profile_attribues_by_social_closeness(Attributes)
 thenceforth
-	normalized_diversity(Diversity,Users,Attributes,@(null),false)
+	normalized_diversity(Diversity,Users,Attributes,1.0,false)
 	and wenet_negate_user_value(SocialClosenessUsers,Diversity)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 :- dynamic get_profile_attribues_by_social_closeness/1.
-get_profile_attribues_by_social_closeness(['materials.department','materials.degree_programme','material.program_study']).
+get_profile_attribues_by_social_closeness(['materials.department','materials.study_year','materials.program_study']).
 
 
 % Calculate social closeness if it is different and domain is 'academic skills'
@@ -215,7 +218,7 @@ whenever
 	and get_task_state_attribute(Users,'appUsers')
 	and get_profile_attribues_by_social_closeness(Attributes)
 thenceforth
-	normalized_diversity(SocialClosenessUsers,Users,Attributes,@(null),false)
+	normalized_diversity(SocialClosenessUsers,Users,Attributes,0.0,false)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 % Calculate social closeness if it is similar and domain is not 'academic skills'
@@ -225,7 +228,7 @@ whenever
 	and get_task_attribute_value('similar','socialCloseness')
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-	normalized_social_closeness(SocialClosenessUsers,Users,@(null))
+	normalized_social_closeness(SocialClosenessUsers,Users,0.0)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 % Calculate social closeness if it is different and domain is not 'academic skills'
@@ -235,7 +238,7 @@ whenever
 	and get_task_attribute_value('different','socialCloseness')
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-    normalized_social_closeness(Socialness,Users,@(null))
+    normalized_social_closeness(Socialness,Users,1.0)
 	and wenet_negate_user_value(SocialClosenessUsers,Socialness)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
@@ -363,7 +366,6 @@ group_indexes_for_domain(0.0,0,0,1,0,0,_,DomainInterest) :-
 group_indexes_for_domain(0.0,0,0,0,0,0,_,_) :-
 	!.
 
-
 group_indexes_for_value(BeliefsAndValues,1,SS1,SB,SS,SB,BeliefsAndValues) :-
 	number(BeliefsAndValues),
 	>(BeliefsAndValues,0.0),
@@ -486,17 +488,17 @@ explanation_type_for(group_5_a,5,MdPC,MdSC,MdX,'academic_skills') :-
 	MdPC =:= 0.0,
 	number(MdSC),
 	MdSC =:= 0.0,
-	(not(number(MdX));not(MdX =:= 0.0)),
+	(not(number(MdX));(number(MdX),not(MdX =:= 0.0))),
 	!.
 explanation_type_for(group_5_b,5,MdPC,MdSC,MdX,'academic_skills') :-
 	number(MdPC),
 	MdPC =:= 0.0,
-	(not(number(MdSC));not(MdSC =:= 0.0)),
+	(not(number(MdSC));(number(MdSC),not(MdSC =:= 0.0))),
 	number(MdX),
 	MdX =:= 0.0,
 	!.
 explanation_type_for(group_5_c,5,MdPC,MdSC,MdX,'academic_skills') :-
-	(not(number(MdPC));not(MdPC =:= 0.0)),
+	(not(number(MdPC));(number(MdPC),not(MdPC =:= 0.0))),
 	number(MdSC),
 	MdSC =:= 0.0,
 	number(MdX),
@@ -505,14 +507,14 @@ explanation_type_for(group_5_c,5,MdPC,MdSC,MdX,'academic_skills') :-
 explanation_type_for(group_5_d,5,MdPC,MdSC,MdX,'academic_skills') :-
 	number(MdPC),
 	MdPC =:= 0.0,
-	(not(number(MdSC));not(MdSC =:= 0.0)),
-	(not(number(MdX));not(MdX =:= 0.0)),
+	(not(number(MdSC));(number(MdSC),not(MdSC =:= 0.0))),
+	(not(number(MdX));(number(MdX),not(MdX =:= 0.0))),
 	!.
 explanation_type_for(group_5_e,5,MdPC,MdSC,MdX,'academic_skills') :-
-	(not(number(MdPC));not(MdPC =:= 0.0)),
+	(not(number(MdPC));(number(MdPC),not(MdPC =:= 0.0))),
 	number(MdSC),
 	MdSC =:= 0.0,
-	(not(number(MdX));not(MdX =:= 0.0)),
+	(not(number(MdX));(number(MdX),not(MdX =:= 0.0))),
 	!.
 explanation_type_for(group_5_f,5,_,_,_,_) :-
 	!.
@@ -522,19 +524,19 @@ explanation_type_for(group_6_7_8_a,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	MdPC =:= 0.0,
 	number(MdSC),
 	MdSC =:= 0.0,
-	(not(number(MdX));not(MdX =:= 0.0)),
+	(not(number(MdX));(number(MdX),not(MdX =:= 0.0))),
 	!.
 explanation_type_for(group_6_7_8_b,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	(Group = 6; Group = 7;  Group = 8),
 	number(MdPC),
 	MdPC =:= 0.0,
-	(not(number(MdSC));not(MdSC =:= 0.0)),
+	(not(number(MdSC));(number(MdSC),not(MdSC =:= 0.0))),
 	number(MdX),
 	MdX =:= 0.0,
 	!.
 explanation_type_for(group_6_7_8_c,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	(Group = 6; Group = 7;  Group = 8),
-	(not(number(MdPC));not(MdPC =:= 0.0)),
+	(not(number(MdPC));(number(MdPC),not(MdPC =:= 0.0))),
 	number(MdSC),
 	MdSC =:= 0.0,
 	number(MdX),
@@ -544,15 +546,15 @@ explanation_type_for(group_6_7_8_d,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	(Group = 6; Group = 7;  Group = 8),
 	number(MdPC),
 	MdPC =:= 0.0,
-	(not(number(MdSC));not(MdSC =:= 0.0)),
-	(not(number(MdX));not(MdX =:= 0.0)),
+	(not(number(MdSC));(number(MdSC),not(MdSC =:= 0.0))),
+	(not(number(MdX));(number(MdX),not(MdX =:= 0.0))),
 	!.
 explanation_type_for(group_6_7_8_e,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	(Group = 6; Group = 7;  Group = 8),
-	(not(number(MdPC));not(MdPC =:= 0.0)),
+	(not(number(MdPC));(number(MdPC),not(MdPC =:= 0.0))),
 	number(MdSC),
 	MdSC =:= 0.0,
-	(not(number(MdX));not(MdX =:= 0.0)),
+	(not(number(MdX));(number(MdX),not(MdX =:= 0.0))),
 	!.
 explanation_type_for(group_6_7_8_f,Group,_,_,_,_) :-
 	(Group = 6; Group = 7;  Group = 8),
