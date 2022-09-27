@@ -497,35 +497,37 @@ whenever
 	and get_task_id(TaskId)
 	and get_transaction_id(TransactionId)
 	and get_task_state_attribute(GroupsUsers,'groupsUsers')
+	and get_profile_language(Lang)
+	and get_task_state_attribute(Unasked,'unaskedUserIds')
 thenceforth
 	send_user_message('AnsweredQuestionMessage',json([taskId=TaskId,question=Question,transactionId=TransactionId,answer=Answer,userId=SenderId,anonymous=Anonymous]))
 	and wenet_add(NewAnswersTransactionIds,TransactionId,AnswersTransactionIds)
 	and put_task_state_attribute('answersTransactionIds',NewAnswersTransactionIds)
 	and send_event(_,1,'checkMaxAnswers',json([]))
-	and explanation(ExplanationTitle,ExplanationText,SenderId,GroupsUsers)
+	and explanation(ExplanationTitle,ExplanationText,SenderId,Unasked,GroupsUsers,Lang)
 	and send_user_message('TextualMessage',json([title=ExplanationTitle,text=ExplanationText])).
 
 :- dynamic
-	explanation/4,
-	explanation/5,
+	explanation/6,
 	explanation_title/2,
 	explanation_text/3.
-explanation(ExplanationTitle,ExplanationText,UserId,GroupsUsers) :-
-	get_profile_language(Lang),
-	explanation(ExplanationTitle,ExplanationText,UserId,GroupsUsers,Lang).
-explanation(ExplanationTitle,ExplanationText,UserId,GroupsUsers,Lang) :-
+
+explanation(ExplanationTitle,ExplanationText,UserId,Unasked,GroupsUsers,Lang) :-
 	explanation_title(ExplanationTitle,Lang),
-	(
-		( wenet_json_element_with(json(Group),GroupsUsers,userId=UserId,json([explanationType=group_0])), member(explanationType=Type,Group))
-		-> true
-		; Type = group_0
+	( member(UserId,Unasked)
+		-> Type = group_unexpected ;
+		(
+			( wenet_json_element_with(json(Group),GroupsUsers,userId=UserId,json([explanationType=group_0])), member(explanationType=Type,Group))
+			-> true
+			; Type = group_unexpected
+		)
 	),
 	explanation_text(ExplanationText,Type,Lang).
 
 explanation_title('Why is this user chosen?',_).
 explanation_text('Recall that there were no requirements set w.r.t domains, values, social or physical closeness. Nevertheless, we tried to increase the gender diversity of selected users.',group_0,_).
 explanation_text('This user fulfils all requirements. While searching for users, we tried to increase the gender diversity of selected users.',group_1,_).
-explanation_text('Not enough members fulfil the requirements. To find some answers, we had to choose some that don\'t fulfil any, like this user. While doing so, we also tried to increase the gender diversity of selected users.',group_12,_).
+explanation_text('Not enough members fulfil the requirements. To find some answers, we had to choose some that do not fulfil any, like this user. While doing so, we also tried to increase the gender diversity of selected users.',group_12,_).
 explanation_text('This user fulfils the physical and social closeness requirements, but not all of the other requirements. To find some answers, we had to relax some of the other requirements. We also tried to increase the gender diversity of selected users.',group_2_3_4_a,_).
 explanation_text('This user fulfils the social closeness requirements, but not all of the other requirements. To find some answers, we had to relax some of the other requirements. We also tried to increase the gender diversity of selected users.',group_2_3_4_b,_).
 explanation_text('This user fulfils the physical closeness requirements, but not all of the other requirements. To find some answers, we had to relax some of the other requirements. We also tried to increase the gender diversity of selected users.',group_2_3_4_c,_).
@@ -536,6 +538,7 @@ explanation_text('This user does not fulfil the physical closeness requirement. 
 explanation_text('This user does not fulfil the social closeness requirement. To find some answers, we had to relax this requirement. We also tried to increase the gender diversity of selected users.',group_5_b,_).
 explanation_text('This user fulfils the social closeness requirement, but neither the physical closeness requirement nor some of the other requirements. To find some answers, we had to relax these requirements. We also tried to increase the gender diversity of selected users.',group_6_7_8_a,_).
 explanation_text('This user fulfils the physical closeness requirement, but neither the social closeness requirement nor some of the other requirements. To find some answers, we had to relax these requirements. We also tried to increase the gender diversity of selected users.',group_6_7_8_b,_).
+explanation_text('This answer does not match your original criteria but maybe you will still find it interesting.',_,_).
 
 % Nothing to do with this transaction only store it
 whenever
