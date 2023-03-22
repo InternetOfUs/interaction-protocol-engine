@@ -221,9 +221,45 @@ whenever
 	is_received_event('sortUsersByDiversity',_)
 	and get_task_attribute_value('nearby','positionOfAnswerer')
 	and get_task_state_attribute(Users,'appUsers')
+	and normalized_closeness_and_raw(PhysicalClosenessUsers,PhysicalClosenessRaw,Users,1000)
 thenceforth
-	normalized_closeness(PhysicalClosenessUsers,Users,500)
-	and put_task_state_attribute('physicalClosenessUsers',PhysicalClosenessUsers).
+	put_task_state_attribute('physicalClosenessUsers',PhysicalClosenessUsers)
+	and put_task_state_attribute('physicalClosenessRaw',PhysicalClosenessRaw).
+
+:- dynamic  normalized_closeness_and_raw/4, normalized_closeness_and_raw_/5.
+
+normalized_closeness_and_raw(Closeness,Locations,Users,MaxDistance) :-
+	(
+		get_profile_id(UserId),
+		wenet_personal_context_builder_locations(Locations,[UserId|Users]),
+		!,
+		member(SourceLocation,Locations),
+		wenet_user_id_of_location(UserId,SourceLocation),
+		!,
+		normalized_closeness_and_raw_(Closeness,Users,MaxDistance,Locations,SourceLocation)
+	)
+	-> true
+	; (
+		wenet_initialize_user_values(Closeness,Users,0.0),
+		Locations = []
+	)
+	.
+normalized_closeness_and_raw_([],[],_,_,_).
+normalized_closeness_and_raw_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,Locations,SourceLocation) :-
+	(
+		(
+			member(TargetLocation,Locations),
+			wenet_user_id_of_location(UserId,TargetLocation),
+			!,
+			wenet_distance_between_locations(DistanceInMeters,SourceLocation,TargetLocation)
+		)
+		-> Distance is 1.0 - min(DistanceInMeters,MaxDistance) / MaxDistance
+		; Distance = 0.0
+	),
+	!,
+	wenet_new_user_value(UserCloseness,UserId,Distance),
+	normalized_closeness_and_raw_(ClosenessRest,Users,MaxDistance,Locations,SourceLocation)
+	.
 
 % Calculate physical closeness if it is anywhere
 whenever
@@ -475,11 +511,11 @@ whenever
 	and get_task_id(TaskId)
 	and get_task_goal_name(Question)
 	and get_task_requester_id(RequesterId)
-	and get_task_attribute_value(Sensitive,'sensitive')
+	and get_task_attribute_value(Domain,'domain')
 	and get_task_attribute_value(Anonymous,'anonymous')
 	and get_task_attribute_value(PositionOfAnswerer,'positionOfAnswerer').
 thenceforth
-	send_user_message('QuestionToAnswerMessage',json([taskId=TaskId,question=Question,userId=RequesterId,sensitive=Sensitive,anonymous=Anonymous,positionOfAnswerer=PositionOfAnswerer])).
+	send_user_message('QuestionToAnswerMessage',json([taskId=TaskId,question=Question,userId=RequesterId,domain=Domain,anonymous=Anonymous,positionOfAnswerer=PositionOfAnswerer])).
 
 % Provide an answer to a question
 whenever

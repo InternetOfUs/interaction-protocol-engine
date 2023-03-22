@@ -29,7 +29,7 @@ whenever
 	and get_task_attribute_value('similar','socialCloseness')
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-	normalized_social_closeness(SocialClosenessUsers,Users,0.5)
+	normalized_social_closeness(SocialClosenessUsers,Users,@(null))
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 % Order the users by different social closeness
@@ -38,7 +38,7 @@ whenever
 	and get_task_attribute_value('different','socialCloseness')
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-    normalized_social_closeness(Socialness,Users,0.5)
+    normalized_social_closeness(Socialness,Users,@(null))
 	and wenet_negate_user_value(SocialClosenessUsers,Socialness)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
@@ -410,38 +410,38 @@ whenever
 	and get_task_goal_name(Question)
 	and get_task_id(TaskId)
 	and get_transaction_id(TransactionId)
-	and get_task_state_attribute(Unasked,'unaskedUserIds')
+	and get_transaction_id(TransactionId)
 	and get_task_state_attribute(SocialClosenessUsers,'socialClosenessUsers')
 	and get_task_state_attribute(BeliefsAndValuesUsers,'beliefsAndValuesUsers')
 	and get_task_state_attribute(DomainInterestUsers,'domainInterestUsers')
-	and get_profile_language(Lang)
 thenceforth
 	send_user_message('AnsweredQuestionMessage',json([taskId=TaskId,question=Question,transactionId=TransactionId,answer=Answer,userId=SenderId,anonymous=Anonymous]))
 	and wenet_add(NewAnswersTransactionIds,TransactionId,AnswersTransactionIds)
 	and put_task_state_attribute('answersTransactionIds',NewAnswersTransactionIds)
 	and send_event(_,1,'checkMaxAnswers',json([]))
-	and explanation(ExplanationTitle,ExplanationText,SenderId,Unasked,SocialClosenessUsers,BeliefsAndValuesUsers,DomainInterestUsers,Lang)
+	and explanation(ExplanationTitle,ExplanationText,SenderId,SocialClosenessUsers,BeliefsAndValuesUsers,DomainInterestUsers)
 	and send_user_message('TextualMessage',json([title=ExplanationTitle,text=ExplanationText])).
 
 :- dynamic
-	explanation/8,
+	explanation/6,
+	explanation/7,
 	explanation_title/2,
 	explanation_text/3.
 
-explanation(ExplanationTitle,ExplanationText,UserId,Unasked,SocialClosenessUsers,BeliefsAndValuesUsers,DomainInterestUsers,Lang) :-
+explanation(ExplanationTitle,ExplanationText,UserId,SocialClosenessUsers,BeliefsAndValuesUsers,DomainInterestUsers) :-
+	get_profile_language(Lang),
+	explanation(ExplanationTitle,ExplanationText,UserId,SocialClosenessUsers,BeliefsAndValuesUsers,DomainInterestUsers,Lang).
+
+explanation(ExplanationTitle,ExplanationText,UserId,SocialClosenessUsers,BeliefsAndValuesUsers,DomainInterestUsers,Lang) :-
 	explanation_title(ExplanationTitle,Lang),
-	(
-		member(UserId,Unasked)
-		-> Type = type_unexpected ;
-		( are_all_dimensions_indifferent()
-			-> Type = type1 ;
-			(
-				wenet_value_of_user_id_from_user_values(SocialCloseness,UserId,SocialClosenessUsers,@(null)),
-		 		wenet_value_of_user_id_from_user_values(BeliefsAndValue,UserId,BeliefsAndValuesUsers,@(null)),
-		 		wenet_value_of_user_id_from_user_values(DomainInterest,UserId,DomainInterestUsers,@(null)),
-		 		( ((number(SocialCloseness),>(SocialCloseness,0.5));(number(BeliefsAndValue),>(BeliefsAndValue,0.0));(number(DomainInterest),>(DomainInterest,0.0))) -> Type = type2 ; Type = type3)
-		 	)
-		)
+	( are_all_dimensions_indifferent()
+		-> Type = type1 ;
+		(
+			wenet_value_of_user_id_from_user_values(SocialCloseness,UserId,SocialClosenessUsers,@(null)),
+		 	wenet_value_of_user_id_from_user_values(BeliefsAndValue,UserId,BeliefsAndValuesUsers,@(null)),
+		 	wenet_value_of_user_id_from_user_values(DomainInterest,UserId,DomainInterestUsers,@(null)),
+		 	( (number(SocialCloseness);number(BeliefsAndValue);number(DomainInterest)) -> Type = type2 ; Type = type3)
+		 )
 	),
 	explanation_text(ExplanationText,Type,Lang).
 
@@ -449,7 +449,7 @@ explanation_title('Why is this user chosen?',_).
 explanation_text('Recall that no requirements were set w.r.t domains, values and social closeness. Nevertheless, we tried to increase the gender diversity of selected users.',type1,_).
 explanation_text('This user fits the requirements to a certain extent. While choosing whom to ask, we also tried to increase the gender diversity of selected users.',type2,_).
 explanation_text('Not enough members in the community fit the requirements. We had to relax the requirements in order to find some answers, which is how this user was chosen. While choosing whom to ask, we also tried to increase the gender diversity of selected users.',type3,_).
-explanation_text('This answer does not match your original criteria but maybe you will still find it interesting.',_,_).
+
 
 % Send expiration message if received max answers
 whenever
@@ -576,7 +576,7 @@ thenceforth
 whenever
 	is_received_do_transaction('followUpTransaction',Attributes)
 	and get_profile_id(Me)
-	and not(get_task_requester_id(Me))
+	and not(get_task_requester_id(Me)
 	and not(is_task_closed())
 	and get_attribute(TransactionId,transactionId,Attributes)
 	and get_transaction(_,TransactionId)

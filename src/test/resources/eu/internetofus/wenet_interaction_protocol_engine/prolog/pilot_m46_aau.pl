@@ -51,11 +51,11 @@ domain_attributes('basic_needs',['competences.c_food','competences.c_accom']).
 domain_attributes('campus_life',['materials.study_year']).
 domain_attributes('academic_skills',['competences.u_active','competences.u_read','competences.u_essay','competences.u_org','competences.u_balance','competences.u_assess','competences.u_theory','competences.u_pract']).
 domain_attributes('appreciating_culture',['competences.c_lit','competences.c_app_mus','competences.c_plays','competences.c_musgall']).
-domain_attributes('performing_producing_culture',['competences.c_creatlit','competences.c_perf_mus','competences.c_perf_plays','competences.c_perf_art']).
-domain_attributes('physical_activities_sports',['competences.c_watch_sp','competences.c_ind_sp','competences.c_team_sp']).
-domain_attributes('things_to_do_about_town',['competences.c_eating','competences.c_locfac','materials.degree_programme']).
+domain_attributes('producing_culture',['competences.c_creatlit','competences.c_perf_mus','competences.c_perf_plays','competences.c_perf_art']).
+domain_attributes('physical_activity',['competences.c_watch_sp','competences.c_ind_sp','competences.c_team_sp']).
+domain_attributes('leisure_activities',['competences.c_eating','competences.c_locfac']).
 domain_attributes('random_thoughts',['competences.c_food','competences.c_eating','competences.c_lit','competences.c_createlit','competences.c_app_mus','competences.c_perf_mus','competences.c_plays','competences.c_perf_plays','competences.c_musgall','competences.c_perf_art','competences.c_watch_sp','competences.c_ind_sp','competences.c_team_sp','competences.c_accom','competences.c_locfac','competences.u_active','competences.u_read','competences.u_essay','competences.u_org','competences.u_balance','competences.u_assess','competences.u_theory','competences.u_pract']).
-domain_attributes('sensitive_issues',[]).
+domain_attributes('sensitive',[]).
 domain_attributes(_,[]).
 
 
@@ -121,12 +121,36 @@ whenever
 	and get_profile_attribues_by_social_closeness(Attributes)
 thenceforth
 	normalized_diversity(Diversity,Users,Attributes,@(null),false)
-	and wenet_negate_user_value(SocialClosenessUsers,Diversity)
+	and wenet_negate_user_value(Similarity,Diversity)
+	and calculate_social_closeness_users(SocialClosenessUsers,Users,Similarity)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
-:- dynamic get_profile_attribues_by_social_closeness/1.
-get_profile_attribues_by_social_closeness(['materials.study_year','materials.degree_programme']).
+:- dynamic
+	get_profile_attribues_by_social_closeness/1,
+	calculate_social_closeness_users/3,
+	is_user_q04_greather_or_equal_to_requester/2.
 
+get_profile_attribues_by_social_closeness(['materials.degree_programme']).
+
+calculate_social_closeness_users([],[],_).
+calculate_social_closeness_users([SocialClosenessUser|SocialClosenessUsers],[User|Users],Similarity) :-
+	is_user_q04_greather_or_equal_to_requester(Result,User),
+	(Result = true-> wenet_value_of_user_id_from_user_values(Value,User,Similarity,0.0); Value = 0.0 ),
+	wenet_new_user_value(SocialClosenessUser,User,Value),
+	calculate_social_closeness_users(SocialClosenessUsers,Users,Similarity)
+	.
+
+is_user_q04_greather_or_equal_to_requester(Result,UserId) :-
+	 (wenet_profile_manager_get_profile(UserProfile,UserId)->true;UserProfile=json([])),
+	 get_profile(Profile),
+	 get_profile_material(UserMaterial,UserProfile,'study_year',json([])),
+	 get_profile_material(Material,Profile,'study_year',json([])),
+	 get_attribute(UserValue,description,'',UserMaterial),
+	 get_attribute(Value,description,'',Material),
+	 (UserValue @>= Value -> Result = true; Result = false),
+	 !,
+	 asserta(is_user_q04_greather_or_equal_to_requester(Result,UserId))
+	.
 
 % Calculate social closeness if it is different and domain is 'academic skills'
 whenever
@@ -136,7 +160,8 @@ whenever
 	and get_task_state_attribute(Users,'appUsers')
 	and get_profile_attribues_by_social_closeness(Attributes)
 thenceforth
-	normalized_diversity(SocialClosenessUsers,Users,Attributes,@(null),false)
+	normalized_diversity(Diversity,Users,Attributes,@(null),false)
+	and calculate_social_closeness_users(SocialClosenessUsers,Users,Diversity)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 % Calculate social closeness if it is similar and domain is not 'academic skills'
@@ -165,9 +190,45 @@ whenever
 	is_received_event('sortUsersByDiversity',_)
 	and get_task_attribute_value('nearby','positionOfAnswerer')
 	and get_task_state_attribute(Users,'appUsers')
+	and normalized_closeness_and_raw(PhysicalClosenessUsers,PhysicalClosenessRaw,Users,500)
 thenceforth
-	normalized_closeness(PhysicalClosenessUsers,Users,500)
-	and put_task_state_attribute('physicalClosenessUsers',PhysicalClosenessUsers).
+	put_task_state_attribute('physicalClosenessUsers',PhysicalClosenessUsers)
+	and put_task_state_attribute('physicalClosenessRaw',PhysicalClosenessRaw).
+
+:- dynamic  normalized_closeness_and_raw/4, normalized_closeness_and_raw_/5.
+
+normalized_closeness_and_raw(Closeness,Locations,Users,MaxDistance) :-
+	(
+		get_profile_id(UserId),
+		wenet_personal_context_builder_locations(Locations,[UserId|Users]),
+		!,
+		member(SourceLocation,Locations),
+		wenet_user_id_of_location(UserId,SourceLocation),
+		!,
+		normalized_closeness_and_raw_(Closeness,Users,MaxDistance,Locations,SourceLocation)
+	)
+	-> true
+	; (
+		wenet_initialize_user_values(Closeness,Users,0.0),
+		Locations = []
+	)
+	.
+normalized_closeness_and_raw_([],[],_,_,_).
+normalized_closeness_and_raw_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,Locations,SourceLocation) :-
+	(
+		(
+			member(TargetLocation,Locations),
+			wenet_user_id_of_location(UserId,TargetLocation),
+			!,
+			wenet_distance_between_locations(DistanceInMeters,SourceLocation,TargetLocation)
+		)
+		-> Distance is 1.0 - min(DistanceInMeters,MaxDistance) / MaxDistance
+		; Distance = 0.0
+	),
+	!,
+	wenet_new_user_value(UserCloseness,UserId,Distance),
+	normalized_closeness_and_raw_(ClosenessRest,Users,MaxDistance,Locations,SourceLocation)
+	.
 
 % Calculate physical closeness if it is anywhere
 whenever
@@ -289,7 +350,8 @@ group_indexes_for_value(0.0,0,SS,SB1,SS,SB,BeliefsAndValues) :-
 group_indexes_for_value(0.0,0,SS,SB,SS,SB,_) :-
 	!.
 
-group_indexes_for_social(SocialCloseness,1,SS1,SB1,0,1,SS1,SB1,'academic_skills',SocialCloseness) :-
+group_indexes_for_social(SocialCloseness,1,SS1,SB1,0,1,SS1,SB1,Domain,SocialCloseness) :-
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	number(SocialCloseness),
 	>(SocialCloseness,0.0),
 	!.
@@ -298,7 +360,8 @@ group_indexes_for_social(SocialCloseness,1,SS2,SB1,0,0,SS1,SB1,_,SocialCloseness
 	>(SocialCloseness,0.0),
 	!,
 	SS2 is SS1 + 1.
-group_indexes_for_social(0.0,0,SS1,SB1,1,0,SS1,SB1,'academic_skills',SocialCloseness) :-
+group_indexes_for_social(0.0,0,SS1,SB1,1,0,SS1,SB1,Domain,SocialCloseness) :-
+    ( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	number(SocialCloseness),
 	SocialCloseness =:= 0.0,
 	!.
@@ -348,13 +411,13 @@ explanation_type_for(group_2_3_4_a,Group,MdPC,MdSC,Domain) :-
 	(Group = 2; Group = 3;  Group = 4),
 	number(MdPC),
 	number(MdSC),
-	Domain = 'academic_skills',
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	!.
 explanation_type_for(group_2_3_4_b,Group,MdPC,MdSC,Domain) :-
 	(Group = 2; Group = 3;  Group = 4),
 	not(number(MdPC)),
 	number(MdSC),
-	Domain = 'academic_skills',
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	!.
 explanation_type_for(group_2_3_4_c,Group,_,_,_) :-
 	(Group = 2; Group = 3;  Group = 4),
@@ -364,7 +427,7 @@ explanation_type_for(group_5_a,5,MdPC,MdSC,Domain) :-
 	MdPC =:= 0.0,
 	number(MdSC),
 	>(MdSC,0.0),
-	Domain = 'academic_skills',
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	!.
 explanation_type_for(group_5_b,5,_,_,_) :-
 	!.
@@ -374,7 +437,7 @@ explanation_type_for(group_6_7_8_a,Group,MdPC,MdSC,Domain) :-
 	MdPC =:= 0.0,
 	number(MdSC),
 	>(MdSC,0.0),
-	Domain = 'academic_skills',
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	!.
 explanation_type_for(group_6_7_8_b,Group,_,_,_) :-
 	(Group = 6; Group = 7;  Group = 8),
@@ -383,13 +446,13 @@ explanation_type_for(group_9_10_11_a,Group,MdPC,MdSC,Domain) :-
 	(Group = 9; Group = 10;  Group = 11),
 	number(MdPC),
 	number(MdSC),
-	Domain = 'academic_skills',
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	!.
 explanation_type_for(group_9_10_11_b,Group,MdPC,MdSC,Domain) :-
 	(Group = 9; Group = 10;  Group = 11),
 	not(number(MdPC)),
 	number(MdSC),
-	Domain = 'academic_skills',
+	( Domain = 'academic_skills' ; Domain = 'sensitive'),
 	!.
 explanation_type_for(group_9_10_11_c,Group,_,_,_) :-
 	(Group = 9; Group = 10;  Group = 11),
@@ -470,35 +533,37 @@ whenever
 	and get_task_id(TaskId)
 	and get_transaction_id(TransactionId)
 	and get_task_state_attribute(GroupsUsers,'groupsUsers')
+	and get_profile_language(Lang)
+	and get_task_state_attribute(Unasked,'unaskedUserIds')
 thenceforth
 	send_user_message('AnsweredQuestionMessage',json([taskId=TaskId,question=Question,transactionId=TransactionId,answer=Answer,userId=SenderId,anonymous=Anonymous]))
 	and wenet_add(NewAnswersTransactionIds,TransactionId,AnswersTransactionIds)
 	and put_task_state_attribute('answersTransactionIds',NewAnswersTransactionIds)
 	and send_event(_,1,'checkMaxAnswers',json([]))
-	and explanation(ExplanationTitle,ExplanationText,SenderId,GroupsUsers)
+	and explanation(ExplanationTitle,ExplanationText,SenderId,Unasked,GroupsUsers,Lang)
 	and send_user_message('TextualMessage',json([title=ExplanationTitle,text=ExplanationText])).
 
 :- dynamic
-	explanation/4,
-	explanation/5,
+	explanation/6,
 	explanation_title/2,
 	explanation_text/3.
-explanation(ExplanationTitle,ExplanationText,UserId,GroupsUsers) :-
-	get_profile_language(Lang),
-	explanation(ExplanationTitle,ExplanationText,UserId,GroupsUsers,Lang).
-explanation(ExplanationTitle,ExplanationText,UserId,GroupsUsers,Lang) :-
+
+explanation(ExplanationTitle,ExplanationText,UserId,Unasked,GroupsUsers,Lang) :-
 	explanation_title(ExplanationTitle,Lang),
-	(
-		( wenet_json_element_with(json(Group),GroupsUsers,userId=UserId,json([explanationType=group_0])), member(explanationType=Type,Group))
-		-> true
-		; Type = group_0
+	( member(UserId,Unasked)
+		-> Type = group_unexpected ;
+		(
+			( wenet_json_element_with(json(Group),GroupsUsers,userId=UserId,json([explanationType=group_0])), member(explanationType=Type,Group))
+			-> true
+			; Type = group_unexpected
+		)
 	),
 	explanation_text(ExplanationText,Type,Lang).
 
 explanation_title('Why is this user chosen?',_).
 explanation_text('Recall that there were no requirements set w.r.t domains, values, social or physical closeness. Nevertheless, we tried to increase the gender diversity of selected users.',group_0,_).
 explanation_text('This user fulfils all requirements. While searching for users, we tried to increase the gender diversity of selected users.',group_1,_).
-explanation_text('Not enough members fulfil the requirements. To find some answers, we had to choose some that don\'t fulfil any, like this user. While doing so, we also tried to increase the gender diversity of selected users.',group_12,_).
+explanation_text('Not enough members fulfil the requirements. To find some answers, we had to choose some that do not fulfil any, like this user. While doing so, we also tried to increase the gender diversity of selected users.',group_12,_).
 explanation_text('This user fulfils the physical and social closeness requirements, but not all of the other requirements. To find some answers, we had to relax some of the other requirements. We also tried to increase the gender diversity of selected users.',group_2_3_4_a,_).
 explanation_text('This user fulfils the social closeness requirements, but not all of the other requirements. To find some answers, we had to relax some of the other requirements. We also tried to increase the gender diversity of selected users.',group_2_3_4_b,_).
 explanation_text('This user fulfils the physical closeness requirements, but not all of the other requirements. To find some answers, we had to relax some of the other requirements. We also tried to increase the gender diversity of selected users.',group_2_3_4_c,_).
@@ -509,6 +574,7 @@ explanation_text('This user does not fulfil the physical closeness requirement. 
 explanation_text('This user does not fulfil the social closeness requirement. To find some answers, we had to relax this requirement. We also tried to increase the gender diversity of selected users.',group_5_b,_).
 explanation_text('This user fulfils the social closeness requirement, but neither the physical closeness requirement nor some of the other requirements. To find some answers, we had to relax these requirements. We also tried to increase the gender diversity of selected users.',group_6_7_8_a,_).
 explanation_text('This user fulfils the physical closeness requirement, but neither the social closeness requirement nor some of the other requirements. To find some answers, we had to relax these requirements. We also tried to increase the gender diversity of selected users.',group_6_7_8_b,_).
+explanation_text('This answer does not match your original criteria but maybe you will still find it interesting.',_,_).
 
 % Nothing to do with this transaction only store it
 whenever
@@ -580,6 +646,17 @@ cancel_expiration_event() :-
 	 	; ( wenet_interaction_protocol_engine_delete_event(TimerId) -> true ; wenet_log_error('Cannot cancel previous event'))
 	).
 
+% Notify the user that its answer is picked
+whenever
+	is_received(_,'closeQuestionTransaction',_)
+	and get_profile_id(Me)
+	and get_task_requester_id(Me)
+	and not(is_task_closed())
+thenceforth
+	add_message_transaction()
+	and close_task()
+	.
+
 % Nothing to do with this transaction only store it
 whenever
 	is_received_do_transaction('reportAnswerTransaction',_)
@@ -589,22 +666,24 @@ whenever
 thenceforth
 	add_message_transaction().
 
-% Send expiration message if received max answers
+% Nothing to do with this transaction only store it
 whenever
-	is_received(_,'checkMaxAnswers',_)
-	and get_task_state_attribute(AnswersTransactionIds,'answersTransactionIds',[])
-	and length(AnswersTransactionIds,AnswersCount)
-	and get_task_attribute_value(MaxAnswers,'maxAnswers')
-	and =<(MaxAnswers,AnswersCount)
+	is_received_do_transaction('likeAnswerTransaction',Attributes)
+	and get_profile_id(Me)
+	and get_task_requester_id(Me)
+	and not(is_task_closed())
+	and get_attribute(TransactionId,transactionId,Attributes)
+	and get_transaction(_,TransactionId)
 thenceforth
-	send_event(_,1,'notifyQuestionExpirationMessage',json([])).
+	add_message_transaction().
 
-% Notify user of the expiration message
+% Nothing to do with this transaction only store it
 whenever
-	is_received_event('notifyQuestionExpirationMessage',_)
-	and get_task_state_attribute(AnswersTransactionIds,'answersTransactionIds',[])
-	and get_task_id(TaskId)
-	and get_task_goal_name(Question)
+	is_received_do_transaction('followUpTransaction',Attributes)
+	and get_profile_id(Me)
+	and not(get_task_requester_id(Me))
+	and not(is_task_closed())
+	and get_attribute(TransactionId,transactionId,Attributes)
+	and get_transaction(_,TransactionId)
 thenceforth
-	send_user_message('QuestionExpirationMessage',json([taskId=TaskId,question=Question,listOfTransactionIds=AnswersTransactionIds]))
-	and cancel_expiration_event().
+	add_message_transaction().

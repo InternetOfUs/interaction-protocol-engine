@@ -31,15 +31,6 @@ thenceforth
 	wenet_initialize_user_values(DomainInterestUsers,Users,@(null))
 	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
 
-% Calculate domain dimension if domain is 'sessitive issue'
-whenever
-	is_received_event('sortUsersByDiversity',_)
-	and get_task_attribute_value('sensitive_issue','domain')
-	and get_task_state_attribute(Users,'appUsers')
-thenceforth
-	wenet_initialize_user_values(DomainInterestUsers,Users,@(null))
-	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
-
 % Calculate domain dimension if it is similar and the domain is 'academic skills'
 whenever
 	is_received_event('sortUsersByDiversity',_)
@@ -53,14 +44,13 @@ thenceforth
 % Calculate domain dimension if it is similar for the rest of domains
 whenever
 	is_received_event('sortUsersByDiversity',_)
-	and not(get_task_attribute_value('sensitive_issue','domain'))
 	and not(get_task_attribute_value('academic_skills','domain'))
 	and get_task_attribute_value('similar','domainInterest')
 	and get_task_state_attribute(Users,'appUsers')
 	and get_task_attribute_value(Domain,'domain')
 	and domain_attributes(Domain,Attributes)
 thenceforth
-	normalized_diversity(Diversity,Users,Attributes,@(null),false)
+	normalized_diversity(Diversity,Users,Attributes,1.0,false)
 	and wenet_negate_user_value(DomainInterestUsers,Diversity)
 	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
 
@@ -68,14 +58,14 @@ thenceforth
 	domain_attributes/2.
 
 domain_attributes('basic_needs',['competences.c_food','competences.c_accom']).
-domain_attributes('campus_life',['materials.degree_programme']).
-domain_attributes('academic_skills',['competences.course_fa','competences.course_plc','competences.course_oop']).
+domain_attributes('campus_life',['materials.study_year']).
+domain_attributes('academic_skills',['competences.c_u_active','competences.c_read','competences.c_essay','competences.c_org','competences.c_balance','competences.c_assess','competences.c_theory','competences.c_pract','competences.course_fa','competences.course_plc','competences.course_oop','materials.program_study']).
 domain_attributes('appreciating_culture',['competences.c_lit','competences.c_app_mus','competences.c_plays','competences.c_musgall']).
-domain_attributes('performing_producing_culture',['competences.c_creatlit','competences.c_perf_mus','competences.c_perf_plays','competences.c_perf_art']).
-domain_attributes('physical_activities_sports',['competences.c_watch_sp','competences.c_ind_sp','competences.c_team_sp']).
-domain_attributes('things_to_do_about_town',['competences.c_eating','competences.c_locfac','materials.degree_programme']).
-domain_attributes('random_thoughts',['competences.c_food','competences.c_eating','competences.c_lit','competences.c_createlit','competences.c_app_mus','competences.c_perf_mus','competences.c_plays','competences.c_perf_plays','competences.c_musgall','competences.c_perf_art','competences.c_watch_sp','competences.c_ind_sp','competences.c_team_sp','competences.c_accom','competences.c_locfac','competences.u_active','competences.u_read','competences.u_essay','competences.u_org','competences.u_balance','competences.u_assess','competences.u_theory','competences.u_pract']).
-domain_attributes('sensitive_issues',[]).
+domain_attributes('producing_culture',['competences.c_creatlit','competences.c_perf_mus','competences.c_perf_plays','competences.c_perf_art']).
+domain_attributes('physical_activity',['competences.c_wath_sp','competences.c_ind_sp','competences.c_team_sp']).
+domain_attributes('leisure_activities',['competences.c_eating','competences.c_locfac']).
+domain_attributes('random_thoughts',[]).
+domain_attributes('sensitive',[]).
 domain_attributes(_,[]).
 
 
@@ -85,67 +75,80 @@ whenever
 	and get_task_attribute_value('different','domainInterest')
 	and get_task_attribute_value('academic_skills','domain')
 	and get_task_state_attribute(Users,'appUsers')
+	and domain_attributes('academic_skills',Attributes)
 thenceforth
-	calculate_domain_by_competences(DomainInterestUsers,Users)
+	calculate_domain_by_attribute(DomainInterestUsers,Users,Attributes)
 	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
 
-:- dynamic calculate_domain_by_competences/2,
-	get_domain_competence_values_for/2,
-	calculate_domain_by_competences_/3,
-	calculate_domain_by_competences_values/3.
+:- dynamic calculate_domain_by_attribute/3,
+	get_domain_attribute_values_for/3,
+	calculate_domain_by_attribute_/4,
+	get_domain_competence_value/3,
+	get_domain_material_value/3,
+	calculate_domain_by_attribute_values/3,
+	are_domain_attribute_values_greater/2,
+	are_domain_attribute_values_le/2.
 
-calculate_domain_by_competences(DomainInterestUsers,Users) :-
+calculate_domain_by_attribute(DomainInterestUsers,Users,Attributes) :-
 	get_profile(Profile),
-	get_domain_competence_values_for(CompetenceValues,Profile),
-	calculate_domain_by_competences_(DomainInterestUsers,Users,CompetenceValues)
+	get_domain_attribute_values_for(Values,Profile,Attributes),
+	calculate_domain_by_attribute_(DomainInterestUsers,Users,Values,Attributes)
 	.
 
-calculate_domain_by_competences_([],[],_).
-calculate_domain_by_competences_([DomainInterestUser|DomainInterestUsers],[User|Users],CompetenceValues) :-
-	(wenet_profile_manager_get_profile(Profile,User)->true;Profile = json([competences=[]])),
-	get_domain_competence_values_for(UserCompetenceValues,Profile),
-	calculate_domain_by_competences_values(Value,CompetenceValues,UserCompetenceValues),
+calculate_domain_by_attribute_([],[],_,_).
+calculate_domain_by_attribute_([DomainInterestUser|DomainInterestUsers],[User|Users],Values,Attributes) :-
+	(wenet_profile_manager_get_profile(Profile,User)->true;Profile = json([competences=[],materials=[]])),
+	get_domain_attribute_values_for(UserValues,Profile,Attributes),
+	calculate_domain_by_attribute_values(Value,Values,UserValues),
 	wenet_new_user_value(DomainInterestUser,User,Value),
-	calculate_domain_by_competences(DomainInterestUsers,Users)
+	calculate_domain_by_attribute_(DomainInterestUsers,Users,Values,Attributes)
 	.
 
-get_domain_competence_values_for(UserCompetenceValues,Profile) :-
-	get_profile_competence(Competence1,Profile,'course_fa',json([level=0.0])),
-	get_attribute(Value1,level,0.0,Competence1),
-	get_profile_competence(json(Competence2),Profile,'course_plc',json([level=0.0])),
-	get_attribute(Value2,level,0.0,Competence2),
-	get_profile_competence(json(Competence3),Profile,'course_oop',json([level=0.0])),
-	get_attribute(Value3,level,0.0,Competence3),
-	UserCompetenceValues = [Value1, Value2, Value3]
+get_domain_attribute_values_for([],_,[]).
+get_domain_attribute_values_for([Value|Values],Profile,[Attribute|Attributes]) :-
+	(get_domain_competence_value(Value,Profile,Attribute);get_domain_material_value(Value,Profile,Attribute);Value = 0.0),
+	get_domain_attribute_values_for(Values,Profile,Attributes)
 	.
 
-get_domain_competence_values_for([0.0,0.0,0.0],_).
+get_domain_competence_value(Value,Profile,Attribute) :-
+	string_concat('competences.',CompetenceStr,Attribute),
+	atom_string(CompetenceName, CompetenceStr),
+	get_profile_competence(Competence,Profile,CompetenceName,json([level=0.0])),
+	get_attribute(Value,level,0.0,Competence)
+	.
 
-calculate_domain_by_competences_values(_,[],[]).
-calculate_domain_by_competences_values(Value,[Requester|RequesterValues],[User|UserValues]):-
-	>(Requester,User),
-	calculate_domain_by_competences_values(Value,RequesterValues,UserValues),
-	Value = 1
-.
-calculate_domain_by_competences_values(Value,[Requester|RequesterValues],[User|UserValues]):-
-	=<(Requester,User),
-	calculate_domain_by_competences_values(Value,RequesterValues,UserValues),
-	Value = 0
-.
-calculate_domain_by_competences_values(0.5,_,_).
+get_domain_material_value(Value,Profile,Attribute) :-
+	string_concat('materials.',MaterialStr,Attribute),
+	atom_string(MaterialName, MaterialStr),
+	get_profile_material(Material,Profile,MaterialName,json([description=''])),
+	get_attribute(Value,description,'',Material)
+	.
+
+calculate_domain_by_attribute_values(Value,[Requester|RequesterValues],[User|UserValues]):-
+	( Requester @> User ->
+		( are_domain_attribute_values_greater(RequesterValues,UserValues) -> Value = 0.0;Value = 0.5)
+		; ( are_domain_attribute_values_le(RequesterValues,UserValues) -> Value = 1.0;Value = 0.5)
+	).
+are_domain_attribute_values_greater([],[]).
+are_domain_attribute_values_greater([Requester|RequesterValues],[User|UserValues]) :-
+	Requester @> User,
+	are_domain_attribute_values_greater(RequesterValues,UserValues).
+are_domain_attribute_values_le([],[]).
+are_domain_attribute_values_le([Requester|RequesterValues],[User|UserValues]) :-
+	Requester @=< User,
+	are_domain_attribute_values_le(RequesterValues,UserValues).
 
 
 % Calculate domain dimension if it is different for the rest of domains
 whenever
 	is_received_event('sortUsersByDiversity',_)
 	and get_task_attribute_value('different','domainInterest')
-	and not(get_task_attribute_value('sensitive_issue','domain'))
 	and not(get_task_attribute_value('academic_skills','domain'))
 	and get_task_state_attribute(Users,'appUsers')
 	and get_task_attribute_value(Domain,'domain')
 	and domain_attributes(Domain,Attributes)
 thenceforth
-	normalized_diversity(DomainInterestUsers,Users,Attributes,@(null),false)
+	normalized_diversity(DomainInterestUsers,Users,Attributes,0.0,false)
 	and put_task_state_attribute('domainInterestUsers',DomainInterestUsers).
 
 % Calculate believe and values if it is similar
@@ -156,7 +159,7 @@ whenever
 	and get_task_state_attribute(Users,'appUsers')
 	and get_profile_attribues_by_beliefs_and_values(Attributes)
 thenceforth
-	normalized_diversity(Diversity,Users,Attributes,@(null),false)
+	normalized_diversity(Diversity,Users,Attributes,1.0,false)
 	and wenet_negate_user_value(BeliefsAndValuesUsers,Diversity)
 	and put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
 
@@ -170,7 +173,7 @@ whenever
 	and get_task_state_attribute(Users,'appUsers')
 	and get_profile_attribues_by_beliefs_and_values(Attributes)
 thenceforth
-	normalized_diversity(BeliefsAndValuesUsers,Users,Attributes,@(null),false)
+	normalized_diversity(BeliefsAndValuesUsers,Users,Attributes,0.0,false)
 	and put_task_state_attribute('beliefsAndValuesUsers',BeliefsAndValuesUsers).
 
 % Calculate believe and values if it is indifferent
@@ -199,12 +202,12 @@ whenever
 	and get_task_state_attribute(Users,'appUsers')
 	and get_profile_attribues_by_social_closeness(Attributes)
 thenceforth
-	normalized_diversity(Diversity,Users,Attributes,@(null),false)
+	normalized_diversity(Diversity,Users,Attributes,1.0,false)
 	and wenet_negate_user_value(SocialClosenessUsers,Diversity)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 :- dynamic get_profile_attribues_by_social_closeness/1.
-get_profile_attribues_by_social_closeness(['materials.department','materials.degree_programme','material.program_study']).
+get_profile_attribues_by_social_closeness(['materials.department','materials.study_year','materials.program_study']).
 
 
 % Calculate social closeness if it is different and domain is 'academic skills'
@@ -215,7 +218,7 @@ whenever
 	and get_task_state_attribute(Users,'appUsers')
 	and get_profile_attribues_by_social_closeness(Attributes)
 thenceforth
-	normalized_diversity(SocialClosenessUsers,Users,Attributes,@(null),false)
+	normalized_diversity(SocialClosenessUsers,Users,Attributes,0.0,false)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 % Calculate social closeness if it is similar and domain is not 'academic skills'
@@ -225,7 +228,7 @@ whenever
 	and get_task_attribute_value('similar','socialCloseness')
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-	normalized_social_closeness(SocialClosenessUsers,Users,@(null))
+	normalized_social_closeness(SocialClosenessUsers,Users,0.0)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
 % Calculate social closeness if it is different and domain is not 'academic skills'
@@ -235,7 +238,7 @@ whenever
 	and get_task_attribute_value('different','socialCloseness')
 	and get_task_state_attribute(Users,'appUsers')
 thenceforth
-    normalized_social_closeness(Socialness,Users,@(null))
+    normalized_social_closeness(Socialness,Users,1.0)
 	and wenet_negate_user_value(SocialClosenessUsers,Socialness)
 	and put_task_state_attribute('socialClosenessUsers',SocialClosenessUsers).
 
@@ -244,9 +247,45 @@ whenever
 	is_received_event('sortUsersByDiversity',_)
 	and get_task_attribute_value('nearby','positionOfAnswerer')
 	and get_task_state_attribute(Users,'appUsers')
+	and normalized_closeness_and_raw(PhysicalClosenessUsers,PhysicalClosenessRaw,Users,500)
 thenceforth
-	normalized_closeness(PhysicalClosenessUsers,Users,500)
-	and put_task_state_attribute('physicalClosenessUsers',PhysicalClosenessUsers).
+	put_task_state_attribute('physicalClosenessUsers',PhysicalClosenessUsers)
+	and put_task_state_attribute('physicalClosenessRaw',PhysicalClosenessRaw).
+
+:- dynamic  normalized_closeness_and_raw/4, normalized_closeness_and_raw_/5.
+
+normalized_closeness_and_raw(Closeness,Locations,Users,MaxDistance) :-
+	(
+		get_profile_id(UserId),
+		wenet_personal_context_builder_locations(Locations,[UserId|Users]),
+		!,
+		member(SourceLocation,Locations),
+		wenet_user_id_of_location(UserId,SourceLocation),
+		!,
+		normalized_closeness_and_raw_(Closeness,Users,MaxDistance,Locations,SourceLocation)
+	)
+	-> true
+	; (
+		wenet_initialize_user_values(Closeness,Users,0.0),
+		Locations = []
+	)
+	.
+normalized_closeness_and_raw_([],[],_,_,_).
+normalized_closeness_and_raw_([UserCloseness|ClosenessRest],[UserId|Users],MaxDistance,Locations,SourceLocation) :-
+	(
+		(
+			member(TargetLocation,Locations),
+			wenet_user_id_of_location(UserId,TargetLocation),
+			!,
+			wenet_distance_between_locations(DistanceInMeters,SourceLocation,TargetLocation)
+		)
+		-> Distance is 1.0 - min(DistanceInMeters,MaxDistance) / MaxDistance
+		; Distance = 0.0
+	),
+	!,
+	wenet_new_user_value(UserCloseness,UserId,Distance),
+	normalized_closeness_and_raw_(ClosenessRest,Users,MaxDistance,Locations,SourceLocation)
+	.
 
 % Calculate physical closeness if it is anywhere
 whenever
@@ -256,7 +295,6 @@ whenever
 thenceforth
 	wenet_initialize_user_values(PhysicalClosenessUsers,Users,@(null))
 	and put_task_state_attribute('physicalClosenessUsers',PhysicalClosenessUsers).
-
 
 % After sorting users by eack diversity dimension aggregate them
 whenever
@@ -362,7 +400,6 @@ group_indexes_for_domain(0.0,0,0,1,0,0,_,DomainInterest) :-
 	!.
 group_indexes_for_domain(0.0,0,0,0,0,0,_,_) :-
 	!.
-
 
 group_indexes_for_value(BeliefsAndValues,1,SS1,SB,SS,SB,BeliefsAndValues) :-
 	number(BeliefsAndValues),
@@ -486,17 +523,17 @@ explanation_type_for(group_5_a,5,MdPC,MdSC,MdX,'academic_skills') :-
 	MdPC =:= 0.0,
 	number(MdSC),
 	MdSC =:= 0.0,
-	(not(number(MdX));not(MdX =:= 0.0)),
+	(not(number(MdX));(number(MdX),not(MdX =:= 0.0))),
 	!.
 explanation_type_for(group_5_b,5,MdPC,MdSC,MdX,'academic_skills') :-
 	number(MdPC),
 	MdPC =:= 0.0,
-	(not(number(MdSC));not(MdSC =:= 0.0)),
+	(not(number(MdSC));(number(MdSC),not(MdSC =:= 0.0))),
 	number(MdX),
 	MdX =:= 0.0,
 	!.
 explanation_type_for(group_5_c,5,MdPC,MdSC,MdX,'academic_skills') :-
-	(not(number(MdPC));not(MdPC =:= 0.0)),
+	(not(number(MdPC));(number(MdPC),not(MdPC =:= 0.0))),
 	number(MdSC),
 	MdSC =:= 0.0,
 	number(MdX),
@@ -505,14 +542,14 @@ explanation_type_for(group_5_c,5,MdPC,MdSC,MdX,'academic_skills') :-
 explanation_type_for(group_5_d,5,MdPC,MdSC,MdX,'academic_skills') :-
 	number(MdPC),
 	MdPC =:= 0.0,
-	(not(number(MdSC));not(MdSC =:= 0.0)),
-	(not(number(MdX));not(MdX =:= 0.0)),
+	(not(number(MdSC));(number(MdSC),not(MdSC =:= 0.0))),
+	(not(number(MdX));(number(MdX),not(MdX =:= 0.0))),
 	!.
 explanation_type_for(group_5_e,5,MdPC,MdSC,MdX,'academic_skills') :-
-	(not(number(MdPC));not(MdPC =:= 0.0)),
+	(not(number(MdPC));(number(MdPC),not(MdPC =:= 0.0))),
 	number(MdSC),
 	MdSC =:= 0.0,
-	(not(number(MdX));not(MdX =:= 0.0)),
+	(not(number(MdX));(number(MdX),not(MdX =:= 0.0))),
 	!.
 explanation_type_for(group_5_f,5,_,_,_,_) :-
 	!.
@@ -522,19 +559,19 @@ explanation_type_for(group_6_7_8_a,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	MdPC =:= 0.0,
 	number(MdSC),
 	MdSC =:= 0.0,
-	(not(number(MdX));not(MdX =:= 0.0)),
+	(not(number(MdX));(number(MdX),not(MdX =:= 0.0))),
 	!.
 explanation_type_for(group_6_7_8_b,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	(Group = 6; Group = 7;  Group = 8),
 	number(MdPC),
 	MdPC =:= 0.0,
-	(not(number(MdSC));not(MdSC =:= 0.0)),
+	(not(number(MdSC));(number(MdSC),not(MdSC =:= 0.0))),
 	number(MdX),
 	MdX =:= 0.0,
 	!.
 explanation_type_for(group_6_7_8_c,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	(Group = 6; Group = 7;  Group = 8),
-	(not(number(MdPC));not(MdPC =:= 0.0)),
+	(not(number(MdPC));(number(MdPC),not(MdPC =:= 0.0))),
 	number(MdSC),
 	MdSC =:= 0.0,
 	number(MdX),
@@ -544,15 +581,15 @@ explanation_type_for(group_6_7_8_d,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	(Group = 6; Group = 7;  Group = 8),
 	number(MdPC),
 	MdPC =:= 0.0,
-	(not(number(MdSC));not(MdSC =:= 0.0)),
-	(not(number(MdX));not(MdX =:= 0.0)),
+	(not(number(MdSC));(number(MdSC),not(MdSC =:= 0.0))),
+	(not(number(MdX));(number(MdX),not(MdX =:= 0.0))),
 	!.
 explanation_type_for(group_6_7_8_e,Group,MdPC,MdSC,MdX,'academic_skills') :-
 	(Group = 6; Group = 7;  Group = 8),
-	(not(number(MdPC));not(MdPC =:= 0.0)),
+	(not(number(MdPC));(number(MdPC),not(MdPC =:= 0.0))),
 	number(MdSC),
 	MdSC =:= 0.0,
-	(not(number(MdX));not(MdX =:= 0.0)),
+	(not(number(MdX));(number(MdX),not(MdX =:= 0.0))),
 	!.
 explanation_type_for(group_6_7_8_f,Group,_,_,_,_) :-
 	(Group = 6; Group = 7;  Group = 8),
@@ -674,35 +711,37 @@ whenever
 	and get_task_id(TaskId)
 	and get_transaction_id(TransactionId)
 	and get_task_state_attribute(GroupsUsers,'groupsUsers')
+	and get_profile_language(Lang)
+	and get_task_state_attribute(Unasked,'unaskedUserIds')
 thenceforth
 	send_user_message('AnsweredQuestionMessage',json([taskId=TaskId,question=Question,transactionId=TransactionId,answer=Answer,userId=SenderId,anonymous=Anonymous]))
 	and wenet_add(NewAnswersTransactionIds,TransactionId,AnswersTransactionIds)
 	and put_task_state_attribute('answersTransactionIds',NewAnswersTransactionIds)
 	and send_event(_,1,'checkMaxAnswers',json([]))
-	and explanation(ExplanationTitle,ExplanationText,SenderId,GroupsUsers)
+	and explanation(ExplanationTitle,ExplanationText,SenderId,Unasked,GroupsUsers,Lang)
 	and send_user_message('TextualMessage',json([title=ExplanationTitle,text=ExplanationText])).
 
 :- dynamic
-	explanation/4,
-	explanation/5,
+	explanation/6,
 	explanation_title/2,
 	explanation_text/3.
-explanation(ExplanationTitle,ExplanationText,UserId,GroupsUsers) :-
-	get_profile_language(Lang),
-	explanation(ExplanationTitle,ExplanationText,UserId,GroupsUsers,Lang).
-explanation(ExplanationTitle,ExplanationText,UserId,GroupsUsers,Lang) :-
+
+explanation(ExplanationTitle,ExplanationText,UserId,Unasked,GroupsUsers,Lang) :-
 	explanation_title(ExplanationTitle,Lang),
-	(
-		( wenet_json_element_with(json(Group),GroupsUsers,userId=UserId,json([explanationType=group_0])), member(explanationType=Type,Group))
-		-> true
-		; Type = group_0
+	( member(UserId,Unasked)
+		-> Type = group_unexpected ;
+		(
+			(wenet_json_element_with(json(Group),GroupsUsers,userId=UserId,json([explanationType=group_0])), member(explanationType=Type,Group))
+			-> true
+			; Type = group_unexpected
+		)
 	),
 	explanation_text(ExplanationText,Type,Lang).
 
 explanation_title('Why is this user chosen?',_).
 explanation_text('Recall that there were no requirements set w.r.t domains, values, social or physical closeness. Nevertheless, we tried to increase the gender diversity of selected users.',group_0,_).
 explanation_text('This user fulfils all requirements. While searching for users, we tried to increase the gender diversity of selected users.',group_1,_).
-explanation_text('Not enough members fulfil the requirements. To find some answers, we had to choose some that don\'t fulfil any, like this user. While doing so, we also tried to increase the gender diversity of selected users.',group_12,_).
+explanation_text('Not enough members fulfil the requirements. To find some answers, we had to choose some that do not fulfil any, like this user. While doing so, we also tried to increase the gender diversity of selected users.',group_12,_).
 explanation_text('This user fulfils the physical closeness, social closeness, and academic skills requirements, but not all of the other requirements. To find some answers, we had to relax some of the other requirements. We also tried to increase the gender diversity of selected users.',group_2_3_4_a,_).
 explanation_text('This user fulfils the physical and social closeness requirements, but not all of the other requirements. To find some answers, we had to relax some of the other requirements. We also tried to increase the gender diversity of selected users.',group_2_3_4_b,_).
 explanation_text('This user fulfils the academic skills and physical closeness requirements, but not all of the other requirements. To find some answers, we had to relax some of the other requirements. We also tried to increase the gender diversity of selected users.',group_2_3_4_c,_).
@@ -729,6 +768,7 @@ explanation_text('This user does not fulfil neither the academic skills and soci
 explanation_text('This user does not fulfil neither the physical closeness requirement nor some of the other requirements. To find some answers, we had to relax these requirements. We also tried to increase the gender diversity of selected users.',group_6_7_8_d,_).
 explanation_text('This user does not fulfil neither the social closeness requirements nor some of the other requirements. To find some answers, we had to relax these requirements. We also tried to increase the gender diversity of selected users.',group_6_7_8_e,_).
 explanation_text('This user does not fulfil neither the academic skills requirements nor some of the other requirements. To find some answers, we had to relax these requirements. We also tried to increase the gender diversity of selected users.',group_6_7_8_f,_).
+explanation_text('This answer does not match your original criteria but maybe you will still find it interesting.',_,_).
 
 % Nothing to do with this transaction only store it
 whenever
@@ -800,6 +840,17 @@ cancel_expiration_event() :-
 	 	; ( wenet_interaction_protocol_engine_delete_event(TimerId) -> true ; wenet_log_error('Cannot cancel previous event'))
 	).
 
+% Notify the user that its answer is picked
+whenever
+	is_received(_,'closeQuestionTransaction',_)
+	and get_profile_id(Me)
+	and get_task_requester_id(Me)
+	and not(is_task_closed())
+thenceforth
+	add_message_transaction()
+	and close_task()
+	.
+
 % Nothing to do with this transaction only store it
 whenever
 	is_received_do_transaction('reportAnswerTransaction',_)
@@ -809,22 +860,24 @@ whenever
 thenceforth
 	add_message_transaction().
 
-% Send expiration message if received max answers
+% Nothing to do with this transaction only store it
 whenever
-	is_received(_,'checkMaxAnswers',_)
-	and get_task_state_attribute(AnswersTransactionIds,'answersTransactionIds',[])
-	and length(AnswersTransactionIds,AnswersCount)
-	and get_task_attribute_value(MaxAnswers,'maxAnswers')
-	and =<(MaxAnswers,AnswersCount)
+	is_received_do_transaction('likeAnswerTransaction',Attributes)
+	and get_profile_id(Me)
+	and get_task_requester_id(Me)
+	and not(is_task_closed())
+	and get_attribute(TransactionId,transactionId,Attributes)
+	and get_transaction(_,TransactionId)
 thenceforth
-	send_event(_,1,'notifyQuestionExpirationMessage',json([])).
+	add_message_transaction().
 
-% Notify user of the expiration message
+% Nothing to do with this transaction only store it
 whenever
-	is_received_event('notifyQuestionExpirationMessage',_)
-	and get_task_state_attribute(AnswersTransactionIds,'answersTransactionIds',[])
-	and get_task_id(TaskId)
-	and get_task_goal_name(Question)
+	is_received_do_transaction('followUpTransaction',Attributes)
+	and get_profile_id(Me)
+	and not(get_task_requester_id(Me))
+	and not(is_task_closed())
+	and get_attribute(TransactionId,transactionId,Attributes)
+	and get_transaction(_,TransactionId)
 thenceforth
-	send_user_message('QuestionExpirationMessage',json([taskId=TaskId,question=Question,listOfTransactionIds=AnswersTransactionIds]))
-	and cancel_expiration_event().
+	add_message_transaction().

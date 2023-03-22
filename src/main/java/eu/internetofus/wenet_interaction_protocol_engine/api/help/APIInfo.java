@@ -28,7 +28,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * @author UDT-IA, IIIA-CSIC
  */
-@Schema(name = "Info", description = "Provide the version information of the API")
+@Schema(title = "Info", description = "Provide the version information of the API")
 public class APIInfo extends ReflectionModel implements Model {
 
   /**

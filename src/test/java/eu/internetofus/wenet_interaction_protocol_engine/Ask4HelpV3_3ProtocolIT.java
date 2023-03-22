@@ -20,18 +20,18 @@
 
 package eu.internetofus.wenet_interaction_protocol_engine;
 
+import eu.internetofus.common.protocols.Ask4HelpV3_3ProtocolITC;
 import eu.internetofus.common.protocols.DefaultProtocols;
-import eu.internetofus.common.protocols.PilotM46AAUProtocolWithAcademicSkillsDomainITC;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Check the {@link DefaultProtocols#PILOT_M46_AAU} protocol. ATTENTION: This
+ * Check the {@link DefaultProtocols#ASK_4_HELP_V3_3} protocol. ATTENTION: This
  * test is sequential and maintains the state between methods. In other words,
  * you must to run the entire test methods on the specified order to work.
  *
  * @author UDT-IA, IIIA-CSIC
  */
 @ExtendWith(WeNetInteractionProtocolEngineIntegrationExtension.class)
-public class PilotM46AAUProtocolWithAcademicSkillsDomainIT extends PilotM46AAUProtocolWithAcademicSkillsDomainITC {
+public class Ask4HelpV3_3ProtocolIT extends Ask4HelpV3_3ProtocolITC {
 
 }
