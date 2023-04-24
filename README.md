@@ -24,9 +24,9 @@ the context-dependent norms that are attached to the message, the individual pri
 has received this message, as well as their local profile (both private and public). This ensures that the interpreter
 abides by human’s private norms without leaking any of their private norms and profile.
 
-There are norms on the individual (user level), the task level, and the community level.
+There are norms on the individual (user level), task level, and community level.
 An individual’s norm might be “Suppress incoming messages at night” (and this will
-be applied for the user who sets this norm only). A task norm might be “Don’t ask my ex”
+be applied to the user who sets this norm only). A task norm might be “Don’t ask my ex”
 (so that would be applied for a specific task only). A community norm might be
 “If you don’t volunteer, you cannot ask for help” and it would be enforced on everyone.
 Given the above, this means that norms will be attached to users, tasks and communities.
