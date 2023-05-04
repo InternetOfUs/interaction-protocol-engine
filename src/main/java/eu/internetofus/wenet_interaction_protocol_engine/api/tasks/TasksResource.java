@@ -29,6 +29,8 @@ import eu.internetofus.common.vertx.ServiceResponseHandlers;
 import eu.internetofus.wenet_interaction_protocol_engine.EngineWorker;
 import eu.internetofus.wenet_interaction_protocol_engine.MessageForWorkerBuilder;
 import eu.internetofus.wenet_interaction_protocol_engine.ProtocolData;
+import eu.internetofus.wenet_interaction_protocol_engine.persistence.InteractionsRepository;
+import eu.internetofus.wenet_interaction_protocol_engine.persistence.StatesRepository;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -113,6 +115,37 @@ public class TasksResource implements Tasks {
         Logger.warn(cause, "Cannot process the creation of the task {}", model.source);
 
       });
+
+    });
+
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void taskDeleted(final String taskId, final ServiceRequest request,
+      final Handler<AsyncResult<ServiceResponse>> resultHandler) {
+
+    ServiceResponseHandlers.responseOk(resultHandler);
+
+    InteractionsRepository.createProxy(this.vertx).deleteAllInteractionByTask(taskId).onComplete((deleted) -> {
+
+      if (deleted.failed()) {
+
+        Logger.trace(deleted.cause(), "Cannot delete the interactions involving the task {}.", taskId);
+
+      }
+
+    });
+
+    StatesRepository.createProxy(this.vertx).deleteAllStateByTask(taskId).onComplete((deleted) -> {
+
+      if (deleted.failed()) {
+
+        Logger.trace(deleted.cause(), "Cannot delete the states associated to the task {}.", taskId);
+
+      }
 
     });
 

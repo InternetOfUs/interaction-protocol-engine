@@ -35,8 +35,10 @@ import io.vertx.ext.web.api.service.ServiceRequest;
 import io.vertx.ext.web.api.service.ServiceResponse;
 import io.vertx.ext.web.api.service.WebApiServiceGen;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -96,6 +98,23 @@ public interface Tasks {
   @ApiResponse(responseCode = "400", description = "Cannot process the task transaction", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
   public void doTransaction(@Parameter(hidden = true, required = false) JsonObject body,
       @Parameter(hidden = true, required = false) ServiceRequest context,
+      @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
+
+  /**
+   * Called when a task has been deleted.
+   *
+   * @param taskId        identifier of the task to delete.
+   * @param request       of the operation.
+   * @param resultHandler to inform of the response.
+   */
+  @DELETE
+  @Path("/{taskId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Called when a task has been deleted", description = "Allow to delete all information associated to a task")
+  @ApiResponse(responseCode = "204", description = "All the information of the task was started to be deleted")
+  void taskDeleted(
+      @PathParam("taskId") @Parameter(description = "The identifier of the task to delete its information") String taskId,
+      @Parameter(hidden = true, required = false) ServiceRequest request,
       @Parameter(hidden = true, required = false) Handler<AsyncResult<ServiceResponse>> resultHandler);
 
 }

@@ -28,7 +28,7 @@ import eu.internetofus.common.components.models.TaskTransaction;
 import io.vertx.core.json.JsonObject;
 
 /**
- * Component used to create the messages that can be wend to a worker.
+ * Component used to create the messages that can be send to a worker.
  *
  * @see EngineWorker
  *

@@ -35,6 +35,8 @@ import eu.internetofus.wenet_interaction_protocol_engine.api.interactions.Intera
 import eu.internetofus.wenet_interaction_protocol_engine.api.interactions.InteractionsResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.Messages;
 import eu.internetofus.wenet_interaction_protocol_engine.api.messages.MessagesResource;
+import eu.internetofus.wenet_interaction_protocol_engine.api.profiles.Profiles;
+import eu.internetofus.wenet_interaction_protocol_engine.api.profiles.ProfilesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.states.States;
 import eu.internetofus.wenet_interaction_protocol_engine.api.states.StatesResource;
 import eu.internetofus.wenet_interaction_protocol_engine.api.tasks.Tasks;
@@ -89,6 +91,10 @@ public class APIVerticle extends AbstractAPIVerticle {
     routerBuilder.mountServiceInterface(Interactions.class, Interactions.ADDRESS);
     new ServiceBinder(this.vertx).setAddress(Interactions.ADDRESS).register(Interactions.class,
         new InteractionsResource(this.vertx));
+
+    routerBuilder.mountServiceInterface(Profiles.class, Profiles.ADDRESS);
+    new ServiceBinder(this.vertx).setAddress(Profiles.ADDRESS).register(Profiles.class,
+        new ProfilesResource(this.vertx));
 
   }
 
