@@ -103,4 +103,25 @@ public class StatesRepositoryImpl extends Repository implements StatesRepository
     return this.migrateSchemaVersionOnCollectionTo(this.schemaVersion, STATES_COLLECTION);
 
   }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void deleteAllStateByUser(final String profileId, final Handler<AsyncResult<Void>> deleteHanndler) {
+
+    final var query = new JsonObject().put("userId", profileId);
+    this.deleteDocuments(STATES_COLLECTION, query).onComplete(deleteHanndler);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void deleteAllStateByTask(final String taskId, final Handler<AsyncResult<Void>> deleteHanndler) {
+
+    final var query = new JsonObject().put("taskId", taskId);
+    this.deleteDocuments(STATES_COLLECTION, query).onComplete(deleteHanndler);
+
+  }
 }

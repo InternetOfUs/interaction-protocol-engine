@@ -34,6 +34,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.serviceproxy.ServiceBinder;
@@ -271,5 +272,38 @@ public interface InteractionsRepository {
    * @param handler to inform if the interaction are removed or not.
    */
   void deleteInteractions(JsonObject query, Handler<AsyncResult<Void>> handler);
+
+  /**
+   * Delete all the interaction that a user is involved.
+   *
+   * @param profileId identifier of the user to remove all its interactions.
+   *
+   * @return if the deletion was or not a success.
+   */
+  @GenIgnore
+  default Future<Void> deleteAllInteractionByUser(final String profileId) {
+
+    final var orFields = new JsonArray();
+    orFields.add(new JsonObject().put("senderId", profileId));
+    orFields.add(new JsonObject().put("receiverId", profileId));
+    final var query = new JsonObject().put("$or", orFields);
+    return this.deleteInteractions(query);
+
+  }
+
+  /**
+   * Delete all the interaction that a task is involved.
+   *
+   * @param taskId identifier of the task to remove all its interactions.
+   *
+   * @return if the deletion was or not a success.
+   */
+  @GenIgnore
+  default Future<Void> deleteAllInteractionByTask(final String taskId) {
+
+    final var query = new JsonObject().put("taskId", taskId);
+    return this.deleteInteractions(query);
+
+  }
 
 }

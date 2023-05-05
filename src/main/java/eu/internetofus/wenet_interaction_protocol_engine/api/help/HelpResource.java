@@ -32,9 +32,10 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.service.ServiceRequest;
 import io.vertx.ext.web.api.service.ServiceResponse;
-import java.nio.charset.Charset;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.stream.Collectors;
 import javax.ws.rs.core.Response.Status;
-import org.apache.commons.io.IOUtils;
 
 /**
  * Resource to provide the help about the API.
@@ -94,7 +95,7 @@ public class HelpResource implements Help {
       try {
 
         final var in = this.getClass().getClassLoader().getResourceAsStream(OPENA_API_RESOURCE);
-        final var openapi = IOUtils.toString(in, Charset.defaultCharset());
+        final var openapi = new BufferedReader(new InputStreamReader(in)).lines().collect(Collectors.joining("\n"));
         promise.complete(openapi);
 
       } catch (final Throwable cause) {

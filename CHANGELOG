@@ -3,6 +3,11 @@
 All notable changes to `wenet-interaction-protocol-engine` will be documented in this file
 
 
+## Version 1.4.0 (2023-05-05)
+
+ * Manage the deletion of profiles and tasks.
+
+
 ## Version 1.3.2 (2023-03-22)
 
  * Update commons library.

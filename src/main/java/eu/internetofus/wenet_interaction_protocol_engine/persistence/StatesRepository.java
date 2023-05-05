@@ -168,4 +168,52 @@ public interface StatesRepository {
    */
   void updateState(JsonObject state, Handler<AsyncResult<Void>> updateHandler);
 
+  /**
+   * Delete all the state that a user is involved.
+   *
+   * @param profileId identifier of the user to remove all its states.
+   *
+   * @return if the deletion was or not a success.
+   */
+  @GenIgnore
+  default Future<Void> deleteAllStateByUser(final String profileId) {
+
+    final Promise<Void> promise = Promise.promise();
+    this.deleteAllStateByUser(profileId, promise);
+    return promise.future();
+
+  }
+
+  /**
+   * Delete all the state that a user is involved.
+   *
+   * @param profileId      identifier of the user to remove all its states.
+   * @param deleteHanndler handler to manage the deleted process.
+   */
+  void deleteAllStateByUser(String profileId, Handler<AsyncResult<Void>> deleteHanndler);
+
+  /**
+   * Delete all the state that a task is involved.
+   *
+   * @param taskId identifier of the task to remove all its states.
+   *
+   * @return if the deletion was or not a success.
+   */
+  @GenIgnore
+  default Future<Void> deleteAllStateByTask(final String taskId) {
+
+    final Promise<Void> promise = Promise.promise();
+    this.deleteAllStateByTask(taskId, promise);
+    return promise.future();
+
+  }
+
+  /**
+   * Delete all the state that a task is involved.
+   *
+   * @param taskId         identifier of the task to remove all its states.
+   * @param deleteHanndler handler to manage the deleted process.
+   */
+  void deleteAllStateByTask(String taskId, Handler<AsyncResult<Void>> deleteHanndler);
+
 }
