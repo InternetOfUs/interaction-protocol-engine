@@ -23,17 +23,23 @@ package eu.internetofus.wenet_interaction_protocol_engine.api.profiles;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import eu.internetofus.common.components.StoreServices;
+import eu.internetofus.common.components.interaction_protocol_engine.Interaction;
+import eu.internetofus.common.components.interaction_protocol_engine.State;
 import eu.internetofus.common.components.interaction_protocol_engine.WeNetInteractionProtocolEngine;
-import eu.internetofus.common.components.models.MessageTest;
-import eu.internetofus.common.components.models.TaskTransactionTest;
-import eu.internetofus.common.components.task_manager.WeNetTaskManager;
+import eu.internetofus.common.vertx.ModelsPageContext;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
+import eu.internetofus.wenet_interaction_protocol_engine.persistence.InteractionsRepository;
+import eu.internetofus.wenet_interaction_protocol_engine.persistence.InteractionsRepositoryIT;
+import eu.internetofus.wenet_interaction_protocol_engine.persistence.StatesRepository;
+import eu.internetofus.wenet_interaction_protocol_engine.persistence.StatesRepositoryIT;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxTestContext;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -63,70 +69,124 @@ public class ProfilesIT {
   public void shouldNotifiedDeletedProfile(final Vertx vertx, final WebClient client,
       final VertxTestContext testContext) {
 
-    StoreServices.storeTaskExample(1, vertx, testContext).onSuccess(task1 -> {
+    StoreServices.storeProfileExample(43, vertx, testContext).onSuccess(profile -> {
+      final List<Interaction> interactions = new ArrayList<>();
+      testContext.assertComplete(InteractionsRepositoryIT.storeSomeInteractions(vertx, testContext, interaction -> {
+        if (interactions.size() % 2 == 0) {
 
-      final var userId = task1.requesterId;
-      StoreServices.storeTaskExample(2, vertx, testContext).onSuccess(task2 -> {
+          for (var i = 0; i < 10; i++) {
 
-        task2.transactions = new ArrayList<>();
-        for (var i = 0; i < 10; i++) {
+            if (i % 3 == 0) {
 
-          final var transaction = new TaskTransactionTest().createModelExample(i);
-          if (i % 2 == 0) {
+              interaction.senderId = profile.id;
 
-            transaction.actioneerId = userId;
-          }
+            } else if (i % 3 == 1) {
 
-          for (var j = 0; j < 10; j++) {
-
-            final var message = new MessageTest().createModelExample(j);
-            if (j % 2 == 0) {
-
-              message.receiverId = userId;
+              interaction.receiverId = profile.id;
             }
-            transaction.messages.add(message);
+          }
+        }
 
+      }, 20, interactions)).onSuccess(any -> {
+
+        final List<State> states = new ArrayList<>();
+        testContext.assertComplete(StatesRepositoryIT.storeSomeStates(vertx, testContext, state -> {
+          if (states.size() % 2 == 0) {
+
+            for (var i = 0; i < 10; i++) {
+
+              if (i % 2 == 0) {
+
+                state.userId = profile.id;
+              }
+            }
           }
 
-        }
-        testContext.assertComplete(WeNetTaskManager.createProxy(vertx).updateTask(task2.id, task2))
-            .onSuccess(updatedTask2 -> {
+        }, 20, states)).onSuccess(any2 -> {
 
-              testContext.assertComplete(WeNetInteractionProtocolEngine.createProxy(vertx).profileDeleted(userId))
-                  .onSuccess(empty -> {
-
-                    vertx.setTimer(10000, ignoredTimer -> {
-
-                      testContext.assertFailure(WeNetTaskManager.createProxy(vertx).retrieveTask(task1.id))
-                          .onFailure(ignoredError -> {
-
-                            testContext.assertComplete(WeNetTaskManager.createProxy(vertx).retrieveTask(task2.id))
-                                .onSuccess(updatedAfterDeleteTask2 -> testContext.verify(() -> {
-
-                                  assertThat(updatedAfterDeleteTask2.transactions).isNotNull();
-                                  for (final var transaction : updatedAfterDeleteTask2.transactions) {
-
-                                    assertThat(transaction.actioneerId).isNotEqualTo(userId);
-                                    assertThat(transaction.messages).isNotNull();
-                                    for (final var message : transaction.messages) {
-
-                                      assertThat(message.receiverId).isNotEqualTo(userId);
-
-                                    }
-                                  }
-
-                                  testContext.completeNow();
-
-                                }));
-
-                          });
-                    });
-
-                  });
-            });
+          testContext.assertComplete(WeNetInteractionProtocolEngine.createProxy(vertx).profileDeleted(profile.id))
+              .onSuccess(empty -> this.assertDeletedProfileInfo(profile.id, interactions, states, vertx, testContext));
+        });
       });
-
     });
   }
 
+  /**
+   * Check that the profile information has been removed.
+   *
+   * @param profileId    identifier of the profile.
+   * @param interactions that may be deleted.
+   * @param states       that may be deleted.
+   * @param vertx        event bus to use.
+   * @param testContext  context that executes the test.
+   */
+  private void assertDeletedProfileInfo(final String profileId, final List<Interaction> interactions,
+      final List<State> states, final Vertx vertx, final VertxTestContext testContext) {
+
+    if (states.isEmpty() && interactions.isEmpty()) {
+
+      testContext.completeNow();
+
+    } else if (interactions.isEmpty()) {
+
+      final var expected = states.remove(0);
+      if (expected.userId.equals(profileId)) {
+
+        testContext
+            .assertFailure(
+                StatesRepository.createProxy(vertx).searchState(expected.communityId, expected.taskId, expected.userId))
+            .onFailure(ignored -> {
+
+              this.assertDeletedProfileInfo(profileId, interactions, states, vertx, testContext);
+
+            });
+
+      } else {
+
+        testContext
+            .assertComplete(
+                StatesRepository.createProxy(vertx).searchState(expected.communityId, expected.taskId, expected.userId))
+            .onSuccess(updated -> {
+
+              testContext.verify(() -> {
+
+                assertThat(updated).isEqualTo(expected);
+
+              });
+
+              this.assertDeletedProfileInfo(profileId, interactions, states, vertx, testContext);
+
+            });
+      }
+
+    } else {
+
+      final var expected = interactions.remove(0);
+      final var context = new ModelsPageContext();
+      context.limit = 100;
+      context.offset = 0;
+      context.query = new JsonObject().put("senderId", expected.senderId).put("receiverId", expected.receiverId);
+      testContext.assertComplete(InteractionsRepository.createProxy(vertx).retrieveInteractionsPage(context))
+          .onSuccess(page -> {
+
+            testContext.verify(() -> {
+
+              if (expected.senderId.equals(profileId) || expected.receiverId.equals(profileId)) {
+
+                assertThat(page.total).isEqualTo(0);
+
+              } else {
+
+                assertThat(page.total).isGreaterThanOrEqualTo(1);
+                assertThat(page.interactions).isNotNull().contains(expected);
+
+              }
+
+            });
+
+            this.assertDeletedProfileInfo(profileId, interactions, states, vertx, testContext);
+
+          });
+    }
+  }
 }

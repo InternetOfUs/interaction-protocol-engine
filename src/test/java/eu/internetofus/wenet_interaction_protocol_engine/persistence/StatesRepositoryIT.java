@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import eu.internetofus.common.components.StoreServices;
 import eu.internetofus.common.components.interaction_protocol_engine.State;
+import eu.internetofus.common.components.interaction_protocol_engine.StateTest;
 import eu.internetofus.common.model.Model;
 import eu.internetofus.wenet_interaction_protocol_engine.WeNetInteractionProtocolEngineIntegrationExtension;
 import io.vertx.core.Future;
@@ -239,7 +240,7 @@ public class StatesRepositoryIT {
    *
    * @return the future creation result.
    */
-  public Future<Void> storeSomeStates(final Vertx vertx, final VertxTestContext testContext,
+  public static Future<Void> storeSomeStates(final Vertx vertx, final VertxTestContext testContext,
       final Consumer<State> change, final int max, final List<State> states) {
 
     if (states.size() == max) {
@@ -248,11 +249,11 @@ public class StatesRepositoryIT {
 
     } else {
 
-      final var state = this.createUniqueState();
+      final var state = new StateTest().createModelExample(states.size());
       change.accept(state);
       return testContext.assertComplete(StatesRepository.createProxy(vertx).storeState(state)).compose(stored -> {
         states.add(stored);
-        return this.storeSomeStates(vertx, testContext, change, max, states);
+        return storeSomeStates(vertx, testContext, change, max, states);
       });
     }
 
@@ -269,7 +270,7 @@ public class StatesRepositoryIT {
 
     StoreServices.storeProfileExample(43, vertx, testContext).onSuccess(profile -> {
       final List<State> states = new ArrayList<>();
-      testContext.assertComplete(this.storeSomeStates(vertx, testContext, state -> {
+      testContext.assertComplete(storeSomeStates(vertx, testContext, state -> {
         if (states.size() % 2 == 0) {
 
           for (var i = 0; i < 10; i++) {
@@ -336,6 +337,7 @@ public class StatesRepositoryIT {
 
             });
       }
+
     }
   }
 
@@ -350,7 +352,7 @@ public class StatesRepositoryIT {
 
     StoreServices.storeTaskExample(43, vertx, testContext).onSuccess(task -> {
       final List<State> states = new ArrayList<>();
-      testContext.assertComplete(this.storeSomeStates(vertx, testContext, state -> {
+      testContext.assertComplete(storeSomeStates(vertx, testContext, state -> {
         if (states.size() % 2 == 0) {
 
           for (var i = 0; i < 10; i++) {

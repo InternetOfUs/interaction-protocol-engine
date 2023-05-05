@@ -165,7 +165,7 @@ public class InteractionsRepositoryIT {
    *
    * @return the future creation result.
    */
-  public Future<Void> storeSomeInteractions(final Vertx vertx, final VertxTestContext testContext,
+  public static Future<Void> storeSomeInteractions(final Vertx vertx, final VertxTestContext testContext,
       final Consumer<Interaction> change, final int max, final List<Interaction> interactions) {
 
     if (interactions.size() == max) {
@@ -179,7 +179,7 @@ public class InteractionsRepositoryIT {
       return testContext.assertComplete(InteractionsRepository.createProxy(vertx).store(interaction))
           .compose(stored -> {
             interactions.add(stored);
-            return this.storeSomeInteractions(vertx, testContext, change, max, interactions);
+            return storeSomeInteractions(vertx, testContext, change, max, interactions);
           });
     }
 
@@ -196,7 +196,7 @@ public class InteractionsRepositoryIT {
 
     StoreServices.storeProfileExample(43, vertx, testContext).onSuccess(profile -> {
       final List<Interaction> interactions = new ArrayList<>();
-      testContext.assertComplete(this.storeSomeInteractions(vertx, testContext, interaction -> {
+      testContext.assertComplete(storeSomeInteractions(vertx, testContext, interaction -> {
         if (interactions.size() % 2 == 0) {
 
           for (var i = 0; i < 10; i++) {
@@ -240,8 +240,8 @@ public class InteractionsRepositoryIT {
 
       final var expected = interactions.remove(0);
       final var context = new ModelsPageContext();
-      context.limit = 0;
-      context.offset = 100;
+      context.limit = 100;
+      context.offset = 0;
       context.query = new JsonObject().put("senderId", expected.senderId).put("receiverId", expected.receiverId);
       testContext.assertComplete(InteractionsRepository.createProxy(vertx).retrieveInteractionsPage(context))
           .onSuccess(page -> {
@@ -278,7 +278,7 @@ public class InteractionsRepositoryIT {
 
     StoreServices.storeTaskExample(43, vertx, testContext).onSuccess(task -> {
       final List<Interaction> interactions = new ArrayList<>();
-      testContext.assertComplete(this.storeSomeInteractions(vertx, testContext, interaction -> {
+      testContext.assertComplete(storeSomeInteractions(vertx, testContext, interaction -> {
         if (interactions.size() % 2 == 0) {
 
           for (var i = 0; i < 10; i++) {
@@ -318,8 +318,8 @@ public class InteractionsRepositoryIT {
 
       final var expected = interactions.remove(0);
       final var context = new ModelsPageContext();
-      context.limit = 0;
-      context.offset = 100;
+      context.limit = 100;
+      context.offset = 0;
       context.query = new JsonObject().put("taskId", expected.taskId);
       testContext.assertComplete(InteractionsRepository.createProxy(vertx).retrieveInteractionsPage(context))
           .onSuccess(page -> {
